@@ -1,10 +1,7 @@
 import queryString from "query-string";
-// import slugify from "slugify";
-
 export const sendRequest = async <T>(props: IRequest) => {
-  let { url } = props; // chỉ mình nó sẽ bị thay đổi
-
   const {
+    url: path,
     method,
     body,
     queryParams = {},
@@ -13,26 +10,39 @@ export const sendRequest = async <T>(props: IRequest) => {
     nextOption = {},
   } = props;
 
-  const options: any = {
+  let url = `${process.env.NEXT_PUBLIC_BACKEND_URL}${path}`;
+
+  if (queryParams) {
+    const query = queryString.stringify(queryParams);
+    url += `?${query}`;
+  }
+
+  const options: RequestInit = {
     method,
-    headers: new Headers({ "content-type": "application/json", ...headers }),
+    headers: new Headers({ "Content-Type": "application/json", ...headers }),
     body: body ? JSON.stringify(body) : null,
     ...nextOption,
   };
 
   if (useCredentials) options.credentials = "include";
-  if (queryParams) url = `${url}?${queryString.stringify(queryParams)}`;
 
-  return fetch(url, options).then(async (res) => {
-    const json = await res.json();
-    if (res.ok) return json as T;
+  try {
+    const response = await fetch(url, options);
+    const json = await response.json();
 
+    // ✅ Chuẩn hóa output với field 'status' (không phải 'statusCode')
     return {
-      statusCode: res.status,
-      message: json?.message ?? "",
-      error: json?.error ?? "",
+      status: json.status || response.status,
+      message: json.message || "",
+      data: json.data ?? null,
     } as T;
-  });
+  } catch (error: any) {
+    return {
+      status: 500,
+      message: "Lỗi kết nối đến máy chủ",
+      data: null,
+    } as T;
+  }
 };
 
 // export const fetchDefaultImages = (type: string) => {

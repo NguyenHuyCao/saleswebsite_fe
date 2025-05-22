@@ -1,10 +1,17 @@
-import { Roboto } from "next/font/google";
+// import { Roboto } from "next/font/google";
 import { createTheme } from "@mui/material/styles";
+import { Quicksand } from "next/font/google";
 
-const roboto = Roboto({
-  weight: ["300", "400", "500", "700"],
-  subsets: ["latin"],
-  display: "swap",
+// const roboto = Roboto({
+//   weight: ["300", "400", "500", "700"],
+//   subsets: ["latin"],
+//   display: "swap",
+// });
+
+const quicksand = Quicksand({
+  subsets: ["latin"], // hoặc ['vietnamese'] nếu cần Tiếng Việt chuẩn
+  weight: ["400", "500", "700"], // chọn các mức độ đậm bạn dùng
+  display: "swap", // tối ưu hiển thị
 });
 
 const theme = createTheme({
@@ -12,7 +19,7 @@ const theme = createTheme({
     mode: "light",
   },
   typography: {
-    fontFamily: roboto.style.fontFamily,
+    fontFamily: quicksand.style.fontFamily,
   },
   components: {
     MuiAlert: {
