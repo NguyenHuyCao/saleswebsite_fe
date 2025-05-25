@@ -9,15 +9,26 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
+    "@emotion/server": "^11.11.0",
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^7.1.0",
+    "@mui/lab": "^5.0.0-alpha.70",
     "@mui/material": "^7.1.0",
+    "@popperjs/core": "^2.11.8",
+    "apexcharts": "^4.7.0",
+    "apexcharts-clevision": "3.28.5",
+    "clsx": "^1.2.1",
+    "mdi-material-ui": "^7.1.0",
     "next": "15.3.2",
-    "next-nprogress-bar": "^2.4.7",
+    "nprogress": "^0.2.0",
     "query-string": "^9.1.2",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-apexcharts": "^1.7.0",
+    "react-dom": "^19.0.0",
+    "react-perfect-scrollbar": "^1.5.8",
+    "react-popper": "^2.3.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

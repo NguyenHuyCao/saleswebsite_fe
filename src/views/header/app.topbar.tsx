@@ -1,3 +1,4 @@
+"use client";
 import { Box, Button, Container, Typography } from "@mui/material";
 import LocalPhoneOutlinedIcon from "@mui/icons-material/LocalPhoneOutlined";
 import { useRouter } from "next/navigation";

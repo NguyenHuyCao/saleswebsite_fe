@@ -1,4 +1,4 @@
-import LoginForm from "@/components/login/app.login";
+import LoginForm from "@/views/login/app.login";
 import { Container } from "@mui/material";
 
 const LoginPage = () => {

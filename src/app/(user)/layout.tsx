@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import ThemeRegistry from "@/components/theme-registry/theme.registry";
+import ThemeRegistry from "@/views/theme-registry/theme.registry";
 import "@/styles/app.css";
-import NprogressWrapper from "@/lib/nprogress.wrapper";
 import { Quicksand } from "next/font/google";
-import AppHeader from "@/components/header/app.header";
-import AppFooter from "@/components/footer/app.footer";
+import AppHeader from "@/views/header/app.header";
+import AppFooter from "@/views/footer/app.footer";
 
 const quicksand = Quicksand({
   subsets: ["latin"],
@@ -29,11 +28,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={quicksand.className}>
         <ThemeRegistry>
-          <NprogressWrapper>
-            <AppHeader />
-            {children}
-            <AppFooter />
-          </NprogressWrapper>
+          <AppHeader />
+          {children}
+          <AppFooter />
         </ThemeRegistry>
       </body>
     </html>
