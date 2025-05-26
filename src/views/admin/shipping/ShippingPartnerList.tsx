@@ -1,19 +1,22 @@
+// File: views/admin/shipping/ShippingPartnerList.tsx
 "use client";
 
 import { useEffect, useState } from "react";
-import Card from "@mui/material/Card";
-import CardHeader from "@mui/material/CardHeader";
-import CardContent from "@mui/material/CardContent";
-import Table from "@mui/material/Table";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
-import TableCell from "@mui/material/TableCell";
-import TableBody from "@mui/material/TableBody";
-import TableContainer from "@mui/material/TableContainer";
-import Button from "@mui/material/Button";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  TableContainer,
+  Button,
+} from "@mui/material";
 import ModalFormShippingCreate from "@/model/shipping/ModalFormShippingCreate";
 import ModalFormShippingEdit from "@/model/shipping/ModalFormShippingEdit";
-import { useRouter } from "next/navigation";
+import AlertSnackbar from "@/model/notify/AlertSnackbar";
 
 interface ShippingPartner {
   id: number;
@@ -23,39 +26,102 @@ interface ShippingPartner {
   active: boolean;
 }
 
-const fakePartners: ShippingPartner[] = [
-  {
-    id: 1,
-    name: "Nhà xe Phương Trang",
-    code: "INTERNAL",
-    apiUrl: null,
-    active: true,
-  },
-  {
-    id: 2,
-    name: "Giao Hàng Nhanh",
-    code: "GHN",
-    apiUrl: "https://api.ghn.vn",
-    active: false,
-  },
-];
-
 const ShippingPartnerList = () => {
-  const [partners, setPartners] = useState<ShippingPartner[]>(fakePartners);
+  const [partners, setPartners] = useState<ShippingPartner[]>([]);
   const [openCreate, setOpenCreate] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [selectedPartner, setSelectedPartner] =
     useState<ShippingPartner | null>(null);
-  const router = useRouter();
 
-  const handleEdit = (partner: ShippingPartner) => {
-    router.push(`/admin/shippings?shippingId=${partner.id}`);
-    setSelectedPartner(partner);
-    setOpenEdit(true);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarType, setSnackbarType] = useState<"success" | "error">(
+    "success"
+  );
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+
+  const handleSnackbar = (message: string, type: "success" | "error") => {
+    setSnackbarMessage(message);
+    setSnackbarType(type);
+    setOpenSnackbar(true);
   };
 
-  const handleAdd = () => {
-    setOpenCreate(true);
+  const fetchPartners = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/shipping_partners`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      setPartners(data.data);
+    } catch (error: any) {
+      handleSnackbar(error.message || "Lỗi tải danh sách", "error");
+    }
+  };
+
+  useEffect(() => {
+    fetchPartners();
+  }, []);
+
+  const handleCreate = async (data: {
+    name: string;
+    code: string;
+    apiUrl: string | null;
+    active: boolean;
+  }) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/shipping_partners`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(data),
+        }
+      );
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message);
+      handleSnackbar("Thêm đơn vị thành công", "success");
+      setOpenCreate(false);
+      fetchPartners();
+    } catch (err: any) {
+      handleSnackbar(err.message, "error");
+    }
+  };
+
+  const handleUpdate = async (data: {
+    name: string;
+    apiUrl: string | null;
+    active: boolean;
+  }) => {
+    if (!selectedPartner) return;
+    try {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/shipping_partners/${selectedPartner.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(data),
+        }
+      );
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message);
+      handleSnackbar("Cập nhật thành công", "success");
+      setOpenEdit(false);
+      fetchPartners();
+    } catch (err: any) {
+      handleSnackbar(err.message, "error");
+    }
   };
 
   return (
@@ -64,7 +130,7 @@ const ShippingPartnerList = () => {
         title="Đơn vị vận chuyển"
         titleTypographyProps={{ variant: "h5" }}
         action={
-          <Button variant="contained" onClick={handleAdd}>
+          <Button variant="contained" onClick={() => setOpenCreate(true)}>
             Thêm đơn vị vận chuyển
           </Button>
         }
@@ -96,18 +162,10 @@ const ShippingPartnerList = () => {
                     <Button
                       size="small"
                       variant="outlined"
-                      sx={{
-                        backgroundColor: "#ff700",
-                        textTransform: "none",
-                        fontWeight: 500,
-                        px: 2,
-                        py: 0.5,
-                        fontSize: "0.8rem",
-                        // "&:hover": {
-                        //   backgroundColor: "#e46600",
-                        // },
+                      onClick={() => {
+                        setSelectedPartner(partner);
+                        setOpenEdit(true);
                       }}
-                      onClick={() => handleEdit(partner)}
                     >
                       Chỉnh sửa
                     </Button>
@@ -122,14 +180,23 @@ const ShippingPartnerList = () => {
       <ModalFormShippingCreate
         open={openCreate}
         onClose={() => setOpenCreate(false)}
+        onSubmit={handleCreate}
       />
       {selectedPartner && (
         <ModalFormShippingEdit
           open={openEdit}
           onClose={() => setOpenEdit(false)}
-          partner={selectedPartner}
+          onSubmit={handleUpdate}
+          initialData={selectedPartner}
         />
       )}
+
+      <AlertSnackbar
+        open={openSnackbar}
+        onClose={() => setOpenSnackbar(false)}
+        message={snackbarMessage}
+        type={snackbarType}
+      />
     </Card>
   );
 };

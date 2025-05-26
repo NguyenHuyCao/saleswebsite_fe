@@ -1,4 +1,3 @@
-// ModalFormShippingCreate.tsx
 "use client";
 
 import Dialog from "@mui/material/Dialog";
@@ -9,7 +8,7 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Switch from "@mui/material/Switch";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Props {
   open: boolean;
@@ -28,14 +27,19 @@ const ModalFormShippingCreate = ({ open, onClose, onSubmit }: Props) => {
   const [apiUrl, setApiUrl] = useState<string | null>(null);
   const [active, setActive] = useState(true);
 
+  useEffect(() => {
+    if (!open) {
+      setName("");
+      setCode("");
+      setApiUrl(null);
+      setActive(true);
+    }
+  }, [open]);
+
   const handleSubmit = () => {
     if (!name.trim() || !code.trim()) return;
     onSubmit({ name, code, apiUrl, active });
     onClose();
-    setName("");
-    setCode("");
-    setApiUrl(null);
-    setActive(true);
   };
 
   return (
@@ -78,6 +82,10 @@ const ModalFormShippingCreate = ({ open, onClose, onSubmit }: Props) => {
           onClick={handleSubmit}
           variant="contained"
           disabled={!name.trim() || !code.trim()}
+          sx={{
+            backgroundColor: "#ff700",
+            "&:hover": { backgroundColor: "#e65f00" },
+          }}
         >
           Lưu
         </Button>

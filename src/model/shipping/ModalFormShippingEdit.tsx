@@ -1,4 +1,4 @@
-// ModalFormShippingEdit.tsx
+// File: model/shipping/ModalFormShippingEdit.tsx
 "use client";
 
 import Dialog from "@mui/material/Dialog";
@@ -41,12 +41,17 @@ const ModalFormShippingEdit = ({
   const [active, setActive] = useState(true);
 
   useEffect(() => {
-    if (initialData) {
+    if (open && initialData) {
       setName(initialData.name);
       setApiUrl(initialData.apiUrl);
       setActive(initialData.active);
     }
-  }, [initialData]);
+    if (!open) {
+      setName("");
+      setApiUrl(null);
+      setActive(true);
+    }
+  }, [open, initialData]);
 
   const handleSubmit = () => {
     if (!name.trim()) return;
