@@ -16,6 +16,7 @@ import { Settings } from "src/@core/context/settingsContext";
 // ** Configs
 import themeConfig from "src/configs/themeConfig";
 import { Container } from "@mui/material";
+import Image from "next/image";
 
 interface Props {
   hidden: boolean;
@@ -63,7 +64,7 @@ const VerticalNavHeader = (props: Props) => {
       ) : (
         <Link href="/" passHref>
           <StyledLink>
-            <svg
+            {/* <svg
               width={30}
               height={25}
               version="1.1"
@@ -121,7 +122,14 @@ const VerticalNavHeader = (props: Props) => {
                   </g>
                 </g>
               </g>
-            </svg>
+            </svg> */}
+            <Image
+              src="/images/store/logo-removebg-preview.png"
+              alt="Logo Cường Hoa"
+              width={120}
+              height={60}
+            />
+
             <HeaderTitle variant="h6" sx={{ ml: 3 }}>
               {themeConfig.templateName}
             </HeaderTitle>

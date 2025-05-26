@@ -86,6 +86,7 @@ const StatisticsCard = () => {
   return (
     <Card
       sx={{
+        minHeight: 210,
         px: 4,
         pb: 4,
         "& .MuiCardContent-root": {

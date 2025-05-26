@@ -133,7 +133,7 @@ const DashboardTable = () => {
               <TableRow
                 hover
                 key={row.name}
-                sx={{ "&:last-of-type td, &:last-of-type th": { border: 0 } }}
+                sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
               >
                 <TableCell
                   sx={{ py: (theme) => `${theme.spacing(0.5)} !important` }}

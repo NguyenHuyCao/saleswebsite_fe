@@ -73,8 +73,8 @@ const Error500 = () => {
           alt="error-illustration"
           src="/images/pages/500.png"
         />
-        <Link passHref href="/">
-          <Button component="a" variant="contained" sx={{ px: 5.5 }}>
+        <Link href="/" style={{ textDecoration: "none" }}>
+          <Button variant="contained" sx={{ px: 5.5 }}>
             Back to Home
           </Button>
         </Link>

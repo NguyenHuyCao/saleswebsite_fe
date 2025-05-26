@@ -7,7 +7,6 @@ import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
 const FooterContent = () => {
-  // ** Var
   const hidden = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
 
   return (
@@ -17,18 +16,17 @@ const FooterContent = () => {
         flexWrap: "wrap",
         alignItems: "center",
         justifyContent: "space-between",
+        py: 2,
       }}
     >
       <Typography sx={{ mr: 2 }}>
-        {`© ${new Date().getFullYear()}, Made with `}
-        <Box component="span" sx={{ color: "error.main" }}>
-          ❤️
+        {`© ${new Date().getFullYear()}, Cửa hàng `}
+        <Box component="span" sx={{ fontWeight: 700 }}>
+          Cường Hoa
         </Box>
-        {` by `}
-        <Link target="_blank" href="https://themeselection.com/">
-          ThemeSelection
-        </Link>
+        {` - Chuyên máy cưa, máy phát, máy tỉa cỏ 2 thì`}
       </Typography>
+
       {hidden ? null : (
         <Box
           sx={{
@@ -38,26 +36,17 @@ const FooterContent = () => {
             "& :not(:last-child)": { mr: 4 },
           }}
         >
-          <Link
-            target="_blank"
-            href="https://github.com/themeselection/materio-mui-react-nextjs-admin-template-free/blob/main/LICENSE"
-          >
-            MIT License
+          <Link target="_blank" href="/about">
+            Giới thiệu
           </Link>
-          <Link target="_blank" href="https://themeselection.com/">
-            More Themes
+          <Link target="_blank" href="/chinh-sach">
+            Chính sách bảo hành
           </Link>
-          <Link
-            target="_blank"
-            href="https://github.com/themeselection/materio-mui-react-nextjs-admin-template-free/blob/main/README.md"
-          >
-            Documentation
+          <Link target="_blank" href="/huong-dan-mua-hang">
+            Hướng dẫn mua hàng
           </Link>
-          <Link
-            target="_blank"
-            href="https://github.com/themeselection/materio-mui-react-nextjs-admin-template-free/issues"
-          >
-            Support
+          <Link target="_blank" href="/lien-he">
+            Liên hệ
           </Link>
         </Box>
       )}

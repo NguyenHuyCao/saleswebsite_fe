@@ -31,7 +31,7 @@ const Trophy = () => {
     theme.palette.mode === "light" ? "triangle-light.png" : "triangle-dark.png";
 
   return (
-    <Card sx={{ position: "relative" }}>
+    <Card sx={{ position: "relative", minHeight: 210 }}>
       <CardContent>
         <Typography variant="h6">Congratulations John! 🥳</Typography>
         <Typography variant="body2" sx={{ letterSpacing: "0.25px" }}>

@@ -69,18 +69,12 @@ const MenuItemTextMetaWrapper = styled(Box)<BoxProps>({
   transition: "opacity .25s ease-in-out",
   ...(themeConfig.menuTextTruncate && { overflow: "hidden" }),
 });
-
 const VerticalNavLink = ({ item, navVisible, toggleNavVisibility }: Props) => {
-  // ** Hooks
   const router = useRouter();
   const pathname = usePathname();
 
   const IconTag: ReactNode = item.icon;
-
-  const isNavLinkActive = () => {
-    if (pathname === item.path) return true;
-    return false;
-  };
+  const isActive = pathname === item.path;
 
   return (
     <ListItem
@@ -92,7 +86,7 @@ const VerticalNavLink = ({ item, navVisible, toggleNavVisibility }: Props) => {
       <MenuNavLink
         component={Link}
         href={item.path || "/"}
-        className={isNavLinkActive() ? "active" : ""}
+        className={isActive ? "active" : ""}
         target={item.openInNewTab ? "_blank" : undefined}
         onClick={(e) => {
           if (!item.path) {

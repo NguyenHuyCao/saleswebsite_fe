@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import ThemeRegistry from "@/views/theme-registry/theme.registry";
 import "@/styles/app.css";
-import { Quicksand } from "next/font/google";
+// import { Quicksand } from "next/font/google";
 import AppHeader from "@/views/header/app.header";
 import AppFooter from "@/views/footer/app.footer";
 
-const quicksand = Quicksand({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  display: "swap",
-});
+// const quicksand = Quicksand({
+//   subsets: ["latin"],
+//   weight: ["400", "500", "700"],
+//   display: "swap",
+// });
 
 export const metadata: Metadata = {
   title: "Cửa hàng Cường Hoa",
@@ -25,14 +25,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={quicksand.className}>
-        <ThemeRegistry>
-          <AppHeader />
-          {children}
-          <AppFooter />
-        </ThemeRegistry>
-      </body>
-    </html>
+    // <html lang="en">
+    //   <body className={quicksand.className}>
+    <ThemeRegistry>
+      <AppHeader />
+      {children}
+      <AppFooter />
+    </ThemeRegistry>
+    //   </body>
+    // </html>
   );
 }

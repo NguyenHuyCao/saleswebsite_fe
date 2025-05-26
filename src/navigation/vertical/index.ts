@@ -1,80 +1,88 @@
 // ** Icon imports
-import Login from 'mdi-material-ui/Login'
-import Table from 'mdi-material-ui/Table'
-import CubeOutline from 'mdi-material-ui/CubeOutline'
-import HomeOutline from 'mdi-material-ui/HomeOutline'
-import FormatLetterCase from 'mdi-material-ui/FormatLetterCase'
-import AccountCogOutline from 'mdi-material-ui/AccountCogOutline'
-import CreditCardOutline from 'mdi-material-ui/CreditCardOutline'
-import AccountPlusOutline from 'mdi-material-ui/AccountPlusOutline'
-import AlertCircleOutline from 'mdi-material-ui/AlertCircleOutline'
-import GoogleCirclesExtended from 'mdi-material-ui/GoogleCirclesExtended'
+import Login from "mdi-material-ui/Login";
+import HomeOutline from "mdi-material-ui/HomeOutline";
+import AccountCogOutline from "mdi-material-ui/AccountCogOutline";
+import AccountPlusOutline from "mdi-material-ui/AccountPlusOutline";
+import AlertCircleOutline from "mdi-material-ui/AlertCircleOutline";
+import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
+import ContactsOutlinedIcon from "@mui/icons-material/ContactsOutlined";
+import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
+import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined";
+import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 
 // ** Type import
-import { VerticalNavItemsType } from 'src/@core/layouts/types'
+import { VerticalNavItemsType } from "src/@core/layouts/types";
 
 const navigation = (): VerticalNavItemsType => {
   return [
     {
-      title: 'Dashboard',
+      title: "Dashboard",
       icon: HomeOutline,
-      path: '/'
+      path: "/admin",
+    },
+    // {
+    //   title: "Account",
+    //   icon: AccountCogOutline,
+    //   path: "/admin/account-settings",
+    // },
+    {
+      title: "Contact",
+      icon: ContactsOutlinedIcon,
+      path: "/admin/contacts",
     },
     {
-      title: 'Account Settings',
+      title: "User",
+      icon: PersonOutlineOutlinedIcon,
+      path: "/admin/users",
+    },
+    {
+      title: "Product",
+      icon: Inventory2OutlinedIcon,
+      path: "/admin/products",
+    },
+    {
+      title: "Order",
       icon: AccountCogOutline,
-      path: '/account-settings'
+      path: "/admin/orders",
     },
     {
-      sectionTitle: 'Pages'
+      title: "Catogory",
+      icon: CategoryOutlinedIcon,
+      path: "/admin/categories",
     },
     {
-      title: 'Login',
+      title: "Brand",
+      icon: LabelOutlinedIcon,
+      path: "/admin/brands",
+    },
+    {
+      title: "Shipping",
+      icon: LocalShippingOutlinedIcon,
+      path: "/admin/shippings",
+    },
+    {
+      sectionTitle: "Pages",
+    },
+    {
+      title: "Login",
       icon: Login,
-      path: '/pages/login',
-      openInNewTab: true
+      path: "/pages/login",
+      openInNewTab: true,
     },
     {
-      title: 'Register',
+      title: "Register",
       icon: AccountPlusOutline,
-      path: '/pages/register',
-      openInNewTab: true
+      path: "/admin/pages/register",
+      openInNewTab: true,
     },
     {
-      title: 'Error',
-      icon: AlertCircleOutline,
-      path: '/pages/error',
-      openInNewTab: true
+      title: "Home",
+      icon: HomeOutlinedIcon,
+      path: "/",
     },
-    {
-      sectionTitle: 'User Interface'
-    },
-    {
-      title: 'Typography',
-      icon: FormatLetterCase,
-      path: '/typography'
-    },
-    {
-      title: 'Icons',
-      path: '/icons',
-      icon: GoogleCirclesExtended
-    },
-    {
-      title: 'Cards',
-      icon: CreditCardOutline,
-      path: '/cards'
-    },
-    {
-      title: 'Tables',
-      icon: Table,
-      path: '/tables'
-    },
-    {
-      icon: CubeOutline,
-      title: 'Form Layouts',
-      path: '/form-layouts'
-    }
-  ]
-}
+  ];
+};
 
-export default navigation
+export default navigation;
