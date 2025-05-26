@@ -8,8 +8,9 @@ const Alert = MuiAlert as React.ElementType;
 interface AlertSnackbarProps {
   open: boolean;
   message: string;
-  type: "success" | "error";
+  type?: "success" | "error";
   onClose: (event?: SyntheticEvent | Event, reason?: string) => void;
+  severity?: "success" | "error";
 }
 
 const AlertSnackbar = ({

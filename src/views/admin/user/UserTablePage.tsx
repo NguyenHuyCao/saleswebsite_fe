@@ -2,7 +2,6 @@
 "use client";
 
 import { useState } from "react";
-import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
@@ -85,7 +84,7 @@ const UserTablePage = () => {
   const router = useRouter();
 
   const handleRowClick = (userId: number) => {
-    router.push(`/admin/users/${userId}`);
+    router.push(`/admin/users?userId=${userId}`);
   };
 
   const handleChangePage = (_event: unknown, newPage: number) => {
@@ -112,7 +111,7 @@ const UserTablePage = () => {
       />
       <CardContent>
         <Paper sx={{ width: "100%", overflow: "hidden" }}>
-          <TableContainer sx={{ maxHeight: 600, minHeight: 300 }}>
+          <TableContainer sx={{ maxHeight: 600, minHeight: 350 }}>
             <Table stickyHeader aria-label="user table">
               <TableHead>
                 <TableRow>

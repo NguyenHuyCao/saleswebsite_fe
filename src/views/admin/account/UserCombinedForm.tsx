@@ -1,155 +1,153 @@
 "use client";
 
-import { useState, forwardRef, ChangeEvent } from "react";
-import Image from "next/image";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
-import FormControl from "@mui/material/FormControl";
 import RadioGroup from "@mui/material/RadioGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Radio from "@mui/material/Radio";
 import FormLabel from "@mui/material/FormLabel";
 import Grid from "@mui/material/Grid";
-import { styled } from "@mui/material/styles";
-// import DatePicker from "react-datepicker";
-// import DatePickerWrapper from "@/styles/libs/react-datepicker";
+import AlertSnackbar from "@/model/notify/AlertSnackbar";
 
-const ImgStyled = styled("img")(({ theme }) => ({
-  width: 120,
-  height: 120,
-  marginRight: theme.spacing(6.25),
-  borderRadius: theme.shape.borderRadius,
-}));
+interface Props {
+  onNext: () => void;
+  userData: {
+    id: number;
+    username: string;
+    email: string;
+    phone: string;
+    address: string;
+    gender: string;
+  } | null;
+}
 
-// const CustomInput = forwardRef((props: any, ref) => (
-//   <TextField inputRef={ref} label="Ngày sinh" fullWidth {...props} />
-// ));
+const UserCombinedForm = ({ onNext, userData }: Props) => {
+  const [form, setForm] = useState({
+    username: "",
+    email: "",
+    phone: "",
+    address: "",
+    gender: "",
+  });
 
-const UserCombinedForm = ({ onNext }: { onNext: () => void }) => {
-  const [imgSrc, setImgSrc] = useState("/images/avatars/1.png");
-  // const [date, setDate] = useState<Date | null | undefined>(null);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success" as "success" | "error",
+  });
 
-  const onChangeImage = (file: ChangeEvent) => {
-    const reader = new FileReader();
-    const { files } = file.target as HTMLInputElement;
-    if (files && files.length !== 0) {
-      reader.onload = () => setImgSrc(reader.result as string);
-      reader.readAsDataURL(files[0]);
+  const searchParams = useSearchParams();
+  const userId = searchParams.get("userId");
+
+  useEffect(() => {
+    if (userData) {
+      setForm({
+        username: userData.username,
+        email: userData.email,
+        phone: userData.phone,
+        address: userData.address,
+        gender: userData.gender || "",
+      });
+    }
+  }, [userData]);
+
+  const handleChange = (field: string, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = async () => {
+    try {
+      const res = await fetch(`http://localhost:8080/api/v1/users/${userId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Cập nhật thất bại");
+
+      setSnackbar({
+        open: true,
+        message: "Cập nhật thông tin thành công!",
+        severity: "success",
+      });
+      onNext();
+    } catch (err: any) {
+      setSnackbar({ open: true, message: err.message, severity: "error" });
     }
   };
 
   return (
     <Box display="flex" flexDirection="column" gap={6}>
-      {/* Ảnh đại diện */}
-      <Box display="flex" flexDirection="column" gap={4}>
-        <Box display="flex" alignItems="center" flexWrap="wrap">
-          <ImgStyled src={imgSrc} alt="Profile Pic" />
-          <Box>
-            <Button
-              variant="contained"
-              component="label"
-              htmlFor="upload-image"
-            >
-              Tải ảnh lên
-              <input
-                hidden
-                type="file"
-                onChange={onChangeImage}
-                accept="image/png, image/jpeg"
-                id="upload-image"
-              />
-            </Button>
-            <Button
-              color="error"
-              variant="outlined"
-              sx={{ ml: 4.5, mt: { sm: 0, xs: 4 } }}
-              onClick={() => setImgSrc("/images/avatars/1.png")}
-            >
-              Đặt lại
-            </Button>
-            <Typography variant="body2" sx={{ mt: 5 }}>
-              Chỉ hỗ trợ định dạng PNG hoặc JPEG. Dung lượng tối đa 800KB.
-            </Typography>
-          </Box>
-        </Box>
-      </Box>
-
-      {/* Thông tin cá nhân */}
-      <Box>
-        <Typography variant="h6" mb={3}>
-          Thông tin cá nhân
-        </Typography>
-        <Grid container spacing={4}>
-          <Grid item xs={12} md={6}>
-            <TextField fullWidth label="Họ và tên" defaultValue="John Doe" />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              type="email"
-              label="Email"
-              defaultValue="johnDoe@example.com"
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              type="number"
-              label="Số điện thoại"
-              placeholder="(0123) 456-789"
-            />
-          </Grid>
+      <Typography variant="h6" mb={3}>
+        Thông tin cá nhân
+      </Typography>
+      <Grid container spacing={4}>
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            label="Họ và tên"
+            value={form.username}
+            onChange={(e) => handleChange("username", e.target.value)}
+          />
         </Grid>
-        <FormControl sx={{ mt: 4 }}>
-          <FormLabel>Giới tính</FormLabel>
-          <RadioGroup row defaultValue="male">
-            <FormControlLabel value="male" label="Nam" control={<Radio />} />
-            <FormControlLabel value="female" label="Nữ" control={<Radio />} />
-            <FormControlLabel value="other" label="Khác" control={<Radio />} />
-          </RadioGroup>
-        </FormControl>
-      </Box>
-
-      {/* Thiết lập tài khoản */}
-      <Box>
-        <Typography variant="h6" mb={3}>
-          Thiết lập tài khoản
-        </Typography>
-        <Grid container spacing={4}>
-          <Grid item xs={12} md={4}>
-            <TextField sx={{ width: "120px" }} label="Quản trị viên" disabled />
-            {/* <FormControl fullWidth>
-              <InputLabel>Vai trò</InputLabel>
-              <Select label="Vai trò" defaultValue="admin" disabled>
-                <MenuItem value="admin">Quản trị viên</MenuItem>
-                <MenuItem value="subscriber">Người dùng</MenuItem>
-              </Select>
-            </FormControl> */}
-          </Grid>
-          <Grid item xs={12} md={8}>
-            <FormControl fullWidth>
-              <InputLabel>Trạng thái</InputLabel>
-              <Select label="Trạng thái" defaultValue="active">
-                <MenuItem value="active">Hoạt động</MenuItem>
-                <MenuItem value="inactive">Không hoạt động</MenuItem>
-                <MenuItem value="pending">Chờ xác nhận</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            type="email"
+            label="Email"
+            value={form.email}
+            onChange={(e) => handleChange("email", e.target.value)}
+          />
         </Grid>
-      </Box>
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            label="Số điện thoại"
+            value={form.phone}
+            onChange={(e) => handleChange("phone", e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            label="Địa chỉ"
+            value={form.address}
+            onChange={(e) => handleChange("address", e.target.value)}
+          />
+        </Grid>
+      </Grid>
 
-      {/* Nút chuyển bước */}
+      <FormLabel>Giới tính</FormLabel>
+      <RadioGroup
+        row
+        value={form.gender}
+        onChange={(e) => handleChange("gender", e.target.value)}
+      >
+        <FormControlLabel value="Nam" control={<Radio />} label="Nam" />
+        <FormControlLabel value="Nữ" control={<Radio />} label="Nữ" />
+        <FormControlLabel value="Khác" control={<Radio />} label="Khác" />
+      </RadioGroup>
+
       <Box>
-        <Button variant="contained" onClick={onNext}>
+        <Button variant="contained" onClick={handleSave}>
           Tiếp theo
         </Button>
       </Box>
+
+      <AlertSnackbar
+        open={snackbar.open}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        message={snackbar.message}
+        severity={snackbar.severity}
+      />
     </Box>
   );
 };

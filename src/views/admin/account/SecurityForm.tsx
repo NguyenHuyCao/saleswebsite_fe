@@ -1,20 +1,30 @@
 "use client";
 
 import { useState, ChangeEvent, MouseEvent } from "react";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import InputLabel from "@mui/material/InputLabel";
-import OutlinedInput from "@mui/material/OutlinedInput";
-import InputAdornment from "@mui/material/InputAdornment";
-import IconButton from "@mui/material/IconButton";
-import Button from "@mui/material/Button";
-import Grid from "@mui/material/Grid";
-
+import { useSearchParams } from "next/navigation";
+import {
+  Box,
+  Typography,
+  InputLabel,
+  OutlinedInput,
+  InputAdornment,
+  IconButton,
+  Button,
+  Grid,
+} from "@mui/material";
 import KeyOutline from "mdi-material-ui/KeyOutline";
 import EyeOutline from "mdi-material-ui/EyeOutline";
 import EyeOffOutline from "mdi-material-ui/EyeOffOutline";
+import AlertSnackbar from "@/model/notify/AlertSnackbar";
 
-const SecurityForm = ({ onBack }: { onBack: () => void }) => {
+const SecurityForm = ({
+  onBack,
+  email,
+}: {
+  onBack: () => void;
+  email: string;
+  userId?: string | null;
+}) => {
   const [values, setValues] = useState({
     newPassword: "",
     currentPassword: "",
@@ -23,6 +33,15 @@ const SecurityForm = ({ onBack }: { onBack: () => void }) => {
     showCurrentPassword: false,
     showConfirmNewPassword: false,
   });
+
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success" as "success" | "error",
+  });
+
+  const searchParams = useSearchParams();
+  const userId = searchParams.get("userId");
 
   const handleChange =
     (prop: keyof typeof values) => (event: ChangeEvent<HTMLInputElement>) => {
@@ -37,8 +56,54 @@ const SecurityForm = ({ onBack }: { onBack: () => void }) => {
     event.preventDefault();
   };
 
-  const handleSave = () => {
-    console.log("Đã lưu mật khẩu mới", values);
+  const handleSave = async () => {
+    if (values.newPassword !== values.confirmNewPassword) {
+      setSnackbar({
+        open: true,
+        message: "Mật khẩu xác nhận không khớp",
+        severity: "error",
+      });
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/v1/users/change_password?userId=${userId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+          body: JSON.stringify({
+            currentPassword: values.currentPassword,
+            newPassword: values.newPassword,
+            confirmPassword: values.confirmNewPassword,
+          }),
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok)
+        throw new Error(data.message || "Cập nhật mật khẩu thất bại");
+
+      setSnackbar({
+        open: true,
+        message: "Cập nhật mật khẩu thành công!",
+        severity: "success",
+      });
+
+      setValues({
+        newPassword: "",
+        currentPassword: "",
+        confirmNewPassword: "",
+        showNewPassword: false,
+        showCurrentPassword: false,
+        showConfirmNewPassword: false,
+      });
+    } catch (err: any) {
+      setSnackbar({ open: true, message: err.message, severity: "error" });
+    }
   };
 
   return (
@@ -48,13 +113,15 @@ const SecurityForm = ({ onBack }: { onBack: () => void }) => {
       </Typography>
 
       <Grid container spacing={4}>
-        {[
-          { key: "currentPassword", label: "Mật khẩu hiện tại" },
-          { key: "newPassword", label: "Mật khẩu mới" },
-          { key: "confirmNewPassword", label: "Xác nhận mật khẩu mới" },
-        ].map(({ key, label }) => (
+        {["currentPassword", "newPassword", "confirmNewPassword"].map((key) => (
           <Grid item xs={12} md={6} key={key}>
-            <InputLabel htmlFor={key}>{label}</InputLabel>
+            <InputLabel htmlFor={key}>
+              {key === "currentPassword"
+                ? "Mật khẩu hiện tại"
+                : key === "newPassword"
+                ? "Mật khẩu mới"
+                : "Xác nhận mật khẩu mới"}
+            </InputLabel>
             <OutlinedInput
               fullWidth
               id={key}
@@ -110,6 +177,13 @@ const SecurityForm = ({ onBack }: { onBack: () => void }) => {
           Lưu thay đổi
         </Button>
       </Box>
+
+      <AlertSnackbar
+        open={snackbar.open}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        message={snackbar.message}
+        severity={snackbar.severity}
+      />
     </Box>
   );
 };

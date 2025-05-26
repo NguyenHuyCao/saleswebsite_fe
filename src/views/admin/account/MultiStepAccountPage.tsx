@@ -18,13 +18,17 @@ const MultiStepAccountPage = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // Lấy step từ query ?step=1, mặc định là 0
   const initialStep = parseInt(searchParams.get("step") || "0", 10);
   const [activeStep, setActiveStep] = useState(initialStep);
 
-  // Cập nhật URL mỗi khi step thay đổi
+  const userId = searchParams.get("userId");
+  const [userData, setUserData] = useState<any>(null);
+
   const updateStepInUrl = (step: number) => {
-    router.replace(`?step=${step}`);
+    const newParams = new URLSearchParams();
+    if (userId) newParams.set("userId", userId);
+    newParams.set("step", step.toString());
+    router.replace(`?${newParams.toString()}`);
   };
 
   const handleNext = () => {
@@ -39,13 +43,31 @@ const MultiStepAccountPage = () => {
     updateStepInUrl(prevStep);
   };
 
-  // Khi URL thay đổi bên ngoài (nút back trên trình duyệt), sync lại step
   useEffect(() => {
     const stepFromUrl = parseInt(searchParams.get("step") || "0", 10);
     if (stepFromUrl !== activeStep) {
       setActiveStep(stepFromUrl);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    if (userId) {
+      fetch(`http://localhost:8080/api/v1/users/${userId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      })
+        .then((res) => res.json())
+        .then((res) => {
+          if (res.status === 200) setUserData(res.data);
+        })
+        .catch(() => {
+          console.error("Lỗi khi lấy dữ liệu người dùng");
+        });
+    }
+  }, [userId]);
 
   return (
     <Box p={4}>
@@ -61,8 +83,16 @@ const MultiStepAccountPage = () => {
         ))}
       </Stepper>
 
-      {activeStep === 0 && <UserCombinedForm onNext={handleNext} />}
-      {activeStep === 1 && <SecurityForm onBack={handleBack} />}
+      {activeStep === 0 && (
+        <UserCombinedForm onNext={handleNext} userData={userData} />
+      )}
+      {activeStep === 1 && userData && (
+        <SecurityForm
+          onBack={handleBack}
+          email={userData.email}
+          userId={userId || ""}
+        />
+      )}
     </Box>
   );
 };
