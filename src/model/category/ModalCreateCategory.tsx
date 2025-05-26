@@ -8,24 +8,24 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import { useEffect, useState } from "react";
 
-interface ModalFormProps {
+interface ModalCreateCategoryProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (name: string) => void;
-  initialName?: string;
 }
 
-const ModalFormCategory = ({
+const ModalCreateCategory = ({
   open,
   onClose,
   onSubmit,
-  initialName = "",
-}: ModalFormProps) => {
-  const [name, setName] = useState(initialName);
+}: ModalCreateCategoryProps) => {
+  const [name, setName] = useState("");
 
   useEffect(() => {
-    setName(initialName);
-  }, [initialName]);
+    if (!open) {
+      setName(""); // Reset khi modal đóng
+    }
+  }, [open]);
 
   const handleSubmit = () => {
     onSubmit(name);
@@ -34,9 +34,7 @@ const ModalFormCategory = ({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth>
-      <DialogTitle>
-        {initialName ? "Cập nhật danh mục" : "Thêm danh mục mới"}
-      </DialogTitle>
+      <DialogTitle>Thêm danh mục mới</DialogTitle>
       <DialogContent>
         <TextField
           autoFocus
@@ -62,4 +60,4 @@ const ModalFormCategory = ({
   );
 };
 
-export default ModalFormCategory;
+export default ModalCreateCategory;

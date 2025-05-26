@@ -1,26 +1,29 @@
-// ** React & MUI Imports
 "use client";
 
 import { useEffect, useState } from "react";
-import Card from "@mui/material/Card";
-import CardHeader from "@mui/material/CardHeader";
-import CardContent from "@mui/material/CardContent";
-import Table from "@mui/material/Table";
-import TableHead from "@mui/material/TableHead";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableRow from "@mui/material/TableRow";
-import Button from "@mui/material/Button";
-import IconButton from "@mui/material/IconButton";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  Table,
+  TableHead,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableRow,
+  Button,
+  Pagination,
+  Stack,
+  Snackbar,
+  Alert as MuiAlert,
+  Typography,
+} from "@mui/material";
+
+import Image from "next/image";
 import ModalFormBrandCreate from "@/model/brand/ModalFormBrandCreate";
 import ModalFormBrandEdit from "@/model/brand/ModalFormBrandEdit";
-import Pagination from "@mui/material/Pagination";
-import Stack from "@mui/material/Stack";
-import Image from "next/image";
-import { Typography } from "@mui/material";
+
+const Alert = MuiAlert as React.ElementType;
 
 interface BrandData {
   id: number;
@@ -39,6 +42,14 @@ const BrandTablePage = () => {
   const [openCreate, setOpenCreate] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [editingBrand, setEditingBrand] = useState<BrandData | null>(null);
+
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarType, setSnackbarType] = useState<"success" | "error">(
+    "success"
+  );
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+
+  const handleCloseSnackbar = () => setOpenSnackbar(false);
 
   const fetchBrands = async (currentPage: number) => {
     try {
@@ -61,6 +72,9 @@ const BrandTablePage = () => {
       setTotalPages(data.data.meta.pages);
     } catch (error) {
       console.error("Failed to fetch brands:", error);
+      setSnackbarMessage("Không thể tải danh sách thương hiệu");
+      setSnackbarType("error");
+      setOpenSnackbar(true);
     }
   };
 
@@ -68,9 +82,7 @@ const BrandTablePage = () => {
     fetchBrands(page);
   }, [page]);
 
-  const handleOpenCreate = () => {
-    setOpenCreate(true);
-  };
+  const handleOpenCreate = () => setOpenCreate(true);
 
   const handleOpenEdit = (brand: BrandData) => {
     setEditingBrand(brand);
@@ -102,11 +114,30 @@ const BrandTablePage = () => {
           body: formData,
         }
       );
-      const newBrand = await res.json();
-      setBrands((prev) => [...prev, newBrand.data]);
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        // 👇 Ghi lỗi nhẹ nhàng, không báo đỏ ở console
+        console.warn("Lỗi khi thêm thương hiệu:", result.message);
+        setSnackbarMessage(result.message || "Thêm thương hiệu thất bại");
+        setSnackbarType("error");
+        setOpenSnackbar(true);
+        return;
+      }
+
+      setSnackbarMessage("Thêm thương hiệu thành công");
+      setSnackbarType("success");
+      setOpenSnackbar(true);
+
       setOpenCreate(false);
-    } catch (error) {
-      console.error("Error creating brand:", error);
+      setPage(1);
+      fetchBrands(1); // refetch danh sách từ đầu
+    } catch (error: any) {
+      console.error("Lỗi hệ thống khi thêm thương hiệu:", error);
+      setSnackbarMessage("Lỗi hệ thống. Vui lòng thử lại.");
+      setSnackbarType("error");
+      setOpenSnackbar(true);
     }
   };
 
@@ -137,15 +168,22 @@ const BrandTablePage = () => {
           body: formData,
         }
       );
+
       const updatedBrand = await res.json();
-      setBrands((prev) =>
-        prev.map((b) =>
-          b.id === editingBrand.id ? { ...b, ...updatedBrand.data } : b
-        )
-      );
+      if (!res.ok)
+        throw new Error(updatedBrand.message || "Lỗi không xác định");
+
+      setSnackbarMessage("Cập nhật thương hiệu thành công");
+      setSnackbarType("success");
+      setOpenSnackbar(true);
+
       setOpenEdit(false);
-    } catch (error) {
+      fetchBrands(page); // cập nhật danh sách ở trang hiện tại
+    } catch (error: any) {
       console.error("Error updating brand:", error);
+      setSnackbarMessage(error.message || "Lỗi khi cập nhật thương hiệu");
+      setSnackbarType("error");
+      setOpenSnackbar(true);
     }
   };
 
@@ -161,7 +199,7 @@ const BrandTablePage = () => {
         }
       />
       <CardContent>
-        <TableContainer>
+        <TableContainer style={{ minHeight: 394 }}>
           <Table>
             <TableHead>
               <TableRow>
@@ -183,7 +221,7 @@ const BrandTablePage = () => {
                   >
                     <Image
                       alt="Logo Tương hiệu"
-                      src={`/images/favicon.png`}
+                      src={"/images/favicon.png"}
                       width={40}
                       height={40}
                     />
@@ -200,12 +238,6 @@ const BrandTablePage = () => {
                       : "-"}
                   </TableCell>
                   <TableCell align="center">
-                    {/* <IconButton
-                      color="warning"
-                      onClick={() => handleOpenEdit(brand)}
-                    >
-                      <EditIcon />
-                    </IconButton> */}
                     <Button
                       size="small"
                       variant="outlined"
@@ -250,6 +282,26 @@ const BrandTablePage = () => {
         onSubmit={handleUpdate}
         initialData={editingBrand}
       />
+
+      <Snackbar
+        key={
+          snackbarType === "error"
+            ? snackbarMessage
+            : snackbarMessage + "-success"
+        }
+        open={openSnackbar}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbarType}
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Card>
   );
 };

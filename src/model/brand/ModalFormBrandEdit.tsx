@@ -61,25 +61,45 @@ const ModalFormBrandEdit = ({
   initialData,
 }: ModalEditProps) => {
   const [formData, setFormData] = useState({
-    name: initialData?.name || "",
-    logo: initialData?.logo || "",
+    name: "",
+    logo: "",
     logoFile: undefined as File | undefined,
-    website: initialData?.website || "",
-    originCountry: initialData?.originCountry || "VN",
+    website: "",
+    originCountry: "VN",
   });
 
-  const [preview, setPreview] = useState(initialData?.logo || "");
+  const [preview, setPreview] = useState("");
 
   useEffect(() => {
-    setFormData({
-      name: initialData?.name || "",
-      logo: initialData?.logo || "",
-      logoFile: undefined,
-      website: initialData?.website || "",
-      originCountry: initialData?.originCountry || "VN",
-    });
-    setPreview(initialData?.logo || "");
-  }, [initialData]);
+    if (open && initialData) {
+      setFormData({
+        name: initialData.name || "",
+        logo: initialData.logo || "",
+        logoFile: undefined,
+        website: initialData.website || "",
+        originCountry: initialData.originCountry || "VN",
+      });
+
+      // Nếu đường dẫn logo bắt đầu bằng http thì dùng làm preview
+      setPreview(
+        initialData.logo?.startsWith("http")
+          ? initialData.logo
+          : `${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/${initialData.logo}`
+      );
+    }
+
+    if (!open) {
+      // Reset khi đóng
+      setFormData({
+        name: "",
+        logo: "",
+        logoFile: undefined,
+        website: "",
+        originCountry: "VN",
+      });
+      setPreview("");
+    }
+  }, [open, initialData]);
 
   const handleSubmit = () => {
     onSubmit({
@@ -114,18 +134,14 @@ const ModalFormBrandEdit = ({
       <DialogContent sx={{ py: 3 }}>
         <Box mb={3}>
           <Typography variant="subtitle2" fontWeight={600} mb={1}>
-            Tên thương hiệu
+            Tên thương hiệu *
           </Typography>
           <TextField
             fullWidth
             size="small"
             value={formData.name}
-            disabled
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "8px",
-              },
-            }}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
           />
         </Box>
 
@@ -140,11 +156,7 @@ const ModalFormBrandEdit = ({
             onChange={(e) =>
               setFormData({ ...formData, website: e.target.value })
             }
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "8px",
-              },
-            }}
+            sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
           />
         </Box>
 
@@ -160,11 +172,7 @@ const ModalFormBrandEdit = ({
             onChange={(e) =>
               setFormData({ ...formData, originCountry: e.target.value })
             }
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "8px",
-              },
-            }}
+            sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
           >
             {countries.map((country) => (
               <MenuItem key={country.value} value={country.value}>
@@ -198,7 +206,7 @@ const ModalFormBrandEdit = ({
                 onChange={handleFileChange}
               />
             </StyledUploadButton>
-            {preview?.startsWith("http") || preview.startsWith("blob:") ? (
+            {preview && (
               <Box mt={2}>
                 <Image
                   src={preview}
@@ -212,7 +220,7 @@ const ModalFormBrandEdit = ({
                   }}
                 />
               </Box>
-            ) : null}
+            )}
           </Box>
         </Box>
       </DialogContent>
@@ -237,7 +245,7 @@ const ModalFormBrandEdit = ({
         <Button
           variant="contained"
           onClick={handleSubmit}
-          disabled={!formData.website || !formData.originCountry}
+          disabled={!formData.name || !formData.originCountry}
           sx={{
             borderRadius: "6px",
             px: 3,

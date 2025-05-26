@@ -1,24 +1,28 @@
-// ** React & MUI Imports
 "use client";
 
-import { useState } from "react";
-import Button from "@mui/material/Button";
-import Paper from "@mui/material/Paper";
-import Table from "@mui/material/Table";
-import TableHead from "@mui/material/TableHead";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableRow from "@mui/material/TableRow";
-import IconButton from "@mui/material/IconButton";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import Card from "@mui/material/Card";
-import CardHeader from "@mui/material/CardHeader";
-import CardContent from "@mui/material/CardContent";
+import { useEffect, useState } from "react";
+import {
+  Button,
+  Paper,
+  Table,
+  TableHead,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableRow,
+  Card,
+  CardHeader,
+  CardContent,
+  Pagination,
+  Stack,
+  Snackbar,
+  Alert as MuiAlert,
+} from "@mui/material";
 
-import ModalFormCategory from "@/model/category/ModalFormCategory";
-import ConfirmDeleteCategory from "@/model/category/ConfirmDeleteCategory";
+import ModalEditCategory from "@/model/category/ModalEditCategory";
+import ModalCreateCategory from "@/model/category/ModalCreateCategory";
+
+const Alert = MuiAlert as React.ElementType;
 
 interface CategoryData {
   id: number;
@@ -27,22 +31,53 @@ interface CategoryData {
   updatedAt: string | null;
 }
 
-const sampleData: CategoryData[] = [
-  {
-    id: 1,
-    name: "Máy cắt cỏ adf",
-    createdAt: "2025-05-20T11:53:52.555381Z",
-    updatedAt: null,
-  },
-];
-
 const CategoryTablePage = () => {
-  const [categories, setCategories] = useState<CategoryData[]>(sampleData);
+  const [categories, setCategories] = useState<CategoryData[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [openModal, setOpenModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryData | null>(
     null
   );
-  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarType, setSnackbarType] = useState<"success" | "error">(
+    "success"
+  );
+
+  const handleCloseSnackbar = () => setOpenSnackbar(false);
+
+  const fetchCategories = async (currentPage: number) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories?page=${currentPage}&size=5`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+
+      console.log("Dữ liệu trả về:", data); // Debug API
+      if (!data.data || !Array.isArray(data.data.result)) {
+        throw new Error("Invalid API response format");
+      }
+
+      setCategories(data.data.result);
+      setTotalPages(data.data.meta.pages || 1);
+    } catch (error) {
+      console.error("Lỗi fetch categories:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories(page);
+  }, [page]);
 
   const handleOpenCreate = () => {
     setEditingCategory(null);
@@ -54,34 +89,57 @@ const CategoryTablePage = () => {
     setOpenModal(true);
   };
 
-  const handleDelete = (id: number) => {
-    setDeleteConfirmId(id);
-  };
+  const handleSave = async (name: string) => {
+    try {
+      if (editingCategory) {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories/${editingCategory.id}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+            body: JSON.stringify({ name }),
+          }
+        );
 
-  const confirmDelete = () => {
-    setCategories((prev) => prev.filter((cat) => cat.id !== deleteConfirmId));
-    setDeleteConfirmId(null);
-  };
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Lỗi không xác định");
 
-  const handleSave = (name: string) => {
-    if (editingCategory) {
-      setCategories((prev) =>
-        prev.map((cat) =>
-          cat.id === editingCategory.id
-            ? { ...cat, name, updatedAt: new Date().toISOString() }
-            : cat
-        )
-      );
-    } else {
-      const newCategory: CategoryData = {
-        id: Date.now(),
-        name,
-        createdAt: new Date().toISOString(),
-        updatedAt: null,
-      };
-      setCategories((prev) => [...prev, newCategory]);
+        setSuccessMessage("Cập nhật danh mục thành công");
+        setSnackbarType("success");
+      } else {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+            body: JSON.stringify({ name }),
+          }
+        );
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Lỗi không xác định");
+
+        setSuccessMessage("Thêm danh mục thành công");
+        setSnackbarType("success");
+
+        // Sau khi thêm mới, fetch lại từ trang đầu
+        setPage(1);
+      }
+
+      setOpenSnackbar(true);
+      setOpenModal(false);
+      fetchCategories(1); // Làm mới danh sách sau khi thao tác
+    } catch (error: any) {
+      setErrorMessage(error.message || "Lỗi không xác định");
+      setSnackbarType("error");
+      setOpenSnackbar(true);
     }
-    setOpenModal(false);
   };
 
   return (
@@ -99,7 +157,7 @@ const CategoryTablePage = () => {
         }
       />
       <CardContent>
-        <Paper>
+        <Paper sx={{ minHeight: "394px" }}>
           <TableContainer>
             <Table>
               <TableHead>
@@ -127,18 +185,14 @@ const CategoryTablePage = () => {
                         : "-"}
                     </TableCell>
                     <TableCell align="center">
-                      <IconButton
-                        color="warning"
+                      <Button
+                        variant="outlined"
+                        color="primary"
                         onClick={() => handleOpenEdit(category)}
+                        sx={{ textTransform: "none", fontWeight: 500 }}
                       >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        color="error"
-                        onClick={() => handleDelete(category.id)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
+                        Cập nhật
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -146,20 +200,47 @@ const CategoryTablePage = () => {
             </Table>
           </TableContainer>
         </Paper>
+
+        <Stack spacing={2} direction="row" justifyContent="center" mt={4}>
+          <Pagination
+            count={totalPages}
+            page={page}
+            onChange={(_, newPage) => setPage(newPage)}
+            color="primary"
+          />
+        </Stack>
       </CardContent>
 
-      <ModalFormCategory
-        open={openModal}
-        onClose={() => setOpenModal(false)}
-        onSubmit={handleSave}
-        initialName={editingCategory?.name}
-      />
+      {editingCategory ? (
+        <ModalEditCategory
+          open={openModal}
+          onClose={() => setOpenModal(false)}
+          onSubmit={handleSave}
+          initialName={editingCategory.name}
+        />
+      ) : (
+        <ModalCreateCategory
+          open={openModal}
+          onClose={() => setOpenModal(false)}
+          onSubmit={handleSave}
+        />
+      )}
 
-      <ConfirmDeleteCategory
-        open={deleteConfirmId !== null}
-        onClose={() => setDeleteConfirmId(null)}
-        onConfirm={confirmDelete}
-      />
+      <Snackbar
+        key={snackbarType === "error" ? errorMessage : successMessage}
+        open={openSnackbar}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbarType}
+          sx={{ width: "100%" }}
+        >
+          {snackbarType === "error" ? errorMessage : successMessage}
+        </Alert>
+      </Snackbar>
     </Card>
   );
 };

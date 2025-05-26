@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import Image from "next/image";
+import { useEffect } from "react";
 
 interface ModalFormBrandCreateProps {
   open: boolean;
@@ -58,6 +59,19 @@ const ModalFormBrandCreate = ({
   });
 
   const [preview, setPreview] = useState("");
+
+  useEffect(() => {
+    if (!open) {
+      // Reset form khi modal đóng
+      setFormData({
+        name: "",
+        logoFile: undefined,
+        website: "",
+        originCountry: "VN",
+      });
+      setPreview("");
+    }
+  }, [open]);
 
   const handleSubmit = () => {
     onSubmit(formData);
