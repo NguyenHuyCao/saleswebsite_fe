@@ -160,18 +160,18 @@ const ModalFormBrandCreate = ({
               textAlign: "center",
             }}
           >
-            <StyledUploadButton
-              component="label"
-              startIcon={<CloudUploadIcon />}
-            >
-              Tải lên logo
+            <Box component="label">
+              <StyledUploadButton startIcon={<CloudUploadIcon />}>
+                Tải lên logo
+              </StyledUploadButton>
               <input
                 type="file"
                 hidden
                 accept="image/*"
                 onChange={handleFileChange}
               />
-            </StyledUploadButton>
+            </Box>
+
             {preview && (
               <Box mt={2}>
                 <Image

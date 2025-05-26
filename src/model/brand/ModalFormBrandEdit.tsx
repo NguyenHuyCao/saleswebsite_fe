@@ -194,18 +194,17 @@ const ModalFormBrandEdit = ({
               textAlign: "center",
             }}
           >
-            <StyledUploadButton
-              component="label"
-              startIcon={<CloudUploadIcon />}
-            >
-              Tải lên logo mới
-              <input
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={handleFileChange}
-              />
-            </StyledUploadButton>
+            <Box component="label">
+              <StyledUploadButton startIcon={<CloudUploadIcon />}>
+                Tải lên logo mới
+                <input
+                  type="file"
+                  hidden
+                  accept="image/*"
+                  onChange={handleFileChange}
+                />
+              </StyledUploadButton>
+            </Box>
             {preview && (
               <Box mt={2}>
                 <Image

@@ -30,14 +30,21 @@ interface OrderData {
   moneyChannel: string | null;
 }
 
-const columns = [
-  { id: "orderId", label: "Mã đơn", minWidth: 80 },
-  { id: "status", label: "Trạng thái", minWidth: 100 },
-  { id: "paymentMethod", label: "Thanh toán", minWidth: 100 },
-  { id: "shippingMethod", label: "Giao hàng", minWidth: 120 },
-  { id: "totalAmount", label: "Tổng tiền", minWidth: 120 },
-  { id: "createdAt", label: "Ngày tạo", minWidth: 120 },
-  { id: "actions", label: "", minWidth: 100 },
+interface Column {
+  id: string;
+  label: string;
+  minWidth: number;
+  align?: "right" | "left" | "center";
+}
+
+const columns: Column[] = [
+  { id: "orderId", label: "Mã đơn", minWidth: 80, align: "left" },
+  { id: "status", label: "Trạng thái", minWidth: 100, align: "center" },
+  { id: "paymentMethod", label: "Thanh toán", minWidth: 100, align: "center" },
+  { id: "shippingMethod", label: "Giao hàng", minWidth: 120, align: "center" },
+  { id: "totalAmount", label: "Tổng tiền", minWidth: 120, align: "right" },
+  { id: "createdAt", label: "Ngày tạo", minWidth: 120, align: "center" },
+  { id: "actions", label: "", minWidth: 100, align: "center" },
 ];
 
 const fakeData: OrderData[] = [
