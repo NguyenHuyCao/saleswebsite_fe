@@ -26,11 +26,14 @@ interface ModalEditProps {
     originCountry: string;
   }) => void;
   initialData?: {
+    id: number;
     name: string;
-    logo?: string;
-    website: string;
-    originCountry: string;
-  };
+    logo: string;
+    website?: string | null;
+    originCountry?: string | null;
+    createdAt: string;
+    updatedAt: string | null;
+  } | null;
 }
 
 const StyledUploadButton = styled(Button)(({ theme }) => ({
@@ -195,7 +198,7 @@ const ModalFormBrandEdit = ({
                 onChange={handleFileChange}
               />
             </StyledUploadButton>
-            {preview && (
+            {preview?.startsWith("http") || preview.startsWith("blob:") ? (
               <Box mt={2}>
                 <Image
                   src={preview}
@@ -209,7 +212,7 @@ const ModalFormBrandEdit = ({
                   }}
                 />
               </Box>
-            )}
+            ) : null}
           </Box>
         </Box>
       </DialogContent>

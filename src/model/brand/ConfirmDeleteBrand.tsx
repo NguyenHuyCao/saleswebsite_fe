@@ -8,19 +8,19 @@ import Button from "@mui/material/Button";
 interface ConfirmDeleteProps {
   open: boolean;
   onConfirm: () => void;
-  onCancel: () => void;
+  onClose: () => void;
 }
 
 const ConfirmDeleteBrand = ({
   open,
+  onClose,
   onConfirm,
-  onCancel,
 }: ConfirmDeleteProps) => {
   return (
-    <Dialog open={open} onClose={onCancel}>
+    <Dialog open={open} onClose={onClose}>
       <DialogTitle>Bạn có chắc muốn xoá thương hiệu này?</DialogTitle>
       <DialogActions>
-        <Button onClick={onCancel}>Hủy</Button>
+        <Button onClick={onClose}>Hủy</Button>
         <Button color="error" variant="contained" onClick={onConfirm}>
           Xoá
         </Button>

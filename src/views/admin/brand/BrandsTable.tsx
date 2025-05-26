@@ -15,7 +15,6 @@ import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import ConfirmDeleteBrand from "@/model/brand/ConfirmDeleteBrand";
 import ModalFormBrandCreate from "@/model/brand/ModalFormBrandCreate";
 import ModalFormBrandEdit from "@/model/brand/ModalFormBrandEdit";
 import Pagination from "@mui/material/Pagination";
@@ -40,7 +39,6 @@ const BrandTablePage = () => {
   const [openCreate, setOpenCreate] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [editingBrand, setEditingBrand] = useState<BrandData | null>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   const fetchBrands = async (currentPage: number) => {
     try {
@@ -77,15 +75,6 @@ const BrandTablePage = () => {
   const handleOpenEdit = (brand: BrandData) => {
     setEditingBrand(brand);
     setOpenEdit(true);
-  };
-
-  const handleDelete = (id: number) => {
-    setDeleteConfirmId(id);
-  };
-
-  const confirmDelete = () => {
-    setBrands((prev) => prev.filter((b) => b.id !== deleteConfirmId));
-    setDeleteConfirmId(null);
   };
 
   const handleCreate = async (data: {
@@ -211,18 +200,27 @@ const BrandTablePage = () => {
                       : "-"}
                   </TableCell>
                   <TableCell align="center">
-                    <IconButton
+                    {/* <IconButton
                       color="warning"
                       onClick={() => handleOpenEdit(brand)}
                     >
                       <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      color="error"
-                      onClick={() => handleDelete(brand.id)}
+                    </IconButton> */}
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      sx={{
+                        backgroundColor: "#ff700",
+                        textTransform: "none",
+                        fontWeight: 500,
+                        px: 2,
+                        py: 0.5,
+                        fontSize: "0.8rem",
+                      }}
+                      onClick={() => handleOpenEdit(brand)}
                     >
-                      <DeleteIcon />
-                    </IconButton>
+                      Cập nhật
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -251,12 +249,6 @@ const BrandTablePage = () => {
         onClose={() => setOpenEdit(false)}
         onSubmit={handleUpdate}
         initialData={editingBrand}
-      />
-
-      <ConfirmDeleteBrand
-        open={deleteConfirmId !== null}
-        onClose={() => setDeleteConfirmId(null)}
-        onConfirm={confirmDelete}
       />
     </Card>
   );
