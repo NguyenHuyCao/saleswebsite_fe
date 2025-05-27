@@ -24,7 +24,10 @@ const AddProductPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const initialStep = parseInt(searchParams.get("step") || "0", 10);
+  const page = searchParams.get("page");
+  const stepParam = searchParams.get("step");
+
+  const initialStep = page === "create" ? parseInt(stepParam || "0", 10) : 0;
   const [activeStep, setActiveStep] = useState(initialStep);
 
   const [formData, setFormData] = useState({
@@ -53,7 +56,7 @@ const AddProductPage = () => {
   };
 
   const updateStepInUrl = (step: number) => {
-    router.replace(`?step=${step}`);
+    router.replace(`?page=create&step=${step}`);
   };
 
   const handleNext = () => {
@@ -69,11 +72,11 @@ const AddProductPage = () => {
   };
 
   useEffect(() => {
-    const stepFromUrl = parseInt(searchParams.get("step") || "0", 10);
-    if (stepFromUrl !== activeStep) {
-      setActiveStep(stepFromUrl);
+    const urlStep = page === "create" ? parseInt(stepParam || "0", 10) : 0;
+    if (urlStep !== activeStep) {
+      setActiveStep(urlStep);
     }
-  }, [searchParams]);
+  }, [stepParam, page]);
 
   const renderStepContent = () => {
     switch (activeStep) {
@@ -104,13 +107,7 @@ const AddProductPage = () => {
           />
         );
       case 3:
-        return (
-          <Step4Images
-            formData={formData}
-            onChange={handleChange}
-            onBack={handleBack}
-          />
-        );
+        return <Step4Images formData={formData} onChange={handleChange} />;
       default:
         return null;
     }

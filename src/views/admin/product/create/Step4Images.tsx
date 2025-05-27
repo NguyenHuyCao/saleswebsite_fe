@@ -6,12 +6,12 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Image from "next/image";
 import { styled } from "@mui/material/styles";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import AlertSnackbar from "@/model/notify/AlertSnackbar";
 
 interface Step4Props {
   formData: any;
   onChange: (field: string, value: any) => void;
-  onBack: () => void;
 }
 
 const UploadBox = styled(Box)(({ theme }) => ({
@@ -43,18 +43,64 @@ const StyledInput = styled("label")(({ theme }) => ({
   },
 }));
 
-const Step4Images = ({ formData, onChange, onBack }: Step4Props) => {
+const Step4Images = ({ formData, onChange }: Step4Props) => {
   const [preview, setPreview] = useState({
     avatar: "",
     detail1: "",
     detail2: "",
     detail3: "",
   });
+  const [alert, setAlert] = useState({
+    open: false,
+    message: "",
+    type: "success",
+  });
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const slug = searchParams.get("name");
 
-  const handleSave = () => {
-    router.push("/admin/products");
+  const handleSave = async () => {
+    const formDataUpload = new FormData();
+    if (formData.imageAvt) formDataUpload.append("imageAvt", formData.imageAvt);
+    if (formData.imageDetail1)
+      formDataUpload.append("imageDetails", formData.imageDetail1);
+    if (formData.imageDetail2)
+      formDataUpload.append("imageDetails", formData.imageDetail2);
+    if (formData.imageDetail3)
+      formDataUpload.append("imageDetails", formData.imageDetail3);
+
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/v1/products/step4/${slug}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+          body: formDataUpload,
+        }
+      );
+
+      const data = await res.json();
+      if (res.status === 201) {
+        setAlert({
+          open: true,
+          message: "Tải ảnh thành công!",
+          type: "success",
+        });
+        setTimeout(() => router.push("/admin/products"), 1500);
+      } else {
+        setAlert({
+          open: true,
+          message: data.message || "Tải ảnh thất bại.",
+          type: "error",
+        });
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      setAlert({ open: true, message: "Lỗi kết nối máy chủ.", type: "error" });
+    }
   };
 
   useEffect(() => {
@@ -136,19 +182,23 @@ const Step4Images = ({ formData, onChange, onBack }: Step4Props) => {
       {renderUploadField("Hình minh hoạ 2", "detail2", "imageDetail2")}
       {renderUploadField("Hình minh hoạ 3", "detail3", "imageDetail3")}
 
-      <Box display="flex" justifyContent="flex-start" mt={4}>
-        <Button variant="outlined" onClick={onBack}>
-          Quay lại
-        </Button>
+      <Box display="flex" justifyContent="flex-end" mt={4}>
         <Button
           onClick={handleSave}
           variant="contained"
-          sx={{ ml: 2 }}
+          sx={{ px: 4, py: 1.5 }}
           color="success"
         >
           Hoàn tất
         </Button>
       </Box>
+
+      <AlertSnackbar
+        open={alert.open}
+        message={alert.message}
+        type={alert.type as "success" | "error"}
+        onClose={() => setAlert({ ...alert, open: false })}
+      />
     </Box>
   );
 };

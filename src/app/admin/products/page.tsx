@@ -1,7 +1,7 @@
-import ProductTablePage from "@/views/admin/product/ProductTablePage";
+import MultiPageProduct from "@/views/admin/product/MultiPageProduct";
 
 const ProductPage = () => {
-  return <ProductTablePage></ProductTablePage>;
+  return <MultiPageProduct />;
 };
 
 export default ProductPage;

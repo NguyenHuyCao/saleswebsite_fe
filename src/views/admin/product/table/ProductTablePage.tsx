@@ -1,4 +1,3 @@
-// ** React & MUI Imports
 "use client";
 
 import { useState, useEffect, ChangeEvent } from "react";
@@ -11,19 +10,21 @@ import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TablePagination from "@mui/material/TablePagination";
 import Avatar from "@mui/material/Avatar";
-import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import IconButton from "@mui/material/IconButton";
 import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import PreviewOutlinedIcon from "@mui/icons-material/PreviewOutlined";
 import Card from "@mui/material/Card";
 import CardHeader from "@mui/material/CardHeader";
 import CardContent from "@mui/material/CardContent";
 import { useRouter } from "next/navigation";
+import AlertSnackbar from "@/model/notify/AlertSnackbar";
+import Tooltip, { TooltipProps, tooltipClasses } from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
+import { styled } from "@mui/material/styles";
 
 interface ProductData {
   id: number;
@@ -37,7 +38,14 @@ interface ProductData {
   weight: number;
 }
 
-const columns = [
+interface Column {
+  id: string;
+  label: string;
+  minWidth?: number;
+  align?: "left" | "right" | "center";
+}
+
+const columns: Column[] = [
   { id: "id", label: "ID", minWidth: 50, align: "left" },
   { id: "product", label: "Sản phẩm", minWidth: 80, align: "left" },
   { id: "stockQuantity", label: "Số lượng", minWidth: 100, align: "right" },
@@ -49,54 +57,68 @@ const columns = [
   { id: "actions", label: "Thao tác", minWidth: 100, align: "center" },
 ];
 
-const fakeData = {
-  result: new Array(20).fill(null).map((_, index) => ({
-    id: index + 1,
-    name: `Máy xay cỏ ${index + 1}`,
-    imageAvt: "4.jpg",
-    stockQuantity: 100,
-    price: 500000,
-    power: "2000W",
-    fuelType: "Điện",
-    weight: 1500,
-    brand: { name: "Máy cadf" },
-  })),
-};
-
 const ProductTablePage = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(3);
   const [products, setProducts] = useState<ProductData[]>([]);
   const [total, setTotal] = useState(0);
+  const [alert, setAlert] = useState({
+    open: false,
+    message: "",
+    type: "error",
+  });
   const router = useRouter();
 
+  const LightTooltip = styled(({ className, ...props }: TooltipProps) => (
+    <Tooltip {...props} classes={{ popper: className }} />
+  ))(({ theme }) => ({
+    [`& .${tooltipClasses.tooltip}`]: {
+      backgroundColor: theme.palette.common.white,
+      color: "rgba(0, 0, 0, 0.87)",
+      boxShadow: theme.shadows[1],
+      fontSize: 11,
+    },
+  }));
+
   useEffect(() => {
-    const start = page * rowsPerPage;
-    const end = start + rowsPerPage;
-    setProducts(fakeData.result.slice(start, end));
-    setTotal(fakeData.result.length);
+    const fetchProducts = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        const res = await fetch(
+          `http://localhost:8080/api/v1/products?page=${
+            page + 1
+          }&size=${rowsPerPage}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await res.json();
+        if (res.ok) {
+          setProducts(data.data.result);
+          setTotal(data.data.meta.total);
+        } else {
+          setAlert({ open: true, message: data.message, type: "error" });
+        }
+      } catch (err) {
+        setAlert({
+          open: true,
+          message: "Lỗi kết nối tới máy chủ. Vui lòng thử lại sau.",
+          type: "error",
+        });
+        console.error("Error fetching products:", err);
+      }
+    };
+    fetchProducts();
   }, [page, rowsPerPage]);
 
-  const handleAddProduct = () => {
-    router.push("/admin/products/create");
-  };
-
-  const handleUpdateProduct = (productId: number) => {
-    router.push(`/admin/products/update?productId=${productId}`);
-  };
-
-  const handleViewProduct = (productId: number) => {
-    router.push(`/admin/products/view?productId=${productId}`);
-  };
-
-  const handleChangePage = (_event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event: ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(+event.target.value);
-    setPage(0);
-  };
+  const handleAddProduct = () => router.push("/admin/products?page=create");
+  const handleUpdateProduct = (id: number) =>
+    router.push(`/admin/products?page=edit&productId=${id}`);
+  const handleViewProduct = (id: number) =>
+    router.push(`/admin/products?page=view&productId=${id}`);
 
   return (
     <Card>
@@ -122,7 +144,6 @@ const ProductTablePage = () => {
           <TextField label="Loại động cơ" size="small" />
           <TextField label="Cân nặng" size="small" />
         </Box>
-
         <Paper sx={{ width: "100%", overflow: "hidden" }}>
           <TableContainer sx={{ maxHeight: 500, minHeight: 270 }}>
             <Table stickyHeader aria-label="product table">
@@ -170,21 +191,23 @@ const ProductTablePage = () => {
                     <TableCell>{product.brand?.name || "-"}</TableCell>
                     <TableCell align="center">
                       <Box display="flex">
-                        <IconButton
-                          color="primary"
-                          onClick={() => handleViewProduct(product.id)}
-                        >
-                          <PreviewOutlinedIcon sx={{ fontSize: 19 }} />
-                        </IconButton>
-                        <IconButton
-                          color="warning"
-                          onClick={() => handleUpdateProduct(product.id)}
-                        >
-                          <EditIcon sx={{ fontSize: 19 }} />
-                        </IconButton>
-                        <IconButton color="error">
-                          <DeleteIcon sx={{ fontSize: 19 }} />
-                        </IconButton>
+                        <LightTooltip title="Xem chi tiết">
+                          <IconButton
+                            color="primary"
+                            onClick={() => handleViewProduct(product.id)}
+                          >
+                            <PreviewOutlinedIcon sx={{ fontSize: 19 }} />
+                          </IconButton>
+                        </LightTooltip>
+
+                        <LightTooltip title="Cập nhật">
+                          <IconButton
+                            color="warning"
+                            onClick={() => handleUpdateProduct(product.id)}
+                          >
+                            <EditIcon sx={{ fontSize: 19 }} />
+                          </IconButton>
+                        </LightTooltip>
                       </Box>
                     </TableCell>
                   </TableRow>
@@ -198,11 +221,20 @@ const ProductTablePage = () => {
             count={total}
             rowsPerPage={rowsPerPage}
             page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
+            onPageChange={(_e, newPage) => setPage(newPage)}
+            onRowsPerPageChange={(e: ChangeEvent<HTMLInputElement>) => {
+              setRowsPerPage(+e.target.value);
+              setPage(0);
+            }}
           />
         </Paper>
       </CardContent>
+      <AlertSnackbar
+        open={alert.open}
+        message={alert.message}
+        type={alert.type as "error" | "success"}
+        onClose={() => setAlert({ ...alert, open: false })}
+      />
     </Card>
   );
 };
