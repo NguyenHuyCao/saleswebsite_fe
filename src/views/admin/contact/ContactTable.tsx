@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Paper from "@mui/material/Paper";
@@ -12,53 +12,48 @@ import TableHead from "@mui/material/TableHead";
 import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 
-const contactData = {
-  meta: {
-    page: 1,
-    pageSize: 2,
-    pages: 2,
-    total: 3,
-  },
-  result: [
-    {
-      id: 1,
-      fullName: "Nguyễn Văn A",
-      email: "nguyen.vana@example.com",
-      phone: "+84901234567",
-      subject: "Yêu cầu hỗ trợ sản phẩm",
-      messageContent:
-        "Kính gửi, tôi đã mua sản phẩm ABC từ cửa hàng, nhưng hiện tại sản phẩm gặp phải lỗi. Tôi mong muốn được hỗ trợ bảo hành. Cảm ơn!",
-      createdAt: "2025-05-21T12:27:04.080030Z",
-      createdBy: "anonymousUser",
-    },
-    {
-      id: 2,
-      fullName: "Nguyễn Văn A",
-      email: "nguyen.vana@example.com",
-      phone: "+84901234567",
-      subject: "Yêu cầu hỗ trợ sản phẩm",
-      messageContent:
-        "Kính gửi, tôi đã mua sản phẩm ABC từ cửa hàng, nhưng hiện tại sản phẩm gặp phải lỗi. Tôi mong muốn được hỗ trợ bảo hành. Cảm ơn!",
-      createdAt: "2025-05-21T12:27:36.717644Z",
-      createdBy: "anonymousUser",
-    },
-    {
-      id: 3,
-      fullName: "Nguyễn Văn A",
-      email: "nguyen.vana@example.com",
-      phone: "+84901234567",
-      subject: "Yêu cầu hỗ trợ sản phẩm",
-      messageContent:
-        "Kính gửi, tôi đã mua sản phẩm ABC từ cửa hàng, nhưng hiện tại sản phẩm gặp phải lỗi. Tôi mong muốn được hỗ trợ bảo hành. Cảm ơn!",
-      createdAt: "2025-05-21T15:49:51.876244Z",
-      createdBy: "anonymousUser",
-    },
-  ],
-};
+interface Contact {
+  id: number;
+  fullName: string;
+  email: string;
+  phone: string;
+  subject: string;
+  messageContent: string;
+  createdAt: string;
+  createdBy: string;
+}
 
 const ContactTablePage = () => {
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(2);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [totalRows, setTotalRows] = useState(0);
+
+  const fetchContacts = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(
+        `http://localhost:8080/api/v1/contacts?page=${
+          page + 1
+        }&size=${rowsPerPage}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+      setContacts(data.data.result);
+      setTotalRows(data.data.meta.total);
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách liên hệ:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchContacts();
+  }, [page, rowsPerPage]);
 
   const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
@@ -101,33 +96,31 @@ const ContactTablePage = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {contactData.result
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((row) => (
-                  <TableRow hover key={row.id}>
-                    <TableCell>{row.id}</TableCell>
-                    <TableCell>{row.fullName}</TableCell>
-                    <TableCell>{row.email}</TableCell>
-                    <TableCell>{row.phone}</TableCell>
-                    <TableCell>{row.subject}</TableCell>
-                    <TableCell sx={{ maxWidth: 300, whiteSpace: "pre-wrap" }}>
-                      {row.messageContent}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(row.createdAt).toLocaleString("vi-VN", {
-                        dateStyle: "short",
-                        timeStyle: "short",
-                      })}
-                    </TableCell>
-                  </TableRow>
-                ))}
+              {contacts.map((row) => (
+                <TableRow hover key={row.id}>
+                  <TableCell>{row.id}</TableCell>
+                  <TableCell>{row.fullName}</TableCell>
+                  <TableCell>{row.email}</TableCell>
+                  <TableCell>{row.phone}</TableCell>
+                  <TableCell>{row.subject}</TableCell>
+                  <TableCell sx={{ maxWidth: 300, whiteSpace: "pre-wrap" }}>
+                    {row.messageContent}
+                  </TableCell>
+                  <TableCell>
+                    {new Date(row.createdAt).toLocaleString("vi-VN", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    })}
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </TableContainer>
         <TablePagination
           rowsPerPageOptions={[2, 5, 10]}
           component="div"
-          count={contactData.result.length}
+          count={totalRows}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
