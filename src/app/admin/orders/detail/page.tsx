@@ -1,4 +1,4 @@
-import OrderDetailTable from "@/views/admin/order/OrderDetailTable";
+import OrderDetailTable from "@/views/admin/order/detail/OrderDetailTable";
 
 const OrderDetailPage = () => {
   return <OrderDetailTable />;

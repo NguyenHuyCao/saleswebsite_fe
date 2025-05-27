@@ -1,7 +1,7 @@
-import OrderListTable from "@/views/admin/order/OrderListTable";
+import MultiOrderPage from "@/views/admin/order/MultiOrderPage";
 
 const OrdersPage = () => {
-  return <OrderListTable />;
+  return <MultiOrderPage />;
 };
 
 export default OrdersPage;

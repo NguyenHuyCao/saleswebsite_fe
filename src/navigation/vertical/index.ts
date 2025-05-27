@@ -1,7 +1,6 @@
 import Login from "mdi-material-ui/Login";
 import HomeOutline from "mdi-material-ui/HomeOutline";
 import AccountCogOutline from "mdi-material-ui/AccountCogOutline";
-import AccountPlusOutline from "mdi-material-ui/AccountPlusOutline";
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import ContactsOutlinedIcon from "@mui/icons-material/ContactsOutlined";
 import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
@@ -10,13 +9,12 @@ import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 
-// ** Type import
 import { VerticalNavItemsType } from "src/@core/layouts/types";
 
 const navigation = (): VerticalNavItemsType => {
   return [
     {
-      title: "Dashboard",
+      title: "Thống kê",
       icon: HomeOutline,
       path: "/admin",
     },
@@ -26,57 +24,51 @@ const navigation = (): VerticalNavItemsType => {
     //   path: "/admin/account-settings",
     // },
     {
-      title: "Contact",
+      title: "Liên hệ",
       icon: ContactsOutlinedIcon,
       path: "/admin/contacts",
     },
     {
-      title: "User",
+      title: "Khách hàng",
       icon: PersonOutlineOutlinedIcon,
       path: "/admin/users",
     },
     {
-      title: "Product",
+      title: "Sản phẩm",
       icon: Inventory2OutlinedIcon,
       path: "/admin/products",
     },
     {
-      title: "Order",
+      title: "Đơn hàng",
       icon: AccountCogOutline,
       path: "/admin/orders",
     },
     {
-      title: "Catogory",
+      title: "Danh mục",
       icon: CategoryOutlinedIcon,
       path: "/admin/categories",
     },
     {
-      title: "Brand",
+      title: "Thương hiệu",
       icon: LabelOutlinedIcon,
       path: "/admin/brands",
     },
     {
-      title: "Shipping",
+      title: "Đơn vị vận chuyển",
       icon: LocalShippingOutlinedIcon,
       path: "/admin/shippings",
     },
     {
-      sectionTitle: "Pages",
+      sectionTitle: "Điều hướng",
     },
     {
-      title: "Login",
+      title: "Đăng xuất",
       icon: Login,
       path: "/pages/login",
       openInNewTab: true,
     },
     {
-      title: "Register",
-      icon: AccountPlusOutline,
-      path: "/admin/pages/register",
-      openInNewTab: true,
-    },
-    {
-      title: "Home",
+      title: "Trang chủ",
       icon: HomeOutlinedIcon,
       path: "/",
     },

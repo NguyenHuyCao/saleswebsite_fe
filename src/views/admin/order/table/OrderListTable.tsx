@@ -28,6 +28,24 @@ interface OrderData {
   paymentStatus: string;
   paidAt: string | null;
   moneyChannel: string | null;
+  user: {
+    email: string;
+    phone: string;
+  };
+}
+
+interface ApiResponse {
+  status: number;
+  message: string;
+  data: {
+    meta: {
+      page: number;
+      pageSize: number;
+      pages: number;
+      total: number;
+    };
+    result: OrderData[];
+  };
 }
 
 interface Column {
@@ -39,6 +57,8 @@ interface Column {
 
 const columns: Column[] = [
   { id: "orderId", label: "Mã đơn", minWidth: 80, align: "left" },
+  { id: "email", label: "Email", minWidth: 160, align: "left" },
+  { id: "phone", label: "SĐT", minWidth: 120, align: "left" },
   { id: "status", label: "Trạng thái", minWidth: 100, align: "center" },
   { id: "paymentMethod", label: "Thanh toán", minWidth: 100, align: "center" },
   { id: "shippingMethod", label: "Giao hàng", minWidth: 120, align: "center" },
@@ -47,67 +67,38 @@ const columns: Column[] = [
   { id: "actions", label: "", minWidth: 100, align: "center" },
 ];
 
-const fakeData: OrderData[] = [
-  {
-    orderId: 1,
-    status: "DELIVERED",
-    shippingAddress: "456 Trần Hưng Đạo, Quy Nhơn",
-    paymentMethod: "COD",
-    shippingMethod: "LOCAL_SHIPPER",
-    totalAmount: 1000000,
-    createdAt: "2025-05-20T11:56:02.709506Z",
-    paymentStatus: "PAID",
-    paidAt: "2025-05-21T05:22:19.373866Z",
-    moneyChannel: "COD",
-  },
-  {
-    orderId: 2,
-    status: "PENDING",
-    shippingAddress: "456 Trần Hưng Đạo, Quy Nhơn",
-    paymentMethod: "COD",
-    shippingMethod: "LOCAL_SHIPPER",
-    totalAmount: 1000000,
-    createdAt: "2025-05-20T12:14:56.794158Z",
-    paymentStatus: "PENDING",
-    paidAt: null,
-    moneyChannel: null,
-  },
-  {
-    orderId: 3,
-    status: "PENDING",
-    shippingAddress: "456 Trần Hưng Đạo, Quy Nhơn",
-    paymentMethod: "COD",
-    shippingMethod: "LOCAL_SHIPPER",
-    totalAmount: 1000000,
-    createdAt: "2025-05-21T05:43:48.204448Z",
-    paymentStatus: "PENDING",
-    paidAt: null,
-    moneyChannel: null,
-  },
-  {
-    orderId: 4,
-    status: "DELIVERED",
-    shippingAddress: "456 Trần Hưng Đạo, Quy Nhơn",
-    paymentMethod: "COD",
-    shippingMethod: "LOCAL_SHIPPER",
-    totalAmount: 1000000,
-    createdAt: "2025-05-21T07:15:11.359583Z",
-    paymentStatus: "PENDING",
-    paidAt: null,
-    moneyChannel: null,
-  },
-];
-
 const OrderTablePage = () => {
+  const [orders, setOrders] = useState<OrderData[]>([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(3);
-  const [orders, setOrders] = useState<OrderData[]>([]);
+  const [totalRows, setTotalRows] = useState(0);
   const router = useRouter();
 
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/v1/orders?page=${
+          page + 1
+        }&size=${rowsPerPage}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+      if (!res.ok) throw new Error("Lỗi khi gọi API");
+      const json: ApiResponse = await res.json();
+      setOrders(json.data.result);
+      setTotalRows(json.data.meta.total);
+    } catch (err) {
+      console.error("Lỗi khi lấy dữ liệu đơn hàng:", err);
+    }
+  };
+
   useEffect(() => {
-    const start = page * rowsPerPage;
-    const end = start + rowsPerPage;
-    setOrders(fakeData.slice(start, end));
+    fetchOrders();
   }, [page, rowsPerPage]);
 
   const handleChangePage = (_event: unknown, newPage: number) => {
@@ -120,8 +111,7 @@ const OrderTablePage = () => {
   };
 
   const handleViewDetails = (orderId: number) => {
-    // Navigate to order details page
-    router.push(`/admin/orders/detail?orderId=${orderId}`);
+    router.push(`/admin/orders?page=detail&orderId=${orderId}`);
   };
 
   return (
@@ -133,7 +123,7 @@ const OrderTablePage = () => {
       <CardContent>
         <Paper sx={{ width: "100%", overflow: "hidden" }}>
           <TableContainer sx={{ maxHeight: 440 }}>
-            <Table stickyHeader aria-label="order table">
+            <Table stickyHeader>
               <TableHead>
                 <TableRow>
                   {columns.map((column) => (
@@ -149,17 +139,14 @@ const OrderTablePage = () => {
               </TableHead>
               <TableBody>
                 {orders.map((order) => (
-                  <TableRow
-                    hover
-                    role="checkbox"
-                    tabIndex={-1}
-                    key={order.orderId}
-                  >
+                  <TableRow key={order.orderId} hover>
                     <TableCell>{order.orderId}</TableCell>
+                    <TableCell>{order.user.email}</TableCell>
+                    <TableCell>{order.user.phone}</TableCell>
                     <TableCell>{order.status}</TableCell>
                     <TableCell>{order.paymentMethod}</TableCell>
                     <TableCell>{order.shippingMethod}</TableCell>
-                    <TableCell>
+                    <TableCell align="right">
                       {order.totalAmount.toLocaleString("vi-VN", {
                         style: "currency",
                         currency: "VND",
@@ -168,8 +155,12 @@ const OrderTablePage = () => {
                     <TableCell>
                       {new Date(order.createdAt).toLocaleDateString("vi-VN")}
                     </TableCell>
-                    <TableCell onClick={() => handleViewDetails(order.orderId)}>
-                      <Button size="small" variant="outlined">
+                    <TableCell align="center">
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => handleViewDetails(order.orderId)}
+                      >
                         Xem chi tiết
                       </Button>
                     </TableCell>
@@ -181,7 +172,7 @@ const OrderTablePage = () => {
           <TablePagination
             rowsPerPageOptions={[3, 5, 10]}
             component="div"
-            count={fakeData.length}
+            count={totalRows}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
