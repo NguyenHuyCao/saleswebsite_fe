@@ -64,8 +64,7 @@ const navigation = (): VerticalNavItemsType => {
     {
       title: "Đăng xuất",
       icon: Login,
-      path: "/pages/login",
-      openInNewTab: true,
+      path: "/login",
     },
     {
       title: "Trang chủ",

@@ -56,7 +56,6 @@ const Navigation = (props: Props) => {
   const {
     hidden,
     afterVerticalNavMenuContent,
-    beforeVerticalNavMenuContent,
     verticalNavMenuContent: userVerticalNavMenuContent,
   } = props;
 

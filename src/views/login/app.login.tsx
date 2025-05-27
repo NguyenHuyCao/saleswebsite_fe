@@ -35,6 +35,23 @@ const LoginForm = () => {
     message: "",
   });
 
+  const handleCloseToken = async () => {
+    const accessToken = localStorage?.getItem("accessToken");
+    if (accessToken) {
+      await fetch("http://localhost:8080/api/v1/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+    }
+  };
+
+  useEffect(() => {
+    handleCloseToken();
+  }, []);
+
   useEffect(() => {
     const page = searchParams.get("page");
     if (page === "register") setTab(1);

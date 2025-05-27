@@ -4,6 +4,8 @@ import "@/styles/app.css";
 // import { Quicksand } from "next/font/google";
 import AppHeader from "@/views/header/app.header";
 import AppFooter from "@/views/footer/app.footer";
+import ScrollToTopButton from "@/components/ScrollToTopButton";
+import FloatingContactButtons from "@/components/FloatingContactButton";
 
 // const quicksand = Quicksand({
 //   subsets: ["latin"],
@@ -25,14 +27,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // <html lang="en">
-    //   <body className={quicksand.className}>
     <ThemeRegistry>
       <AppHeader />
       {children}
       <AppFooter />
+      <FloatingContactButtons />
+      <ScrollToTopButton />
     </ThemeRegistry>
-    //   </body>
-    // </html>
   );
 }
