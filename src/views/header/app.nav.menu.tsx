@@ -7,6 +7,7 @@ import {
   Typography,
   BottomNavigation,
   BottomNavigationAction,
+  Fade,
 } from "@mui/material";
 
 import AppsIcon from "@mui/icons-material/Apps";
@@ -14,8 +15,50 @@ import HomeIcon from "@mui/icons-material/Home";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import CompareIcon from "@mui/icons-material/Compare";
+import { useState } from "react";
+import CategoryMegaMenu from "@/components/CategoryMegaMenu";
+
+const categoriesData = [
+  {
+    label: "Máy khoan",
+    icon: "/images/icons/drill.png",
+    subCategories: [
+      {
+        title: "Phụ kiện máy khoan",
+        items: ["Pin máy khoan", "Sạc pin máy khoan", "Mũi khoan"],
+      },
+      { title: "Máy khoan mini", items: [] },
+      { title: "Máy khoan pin", items: [] },
+      { title: "Máy khoan động lực", items: [] },
+      { title: "Máy khoan bê tông, khoan búa", items: ["Máy đục bê tông"] },
+      { title: "Máy khoan rút lõi bê tông", items: [] },
+      { title: "Máy khoan góc", items: [] },
+      { title: "Tìm sản phẩm Máy khoan cầm tay gia đình", items: [] },
+    ],
+  },
+  {
+    label: "Máy khoan",
+    icon: "/images/icons/drill.png",
+    subCategories: [
+      {
+        title: "Phụ kiện máy khoan",
+        items: ["Pin máy khoan", "Sạc pin máy khoan", "Mũi khoan"],
+      },
+      { title: "Máy khoan mini", items: [] },
+      { title: "Máy khoan pin", items: [] },
+      { title: "Máy khoan động lực", items: [] },
+      { title: "Máy khoan bê tông, khoan búa", items: ["Máy đục bê tông"] },
+      { title: "Máy khoan rút lõi bê tông", items: [] },
+      { title: "Máy khoan góc", items: [] },
+      { title: "Tìm sản phẩm Máy khoan cầm tay gia đình", items: [] },
+    ],
+  },
+  // Add more categories if needed
+];
 
 const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
+  const [showMegaMenu, setShowMegaMenu] = useState(false);
+
   if (isMobile) {
     return (
       <Box
@@ -59,6 +102,7 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
     <Container maxWidth="xl">
       <Box
         sx={{
+          position: "relative",
           display: "flex",
           alignItems: "center",
           gap: 16,
@@ -67,22 +111,45 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
           px: 2,
         }}
       >
-        <Button
-          variant="contained"
-          sx={{
-            bgcolor: "black",
-            color: "white",
-            textTransform: "none",
-            fontWeight: "bold",
-            px: 3,
-            py: 1,
-            whiteSpace: "nowrap",
-            flexShrink: 0,
-          }}
+        {/* DANH MỤC SẢN PHẨM BUTTON */}
+        <Box
+          onMouseEnter={() => setShowMegaMenu(true)}
+          onMouseLeave={() => setShowMegaMenu(false)}
+          sx={{ position: "relative" }}
         >
-          DANH MỤC SẢN PHẨM
-        </Button>
+          <Button
+            variant="contained"
+            sx={{
+              bgcolor: "black",
+              color: "white",
+              textTransform: "none",
+              fontWeight: "bold",
+              px: 3,
+              py: 1,
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+            }}
+          >
+            DANH MỤC SẢN PHẨM
+          </Button>
 
+          {/* Mega Menu tích hợp */}
+          <Fade in={showMegaMenu} timeout={300}>
+            <Box
+              onMouseLeave={() => setShowMegaMenu(false)}
+              sx={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                zIndex: 1000,
+              }}
+            >
+              <CategoryMegaMenu data={categoriesData} />
+            </Box>
+          </Fade>
+        </Box>
+
+        {/* MENU NGANG BÊN PHẢI */}
         <Box
           sx={{
             display: "flex",
@@ -107,6 +174,7 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
             "Liên hệ",
             "Hệ thống cửa hàng",
             "Câu hỏi thường gặp",
+            "Chế độ bảo hành",
           ].map((item) => (
             <Typography
               key={item}
