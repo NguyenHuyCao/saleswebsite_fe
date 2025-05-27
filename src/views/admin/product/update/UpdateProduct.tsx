@@ -25,7 +25,9 @@ const UpdateProduct = () => {
   const searchParams = useSearchParams();
 
   const initialStep = parseInt(searchParams.get("step") || "0", 10);
+  const productId = searchParams.get("productId");
   const [activeStep, setActiveStep] = useState(initialStep);
+  const [slug, setSlug] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -55,6 +57,7 @@ const UpdateProduct = () => {
   const updateStepInUrl = (step: number) => {
     const currentParams = new URLSearchParams(searchParams.toString());
     currentParams.set("step", step.toString());
+    if (slug) currentParams.set("name", slug);
     router.replace(`?${currentParams.toString()}`);
   };
 
@@ -76,6 +79,52 @@ const UpdateProduct = () => {
       setActiveStep(stepFromUrl);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    const fetchProductData = async () => {
+      if (!productId) return;
+
+      try {
+        const res = await fetch(
+          `http://localhost:8080/api/v1/products/${productId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          }
+        );
+        const data = await res.json();
+        if (res.ok) {
+          const product = data.data;
+          setSlug(product.slug);
+          setFormData({
+            name: product.name,
+            description: product.description,
+            origin: product.origin,
+            categoryId: product.productCategory?.id || null,
+            brandId: product.brand?.id || null,
+            power: product.power,
+            fuelType: product.fuelType,
+            engineType: product.engineType,
+            weight: product.weight,
+            dimensions: product.dimensions,
+            tankCapacity: product.tankCapacity,
+            price: product.price,
+            stockQuantity: product.stockQuantity,
+            warrantyMonths: product.warrantyMonths,
+            imageAvt: product.imageAvt,
+            imageDetail1: product.imageDetail1,
+            imageDetail2: product.imageDetail2,
+            imageDetail3: product.imageDetail3,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch product:", err);
+      }
+    };
+
+    fetchProductData();
+  }, [productId]);
 
   const renderStepContent = () => {
     switch (activeStep) {

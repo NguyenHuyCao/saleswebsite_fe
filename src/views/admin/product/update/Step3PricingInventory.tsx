@@ -4,6 +4,9 @@ import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
+import { useSearchParams } from "next/navigation";
+import { useState } from "react";
+import AlertSnackbar from "@/model/notify/AlertSnackbar";
 
 interface Props {
   formData: any;
@@ -18,13 +21,58 @@ const Step3PricingInventory = ({
   onNext,
   onBack,
 }: Props) => {
+  const searchParams = useSearchParams();
+  const name = searchParams.get("name");
+
+  const [alert, setAlert] = useState({
+    open: false,
+    message: "",
+    type: "error",
+  });
+
+  const handleSubmit = async () => {
+    const payload = {
+      price: formData.price,
+      stockQuantity: formData.stockQuantity,
+      warrantyMonths: formData.warrantyMonths,
+    };
+
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/v1/products/step3/${name}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const data = await res.json();
+
+      if (res.status === 200) {
+        onNext();
+      } else {
+        setAlert({
+          open: true,
+          message: data.message || "Lỗi khi cập nhật bước 3.",
+          type: "error",
+        });
+      }
+    } catch (err) {
+      console.error("Lỗi kết nối máy chủ:", err);
+      setAlert({ open: true, message: "Lỗi kết nối máy chủ.", type: "error" });
+    }
+  };
+
   return (
     <Box display="flex" flexDirection="column" gap={5}>
       <Typography variant="h6" fontWeight={700}>
         Bước 3: Giá và tồn kho
       </Typography>
 
-      {/* Responsive layout: 1-3 on lg, 2-2 on md, 1-1 on xs */}
       <Box
         display="flex"
         flexWrap="wrap"
@@ -83,15 +131,21 @@ const Step3PricingInventory = ({
         </Box>
       </Box>
 
-      {/* Button group */}
       <Box display="flex" justifyContent="space-between" mt={2}>
         <Button variant="outlined" onClick={onBack}>
           Quay lại
         </Button>
-        <Button variant="contained" onClick={onNext}>
+        <Button variant="contained" onClick={handleSubmit}>
           Tiếp tục
         </Button>
       </Box>
+
+      <AlertSnackbar
+        open={alert.open}
+        message={alert.message}
+        type={alert.type as "success" | "error"}
+        onClose={() => setAlert({ ...alert, open: false })}
+      />
     </Box>
   );
 };

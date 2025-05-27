@@ -29,6 +29,7 @@ import { styled } from "@mui/material/styles";
 interface ProductData {
   id: number;
   name: string;
+  slug: string;
   imageAvt: string;
   stockQuantity: number;
   price: number;
@@ -36,6 +37,7 @@ interface ProductData {
   power: string;
   fuelType: string;
   weight: number;
+  active: boolean;
 }
 
 interface Column {
@@ -54,6 +56,7 @@ const columns: Column[] = [
   { id: "fuelType", label: "Động cơ", minWidth: 100, align: "left" },
   { id: "weight", label: "Cân nặng", minWidth: 100, align: "left" },
   { id: "brand", label: "Thương hiệu", minWidth: 110, align: "left" },
+  { id: "status", label: "Trạng thái", minWidth: 100, align: "center" },
   { id: "actions", label: "Thao tác", minWidth: 100, align: "center" },
 ];
 
@@ -80,37 +83,38 @@ const ProductTablePage = () => {
     },
   }));
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const token = localStorage.getItem("accessToken");
-        const res = await fetch(
-          `http://localhost:8080/api/v1/products?page=${
-            page + 1
-          }&size=${rowsPerPage}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        const data = await res.json();
-        if (res.ok) {
-          setProducts(data.data.result);
-          setTotal(data.data.meta.total);
-        } else {
-          setAlert({ open: true, message: data.message, type: "error" });
+  const fetchProducts = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(
+        `http://localhost:8080/api/v1/products?page=${
+          page + 1
+        }&size=${rowsPerPage}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      } catch (err) {
-        setAlert({
-          open: true,
-          message: "Lỗi kết nối tới máy chủ. Vui lòng thử lại sau.",
-          type: "error",
-        });
-        console.error("Error fetching products:", err);
+      );
+
+      const data = await res.json();
+      if (res.ok) {
+        setProducts(data.data.result);
+        setTotal(data.data.meta.total);
+      } else {
+        setAlert({ open: true, message: data.message, type: "error" });
       }
-    };
+    } catch (err) {
+      setAlert({
+        open: true,
+        message: "Lỗi kết nối tới máy chủ. Vui lòng thử lại sau.",
+        type: "error",
+      });
+      console.error("Error fetching products:", err);
+    }
+  };
+
+  useEffect(() => {
     fetchProducts();
   }, [page, rowsPerPage]);
 
@@ -119,6 +123,40 @@ const ProductTablePage = () => {
     router.push(`/admin/products?page=edit&productId=${id}`);
   const handleViewProduct = (id: number) =>
     router.push(`/admin/products?page=view&productId=${id}`);
+
+  const handleToggleStatus = async (slug: string) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(
+        `http://localhost:8080/api/v1/products/${slug}/toggle-active`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+      if (res.ok) {
+        setAlert({
+          open: true,
+          message: "Cập nhật trạng thái thành công!",
+          type: "success",
+        });
+        fetchProducts();
+      } else {
+        setAlert({
+          open: true,
+          message: data.message || "Cập nhật thất bại",
+          type: "error",
+        });
+      }
+    } catch (err) {
+      setAlert({ open: true, message: "Lỗi máy chủ.", type: "error" });
+      console.error("Toggle status error:", err);
+    }
+  };
 
   return (
     <Card>
@@ -189,6 +227,16 @@ const ProductTablePage = () => {
                     <TableCell>{product.fuelType}</TableCell>
                     <TableCell>{product.weight}g</TableCell>
                     <TableCell>{product.brand?.name || "-"}</TableCell>
+                    <TableCell align="center">
+                      <Button
+                        variant="outlined"
+                        color={product.active ? "success" : "inherit"}
+                        size="small"
+                        onClick={() => handleToggleStatus(product.slug)}
+                      >
+                        {product.active ? "Bật" : "Tắt"}
+                      </Button>
+                    </TableCell>
                     <TableCell align="center">
                       <Box display="flex">
                         <LightTooltip title="Xem chi tiết">

@@ -6,7 +6,8 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Image from "next/image";
 import { styled } from "@mui/material/styles";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import AlertSnackbar from "@/model/notify/AlertSnackbar";
 
 interface Step4Props {
   formData: any;
@@ -50,11 +51,57 @@ const Step4Images = ({ formData, onChange, onBack }: Step4Props) => {
     detail2: "",
     detail3: "",
   });
+  const [alert, setAlert] = useState({
+    open: false,
+    message: "",
+    type: "success",
+  });
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const slug = searchParams.get("name");
 
-  const handleSave = () => {
-    router.push("/admin/products");
+  const handleSave = async () => {
+    const formDataUpload = new FormData();
+    if (formData.imageAvt) formDataUpload.append("imageAvt", formData.imageAvt);
+    if (formData.imageDetail1)
+      formDataUpload.append("imageDetails", formData.imageDetail1);
+    if (formData.imageDetail2)
+      formDataUpload.append("imageDetails", formData.imageDetail2);
+    if (formData.imageDetail3)
+      formDataUpload.append("imageDetails", formData.imageDetail3);
+
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/v1/products/step4/${slug}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+          body: formDataUpload,
+        }
+      );
+
+      const data = await res.json();
+      if (res.status === 200) {
+        setAlert({
+          open: true,
+          message: "Tải ảnh thành công!",
+          type: "success",
+        });
+        setTimeout(() => router.push("/admin/products"), 1500);
+      } else {
+        setAlert({
+          open: true,
+          message: data.message || "Tải ảnh thất bại.",
+          type: "error",
+        });
+      }
+    } catch (err) {
+      setAlert({ open: true, message: "Lỗi kết nối máy chủ.", type: "error" });
+      console.error("Upload error:", err);
+    }
   };
 
   useEffect(() => {
@@ -92,24 +139,30 @@ const Step4Images = ({ formData, onChange, onBack }: Step4Props) => {
     label: string,
     field: keyof typeof preview,
     keyMapValue: string
-  ) => (
-    <Box>
-      <Typography fontWeight={600} mb={1}>
-        {label}
-      </Typography>
-      <UploadBox>
-        <StyledInput>
-          Chọn ảnh
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => handleUpload(e, field, keyMapValue)}
-          />
-        </StyledInput>
-        {preview[field] && (
+  ) => {
+    const imageSrc =
+      preview[field] &&
+      (preview[field].startsWith("blob:") || preview[field].startsWith("http"))
+        ? preview[field]
+        : "/images/favicon.png";
+
+    return (
+      <Box>
+        <Typography fontWeight={600} mb={1}>
+          {label}
+        </Typography>
+        <UploadBox>
+          <StyledInput>
+            Chọn ảnh
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleUpload(e, field, keyMapValue)}
+            />
+          </StyledInput>
           <Box mt={2} display="flex" justifyContent="center">
             <Image
-              src={preview[field]}
+              src={imageSrc}
               alt={label}
               width={140}
               height={140}
@@ -120,10 +173,10 @@ const Step4Images = ({ formData, onChange, onBack }: Step4Props) => {
               }}
             />
           </Box>
-        )}
-      </UploadBox>
-    </Box>
-  );
+        </UploadBox>
+      </Box>
+    );
+  };
 
   return (
     <Box display="flex" flexDirection="column" gap={4}>
@@ -149,6 +202,13 @@ const Step4Images = ({ formData, onChange, onBack }: Step4Props) => {
           Hoàn tất
         </Button>
       </Box>
+
+      <AlertSnackbar
+        open={alert.open}
+        message={alert.message}
+        type={alert.type as "success" | "error"}
+        onClose={() => setAlert({ ...alert, open: false })}
+      />
     </Box>
   );
 };
