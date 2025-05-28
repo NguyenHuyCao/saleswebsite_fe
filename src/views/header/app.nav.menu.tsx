@@ -124,6 +124,7 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
               color: "white",
               textTransform: "none",
               fontWeight: "bold",
+              minWidth: "250px",
               px: 3,
               py: 1,
               whiteSpace: "nowrap",
