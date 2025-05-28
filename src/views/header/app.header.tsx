@@ -11,7 +11,15 @@ const AppHeader = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   return (
-    <Box sx={{ flexGrow: 1, bgcolor: "#ffb700", pb: isMobile ? 7 : 0 }}>
+    <Box
+      sx={{
+        flexGrow: 1,
+        bgcolor: "#ffb700",
+        pb: isMobile ? 7 : 0, // để chừa chỗ cho nav dưới
+        // overflowX: "hidden", // tránh tràn ngang
+        // overflowY: "hidden",
+      }}
+    >
       {/* Thanh trên cùng */}
       <TopBar />
 

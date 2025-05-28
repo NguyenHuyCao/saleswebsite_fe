@@ -1,0 +1,265 @@
+"use client";
+
+import React, { useState } from "react";
+import {
+  Box,
+  Typography,
+  IconButton,
+  Avatar,
+  Stack,
+  Grid,
+  Card,
+  CardHeader,
+  CardContent,
+  TextField,
+  InputAdornment,
+  Button,
+  useTheme,
+  useMediaQuery,
+  Fade,
+  Slide,
+} from "@mui/material";
+import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import Phone from "mdi-material-ui/Phone";
+import EmailOutline from "mdi-material-ui/EmailOutline";
+import AccountOutline from "mdi-material-ui/AccountOutline";
+import MessageOutline from "mdi-material-ui/MessageOutline";
+
+const reviews = [
+  {
+    name: "Nguyễn Văn A",
+    comment: '"Dịch vụ tuyệt vời, tôi rất hài lòng!"',
+    image: "/images/customer/customer1.jpeg",
+  },
+  {
+    name: "Trần Thị B",
+    comment: '"Sản phẩm chất lượng, giá cả hợp lý."',
+    image: "/images/customer/customer2.jpeg",
+  },
+  {
+    name: "Lê Văn C",
+    comment: '"Tôi sẽ giới thiệu cho bạn bè."',
+    image: "/images/customer/customer3.jpeg",
+  },
+  {
+    name: "Phạm Thị D",
+    comment: '"Nhân viên hỗ trợ rất nhiệt tình."',
+    image: "/images/customer/customer4.jpeg",
+  },
+];
+
+const CustomerReviewsSlider = () => {
+  const [index, setIndex] = useState(0);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
+  const showReview = (idx: number) => {
+    setIndex(idx);
+  };
+
+  const prev = () => {
+    setIndex((prevIndex) => (prevIndex - 1 + reviews.length) % reviews.length);
+  };
+
+  const next = () => {
+    setIndex((prevIndex) => (prevIndex + 1) % reviews.length);
+  };
+
+  return (
+    <Box textAlign="center" py={6} className="customer-reviews">
+      {/* <Box
+        sx={{
+          backgroundImage: "url(/images/banner/images.jpeg)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          color: "white",
+          borderRadius: 2,
+          mb: 6,
+          px: 4,
+          py: 6,
+          textAlign: "left",
+        }}
+      >
+        <Typography
+          variant="h6"
+          sx={{
+            bgcolor: "#ffb700",
+            display: "inline-block",
+            px: 2,
+            py: 0.5,
+            borderRadius: 1,
+          }}
+        >
+          1.550.000Đ
+        </Typography>
+        <Typography variant="h4" fontWeight="bold" mt={2}>
+          Khuyến mãi
+        </Typography>
+        <Typography variant="h5" fontWeight={400}>
+          Pin DEWALT
+        </Typography>
+        <Button
+          variant="contained"
+          sx={{ mt: 3, bgcolor: "white", color: "black", fontWeight: 600 }}
+        >
+          Xem ngay
+        </Button>
+      </Box> */}
+
+      <Grid container spacing={4} justifyContent="center">
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Slide direction="left" in mountOnEnter unmountOnExit>
+            <Box sx={{ mt: 6 }}>
+              <Typography variant="h5" fontWeight="bold" mb={3}>
+                CẢM NHẬN KHÁCH HÀNG
+              </Typography>
+
+              <Box
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                gap={2}
+              >
+                <IconButton onClick={prev}>
+                  <ArrowBackIosNewIcon />
+                </IconButton>
+
+                <Box
+                  className="review"
+                  sx={{
+                    width: 250,
+                    background: "white",
+                    p: 2,
+                    borderRadius: 2,
+                    boxShadow: 3,
+                    transition: "transform 0.3s",
+                  }}
+                >
+                  <Avatar
+                    src={reviews[index].image}
+                    alt={reviews[index].name}
+                    sx={{ width: 120, height: 120, mx: "auto", mb: 2 }}
+                  />
+                  <Typography fontSize={14}>
+                    {reviews[index].comment}
+                  </Typography>
+                  <Typography fontSize={14} mt={1} fontWeight={600}>
+                    - {reviews[index].name}
+                  </Typography>
+                </Box>
+
+                <IconButton onClick={next}>
+                  <ArrowForwardIosIcon />
+                </IconButton>
+              </Box>
+
+              <Stack direction="row" justifyContent="center" spacing={1} mt={2}>
+                {reviews.map((r, i) => (
+                  <Avatar
+                    key={i}
+                    src={r.image}
+                    onClick={() => showReview(i)}
+                    sx={{
+                      width: 60,
+                      height: 60,
+                      borderRadius: "50%",
+                      cursor: "pointer",
+                      transform: index === i ? "scale(1.1)" : "scale(1)",
+                      transition: "transform 0.3s",
+                      boxShadow: index === i ? 3 : 1,
+                    }}
+                  />
+                ))}
+              </Stack>
+            </Box>
+          </Slide>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Fade in timeout={500}>
+            <Card>
+              <CardHeader
+                title="Liên hệ với chúng tôi"
+                titleTypographyProps={{ variant: "h6" }}
+              />
+              <CardContent>
+                <form onSubmit={(e) => e.preventDefault()}>
+                  <Grid container spacing={3}>
+                    <Grid size={{ xs: 12 }}>
+                      <TextField
+                        fullWidth
+                        label="Họ và tên"
+                        placeholder="Nguyễn Văn A"
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <AccountOutline />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12 }}>
+                      <TextField
+                        fullWidth
+                        type="email"
+                        label="Email"
+                        placeholder="example@gmail.com"
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <EmailOutline />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12 }}>
+                      <TextField
+                        fullWidth
+                        type="number"
+                        label="Số điện thoại"
+                        placeholder="0901234567"
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <Phone />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12 }}>
+                      <TextField
+                        fullWidth
+                        multiline
+                        minRows={3}
+                        label="Tin nhắn"
+                        placeholder="Bạn cần hỗ trợ gì?"
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <MessageOutline />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12 }}>
+                      <Button type="submit" variant="contained" size="large">
+                        Gửi
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </form>
+              </CardContent>
+            </Card>
+          </Fade>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+};
+
+export default CustomerReviewsSlider;

@@ -17,10 +17,39 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import CompareIcon from "@mui/icons-material/Compare";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown"; // ✅ Thêm icon
 import { useState } from "react";
-import CategoryMegaMenu from "@/components/CategoryMegaMenu";
+import CategoryMegaMenu from "@/components/category/CategoryMegaMenu";
 
 const categoriesData = [
-  /* dữ liệu như cũ */
+  {
+    label: "Sản phẩm",
+    subCategories: [
+      {
+        title: "Máy khoan",
+        items: [
+          "Máy khoan pin",
+          "Máy khoan bê tông",
+          "Máy khoan bàn",
+          "Máy khoan mini",
+        ],
+      },
+      {
+        title: "Máy rửa xe",
+        items: [
+          "Máy rửa xe mini",
+          "Máy rửa xe chuyên nghiệp",
+          "Phụ kiện máy rửa xe",
+        ],
+      },
+      {
+        title: "Thiết bị cầm tay",
+        items: ["Máy mài", "Máy cắt", "Máy đánh bóng", "Máy bắt vít"],
+      },
+      {
+        title: "Thiết bị cơ khí",
+        items: ["Máy hàn", "Máy tiện", "Máy nén khí", "Máy cắt plasma"],
+      },
+    ],
+  },
 ];
 
 const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
@@ -29,13 +58,26 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
   if (isMobile) {
     return (
       <Box
-        sx={
-          {
-            /* ... giữ nguyên phần mobile ... */
-          }
-        }
+        sx={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1200,
+          borderTop: "1px solid #ddd",
+          bgcolor: "#fff",
+        }}
       >
-        <BottomNavigation showLabels>{/* ... các nút ... */}</BottomNavigation>
+        <BottomNavigation showLabels>
+          <BottomNavigationAction label="Trang chủ" icon={<HomeIcon />} />
+          <BottomNavigationAction label="Sản phẩm" icon={<AppsIcon />} />
+          <BottomNavigationAction label="Yêu thích" icon={<FavoriteIcon />} />
+          <BottomNavigationAction label="Đơn hàng" icon={<CompareIcon />} />
+          <BottomNavigationAction
+            label="Giỏ hàng"
+            icon={<ShoppingCartIcon />}
+          />
+        </BottomNavigation>
       </Box>
     );
   }

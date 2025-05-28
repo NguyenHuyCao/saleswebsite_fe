@@ -23,6 +23,7 @@
     "apexcharts": "^4.7.0",
     "apexcharts-clevision": "3.28.5",
     "clsx": "^1.2.1",
+    "framer-motion": "^12.15.0",
     "mdi-material-ui": "^7.1.0",
     "next": "15.3.2",
     "nprogress": "^0.2.0",
@@ -31,8 +32,8 @@
     "react-apexcharts": "^1.7.0",
     "react-datepicker": "^8.3.0",
     "react-dom": "^19.0.0",
-    "react-perfect-scrollbar": "^1.5.8",
-    "react-popper": "^2.3.0"
+    "react-fast-marquee": "^1.6.5",
+    "react-perfect-scrollbar": "^1.5.8"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
