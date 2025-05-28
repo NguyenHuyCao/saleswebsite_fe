@@ -4,8 +4,10 @@ import "@/styles/app.css";
 // import { Quicksand } from "next/font/google";
 import AppHeader from "@/views/header/app.header";
 import AppFooter from "@/views/footer/app.footer";
-import ScrollToTopButton from "@/components/ScrollToTopButton";
-import FloatingContactButtons from "@/components/FloatingContactButton";
+import ScrollToTopButton from "@/components/home/ScrollToTopButton";
+import FloatingContactButtons from "@/components/home/FloatingContactButton";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
 // const quicksand = Quicksand({
 //   subsets: ["latin"],

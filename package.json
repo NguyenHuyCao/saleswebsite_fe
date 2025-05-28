@@ -33,7 +33,10 @@
     "react-datepicker": "^8.3.0",
     "react-dom": "^19.0.0",
     "react-fast-marquee": "^1.6.5",
-    "react-perfect-scrollbar": "^1.5.8"
+    "react-perfect-scrollbar": "^1.5.8",
+    "react-slick": "^0.30.3",
+    "slick-carousel": "^1.8.1",
+    "yet-another-react-lightbox": "^3.23.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
