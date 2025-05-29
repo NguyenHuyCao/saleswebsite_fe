@@ -26,11 +26,7 @@ const HomePage = () => {
   return (
     <>
       <Box sx={{ width: "100%" }}>
-        <Container
-          disableGutters // ✅ loại bỏ padding mặc định
-          maxWidth={false} // ✅ cho phép full width
-          sx={{ p: 0 }} // ✅ đảm bảo không có padding thủ công
-        >
+        <Container disableGutters maxWidth={false} sx={{ p: 0 }}>
           <Image
             src="/images/banner/banner-ab.jpg"
             alt="banner"

@@ -7,7 +7,7 @@ const TopBar = () => {
   const router = useRouter();
 
   return (
-    <Container maxWidth="xl">
+    <Container>
       <Box
         sx={{
           display: "flex",

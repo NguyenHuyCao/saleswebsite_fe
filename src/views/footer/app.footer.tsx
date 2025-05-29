@@ -20,7 +20,7 @@ const AppFooter = () => {
       {/* Chính sách nổi bật */}
       <Box sx={{ bgcolor: "#ffb700", py: 2 }}>
         <Container
-          maxWidth="xl"
+          // maxWidth="xl"
           sx={
             {
               // display: "flex",

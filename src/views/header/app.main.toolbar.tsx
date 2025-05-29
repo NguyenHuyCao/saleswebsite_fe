@@ -15,7 +15,7 @@ import { FavoriteBorder, Search } from "@mui/icons-material";
 const MainToolbar = () => {
   return (
     <AppBar position="static" sx={{ bgcolor: "black", boxShadow: "none" }}>
-      <Container maxWidth="xl">
+      <Container>
         <Toolbar
           sx={{
             justifyContent: { xs: "center", md: "space-between" },

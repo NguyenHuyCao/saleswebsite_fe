@@ -35,7 +35,7 @@ const CategoryMegaMenu = ({ data }: Props) => {
     ...data,
     {
       label: "Dụng cụ cầm tay",
-      icon: "/images/icons/hand-tools.png",
+      icon: "/images/product/1534231926-5.jpg",
       subCategories: [
         {
           title: "Tua vít & kìm",
@@ -51,7 +51,7 @@ const CategoryMegaMenu = ({ data }: Props) => {
         },
       ],
       banner: {
-        image: "/images/banners/tools-sale.jpg",
+        image: "/images/product/images.jpeg",
         description: "Ưu đãi 25% cho các bộ dụng cụ cầm tay chuyên nghiệp!",
         ctaText: "Mua ngay",
         ctaLink: "/dung-cu-cam-tay",
