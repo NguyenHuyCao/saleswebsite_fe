@@ -12,6 +12,13 @@ declare global {
     nextOption?: any;
   }
 
+  export interface Product {
+    id: string;
+    name: string;
+    image: string;
+    inStock: boolean;
+  }
+
   interface IBackendRes<T> {
     message: string;
     status: number | string;
