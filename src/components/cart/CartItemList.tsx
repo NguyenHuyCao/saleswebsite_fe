@@ -59,7 +59,7 @@ const CartItemList = () => {
             <TableRow>
               <TableCell>Ảnh</TableCell>
               <TableCell>Tên</TableCell>
-              <TableCell>Mô tả</TableCell>
+              {/* <TableCell>Mô tả</TableCell> */}
               <TableCell>Số lượng</TableCell>
               <TableCell>Đơn giá</TableCell>
               <TableCell>Tổng</TableCell>
@@ -80,11 +80,11 @@ const CartItemList = () => {
                 <TableCell>
                   <Typography fontWeight={600}>{item.productName}</Typography>
                 </TableCell>
-                <TableCell>
+                {/* <TableCell>
                   <Typography variant="body2" color="text.secondary">
                     {item.productDescription}
                   </Typography>
-                </TableCell>
+                </TableCell> */}
                 <TableCell>
                   <Box display="flex" alignItems="center" gap={1}>
                     <IconButton size="small" color="primary">
@@ -95,7 +95,7 @@ const CartItemList = () => {
                       size="small"
                       type="number"
                       inputProps={{ min: 1 }}
-                      sx={{ width: 50 }}
+                      sx={{ width: 60 }}
                     />
                     <IconButton size="small" color="primary">
                       <AddIcon fontSize="small" />

@@ -69,7 +69,7 @@ const CartSummary = () => {
       {/* Coupon input */}
       <Stack direction="row" spacing={1} mb={2}>
         <TextField fullWidth placeholder="Nhập mã giảm giá" size="small" />
-        <Button variant="contained">Áp dụng</Button>
+        <Button variant="contained">apply</Button>
       </Stack>
 
       {/* Action buttons */}

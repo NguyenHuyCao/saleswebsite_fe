@@ -32,6 +32,7 @@ const ContactCTA = () => {
         alignItems: "center",
         justifyContent: "space-between",
         gap: 3,
+        mb: 5,
       }}
     >
       <Box maxWidth={isMobile ? "100%" : "60%"}>
