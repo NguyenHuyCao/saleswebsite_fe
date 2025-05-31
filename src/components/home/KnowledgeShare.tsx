@@ -9,6 +9,7 @@ import {
   CardMedia,
   CardContent,
 } from "@mui/material";
+import { useRouter } from "next/navigation";
 
 const articles = [
   {
@@ -40,6 +41,8 @@ const articles = [
 ];
 
 const KnowledgeShare = () => {
+  const router = useRouter();
+
   return (
     <Box px={3} py={5}>
       <Typography variant="h5" fontWeight="bold" mb={3}>
@@ -49,68 +52,69 @@ const KnowledgeShare = () => {
       <Grid container spacing={3}>
         {articles.map((article, index) => (
           <Grid key={index} size={{ xs: 12, sm: 6, md: 4 }}>
-            <Card
-              sx={{
-                cursor: "pointer",
-                transition: "transform 0.3s ease, box-shadow 0.3s ease",
-                ":hover": {
-                  transform: "translateY(-5px)",
-                  boxShadow: 4,
-                },
-              }}
-            >
-              <Box sx={{ position: "relative" }}>
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={article.image}
-                  alt={article.title}
-                  sx={{
-                    objectFit: "cover",
-                    transition: "transform 0.3s ease",
-                    ":hover": {
-                      transform: "scale(1.03)",
-                    },
-                  }}
-                />
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: 12,
-                    left: 12,
-                    bgcolor: "#f25c05",
-                    color: "white",
-                    px: 1.5,
-                    py: 0.5,
-                    borderRadius: 1,
-                    textAlign: "center",
-                    fontWeight: "bold",
-                    fontSize: 14,
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {article.date}
-                  <br />
-                  {article.month}
+            <Box onClick={() => router.push("/new")} sx={{ cursor: "pointer" }}>
+              <Card
+                sx={{
+                  transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                  ":hover": {
+                    transform: "translateY(-5px)",
+                    boxShadow: 4,
+                  },
+                }}
+              >
+                <Box sx={{ position: "relative" }}>
+                  <CardMedia
+                    component="img"
+                    height="200"
+                    image={article.image}
+                    alt={article.title}
+                    sx={{
+                      objectFit: "cover",
+                      transition: "transform 0.3s ease",
+                      ":hover": {
+                        transform: "scale(1.03)",
+                      },
+                    }}
+                  />
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: 12,
+                      left: 12,
+                      bgcolor: "#f25c05",
+                      color: "white",
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 1,
+                      textAlign: "center",
+                      fontWeight: "bold",
+                      fontSize: 14,
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {article.date}
+                    <br />
+                    {article.month}
+                  </Box>
                 </Box>
-              </Box>
-              <CardContent>
-                <Typography
-                  fontWeight={700}
-                  fontSize={16}
-                  sx={{
-                    mb: 1,
-                    transition: "color 0.3s",
-                    ":hover": { color: "#f25c05" },
-                  }}
-                >
-                  {article.title}
-                </Typography>
-                <Typography fontSize={14} color="text.secondary">
-                  {article.summary}
-                </Typography>
-              </CardContent>
-            </Card>
+                <CardContent>
+                  <Typography
+                    fontWeight={700}
+                    fontSize={16}
+                    sx={{
+                      mb: 1,
+                      transition: "color 0.3s",
+                      ":hover": { color: "#f25c05" },
+                    }}
+                  >
+                    {article.title}
+                  </Typography>
+                  <Typography fontSize={14} color="text.secondary">
+                    {article.summary}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Box>
           </Grid>
         ))}
       </Grid>

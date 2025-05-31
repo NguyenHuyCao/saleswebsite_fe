@@ -1,7 +1,12 @@
+"use client";
+
 import React from "react";
 import { Box, Typography, Button, Grid } from "@mui/material";
+import { useRouter } from "next/navigation";
 
 const PromoBanner = () => {
+  const router = useRouter();
+
   return (
     <Box
       sx={{
@@ -60,6 +65,7 @@ const PromoBanner = () => {
             </Typography>
             <Button
               variant="contained"
+              onClick={() => router.push("/promotion")}
               sx={{
                 mt: 3,
                 bgcolor: "#fff",
