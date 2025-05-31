@@ -1,6 +1,5 @@
 "use client";
 
-import ScrollToTopButton from "@/components/fixed_elements/button_scroll_to_top/ScrollToTopButton";
 import { Quicksand } from "next/font/google";
 import { ReactNode } from "react";
 import {
@@ -8,7 +7,6 @@ import {
   SettingsConsumer,
 } from "src/@core/context/settingsContext";
 import ThemeComponent from "src/@core/theme/ThemeComponent";
-import ScrollToTop from "react-scroll-to-top";
 
 const quicksand = Quicksand({
   subsets: ["latin"],
@@ -25,7 +23,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             {({ settings }) => (
               <ThemeComponent settings={settings}>
                 {children}
-                <ScrollToTopButton />
                 {/* <ScrollToTop
                   smooth
                   top={300} // bao nhiêu px thì hiện nút
