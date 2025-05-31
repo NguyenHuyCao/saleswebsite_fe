@@ -1,3 +1,5 @@
+"use client";
+
 import {
   AppBar,
   Box,
@@ -11,8 +13,38 @@ import {
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import BookmarkBorderOutlinedIcon from "@mui/icons-material/BookmarkBorderOutlined";
 import { FavoriteBorder, Search } from "@mui/icons-material";
+import { useEffect, useState } from "react";
+
+const searchPhrases = [
+  "Bạn muốn tìm gì?",
+  "Máy khoan, máy cắt, máy hàn...",
+  "Khuyến mãi hôm nay là gì?",
+  "Tìm sản phẩm hot nhất!",
+];
 
 const MainToolbar = () => {
+  const [currentText, setCurrentText] = useState("");
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [charIndex, setCharIndex] = useState(0);
+
+  useEffect(() => {
+    const currentPhrase = searchPhrases[phraseIndex];
+    if (charIndex < currentPhrase.length) {
+      const timeout = setTimeout(() => {
+        setCurrentText((prev) => prev + currentPhrase[charIndex]);
+        setCharIndex((prev) => prev + 1);
+      }, 70);
+      return () => clearTimeout(timeout);
+    } else {
+      const resetTimeout = setTimeout(() => {
+        setCurrentText("");
+        setCharIndex(0);
+        setPhraseIndex((prev) => (prev + 1) % searchPhrases.length);
+      }, 1500);
+      return () => clearTimeout(resetTimeout);
+    }
+  }, [charIndex, phraseIndex]);
+
   return (
     <AppBar position="static" sx={{ bgcolor: "black", boxShadow: "none" }}>
       <Container>
@@ -45,7 +77,7 @@ const MainToolbar = () => {
             }}
           >
             <InputBase
-              placeholder="Bạn muốn tìm gì?"
+              placeholder={currentText}
               fullWidth
               sx={{ fontSize: { xs: "14px", sm: "16px" } }}
             />
