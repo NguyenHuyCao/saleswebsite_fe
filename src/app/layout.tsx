@@ -1,6 +1,7 @@
 // app/layout.tsx
 "use client";
 
+import ScrollToTopButton from "@/components/fixed_elements/button_scroll_to_top/ScrollToTopButton";
 import { Quicksand } from "next/font/google";
 import { ReactNode } from "react";
 import {
@@ -18,11 +19,14 @@ const quicksand = Quicksand({
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="vi">
-      <body className={quicksand.className}>
+      <body className={quicksand.className} style={{ overflowY: "scroll" }}>
         <SettingsProvider>
           <SettingsConsumer>
             {({ settings }) => (
-              <ThemeComponent settings={settings}>{children}</ThemeComponent>
+              <ThemeComponent settings={settings}>
+                {children}
+                <ScrollToTopButton />
+              </ThemeComponent>
             )}
           </SettingsConsumer>
         </SettingsProvider>

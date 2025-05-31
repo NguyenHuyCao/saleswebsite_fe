@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
 import ThemeRegistry from "@/views/theme-registry/theme.registry";
 import "@/styles/app.css";
-// import { Quicksand } from "next/font/google";
 import AppHeader from "@/views/header/app.header";
 import AppFooter from "@/views/footer/app.footer";
-import ScrollToTopButton from "@/components/home/ScrollToTopButton";
-import FloatingContactButtons from "@/components/home/FloatingContactButton";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import ClientLayoutWrapper from "@/components/fixed_elements/ClientLayoutWrapper";
 
 // const quicksand = Quicksand({
 //   subsets: ["latin"],
@@ -29,12 +27,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ThemeRegistry>
-      <AppHeader />
-      {children}
-      <AppFooter />
-      <FloatingContactButtons />
-      <ScrollToTopButton />
-    </ThemeRegistry>
+    <>
+      <ThemeRegistry>
+        <AppHeader />
+        {children}
+        <AppFooter />
+        <ClientLayoutWrapper />
+      </ThemeRegistry>
+    </>
   );
 }

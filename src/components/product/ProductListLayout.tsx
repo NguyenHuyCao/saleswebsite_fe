@@ -18,6 +18,16 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import CategorySidebar from "./CategorySidebar";
 import ProductFilterPanel from "./ProductFilterPanel";
 
+interface ProductIprop {
+  name: string;
+  image: string;
+  price: number;
+  oldPrice: number;
+  tag?: string;
+  badge?: string;
+  rating?: number;
+}
+
 const baseProducts = Array.from({ length: 20 }, (_, i) => ({
   name: `Sản phẩm demo ${i + 1}`,
   image: "/images/product/1534231926-5.jpg",
@@ -32,7 +42,7 @@ const ITEMS_PER_PAGE = 8;
 export default function ProductListLayout() {
   const [page, setPage] = useState(1);
   const [favorites, setFavorites] = useState<number[]>([]);
-  const [products, setProducts] = useState<typeof baseProducts>([]);
+  const [products, setProducts] = useState<ProductIprop[]>([]);
 
   useEffect(() => {
     const dataWithRating = baseProducts.map((p) => ({

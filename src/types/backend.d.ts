@@ -17,6 +17,11 @@ declare global {
     name: string;
     image: string;
     inStock: boolean;
+    price: number;
+    oldPrice: number;
+    tag?: string;
+    badge?: string;
+    rating?: number;
   }
 
   interface IBackendRes<T> {

@@ -61,7 +61,7 @@ const AppFooter = () => {
                 icon: ChangeCircleOutlinedIcon,
               },
             ].map((item) => (
-              <Grid item xs={12} sm={6} md={3} key={item.title}>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }} key={item.title}>
                 <Stack direction="row" spacing={2} alignItems="center">
                   <item.icon sx={{ fontSize: 36, color: "black" }} />
                   <Box>
@@ -86,7 +86,7 @@ const AppFooter = () => {
       </Box>
 
       {/* Nội dung chính */}
-      <Container maxWidth="xl">
+      <Container>
         <Grid
           container
           spacing={4}
@@ -95,7 +95,7 @@ const AppFooter = () => {
           alignItems="flex-start"
         >
           {/* Cột logo và mô tả */}
-          <Grid item xs={12} md={3}>
+          <Grid size={{ xs: 12, md: 3 }}>
             <Image
               src="/images/store/logo-removebg-preview.png"
               alt="Logo"
@@ -132,10 +132,10 @@ const AppFooter = () => {
           </Grid>
 
           {/* Các nhóm thông tin khác */}
-          <Grid item xs={12} md={9}>
+          <Grid size={{ xs: 12, md: 9 }}>
             <Grid container spacing={4}>
               {/* Chính sách */}
-              <Grid item xs={6} sm={3}>
+              <Grid size={{ xs: 6, sm: 3 }}>
                 <Typography fontWeight={700} mb={1} color="#ffb700">
                   CHÍNH SÁCH
                 </Typography>
@@ -152,7 +152,7 @@ const AppFooter = () => {
               </Grid>
 
               {/* Hướng dẫn */}
-              <Grid item xs={6} sm={3}>
+              <Grid size={{ xs: 6, sm: 3 }}>
                 <Typography fontWeight={700} mb={1} color="#ffb700">
                   HƯỚNG DẪN
                 </Typography>
@@ -169,7 +169,7 @@ const AppFooter = () => {
               </Grid>
 
               {/* Danh mục nổi bật */}
-              <Grid item xs={6} sm={3}>
+              <Grid size={{ xs: 6, sm: 3 }}>
                 <Typography fontWeight={700} mb={1} color="#ffb700">
                   DANH MỤC NỔI BẬT
                 </Typography>
@@ -186,7 +186,7 @@ const AppFooter = () => {
               </Grid>
 
               {/* Liên hệ */}
-              <Grid item xs={6} sm={3}>
+              <Grid size={{ xs: 6, sm: 3 }}>
                 <Typography fontWeight={700} mb={1} color="#ffb700">
                   LIÊN HỆ
                 </Typography>
