@@ -31,7 +31,7 @@ const FloatingContactButtons = () => {
             alt: "Zalo",
           },
           {
-            href: "tel:0123456789",
+            href: "tel:0367164126",
             title: "Gọi điện thoại",
             src: "/images/icons/phone-call.png",
             alt: "Gọi ngay",

@@ -31,34 +31,6 @@ interface Props {
 const CategoryMegaMenu = ({ data }: Props) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-  const fakeData: CategoryData[] = [
-    ...data,
-    {
-      label: "Dụng cụ cầm tay",
-      icon: "/images/product/1534231926-5.jpg",
-      subCategories: [
-        {
-          title: "Tua vít & kìm",
-          items: ["Tua vít điện", "Kìm cắt", "Kìm bấm"],
-        },
-        {
-          title: "Cờ lê & Mỏ lết",
-          items: ["Cờ lê đa năng", "Mỏ lết tự động"],
-        },
-        {
-          title: "Bộ dụng cụ sửa chữa",
-          items: ["Bộ vặn ốc", "Bộ mở nắp"],
-        },
-      ],
-      banner: {
-        image: "/images/product/images.jpeg",
-        description: "Ưu đãi 25% cho các bộ dụng cụ cầm tay chuyên nghiệp!",
-        ctaText: "Mua ngay",
-        ctaLink: "/dung-cu-cam-tay",
-      },
-    },
-  ];
-
   return (
     <Box display="flex" sx={{ position: "relative" }}>
       {/* Danh mục chính */}
@@ -69,7 +41,7 @@ const CategoryMegaMenu = ({ data }: Props) => {
           width: 250,
         }}
       >
-        {fakeData.map((category, index) => (
+        {data.map((category, index) => (
           <Box
             key={index}
             onMouseEnter={() => setHoveredIndex(index)}
@@ -121,7 +93,7 @@ const CategoryMegaMenu = ({ data }: Props) => {
             borderTop: "4px solid #ffb700",
           }}
         >
-          {fakeData[hoveredIndex].subCategories.map((group, idx) => (
+          {data[hoveredIndex].subCategories.map((group, idx) => (
             <Box key={idx} minWidth={200} maxWidth={250}>
               <Typography fontWeight="bold" mb={1} fontSize={14}>
                 {group.title}
@@ -158,7 +130,7 @@ const CategoryMegaMenu = ({ data }: Props) => {
           ))}
 
           {/* Optional banner hiển thị khi hover */}
-          {fakeData[hoveredIndex].banner && (
+          {data[hoveredIndex].banner && (
             <Box
               display="flex"
               flexDirection="column"
@@ -166,20 +138,20 @@ const CategoryMegaMenu = ({ data }: Props) => {
               sx={{ maxWidth: 250 }}
             >
               <img
-                src={fakeData[hoveredIndex].banner.image}
+                src={data[hoveredIndex].banner.image}
                 alt="banner"
                 style={{ width: "100%", borderRadius: 4, marginBottom: 12 }}
               />
               <Typography fontSize={13} mb={1}>
-                {fakeData[hoveredIndex].banner.description}
+                {data[hoveredIndex].banner.description}
               </Typography>
               <Button
                 size="small"
                 variant="contained"
-                href={fakeData[hoveredIndex].banner.ctaLink}
+                href={data[hoveredIndex].banner.ctaLink}
                 sx={{ bgcolor: "#ffb700", color: "black" }}
               >
-                {fakeData[hoveredIndex].banner.ctaText}
+                {data[hoveredIndex].banner.ctaText}
               </Button>
             </Box>
           )}

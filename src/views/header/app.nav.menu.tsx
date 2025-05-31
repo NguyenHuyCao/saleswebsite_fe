@@ -22,6 +22,7 @@ import CategoryMegaMenu from "@/components/category/CategoryMegaMenu";
 const categoriesData = [
   {
     label: "Sản phẩm",
+    icon: "/images/product/1534231926-5.jpg",
     subCategories: [
       {
         title: "Máy khoan",
@@ -49,6 +50,30 @@ const categoriesData = [
         items: ["Máy hàn", "Máy tiện", "Máy nén khí", "Máy cắt plasma"],
       },
     ],
+  },
+  {
+    label: "Dụng cụ cầm tay",
+    icon: "/images/product/1534231926-5.jpg",
+    subCategories: [
+      {
+        title: "Tua vít & kìm",
+        items: ["Tua vít điện", "Kìm cắt", "Kìm bấm"],
+      },
+      {
+        title: "Cờ lê & Mỏ lết",
+        items: ["Cờ lê đa năng", "Mỏ lết tự động"],
+      },
+      {
+        title: "Bộ dụng cụ sửa chữa",
+        items: ["Bộ vặn ốc", "Bộ mở nắp"],
+      },
+    ],
+    banner: {
+      image: "/images/product/images.jpeg",
+      description: "Ưu đãi 25% cho các bộ dụng cụ cầm tay chuyên nghiệp!",
+      ctaText: "Mua ngay",
+      ctaLink: "/dung-cu-cam-tay",
+    },
   },
 ];
 

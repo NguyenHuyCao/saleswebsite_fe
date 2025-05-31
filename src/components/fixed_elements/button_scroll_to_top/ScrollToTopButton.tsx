@@ -9,7 +9,9 @@ const ScrollToTopButton = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setVisible(window.scrollY > 300);
+      const scrollTop =
+        document.documentElement.scrollTop || document.body.scrollTop;
+      setVisible(scrollTop > 300);
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -17,12 +19,7 @@ const ScrollToTopButton = () => {
   }, []);
 
   const handleClick = () => {
-    console.log("Clicked scroll to top");
-
-    const scrollElement =
-      document.scrollingElement || document.documentElement || document.body;
-
-    scrollElement.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -35,6 +32,7 @@ const ScrollToTopButton = () => {
           right: 32,
           bgcolor: "#ffb700",
           color: "#fff",
+
           "&:hover": {
             bgcolor: "#e6a500",
           },
