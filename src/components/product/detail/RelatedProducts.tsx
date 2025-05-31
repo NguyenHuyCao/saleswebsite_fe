@@ -133,10 +133,13 @@ export const RelatedProducts = () => {
           {related.map((item, idx) => (
             <motion.div
               key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: idx * 0.05 }}
-              whileHover={{ scale: 1.03 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4, delay: idx * 0.05, ease: "easeOut" }}
+              whileHover={{
+                scale: 1.02,
+                boxShadow: "0px 8px 20px rgba(0,0,0,0.08)",
+              }}
               style={{ minWidth: 200, maxWidth: 200 }}
             >
               <Card
