@@ -61,7 +61,7 @@ export default function ProductListLayout() {
     value: number
   ) => {
     setPage(value);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const toggleFavorite = (index: number) => {
@@ -78,7 +78,7 @@ export default function ProductListLayout() {
   return (
     <Box
       display={{ xs: "block", md: "flex" }}
-      px={{ xs: 2, md: 3 }}
+      // px={{ xs: 2, md: 3 }}
       py={4}
       gap={3}
     >
@@ -102,7 +102,7 @@ export default function ProductListLayout() {
             <Grid size={{ xs: 12, md: 2 }}>
               <Box
                 component="img"
-                src="/images/product/banner.avif"
+                src="/images/product/Single-Crawler-Hot-Sale-Mini-Power-180-2wheel-Tractor-Plow-Rubber-Farmland-Chain-Track-Trenching-Weeding-Seeding-All-in-One-Machine-Hand-Held-Cultivator.avif"
                 alt="Banner"
                 sx={{
                   width: "100%",
