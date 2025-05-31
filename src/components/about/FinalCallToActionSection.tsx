@@ -2,6 +2,7 @@
 
 import { Box, Typography, Button, Stack } from "@mui/material";
 import { styled } from "@mui/system";
+import { useRouter } from "next/navigation";
 
 const BackgroundBox = styled(Box)(({ theme }) => ({
   backgroundImage: 'url("/images/cta/2-stroke-engine-banner.jpg")',
@@ -31,6 +32,8 @@ const ContentBox = styled(Box)({
 });
 
 const FinalCallToActionSection = () => {
+  const router = useRouter();
+
   return (
     <Box px={4} py={6}>
       <BackgroundBox>
@@ -57,6 +60,7 @@ const FinalCallToActionSection = () => {
                 py: 1.5,
                 borderRadius: 2,
               }}
+              onClick={() => router.push("/contact")}
             >
               Liên hệ tư vấn
             </Button>
@@ -75,6 +79,7 @@ const FinalCallToActionSection = () => {
                   backgroundColor: "rgba(255,255,255,0.1)",
                 },
               }}
+              onClick={() => router.push("/product")}
             >
               Mua ngay hôm nay – Ưu đãi cực sốc!
             </Button>
