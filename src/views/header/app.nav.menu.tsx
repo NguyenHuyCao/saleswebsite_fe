@@ -15,7 +15,6 @@ import HomeIcon from "@mui/icons-material/Home";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import CompareIcon from "@mui/icons-material/Compare";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import CategoryMegaMenu from "@/components/category/CategoryMegaMenu";
@@ -136,21 +135,18 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
     { label: "Tin tức", href: "/new" },
     { label: "Liên hệ", href: "/contact" },
     { label: "Hệ thống cửa hàng", href: "/system" },
-    { label: "Câu hỏi thường gặp", href: "/question" },
-    { label: "Chế độ bảo hành", href: "/warranty" },
   ];
 
   return (
-    <Container maxWidth="xl">
+    <Container>
       <Box
         sx={{
           position: "relative",
           display: "flex",
           alignItems: "center",
-          gap: 3,
+          gap: 4,
           bgcolor: "#ffb700",
-          py: 1,
-          px: 2,
+          py: 0.5,
         }}
       >
         <Box
@@ -193,12 +189,12 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
         <Box
           sx={{
             display: "flex",
-            flexWrap: "nowrap",
+            flexWrap: "wrap",
             overflowX: "auto",
             whiteSpace: "nowrap",
             justifyContent: "flex-start",
             flexGrow: 1,
-            px: { xs: 1, sm: 2, md: 0 },
+            px: { xs: 1, sm: 3, md: 2 },
             scrollbarWidth: "none",
             "&::-webkit-scrollbar": { display: "none" },
             maxWidth: "100%",
@@ -232,9 +228,9 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
                 }}
               >
                 {label}
-                {label === "Sản phẩm" && (
+                {/* {label === "Sản phẩm" && (
                   <ArrowDropDownIcon fontSize="small" sx={{ ml: 0.3 }} />
-                )}
+                )} */}
               </Typography>
             </Box>
           ))}
