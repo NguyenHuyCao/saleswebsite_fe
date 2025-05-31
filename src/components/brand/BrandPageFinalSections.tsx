@@ -12,8 +12,8 @@ import {
   Stack,
 } from "@mui/material";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
-// Sample data
 const certifications = [
   "/images/certificate/ce-certification-for-machinaries-and-machine-tools.jpg",
   "/images/certificate/435969446.png",
@@ -36,9 +36,11 @@ const userImages = [
 ];
 
 const BrandPageFinalSections = () => {
+  const router = useRouter();
+
   return (
     <Box px={4} py={6}>
-      {/* 5. Certifications & Partners */}
+      {/* 1. Certifications & Partners */}
       <Box mb={8}>
         <Typography variant="h5" fontWeight="bold" textAlign="center" mb={4}>
           CHỨNG NHẬN & ĐỐI TÁC
@@ -60,10 +62,10 @@ const BrandPageFinalSections = () => {
         </Grid>
       </Box>
 
-      {/* 6. User Gallery */}
+      {/* 2. Customer Feedback */}
       <Box mb={8}>
         <Typography variant="h5" fontWeight="bold" textAlign="center" mb={4}>
-          GÓC NGƯỞI DÙNG
+          GÓC NGƯỜI DÙNG
         </Typography>
         <Grid container spacing={3} justifyContent="center">
           {userImages.map((user, idx) => (
@@ -97,7 +99,7 @@ const BrandPageFinalSections = () => {
         </Grid>
       </Box>
 
-      {/* 7. Final CTA */}
+      {/* 3. Final CTA */}
       <Box
         py={6}
         px={4}
@@ -119,10 +121,20 @@ const BrandPageFinalSections = () => {
           justifyContent="center"
           mt={3}
         >
-          <Button variant="contained" color="warning" size="large">
+          <Button
+            variant="contained"
+            color="warning"
+            size="large"
+            onClick={() => router.push("/product")}
+          >
             Khám phá sản phẩm
           </Button>
-          <Button variant="outlined" color="inherit" size="large">
+          <Button
+            variant="outlined"
+            color="inherit"
+            size="large"
+            onClick={() => router.push("/contact")}
+          >
             Liên hệ để được tư vấn thêm
           </Button>
         </Stack>

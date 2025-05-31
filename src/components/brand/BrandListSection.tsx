@@ -3,6 +3,7 @@
 import React from "react";
 import { Box, Typography, Grid, Paper, Button, Stack } from "@mui/material";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 const brands = [
   {
@@ -10,25 +11,27 @@ const brands = [
     name: "Makita",
     origin: "Nhật Bản",
     category: "Công trình, sửa chữa",
-    link: "/products/makita",
+    link: "/product?brand=makita",
   },
   {
     logo: "/images/brands/Stihl_Logo_WhiteOnOrange.svg.png",
     name: "Stihl",
     origin: "Đức",
     category: "Nông nghiệp, lâm nghiệp",
-    link: "/products/stihl",
+    link: "/product?brand=stihl",
   },
   {
     logo: "/images/brands/TGPT Husqvarna.jpg",
     name: "Husqvarna",
     origin: "Thụy Điển",
     category: "Làm vườn, lâm nghiệp",
-    link: "/products/husqvarna",
+    link: "/product?brand=husqvarna",
   },
 ];
 
 const BrandListSection = () => {
+  const router = useRouter();
+
   return (
     <Box px={4} py={8} bgcolor="#f9fafb">
       <Typography
@@ -107,8 +110,8 @@ const BrandListSection = () => {
               <Stack alignItems="center">
                 <Button
                   variant="outlined"
-                  href={brand.link}
                   sx={{ mt: 1, zIndex: 1, position: "relative" }}
+                  onClick={() => router.push(brand.link)}
                 >
                   Xem sản phẩm
                 </Button>

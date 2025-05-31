@@ -15,7 +15,7 @@ const BackgroundBox = styled(Box)(({ theme }) => ({
   position: "relative",
   borderRadius: theme.spacing(2),
   overflow: "hidden",
-  boxShadow: theme.shadows[6],
+  boxShadow: (theme.shadows as string[])[6],
 
   "&::before": {
     content: '""',

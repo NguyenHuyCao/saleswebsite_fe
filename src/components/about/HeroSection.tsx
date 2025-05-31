@@ -3,8 +3,11 @@
 import { Box, Typography, Button, Stack } from "@mui/material";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 const HeroSection = () => {
+  const router = useRouter();
+
   return (
     <Box
       sx={{
@@ -87,6 +90,7 @@ const HeroSection = () => {
             component={motion.button}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            onClick={() => router.push("/product")}
           >
             Xem sản phẩm
           </Button>
