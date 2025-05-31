@@ -1,195 +1,101 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
-import {
-  Box,
-  Typography,
-  Button,
-  IconButton,
-  Stack,
-  Paper,
-} from "@mui/material";
+import { Box, IconButton } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import ProductCard, { Product } from "../product/ProductCard";
 
-const products = [
+const products: Product[] = [
   {
     title: "Demo sản phẩm thuộc tính",
     price: 2920000,
     originalPrice: 3500000,
     image: "/images/product/12.jpg",
-    status: "Mới",
-    sold: 12,
+    status: ["Mới"],
+    sale: true,
     inStock: false,
+    label: "Hết hàng",
+    rating: 4.5,
   },
   {
     title: "Máy cắt sắt 2300W Dewalt D28730-B1",
     price: 2920000,
     originalPrice: 3500000,
     image: "/images/product/12.jpg",
-    status: "Mới",
-    sold: 0,
+    status: ["Mới"],
+    sale: true,
     inStock: false,
+    label: "Hết hàng",
+    rating: 4.0,
   },
   {
     title: "Tời quay tay Kenbo cao cấp 1200LBS 20m",
     price: 859000,
     originalPrice: 1210000,
     image: "/images/product/12.jpg",
-    status: "Mới, Bán chạy",
-    sold: 0,
+    status: ["Mới", "Bán chạy"],
+    sale: true,
     inStock: false,
+    label: "Hết hàng",
+    rating: 3.5,
   },
   {
     title: "Tời điện Kenbo PA500-12m/30m 220v",
     price: 2180000,
     originalPrice: 2915000,
     image: "/images/product/12.jpg",
-    status: "",
-    sold: 11,
+    status: [],
+    sale: true,
     inStock: true,
+    label: "Thêm vào giỏ",
+    rating: 4.2,
   },
   {
     title: "Máy bơm nước tự động tăng áp Shining SHP-128EA",
     price: 1090000,
     originalPrice: 1370000,
     image: "/images/product/12.jpg",
-    status: "Bán chạy",
-    sold: 8,
+    status: ["Bán chạy"],
+    sale: true,
     inStock: true,
+    label: "Thêm vào giỏ",
+    rating: 3.8,
   },
   {
     title: "Máy cưa đĩa 1800W Bosch GKS 190",
     price: 2290000,
     originalPrice: 2650000,
     image: "/images/product/12.jpg",
-    status: "Hot",
-    sold: 15,
+    status: ["Hot"],
+    sale: true,
     inStock: true,
+    label: "Thêm vào giỏ",
+    rating: 4.7,
   },
   {
     title: "Máy mài góc 850W Makita GA4030",
     price: 890000,
     originalPrice: 1120000,
     image: "/images/product/12.jpg",
-    status: "",
-    sold: 30,
+    status: [],
+    sale: true,
     inStock: true,
+    label: "Thêm vào giỏ",
+    rating: 4.0,
   },
   {
     title: "Máy khoan bê tông Bosch GBH 2-26 DRE",
     price: 3120000,
     originalPrice: 3650000,
     image: "/images/product/12.jpg",
-    status: "Sale",
-    sold: 22,
+    status: ["Sale"],
+    sale: true,
     inStock: true,
+    label: "Thêm vào giỏ",
+    rating: 4.6,
   },
 ];
-
-const ProductCard = ({ product }: { product: (typeof products)[0] }) => (
-  <Paper
-    elevation={3}
-    sx={{
-      width: 240,
-      height: 360,
-      mx: 1,
-      borderRadius: 2,
-      overflow: "hidden",
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "space-between",
-      transition: "transform 0.3s ease",
-      flexShrink: 0,
-      "&:hover": {
-        transform: "translateY(-4px)",
-      },
-    }}
-  >
-    <Box
-      position="relative"
-      height={150}
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      sx={{ backgroundColor: "#fafafa" }}
-    >
-      <img
-        src={product.image}
-        alt={product.title}
-        style={{ height: "100%", width: "auto", objectFit: "contain" }}
-      />
-      {product.status && (
-        <Box
-          sx={{
-            position: "absolute",
-            top: 8,
-            left: 8,
-            bgcolor: "#f25c05",
-            px: 1,
-            borderRadius: 1,
-            color: "white",
-            fontSize: 12,
-            fontWeight: "bold",
-          }}
-        >
-          {product.status}
-        </Box>
-      )}
-    </Box>
-    <Box
-      px={2}
-      py={1}
-      flex={1}
-      display="flex"
-      flexDirection="column"
-      justifyContent="space-between"
-    >
-      <Typography
-        fontWeight={600}
-        fontSize={14}
-        sx={{
-          display: "-webkit-box",
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: "vertical",
-          overflow: "hidden",
-        }}
-      >
-        {product.title}
-      </Typography>
-      <Stack direction="row" spacing={1} alignItems="center" mt={1}>
-        <Typography color="#f25c05" fontWeight="bold">
-          {product.price.toLocaleString()}₫
-        </Typography>
-        <Typography
-          fontSize={13}
-          sx={{ textDecoration: "line-through", color: "gray" }}
-        >
-          {product.originalPrice.toLocaleString()}₫
-        </Typography>
-      </Stack>
-      <Box mt={1}>
-        <Button
-          fullWidth
-          variant={product.inStock ? "contained" : "outlined"}
-          disabled={!product.inStock}
-          sx={{
-            bgcolor: product.inStock ? "#ffb700" : "#f0f0f0",
-            color: product.inStock ? "black" : "gray",
-            fontWeight: 600,
-            textTransform: "none",
-            fontSize: 14,
-          }}
-        >
-          {product.inStock ? "Thêm vào giỏ" : "Hết hàng"}
-        </Button>
-        <Typography fontSize={12} mt={1}>
-          Đã bán {product.sold}
-        </Typography>
-      </Box>
-    </Box>
-  </Paper>
-);
 
 const FlashSaleSlider = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -248,6 +154,7 @@ const FlashSaleSlider = () => {
           scrollBehavior: "smooth",
           scrollbarWidth: "none",
           "&::-webkit-scrollbar": { display: "none" },
+          gap: 1,
           px: 5,
           scrollSnapType: "x mandatory",
         }}

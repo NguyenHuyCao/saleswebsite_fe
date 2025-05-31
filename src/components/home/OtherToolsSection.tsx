@@ -1,18 +1,13 @@
 "use client";
 
 import React from "react";
-import {
-  Box,
-  Typography,
-  Grid,
-  Button,
-  Paper,
-  Stack,
-  Tooltip,
-} from "@mui/material";
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import { Box, Typography, Button, IconButton } from "@mui/material";
+import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import { useRouter } from "next/navigation";
+import ProductCard, { Product } from "../product/ProductCard";
 
-const otherTools = [
+const otherTools: Product[] = [
   {
     title: "Máy cắt cỏ 2 thì Kasei KS 33N",
     price: 2450000,
@@ -21,6 +16,8 @@ const otherTools = [
     status: [],
     sale: true,
     inStock: true,
+    label: "Thêm vào giỏ",
+    rating: 4.0,
   },
   {
     title: "Cuộn vòi tưới cây 20m Claber Kiros Kit (8945)",
@@ -30,6 +27,8 @@ const otherTools = [
     status: ["Mới", "Bán chạy"],
     sale: true,
     inStock: true,
+    label: "Thêm vào giỏ",
+    rating: 4.2,
   },
   {
     title: "Bình phun hóa chất béc xoay Dudaco B801 8 lít",
@@ -39,6 +38,8 @@ const otherTools = [
     status: ["Mới"],
     sale: true,
     inStock: true,
+    label: "Thêm vào giỏ",
+    rating: 3.8,
   },
   {
     title: "Máy cắt cỏ Hyundai HD 835",
@@ -48,133 +49,67 @@ const otherTools = [
     status: ["Bán chạy"],
     sale: true,
     inStock: true,
+    label: "Thêm vào giỏ",
+    rating: 4.4,
   },
 ];
 
-const ProductCard = ({ product }: { product: (typeof otherTools)[0] }) => (
-  <Paper
-    elevation={3}
-    sx={{
-      borderRadius: 1,
-      overflow: "hidden",
-      position: "relative",
-      p: 2,
-      transition: "transform 0.3s, box-shadow 0.3s",
-      "&:hover": {
-        transform: "translateY(-4px)",
-        boxShadow: 6,
-      },
-    }}
-  >
-    {product.sale && (
-      <Box
-        sx={{
-          bgcolor: "#f25c05",
-          color: "white",
-          px: 1,
-          py: 0.2,
-          fontSize: 12,
-          fontWeight: "bold",
-          position: "absolute",
-          top: 8,
-          left: 8,
-        }}
-      >
-        Sale
-      </Box>
-    )}
-    <Box
-      sx={{
-        height: 150,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <img
-        src={product.image}
-        alt={product.title}
-        style={{ maxHeight: "100%", objectFit: "contain" }}
-      />
-    </Box>
-    <Stack direction="row" spacing={1} mt={1}>
-      {product.status.map((s, idx) => (
-        <Box
-          key={idx}
-          sx={{
-            bgcolor: s === "Bán chạy" ? "#ffb700" : "#f25c05",
-            color: "white",
-            fontSize: 12,
-            fontWeight: "bold",
-            px: 1,
-            borderRadius: 0.5,
-          }}
-        >
-          {s}
-        </Box>
-      ))}
-    </Stack>
-    <Typography fontSize={14} fontWeight={600} mt={1} height={40}>
-      {product.title}
-    </Typography>
-    <Stack direction="row" spacing={1} alignItems="center" mt={0.5}>
-      <Typography color="#f25c05" fontWeight="bold">
-        {product.price.toLocaleString()}₫
-      </Typography>
-      <Typography
-        fontSize={13}
-        sx={{ textDecoration: "line-through", color: "gray" }}
-      >
-        {product.originalPrice.toLocaleString()}₫
-      </Typography>
-    </Stack>
-    <Button
-      fullWidth
-      variant="contained"
-      sx={{
-        mt: 1,
-        bgcolor: "#ffb700",
-        color: "black",
-        fontWeight: 600,
-        textTransform: "none",
-        fontSize: 14,
-        "&:hover": { bgcolor: "#f25c05" },
-      }}
-    >
-      Thêm vào giỏ
-    </Button>
-    <Tooltip title="Yêu thích">
-      <Box
-        sx={{
-          position: "absolute",
-          top: 8,
-          right: 8,
-          bgcolor: "white",
-          borderRadius: "50%",
-          boxShadow: 1,
-          width: 28,
-          height: 28,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-          transition: "background-color 0.2s",
-          "&:hover": { bgcolor: "#ffb700" },
-        }}
-      >
-        <FavoriteBorderIcon fontSize="small" sx={{ color: "#f25c05" }} />
-      </Box>
-    </Tooltip>
-  </Paper>
-);
-
 const OtherToolsSection = () => {
+  const router = useRouter();
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [showLeft, setShowLeft] = React.useState(false);
+  const [showRight, setShowRight] = React.useState(false);
+
+  const checkScroll = () => {
+    const el = containerRef.current;
+    if (el) {
+      setShowLeft(el.scrollLeft > 10);
+      setShowRight(el.scrollLeft + el.offsetWidth < el.scrollWidth - 10);
+    }
+  };
+
+  React.useEffect(() => {
+    checkScroll();
+    const el = containerRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", checkScroll);
+    return () => el.removeEventListener("scroll", checkScroll);
+  }, []);
+
+  const scroll = (direction: "left" | "right") => {
+    if (containerRef.current) {
+      containerRef.current.scrollBy({
+        left: direction === "left" ? -300 : 300,
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
-    <Box px={3} py={4}>
+    <Box sx={{ position: "relative", px: 2, py: 4 }}>
       <Typography variant="h5" fontWeight="bold" mb={2}>
         DỤNG CỤ <span style={{ color: "#ffb700" }}>KHÁC</span>
       </Typography>
-      <Box mb={3} display="flex" flexWrap="wrap" gap={1}>
+
+      {showLeft && (
+        <IconButton
+          onClick={() => scroll("left")}
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: 0,
+            zIndex: 10,
+            bgcolor: "white",
+            boxShadow: 2,
+            transform: "translateY(-50%)",
+            "&:hover": { bgcolor: "#ffb700" },
+          }}
+        >
+          <ArrowBackIosNewIcon />
+        </IconButton>
+      )}
+
+      <Box mb={3} display="flex" flexWrap="wrap" gap={1} px={5}>
         {["Máy nông nghiệp", "Thang nhôm", "Máy rửa xe", "Thiết bị nâng"].map(
           (label, idx) => (
             <Button
@@ -198,15 +133,51 @@ const OtherToolsSection = () => {
           )
         )}
       </Box>
-      <Grid container spacing={2}>
+
+      <Box
+        ref={containerRef}
+        sx={{
+          display: "flex",
+          overflowX: "auto",
+          scrollBehavior: "smooth",
+          scrollbarWidth: "none",
+          "&::-webkit-scrollbar": { display: "none" },
+          scrollSnapType: "x mandatory",
+          gap: 2,
+          px: 5,
+        }}
+      >
         {otherTools.map((product, index) => (
-          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3, xl: 2.4 }} key={index}>
+          <Box
+            key={index}
+            sx={{ width: 250, scrollSnapAlign: "start", flexShrink: 0 }}
+          >
             <ProductCard product={product} />
-          </Grid>
+          </Box>
         ))}
-      </Grid>
+      </Box>
+
+      {showRight && (
+        <IconButton
+          onClick={() => scroll("right")}
+          sx={{
+            position: "absolute",
+            top: "50%",
+            right: 0,
+            zIndex: 10,
+            bgcolor: "white",
+            boxShadow: 2,
+            transform: "translateY(-50%)",
+            "&:hover": { bgcolor: "#ffb700" },
+          }}
+        >
+          <ArrowForwardIosIcon />
+        </IconButton>
+      )}
+
       <Box display="flex" justifyContent="center" mt={3}>
         <Button
+          onClick={() => router.push("/product")}
           variant="outlined"
           sx={{
             borderColor: "#ffb700",

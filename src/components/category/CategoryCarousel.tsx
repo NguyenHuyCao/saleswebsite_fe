@@ -91,14 +91,17 @@ const CategoryCarousel = () => {
                 border: "3px solid #ffb700",
                 boxShadow: 3,
                 bgcolor: "#fff",
+                position: "relative",
               }}
             >
               <Image
                 src={item.image}
                 alt={item.title}
-                width={100}
-                height={100}
-                style={{ objectFit: "contain" }}
+                fill
+                style={{
+                  objectFit: "cover",
+                  borderRadius: "50%",
+                }}
               />
             </Box>
             <Typography mt={1.5} fontSize={14} fontWeight={600} color="#000">
