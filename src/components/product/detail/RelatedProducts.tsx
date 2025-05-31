@@ -13,6 +13,7 @@ import {
   IconButton,
 } from "@mui/material";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import FavoriteIcon from "@mui/icons-material/Favorite";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { useRef, useState, useEffect } from "react";
@@ -32,6 +33,7 @@ export const RelatedProducts = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [liked, setLiked] = useState<number[]>([]);
 
   const updateScrollButtons = () => {
     const container = scrollRef.current;
@@ -66,6 +68,12 @@ export const RelatedProducts = () => {
       left: direction === "left" ? -scrollAmount : scrollAmount,
       behavior: "smooth",
     });
+  };
+
+  const toggleLike = (idx: number) => {
+    setLiked((prev) =>
+      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
+    );
   };
 
   return (
@@ -172,16 +180,26 @@ export const RelatedProducts = () => {
                     }}
                   />
                 ))}
-                <Chip
-                  icon={<FavoriteBorderIcon fontSize="small" />}
-                  size="small"
+                <IconButton
+                  onClick={() => toggleLike(idx)}
                   sx={{
                     position: "absolute",
                     top: 8,
                     right: 8,
                     bgcolor: "white",
+                    borderRadius: 1,
+                    transition: "all 0.3s",
+                    "&:hover": {
+                      bgcolor: liked.includes(idx) ? "#ffe5e5" : "grey.100",
+                    },
                   }}
-                />
+                >
+                  {liked.includes(idx) ? (
+                    <FavoriteIcon fontSize="small" color="error" />
+                  ) : (
+                    <FavoriteBorderIcon fontSize="small" />
+                  )}
+                </IconButton>
                 <CardMedia
                   component="img"
                   image={item.image}
