@@ -14,6 +14,7 @@ import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import BookmarkBorderOutlinedIcon from "@mui/icons-material/BookmarkBorderOutlined";
 import { FavoriteBorder, Search } from "@mui/icons-material";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const searchPhrases = [
   "Bạn muốn tìm gì?",
@@ -23,6 +24,7 @@ const searchPhrases = [
 ];
 
 const MainToolbar = () => {
+  const router = useRouter();
   const [currentText, setCurrentText] = useState("");
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
@@ -45,6 +47,12 @@ const MainToolbar = () => {
     }
   }, [charIndex, phraseIndex]);
 
+  const navRoutes: Record<string, string> = {
+    "Yêu thích": "/wishlist",
+    "Đơn hàng": "/order",
+    "Giỏ hàng": "/cart",
+  };
+
   return (
     <AppBar position="static" sx={{ bgcolor: "black", boxShadow: "none" }}>
       <Container>
@@ -60,7 +68,16 @@ const MainToolbar = () => {
           <Box
             component="img"
             src="/images/store/logo-removebg-preview.png"
-            sx={{ height: { xs: 60, sm: 80, md: 100 } }}
+            alt="Logo"
+            sx={{
+              height: { xs: 60, sm: 80, md: 100 },
+              cursor: "pointer",
+              transition: "transform 0.3s ease",
+              "&:hover": {
+                transform: "scale(1.05)",
+              },
+            }}
+            onClick={() => router.push("/")}
           />
 
           <Box
@@ -104,7 +121,13 @@ const MainToolbar = () => {
               return (
                 <Box
                   key={label}
-                  sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    cursor: "pointer",
+                  }}
+                  onClick={() => router.push(navRoutes[label])}
                 >
                   <IconButton
                     sx={{

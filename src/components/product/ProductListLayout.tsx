@@ -15,10 +15,12 @@ import {
 } from "@mui/material";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
+import { useRouter } from "next/navigation";
 import CategorySidebar from "./CategorySidebar";
 import ProductFilterPanel from "./ProductFilterPanel";
 
 interface ProductIprop {
+  id: number;
   name: string;
   image: string;
   price: number;
@@ -29,6 +31,7 @@ interface ProductIprop {
 }
 
 const baseProducts = Array.from({ length: 20 }, (_, i) => ({
+  id: i + 1,
   name: `Sản phẩm demo ${i + 1}`,
   image: "/images/product/1534231926-5.jpg",
   price: 1000000 + i * 100000,
@@ -43,6 +46,7 @@ export default function ProductListLayout() {
   const [page, setPage] = useState(1);
   const [favorites, setFavorites] = useState<number[]>([]);
   const [products, setProducts] = useState<ProductIprop[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     const dataWithRating = baseProducts.map((p) => ({
@@ -133,15 +137,24 @@ export default function ProductListLayout() {
 
         <Grid container spacing={2}>
           {paginatedProducts.map((item, idx) => (
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={idx}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.id}>
               <Paper
                 elevation={2}
+                onClick={() =>
+                  router.push(`/product/detail?productId=${item.id}`)
+                }
                 sx={{
                   borderRadius: 1,
                   overflow: "hidden",
                   position: "relative",
                   p: 2,
                   height: "100%",
+                  cursor: "pointer",
+                  transition: "transform 0.2s ease",
+                  "&:hover": {
+                    transform: "translateY(-4px)",
+                    boxShadow: "0 6px 16px rgba(0,0,0,0.12)",
+                  },
                 }}
               >
                 {item.badge && (
@@ -163,7 +176,10 @@ export default function ProductListLayout() {
                 )}
                 <Tooltip title="Yêu thích">
                   <Box
-                    onClick={() => toggleFavorite(startIndex + idx)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFavorite(startIndex + idx);
+                    }}
                     sx={{
                       position: "absolute",
                       top: 8,

@@ -15,7 +15,8 @@ import HomeIcon from "@mui/icons-material/Home";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import CompareIcon from "@mui/icons-material/Compare";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown"; // ✅ Thêm icon
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import CategoryMegaMenu from "@/components/category/CategoryMegaMenu";
 
@@ -79,6 +80,8 @@ const categoriesData = [
 
 const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
   const [showMegaMenu, setShowMegaMenu] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
 
   if (isMobile) {
     return (
@@ -94,18 +97,48 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
         }}
       >
         <BottomNavigation showLabels>
-          <BottomNavigationAction label="Trang chủ" icon={<HomeIcon />} />
-          <BottomNavigationAction label="Sản phẩm" icon={<AppsIcon />} />
-          <BottomNavigationAction label="Yêu thích" icon={<FavoriteIcon />} />
-          <BottomNavigationAction label="Đơn hàng" icon={<CompareIcon />} />
+          <BottomNavigationAction
+            label="Trang chủ"
+            icon={<HomeIcon />}
+            onClick={() => router.push("/")}
+          />
+          <BottomNavigationAction
+            label="Sản phẩm"
+            icon={<AppsIcon />}
+            onClick={() => router.push("/product")}
+          />
+          <BottomNavigationAction
+            label="Yêu thích"
+            icon={<FavoriteIcon />}
+            onClick={() => router.push("/wishlist")}
+          />
+          <BottomNavigationAction
+            label="Đơn hàng"
+            icon={<CompareIcon />}
+            onClick={() => router.push("/order")}
+          />
           <BottomNavigationAction
             label="Giỏ hàng"
             icon={<ShoppingCartIcon />}
+            onClick={() => router.push("/cart")}
           />
         </BottomNavigation>
       </Box>
     );
   }
+
+  const navLinks = [
+    { label: "Trang chủ", href: "/" },
+    { label: "Giới thiệu", href: "/about" },
+    { label: "Thương hiệu", href: "/brand" },
+    { label: "Sản phẩm", href: "/product" },
+    { label: "Khuyến mãi", href: "/promotion" },
+    { label: "Tin tức", href: "/new" },
+    { label: "Liên hệ", href: "/contact" },
+    { label: "Hệ thống cửa hàng", href: "/system" },
+    { label: "Câu hỏi thường gặp", href: "/question" },
+    { label: "Chế độ bảo hành", href: "/warranty" },
+  ];
 
   return (
     <Container maxWidth="xl">
@@ -120,7 +153,6 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
           px: 2,
         }}
       >
-        {/* DANH MỤC SẢN PHẨM BUTTON */}
         <Box
           onMouseEnter={() => setShowMegaMenu(true)}
           onMouseLeave={() => setShowMegaMenu(false)}
@@ -143,7 +175,6 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
             DANH MỤC SẢN PHẨM
           </Button>
 
-          {/* Mega Menu tích hợp */}
           <Fade in={showMegaMenu} timeout={300}>
             <Box
               onMouseLeave={() => setShowMegaMenu(false)}
@@ -162,32 +193,20 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
         <Box
           sx={{
             display: "flex",
-            flexWrap: "nowrap", // ❗ Không cho xuống dòng
-            overflowX: "auto", // ❗ Cho phép cuộn ngang khi không đủ
+            flexWrap: "nowrap",
+            overflowX: "auto",
             whiteSpace: "nowrap",
-            // gap: 0.2,
             justifyContent: "flex-start",
             flexGrow: 1,
             px: { xs: 1, sm: 2, md: 0 },
-            scrollbarWidth: "none", // Firefox
-            "&::-webkit-scrollbar": { display: "none" }, // Chrome
-            maxWidth: "100%", // Giới hạn trong container
+            scrollbarWidth: "none",
+            "&::-webkit-scrollbar": { display: "none" },
+            maxWidth: "100%",
           }}
         >
-          {[
-            "Trang chủ",
-            "Giới thiệu",
-            "Thương hiệu",
-            "Sản phẩm",
-            "Khuyến mãi",
-            "Tin tức",
-            "Liên hệ",
-            "Hệ thống cửa hàng",
-            "Câu hỏi thường gặp",
-            "Chế độ bảo hành",
-          ].map((item) => (
+          {navLinks.map(({ label, href }) => (
             <Box
-              key={item}
+              key={label}
               sx={{
                 display: "flex",
                 alignItems: "center",
@@ -196,9 +215,10 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
                 height: "100%",
                 minHeight: "44px",
                 cursor: "pointer",
-                flexShrink: 0, // Đảm bảo không bị co lại khi không đủ chỗ
+                flexShrink: 0,
                 transition: "color 0.2s, background-color 0.2s",
               }}
+              onClick={() => router.push(href)}
             >
               <Typography
                 sx={{
@@ -206,15 +226,13 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
                   fontWeight: "bold",
                   display: "flex",
                   alignItems: "center",
-                  color: "#000",
-                  "&:hover": {
-                    color: "#f25c05",
-                    // backgroundColor: "rgba(0, 0, 0, 0.06)",
-                  },
+                  color: pathname === href ? "#f25c05" : "#000",
+                  borderBottom:
+                    pathname === href ? "2px solid #f25c05" : "none",
                 }}
               >
-                {item}
-                {item === "Sản phẩm" && (
+                {label}
+                {label === "Sản phẩm" && (
                   <ArrowDropDownIcon fontSize="small" sx={{ ml: 0.3 }} />
                 )}
               </Typography>

@@ -12,8 +12,15 @@ import {
   Stack,
   Paper,
 } from "@mui/material";
+import { useRouter } from "next/navigation"; // ✅ import useRouter
 
 const CartSummary = () => {
+  const router = useRouter(); // ✅ khởi tạo router
+
+  const handleCheckout = () => {
+    router.push("/checkout"); // ✅ điều hướng
+  };
+
   return (
     <Paper elevation={2} sx={{ p: 4, borderRadius: 2 }}>
       <Typography variant="h6" fontWeight={700} gutterBottom>
@@ -77,7 +84,7 @@ const CartSummary = () => {
         <Button variant="outlined" color="error">
           Xoá tất cả
         </Button>
-        <Button variant="contained" color="primary">
+        <Button variant="contained" color="primary" onClick={handleCheckout}>
           Tiến hành đặt hàng
         </Button>
       </Stack>
