@@ -6,7 +6,6 @@ import AppFooter from "@/views/footer/app.footer";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import ClientLayoutWrapper from "@/components/fixed_elements/ClientLayoutWrapper";
-import ScrollToTopButton from "@/components/fixed_elements/button_scroll_to_top/ScrollToTopButton";
 
 // const quicksand = Quicksand({
 //   subsets: ["latin"],
@@ -33,7 +32,6 @@ export default function RootLayout({
         <AppHeader />
         {children}
 
-        <ScrollToTopButton />
         <AppFooter />
         <ClientLayoutWrapper />
       </ThemeRegistry>

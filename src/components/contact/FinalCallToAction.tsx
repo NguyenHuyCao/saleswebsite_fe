@@ -8,10 +8,12 @@ import {
   useTheme,
 } from "@mui/material";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 const FinalCallToAction = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const router = useRouter();
 
   return (
     <Box
@@ -65,6 +67,7 @@ const FinalCallToAction = () => {
             variant="outlined"
             size="large"
             sx={{ color: "white", borderColor: "white", textTransform: "none" }}
+            onClick={() => router.push("/product")}
           >
             Mua ngay – Ưu đãi cực sốc!
           </Button>

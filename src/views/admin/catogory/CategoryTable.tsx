@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, ChangeEvent } from "react";
 import {
   Button,
   Paper,
@@ -13,8 +13,7 @@ import {
   Card,
   CardHeader,
   CardContent,
-  Pagination,
-  Stack,
+  TablePagination,
   Snackbar,
   Alert as MuiAlert,
 } from "@mui/material";
@@ -33,8 +32,9 @@ interface CategoryData {
 
 const CategoryTablePage = () => {
   const [categories, setCategories] = useState<CategoryData[]>([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [totalRows, setTotalRows] = useState(0);
   const [openModal, setOpenModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryData | null>(
     null
@@ -49,11 +49,13 @@ const CategoryTablePage = () => {
 
   const handleCloseSnackbar = () => setOpenSnackbar(false);
 
-  const fetchCategories = async (currentPage: number) => {
+  const fetchCategories = async () => {
     try {
       const token = localStorage.getItem("accessToken");
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories?page=${currentPage}&size=5`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories?page=${
+          page + 1
+        }&size=${rowsPerPage}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -63,21 +65,20 @@ const CategoryTablePage = () => {
 
       const data = await res.json();
 
-      console.log("Dữ liệu trả về:", data); // Debug API
       if (!data.data || !Array.isArray(data.data.result)) {
         throw new Error("Invalid API response format");
       }
 
       setCategories(data.data.result);
-      setTotalPages(data.data.meta.pages || 1);
+      setTotalRows(data.data.meta.total);
     } catch (error) {
       console.error("Lỗi fetch categories:", error);
     }
   };
 
   useEffect(() => {
-    fetchCategories(page);
-  }, [page]);
+    fetchCategories();
+  }, [page, rowsPerPage]);
 
   const handleOpenCreate = () => {
     setEditingCategory(null);
@@ -87,6 +88,15 @@ const CategoryTablePage = () => {
   const handleOpenEdit = (category: CategoryData) => {
     setEditingCategory(category);
     setOpenModal(true);
+  };
+
+  const handleChangePage = (_event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(+event.target.value);
+    setPage(0);
   };
 
   const handleSave = async (name: string) => {
@@ -128,13 +138,12 @@ const CategoryTablePage = () => {
         setSuccessMessage("Thêm danh mục thành công");
         setSnackbarType("success");
 
-        // Sau khi thêm mới, fetch lại từ trang đầu
-        setPage(1);
+        setPage(0);
       }
 
       setOpenSnackbar(true);
       setOpenModal(false);
-      fetchCategories(1); // Làm mới danh sách sau khi thao tác
+      fetchCategories();
     } catch (error: any) {
       setErrorMessage(error.message || "Lỗi không xác định");
       setSnackbarType("error");
@@ -146,10 +155,7 @@ const CategoryTablePage = () => {
     <Card>
       <CardHeader
         title="Danh mục sản phẩm"
-        titleTypographyProps={{
-          variant: "h5",
-          sx: { fontWeight: 600, color: "primary.main" },
-        }}
+        titleTypographyProps={{ variant: "h6" }}
         action={
           <Button variant="contained" onClick={handleOpenCreate}>
             Thêm danh mục
@@ -157,9 +163,9 @@ const CategoryTablePage = () => {
         }
       />
       <CardContent>
-        <Paper sx={{ minHeight: "394px" }}>
-          <TableContainer>
-            <Table>
+        <Paper sx={{ width: "100%", overflow: "hidden" }}>
+          <TableContainer sx={{ maxHeight: 440 }}>
+            <Table stickyHeader>
               <TableHead>
                 <TableRow>
                   <TableCell>ID</TableCell>
@@ -199,16 +205,16 @@ const CategoryTablePage = () => {
               </TableBody>
             </Table>
           </TableContainer>
-        </Paper>
-
-        <Stack spacing={2} direction="row" justifyContent="center" mt={4}>
-          <Pagination
-            count={totalPages}
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 20]}
+            component="div"
+            count={totalRows}
+            rowsPerPage={rowsPerPage}
             page={page}
-            onChange={(_, newPage) => setPage(newPage)}
-            color="primary"
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
           />
-        </Stack>
+        </Paper>
       </CardContent>
 
       {editingCategory ? (

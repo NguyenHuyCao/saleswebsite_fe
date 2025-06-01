@@ -1,19 +1,22 @@
 "use client";
 
 import Image from "next/image";
-import { Box, Zoom, Tooltip } from "@mui/material";
+import { Box, Zoom, Tooltip, useMediaQuery, useTheme } from "@mui/material";
 
 const FloatingContactButtons = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   return (
     <Zoom in={true}>
       <Box
         sx={{
           position: "fixed",
-          bottom: 24,
-          left: 24,
+          bottom: isMobile ? 80 : 40,
+          left: isMobile ? 12 : 32,
           display: "flex",
           flexDirection: "column",
-          gap: 2,
+          gap: isMobile ? 1.5 : 2,
           zIndex: 9999,
         }}
       >
@@ -42,18 +45,23 @@ const FloatingContactButtons = () => {
               <Box
                 sx={{
                   position: "relative",
-                  width: 50,
-                  height: 50,
+                  width: isMobile ? 42 : 50,
+                  height: isMobile ? 42 : 50,
                   borderRadius: "50%",
                   cursor: "pointer",
+                  animation: isMobile ? "none" : "bellShake 1.5s infinite",
+                  transition: "transform 0.3s ease",
+                  "&:hover": {
+                    transform: "scale(1.1)",
+                  },
                   "&::before": {
                     content: '""',
                     position: "absolute",
                     width: "100%",
                     height: "100%",
                     borderRadius: "50%",
-                    backgroundColor: "rgba(38, 132, 255, 0.4)",
-                    animation: "pulseRing 2s infinite",
+                    backgroundColor: "rgba(38, 132, 255, 0.3)",
+                    animation: isMobile ? "none" : "pulseRing 2s infinite",
                     zIndex: 0,
                   },
                 }}
@@ -61,8 +69,8 @@ const FloatingContactButtons = () => {
                 <Image
                   src={item.src}
                   alt={item.alt}
-                  width={50}
-                  height={50}
+                  width={isMobile ? 42 : 50}
+                  height={isMobile ? 42 : 50}
                   style={{
                     borderRadius: "50%",
                     position: "relative",
@@ -87,6 +95,30 @@ const FloatingContactButtons = () => {
             100% {
               transform: scale(1.6);
               opacity: 0;
+            }
+          }
+
+          @keyframes bellShake {
+            0% {
+              transform: rotate(0deg);
+            }
+            15% {
+              transform: rotate(25deg);
+            }
+            30% {
+              transform: rotate(-20deg);
+            }
+            45% {
+              transform: rotate(15deg);
+            }
+            60% {
+              transform: rotate(-10deg);
+            }
+            75% {
+              transform: rotate(5deg);
+            }
+            100% {
+              transform: rotate(0deg);
             }
           }
         `}</style>

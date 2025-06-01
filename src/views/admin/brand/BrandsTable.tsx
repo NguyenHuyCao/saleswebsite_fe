@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, ChangeEvent } from "react";
 import {
   Card,
   CardHeader,
@@ -12,11 +12,11 @@ import {
   TableContainer,
   TableRow,
   Button,
-  Pagination,
-  Stack,
+  TablePagination,
   Snackbar,
   Alert as MuiAlert,
   Typography,
+  Paper,
 } from "@mui/material";
 
 import Image from "next/image";
@@ -37,8 +37,9 @@ interface BrandData {
 
 const BrandTablePage = () => {
   const [brands, setBrands] = useState<BrandData[]>([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [totalRows, setTotalRows] = useState(0);
   const [openCreate, setOpenCreate] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [editingBrand, setEditingBrand] = useState<BrandData | null>(null);
@@ -51,11 +52,13 @@ const BrandTablePage = () => {
 
   const handleCloseSnackbar = () => setOpenSnackbar(false);
 
-  const fetchBrands = async (currentPage: number) => {
+  const fetchBrands = async () => {
     try {
       const token = localStorage.getItem("accessToken");
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/brands?page=${currentPage}&size=5`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/brands?page=${
+          page + 1
+        }&size=${rowsPerPage}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -69,7 +72,7 @@ const BrandTablePage = () => {
       }
 
       setBrands(data.data.result);
-      setTotalPages(data.data.meta.pages);
+      setTotalRows(data.data.meta.total);
     } catch (error) {
       console.error("Failed to fetch brands:", error);
       setSnackbarMessage("Không thể tải danh sách thương hiệu");
@@ -79,8 +82,17 @@ const BrandTablePage = () => {
   };
 
   useEffect(() => {
-    fetchBrands(page);
-  }, [page]);
+    fetchBrands();
+  }, [page, rowsPerPage]);
+
+  const handleChangePage = (_event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(+event.target.value);
+    setPage(0);
+  };
 
   const handleOpenCreate = () => setOpenCreate(true);
 
@@ -118,7 +130,6 @@ const BrandTablePage = () => {
       const result = await res.json();
 
       if (!res.ok) {
-        // 👇 Ghi lỗi nhẹ nhàng, không báo đỏ ở console
         console.warn("Lỗi khi thêm thương hiệu:", result.message);
         setSnackbarMessage(result.message || "Thêm thương hiệu thất bại");
         setSnackbarType("error");
@@ -131,8 +142,8 @@ const BrandTablePage = () => {
       setOpenSnackbar(true);
 
       setOpenCreate(false);
-      setPage(1);
-      fetchBrands(1); // refetch danh sách từ đầu
+      setPage(0);
+      fetchBrands();
     } catch (error: any) {
       console.error("Lỗi hệ thống khi thêm thương hiệu:", error);
       setSnackbarMessage("Lỗi hệ thống. Vui lòng thử lại.");
@@ -178,7 +189,7 @@ const BrandTablePage = () => {
       setOpenSnackbar(true);
 
       setOpenEdit(false);
-      fetchBrands(page); // cập nhật danh sách ở trang hiện tại
+      fetchBrands();
     } catch (error: any) {
       console.error("Error updating brand:", error);
       setSnackbarMessage(error.message || "Lỗi khi cập nhật thương hiệu");
@@ -199,75 +210,77 @@ const BrandTablePage = () => {
         }
       />
       <CardContent>
-        <TableContainer style={{ minHeight: 394 }}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Tên thương hiệu</TableCell>
-                <TableCell>Website</TableCell>
-                <TableCell>Nguồn gốc</TableCell>
-                <TableCell>Ngày tạo</TableCell>
-                <TableCell>Cập nhật gần nhất</TableCell>
-                <TableCell align="center">Hành động</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {brands.map((brand) => (
-                <TableRow key={brand.id} hover>
-                  <TableCell>{brand.id}</TableCell>
-                  <TableCell
-                    style={{ display: "flex", alignItems: "center", gap: 8 }}
-                  >
-                    <Image
-                      alt="Logo Tương hiệu"
-                      src={"/images/favicon.png"}
-                      width={40}
-                      height={40}
-                    />
-                    <Typography fontSize={14}>{brand.name}</Typography>
-                  </TableCell>
-                  <TableCell>{brand.website}</TableCell>
-                  <TableCell>{brand.originCountry}</TableCell>
-                  <TableCell>
-                    {new Date(brand.createdAt).toLocaleDateString("vi-VN")}
-                  </TableCell>
-                  <TableCell>
-                    {brand.updatedAt
-                      ? new Date(brand.updatedAt).toLocaleDateString("vi-VN")
-                      : "-"}
-                  </TableCell>
-                  <TableCell align="center">
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      sx={{
-                        backgroundColor: "#ff700",
-                        textTransform: "none",
-                        fontWeight: 500,
-                        px: 2,
-                        py: 0.5,
-                        fontSize: "0.8rem",
-                      }}
-                      onClick={() => handleOpenEdit(brand)}
-                    >
-                      Cập nhật
-                    </Button>
-                  </TableCell>
+        <Paper>
+          <TableContainer sx={{ maxHeight: 440 }}>
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell>ID</TableCell>
+                  <TableCell>Tên thương hiệu</TableCell>
+                  <TableCell>Website</TableCell>
+                  <TableCell>Nguồn gốc</TableCell>
+                  <TableCell>Ngày tạo</TableCell>
+                  <TableCell>Cập nhật gần nhất</TableCell>
+                  <TableCell align="center">Hành động</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        <Stack spacing={2} direction="row" justifyContent="center" mt={4}>
-          <Pagination
-            count={totalPages}
+              </TableHead>
+              <TableBody>
+                {brands.map((brand) => (
+                  <TableRow key={brand.id} hover>
+                    <TableCell>{brand.id}</TableCell>
+                    <TableCell
+                      style={{ display: "flex", alignItems: "center", gap: 8 }}
+                    >
+                      <Image
+                        alt="Logo Tương hiệu"
+                        src={"/images/favicon.png"}
+                        width={40}
+                        height={40}
+                      />
+                      <Typography fontSize={14}>{brand.name}</Typography>
+                    </TableCell>
+                    <TableCell>{brand.website}</TableCell>
+                    <TableCell>{brand.originCountry}</TableCell>
+                    <TableCell>
+                      {new Date(brand.createdAt).toLocaleDateString("vi-VN")}
+                    </TableCell>
+                    <TableCell>
+                      {brand.updatedAt
+                        ? new Date(brand.updatedAt).toLocaleDateString("vi-VN")
+                        : "-"}
+                    </TableCell>
+                    <TableCell align="center">
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        sx={{
+                          backgroundColor: "#ff700",
+                          textTransform: "none",
+                          fontWeight: 500,
+                          px: 2,
+                          py: 0.5,
+                          fontSize: "0.8rem",
+                        }}
+                        onClick={() => handleOpenEdit(brand)}
+                      >
+                        Cập nhật
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={totalRows}
+            rowsPerPage={rowsPerPage}
             page={page}
-            onChange={(_, newPage) => setPage(newPage)}
-            color="primary"
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
           />
-        </Stack>
+        </Paper>
       </CardContent>
 
       <ModalFormBrandCreate

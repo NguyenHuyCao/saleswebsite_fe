@@ -1,7 +1,7 @@
 // File: views/admin/shipping/ShippingPartnerList.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, ChangeEvent } from "react";
 import {
   Card,
   CardHeader,
@@ -12,11 +12,16 @@ import {
   TableCell,
   TableBody,
   TableContainer,
+  TablePagination,
   Button,
+  Snackbar,
+  Alert as MuiAlert,
+  Paper,
 } from "@mui/material";
 import ModalFormShippingCreate from "@/model/shipping/ModalFormShippingCreate";
 import ModalFormShippingEdit from "@/model/shipping/ModalFormShippingEdit";
-import AlertSnackbar from "@/model/notify/AlertSnackbar";
+
+const Alert = MuiAlert as React.ElementType;
 
 interface ShippingPartner {
   id: number;
@@ -28,6 +33,9 @@ interface ShippingPartner {
 
 const ShippingPartnerList = () => {
   const [partners, setPartners] = useState<ShippingPartner[]>([]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [totalRows, setTotalRows] = useState(0);
   const [openCreate, setOpenCreate] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [selectedPartner, setSelectedPartner] =
@@ -45,6 +53,8 @@ const ShippingPartnerList = () => {
     setOpenSnackbar(true);
   };
 
+  const handleCloseSnackbar = () => setOpenSnackbar(false);
+
   const fetchPartners = async () => {
     try {
       const token = localStorage.getItem("accessToken");
@@ -56,7 +66,9 @@ const ShippingPartnerList = () => {
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-      setPartners(data.data);
+
+      setPartners(data.data || []);
+      setTotalRows((data.data || []).length);
     } catch (error: any) {
       handleSnackbar(error.message || "Lỗi tải danh sách", "error");
     }
@@ -65,6 +77,15 @@ const ShippingPartnerList = () => {
   useEffect(() => {
     fetchPartners();
   }, []);
+
+  const handleChangePage = (_event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(+event.target.value);
+    setPage(0);
+  };
 
   const handleCreate = async (data: {
     name: string;
@@ -136,45 +157,56 @@ const ShippingPartnerList = () => {
         }
       />
       <CardContent>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Tên đơn vị</TableCell>
-                <TableCell>Mã đơn vị</TableCell>
-                <TableCell>API URL</TableCell>
-                <TableCell>Trạng thái</TableCell>
-                <TableCell align="center"></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {partners.map((partner) => (
-                <TableRow key={partner.id} hover>
-                  <TableCell>{partner.id}</TableCell>
-                  <TableCell>{partner.name}</TableCell>
-                  <TableCell>{partner.code}</TableCell>
-                  <TableCell>{partner.apiUrl || "-"}</TableCell>
-                  <TableCell>
-                    {partner.active ? "Hoạt động" : "Tạm ngưng"}
-                  </TableCell>
-                  <TableCell align="center">
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      onClick={() => {
-                        setSelectedPartner(partner);
-                        setOpenEdit(true);
-                      }}
-                    >
-                      Chỉnh sửa
-                    </Button>
-                  </TableCell>
+        <Paper>
+          <TableContainer sx={{ maxHeight: 440 }}>
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell>ID</TableCell>
+                  <TableCell>Tên đơn vị</TableCell>
+                  <TableCell>Mã đơn vị</TableCell>
+                  <TableCell>API URL</TableCell>
+                  <TableCell>Trạng thái</TableCell>
+                  <TableCell align="center"></TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {partners.map((partner) => (
+                  <TableRow key={partner.id} hover>
+                    <TableCell>{partner.id}</TableCell>
+                    <TableCell>{partner.name}</TableCell>
+                    <TableCell>{partner.code}</TableCell>
+                    <TableCell>{partner.apiUrl || "-"}</TableCell>
+                    <TableCell>
+                      {partner.active ? "Hoạt động" : "Tạm ngưng"}
+                    </TableCell>
+                    <TableCell align="center">
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => {
+                          setSelectedPartner(partner);
+                          setOpenEdit(true);
+                        }}
+                      >
+                        Chỉnh sửa
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={totalRows}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
+        </Paper>
       </CardContent>
 
       <ModalFormShippingCreate
@@ -191,12 +223,25 @@ const ShippingPartnerList = () => {
         />
       )}
 
-      <AlertSnackbar
+      <Snackbar
+        key={
+          snackbarType === "error"
+            ? snackbarMessage
+            : snackbarMessage + "-success"
+        }
         open={openSnackbar}
-        onClose={() => setOpenSnackbar(false)}
-        message={snackbarMessage}
-        type={snackbarType}
-      />
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbarType}
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Card>
   );
 };
