@@ -65,7 +65,7 @@ const PromoBanner = () => {
             </Typography>
             <Button
               variant="contained"
-              onClick={() => router.push("/promotion")}
+              onClick={() => router.push("/product")}
               sx={{
                 mt: 3,
                 bgcolor: "#fff",
