@@ -26,7 +26,7 @@ const OrderHistoryHeroSection = () => {
           Theo dõi, xem chi tiết và xử lý đơn hàng một cách dễ dàng. Mọi thông
           tin đều được cập nhật minh bạch và nhanh chóng.
         </Typography>
-        <Button variant="contained" color="primary" href="/products">
+        <Button variant="contained" color="primary" href="/product">
           Tiếp tục mua sắm
         </Button>
       </Box>

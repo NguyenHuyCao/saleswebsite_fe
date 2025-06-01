@@ -8,12 +8,12 @@ import {
   Box,
   Chip,
   Grid,
-  Button,
   Divider,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import ShippingStatusChip from "./ShippingStatusChipProps";
+import { useRouter } from "next/navigation";
 
 const orders = [
   {
@@ -91,10 +91,12 @@ const statusColor = (status: string) => {
 };
 
 const OrderListSection = () => {
+  const router = useRouter();
+
   return (
     <Box mt={6}>
       {orders.map((order) => (
-        <Box key={order.orderId}>
+        <Box key={order.orderId} mb={2}>
           <Accordion sx={{ mb: 2 }}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Box sx={{ width: "100%" }}>
@@ -137,19 +139,30 @@ const OrderListSection = () => {
 
                   <Grid size={{ xs: 12, md: 2 }}>
                     <Box
+                      onClick={() => router.push("/contact")}
                       display="flex"
-                      justifyContent={{ xs: "flex-start", md: "flex-start" }}
-                      flexWrap="wrap"
-                      gap={1}
+                      alignItems="center"
+                      maxWidth={100}
+                      px={1.5}
+                      py={0.5}
+                      border="1px solid"
+                      borderColor="error.main"
+                      color="error.main"
+                      borderRadius={1}
+                      fontSize={14}
+                      fontWeight={500}
+                      sx={{
+                        cursor: "pointer",
+                        textDecoration: "none !important",
+                        transition: "all 0.2s",
+                        "&:hover": {
+                          backgroundColor: "error.main",
+                          color: "#fff",
+                        },
+                      }}
                     >
-                      <Button
-                        size="small"
-                        color="error"
-                        variant="outlined"
-                        startIcon={<HelpOutlineIcon />}
-                      >
-                        Hỗ trợ
-                      </Button>
+                      <HelpOutlineIcon sx={{ fontSize: 18, mr: 1 }} />
+                      Hỗ trợ
                     </Box>
                   </Grid>
                 </Grid>
