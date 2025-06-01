@@ -9,79 +9,66 @@ import {
   BottomNavigationAction,
   Fade,
 } from "@mui/material";
-
 import AppsIcon from "@mui/icons-material/Apps";
 import HomeIcon from "@mui/icons-material/Home";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import CompareIcon from "@mui/icons-material/Compare";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
-import CategoryMegaMenu from "@/components/category/CategoryMegaMenu";
+import { useEffect, useState } from "react";
+import BrandMegaMenu from "@/components/brand/BrandMegaMenu";
 
-const categoriesData = [
-  {
-    label: "Sản phẩm",
-    icon: "/images/product/1534231926-5.jpg",
-    subCategories: [
-      {
-        title: "Máy khoan",
-        items: [
-          "Máy khoan pin",
-          "Máy khoan bê tông",
-          "Máy khoan bàn",
-          "Máy khoan mini",
-        ],
-      },
-      {
-        title: "Máy rửa xe",
-        items: [
-          "Máy rửa xe mini",
-          "Máy rửa xe chuyên nghiệp",
-          "Phụ kiện máy rửa xe",
-        ],
-      },
-      {
-        title: "Thiết bị cầm tay",
-        items: ["Máy mài", "Máy cắt", "Máy đánh bóng", "Máy bắt vít"],
-      },
-      {
-        title: "Thiết bị cơ khí",
-        items: ["Máy hàn", "Máy tiện", "Máy nén khí", "Máy cắt plasma"],
-      },
-    ],
-  },
-  {
-    label: "Dụng cụ cầm tay",
-    icon: "/images/product/1534231926-5.jpg",
-    subCategories: [
-      {
-        title: "Tua vít & kìm",
-        items: ["Tua vít điện", "Kìm cắt", "Kìm bấm"],
-      },
-      {
-        title: "Cờ lê & Mỏ lết",
-        items: ["Cờ lê đa năng", "Mỏ lết tự động"],
-      },
-      {
-        title: "Bộ dụng cụ sửa chữa",
-        items: ["Bộ vặn ốc", "Bộ mở nắp"],
-      },
-    ],
-    banner: {
-      image: "/images/product/images.jpeg",
-      description: "Ưu đãi 25% cho các bộ dụng cụ cầm tay chuyên nghiệp!",
-      ctaText: "Mua ngay",
-      ctaLink: "/dung-cu-cam-tay",
-    },
-  },
-];
+interface Product {
+  name: string;
+  active: boolean;
+  brand?: { id: number };
+}
+
+interface Category {
+  id: number;
+  name: string;
+  products: Product[];
+}
+
+interface Brand {
+  id: number;
+  name: string;
+  logo: string;
+}
 
 const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
   const [showMegaMenu, setShowMegaMenu] = useState(false);
+  const [categoriesRawData, setCategoriesRawData] = useState<Category[]>([]);
+  const [brandsData, setBrandsData] = useState<Brand[]>([]);
   const router = useRouter();
   const pathname = usePathname();
 
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+
+    const fetchData = async () => {
+      try {
+        const [catRes, brandRes] = await Promise.all([
+          fetch("http://localhost:8080/api/v1/categories", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch("http://localhost:8080/api/v1/brands", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+        const catData = await catRes.json();
+        const brandData = await brandRes.json();
+
+        if (catRes.ok) setCategoriesRawData(catData.data.result || []);
+        if (brandRes.ok) setBrandsData(brandData.data.result || []);
+      } catch (err) {
+        console.error("Lỗi khi lấy dữ liệu:", err);
+      }
+    };
+
+    fetchData();
+  }, []);
   if (isMobile) {
     return (
       <Box
@@ -181,7 +168,10 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
                 zIndex: 1000,
               }}
             >
-              <CategoryMegaMenu data={categoriesData} />
+              <BrandMegaMenu
+                brands={brandsData}
+                categories={categoriesRawData}
+              />
             </Box>
           </Fade>
         </Box>
@@ -228,9 +218,6 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
                 }}
               >
                 {label}
-                {/* {label === "Sản phẩm" && (
-                  <ArrowDropDownIcon fontSize="small" sx={{ ml: 0.3 }} />
-                )} */}
               </Typography>
             </Box>
           ))}
