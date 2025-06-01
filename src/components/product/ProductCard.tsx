@@ -29,7 +29,7 @@ const ProductCard = ({ product }: { product: Product }) => (
   <Paper
     elevation={2}
     sx={{
-      width: 240,
+      width: 220,
       height: 350,
       borderRadius: 2,
       overflow: "hidden",

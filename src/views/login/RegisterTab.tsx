@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import { useRouter } from "next/navigation";
 
 interface RegisterTabProps {
   showMessage: (severity: "success" | "error", message: string) => void;
@@ -59,6 +60,8 @@ const RegisterTab: React.FC<RegisterTabProps> = ({ showMessage }) => {
     setGender("");
   };
 
+  const router = useRouter();
+
   const handleRegister = async () => {
     if (passwordRegister !== confirmPassword) {
       showMessage("error", "Mật khẩu xác nhận không khớp");
@@ -83,6 +86,7 @@ const RegisterTab: React.FC<RegisterTabProps> = ({ showMessage }) => {
       if (res.status === 201) {
         showMessage("success", "Đăng ký thành công!");
         resetForm();
+        router.push("/login?page=login"); // Điều hướng về đăng nhập
       } else {
         throw new Error(data.message || "Đăng ký thất bại");
       }
