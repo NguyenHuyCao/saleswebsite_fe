@@ -32,6 +32,13 @@ export type Category = {
   image: string;
 };
 
+export type CategoryWithProducts = {
+  id: number;
+  name: string;
+  slug: string;
+  products: Product[];
+};
+
 export async function getNewProducts(): Promise<Product[]> {
   const cookieStore = await cookies();
   const token = cookieStore.get("accessToken")?.value;
@@ -86,11 +93,43 @@ export async function getCategories(): Promise<Category[]> {
   return mappedCategories;
 }
 
+export async function getCategoriesWithProducts(): Promise<
+  CategoryWithProducts[]
+> {
+  const res = await fetch("http://localhost:8080/api/v1/categories", {
+    cache: "no-store",
+  });
+  const raw = await res.json();
+  const data = raw?.data?.result || [];
+
+  return data.map((category: any) => ({
+    id: category.id,
+    name: category.name,
+    slug: category.slug,
+    products: (category.products || []).slice(0, 4).map(
+      (item: any): Product => ({
+        title: item.name,
+        price: item.price,
+        originalPrice: item.price > 0 ? Math.floor(item.price * 1.2) : 1000000,
+        image: item.imageAvt
+          ? `http://localhost:8080/api/v1/files/${item.imageAvt}`
+          : "/images/product/placeholder.jpg",
+        status: item.stockQuantity === 0 ? ["Hết hàng"] : ["Mới"],
+        sale: true,
+        inStock: item.stockQuantity > 0,
+        label: item.stockQuantity > 0 ? "Thêm vào giỏ" : "Hết hàng",
+        rating: 4.0,
+      })
+    ),
+  }));
+}
+
 export default async function HomePage() {
   const deadline = "2025-06-30T23:59:59";
-  const [newProducts, categories] = await Promise.all([
+  const [newProducts, categories, categoriesWithProducts] = await Promise.all([
     getNewProducts(),
     getCategories(),
+    getCategoriesWithProducts(),
   ]);
 
   return (
@@ -115,7 +154,7 @@ export default async function HomePage() {
         <PromotionBanner />
         <CategoryCarousel categories={categories} />
         <AboutDolaTool />
-        <OtherToolsSection />
+        <OtherToolsSection categories={categoriesWithProducts} />
         <NewsSection />
         <PromoBanner />
         <CustomerFeedback />

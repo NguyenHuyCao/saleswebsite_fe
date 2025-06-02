@@ -25,6 +25,7 @@ import Phone from "mdi-material-ui/Phone";
 import EmailOutline from "mdi-material-ui/EmailOutline";
 import AccountOutline from "mdi-material-ui/AccountOutline";
 import MessageOutline from "mdi-material-ui/MessageOutline";
+import GlobalSnackbar from "../alert/GlobalSnackbar";
 
 const reviews = [
   {
@@ -51,8 +52,57 @@ const reviews = [
 
 const CustomerReviewsSlider = () => {
   const [index, setIndex] = useState(0);
+  const [form, setForm] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    messageContent: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
+  const handleChange = (field: string, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const response = await fetch("http://localhost:8080/api/v1/contacts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form,
+          subject: "Tư vấn",
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setAlert({
+          type: "error",
+          message: result.message || "Gửi liên hệ thất bại.",
+        });
+        return;
+      }
+
+      setAlert({ type: "success", message: "Gửi liên hệ thành công!" });
+      setForm({ fullName: "", email: "", phone: "", messageContent: "" });
+    } catch (err) {
+      setAlert({ type: "error", message: "Có lỗi xảy ra. Vui lòng thử lại!" });
+    } finally {
+      setLoading(false);
+      setTimeout(() => setAlert(null), 4000);
+    }
+  };
 
   const showReview = (idx: number) => {
     setIndex(idx);
@@ -68,44 +118,12 @@ const CustomerReviewsSlider = () => {
 
   return (
     <Box textAlign="center" py={6} className="customer-reviews">
-      {/* <Box
-        sx={{
-          backgroundImage: "url(/images/banner/images.jpeg)",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          color: "white",
-          borderRadius: 2,
-          mb: 6,
-          px: 4,
-          py: 6,
-          textAlign: "left",
-        }}
-      >
-        <Typography
-          variant="h6"
-          sx={{
-            bgcolor: "#ffb700",
-            display: "inline-block",
-            px: 2,
-            py: 0.5,
-            borderRadius: 1,
-          }}
-        >
-          1.550.000Đ
-        </Typography>
-        <Typography variant="h4" fontWeight="bold" mt={2}>
-          Khuyến mãi
-        </Typography>
-        <Typography variant="h5" fontWeight={400}>
-          Pin DEWALT
-        </Typography>
-        <Button
-          variant="contained"
-          sx={{ mt: 3, bgcolor: "white", color: "black", fontWeight: 600 }}
-        >
-          Xem ngay
-        </Button>
-      </Box> */}
+      <GlobalSnackbar
+        open={!!alert}
+        type={alert?.type || "success"}
+        message={alert?.message || ""}
+        onClose={() => setAlert(null)}
+      />
 
       <Grid container spacing={4} justifyContent="center">
         <Grid size={{ xs: 12, md: 6 }}>
@@ -126,7 +144,6 @@ const CustomerReviewsSlider = () => {
                 </IconButton>
 
                 <Box
-                  className="review"
                   sx={{
                     width: 250,
                     background: "white",
@@ -184,12 +201,16 @@ const CustomerReviewsSlider = () => {
                 titleTypographyProps={{ variant: "h6" }}
               />
               <CardContent>
-                <form onSubmit={(e) => e.preventDefault()}>
+                <form onSubmit={handleSubmit}>
                   <Grid container spacing={3}>
                     <Grid size={{ xs: 12 }}>
                       <TextField
                         fullWidth
                         label="Họ và tên"
+                        value={form.fullName}
+                        onChange={(e) =>
+                          handleChange("fullName", e.target.value)
+                        }
                         placeholder="Nguyễn Văn A"
                         InputProps={{
                           startAdornment: (
@@ -205,6 +226,8 @@ const CustomerReviewsSlider = () => {
                         fullWidth
                         type="email"
                         label="Email"
+                        value={form.email}
+                        onChange={(e) => handleChange("email", e.target.value)}
                         placeholder="example@gmail.com"
                         InputProps={{
                           startAdornment: (
@@ -218,8 +241,10 @@ const CustomerReviewsSlider = () => {
                     <Grid size={{ xs: 12 }}>
                       <TextField
                         fullWidth
-                        type="number"
+                        type="tel"
                         label="Số điện thoại"
+                        value={form.phone}
+                        onChange={(e) => handleChange("phone", e.target.value)}
                         placeholder="0901234567"
                         InputProps={{
                           startAdornment: (
@@ -236,6 +261,10 @@ const CustomerReviewsSlider = () => {
                         multiline
                         minRows={3}
                         label="Tin nhắn"
+                        value={form.messageContent}
+                        onChange={(e) =>
+                          handleChange("messageContent", e.target.value)
+                        }
                         placeholder="Bạn cần hỗ trợ gì?"
                         InputProps={{
                           startAdornment: (
@@ -247,8 +276,13 @@ const CustomerReviewsSlider = () => {
                       />
                     </Grid>
                     <Grid size={{ xs: 12 }}>
-                      <Button type="submit" variant="contained" size="large">
-                        Gửi
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        size="large"
+                        disabled={loading}
+                      >
+                        {loading ? "Đang gửi..." : "Gửi"}
                       </Button>
                     </Grid>
                   </Grid>
