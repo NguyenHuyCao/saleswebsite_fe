@@ -10,7 +10,41 @@ import { PromotionBox } from "./PromotionBox";
 import { ProductTabs } from "./ProductTabs";
 import { RelatedProducts } from "./RelatedProducts";
 
-export default function ProductDetailPage() {
+interface Product {
+  name: string;
+  description: string;
+  price: number;
+  stockQuantity: number;
+  power: string;
+  fuelType: string;
+  imageAvt: string;
+  imageDetail1: string | null;
+  imageDetail2: string | null;
+  imageDetail3: string | null;
+  engineType: string;
+  weight: number;
+  dimensions: string;
+  tankCapacity: number;
+  origin: string;
+  warrantyMonths: number;
+  slug: string;
+}
+
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+interface ProductDetailPageProps {
+  product: Product;
+  category: Category | null;
+}
+
+export default function ProductDetailPage({
+  product,
+  category,
+}: ProductDetailPageProps) {
   return (
     <Box sx={{ maxWidth: "1400px", mx: "auto", py: 4 }}>
       <Grid container spacing={4}>
@@ -18,7 +52,7 @@ export default function ProductDetailPage() {
         <Grid size={{ xs: 12, md: 8 }}>
           <Grid container spacing={4}>
             <Grid size={{ xs: 12, md: 5 }}>
-              <ImageGallery />
+              <ImageGallery product={product} />
             </Grid>
             <Grid size={{ xs: 12, md: 7 }}>
               <motion.div
@@ -26,7 +60,7 @@ export default function ProductDetailPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <ProductDetails />
+                <ProductDetails product={product} category={category} />
               </motion.div>
             </Grid>
           </Grid>
@@ -45,11 +79,11 @@ export default function ProductDetailPage() {
       </Grid>
 
       <Box mt={6}>
-        <ProductTabs />
+        <ProductTabs product={product} category={category} />
       </Box>
 
       <Box mt={6}>
-        <RelatedProducts />
+        <RelatedProducts category={category} />
       </Box>
     </Box>
   );

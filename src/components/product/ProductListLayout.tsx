@@ -12,12 +12,14 @@ import {
   Tooltip,
   Stack,
   Rating,
+  InputBase,
 } from "@mui/material";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import CategorySidebar from "./CategorySidebar";
 import ProductFilterPanel from "./ProductFilterPanel";
+import Image from "next/image";
 
 interface ProductIprop {
   id: number;
@@ -28,40 +30,69 @@ interface ProductIprop {
   tag?: string;
   badge?: string;
   rating?: number;
+  createdAt?: string;
+  slug?: string;
 }
 
-const baseProducts = Array.from({ length: 20 }, (_, i) => ({
-  id: i + 1,
-  name: `Sản phẩm demo ${i + 1}`,
-  image: "/images/product/1534231926-5.jpg",
-  price: 1000000 + i * 100000,
-  oldPrice: 1200000 + i * 100000,
-  tag: i % 2 === 0 ? "Bán chạy" : undefined,
-  badge: i % 3 === 0 ? "Sale" : i % 5 === 0 ? "New" : undefined,
-}));
+interface Props {
+  categories: any[];
+  brands: any[];
+}
 
 const ITEMS_PER_PAGE = 8;
 
-export default function ProductListLayout() {
+export default function ProductListLayout({ categories, brands }: Props) {
   const [page, setPage] = useState(1);
   const [favorites, setFavorites] = useState<number[]>([]);
   const [products, setProducts] = useState<ProductIprop[]>([]);
+  const [search, setSearch] = useState("");
+  const [sortType, setSortType] = useState<string>("");
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const getFilterUrl = () => {
+    const category = searchParams.get("category") || "";
+    const brand = searchParams.get("brand") || "";
+    const price = searchParams.get("price") || "";
+    const params = new URLSearchParams();
+    if (category) params.set("category", category);
+    if (brand) params.set("brand", brand);
+    if (price) params.set("price", price);
+    return `http://localhost:8080/api/v1/products?${params.toString()}`;
+  };
 
   useEffect(() => {
-    const dataWithRating = baseProducts.map((p) => ({
-      ...p,
-      rating: Math.floor(Math.random() * 2) + 4,
-    }));
-    setProducts(dataWithRating);
-  }, []);
+    async function fetchProducts() {
+      try {
+        const res = await fetch(getFilterUrl());
+        const data = await res.json();
+        const mapped = data?.data?.result.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          image: item.imageAvt
+            ? `http://localhost:8080/api/v1/files/${item.imageAvt}`
+            : "/images/product/placeholder.jpg",
+          price: item.price,
+          oldPrice: item.price > 0 ? Math.floor(item.price * 1.2) : 1000000,
+          rating: Math.floor(Math.random() * 2) + 4,
+          tag: item.stockQuantity > 10 ? "Bán chạy" : undefined,
+          badge: item.stockQuantity === 0 ? "Hết hàng" : undefined,
+          createdAt: item.createdAt,
+          slug: item.slug,
+        }));
+        setProducts(mapped);
+      } catch (err) {
+        console.error("Failed to fetch products", err);
+      }
+    }
+    fetchProducts();
+  }, [searchParams.toString()]);
 
   const handlePageChange = (
     _event: React.ChangeEvent<unknown>,
     value: number
   ) => {
     setPage(value);
-    // window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const toggleFavorite = (index: number) => {
@@ -70,18 +101,41 @@ export default function ProductListLayout() {
     );
   };
 
+  const normalized = (text: string) =>
+    text
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .toLowerCase();
+
+  const filteredProducts = products
+    .filter((product) => normalized(product.name).includes(normalized(search)))
+    .sort((a, b) => {
+      if (sortType === "newest") {
+        return (
+          new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+        );
+      }
+      if (sortType === "asc") return a.price - b.price;
+      if (sortType === "desc") return b.price - a.price;
+      return 0;
+    });
+
   const startIndex = (page - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedProducts = products.slice(startIndex, endIndex);
-  const pageCount = Math.ceil(products.length / ITEMS_PER_PAGE);
+  const paginatedProducts = filteredProducts.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE
+  );
+  const pageCount = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+
+  const updateURLParam = (key: string, value: string) => {
+    const current = new URLSearchParams(window.location.search);
+    current.set(key, value);
+    const newUrl = `/product?${current.toString()}`;
+    router.push(newUrl);
+  };
 
   return (
-    <Box
-      display={{ xs: "block", md: "flex" }}
-      // px={{ xs: 2, md: 3 }}
-      py={4}
-      gap={3}
-    >
+    <Box display={{ xs: "block", md: "flex" }} py={4} gap={3}>
       <Box
         width={{ xs: "100%", md: 260 }}
         mb={{ xs: 3, md: 0 }}
@@ -89,50 +143,43 @@ export default function ProductListLayout() {
         flexDirection="column"
         gap={2}
       >
-        <CategorySidebar />
-        <ProductFilterPanel />
+        <CategorySidebar
+          categories={categories}
+          onSelectCategory={(slug) => updateURLParam("category", slug)}
+        />
+        <ProductFilterPanel
+          brands={brands}
+          onSelectBrand={(slug) => updateURLParam("brand", slug)}
+          onSelectPrice={(range) => updateURLParam("price", range)}
+        />
       </Box>
 
       <Box flex={1}>
-        <Paper
-          variant="outlined"
-          sx={{ p: { xs: 2, md: 3 }, mb: 3, borderRadius: 2 }}
-        >
-          <Grid container spacing={2} alignItems="center">
-            <Grid size={{ xs: 12, md: 2 }}>
-              <Box
-                component="img"
-                src="/images/product/Single-Crawler-Hot-Sale-Mini-Power-180-2wheel-Tractor-Plow-Rubber-Farmland-Chain-Track-Trenching-Weeding-Seeding-All-in-One-Machine-Hand-Held-Cultivator.avif"
-                alt="Banner"
-                sx={{
-                  width: "100%",
-                  height: 80,
-                  objectFit: "cover",
-                  borderRadius: 1,
-                }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 10 }}>
-              <Typography variant="h6" fontWeight="bold">
-                Máy hàn điện tử
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Sản phẩm chất lượng cao được chọn lọc kỹ lưỡng từ các nhà sản
-                xuất uy tín. Dola Tool cung cấp giải pháp tối ưu cho cơ khí.
-              </Typography>
-            </Grid>
-          </Grid>
-        </Paper>
-
         <Box display="flex" alignItems="center" mb={3} gap={2} flexWrap="wrap">
           <Typography variant="body2" fontWeight={500}>
-            🧮 Xếp theo:
+            Xếp theo:
           </Typography>
-          <Chip label="Tên A-Z" variant="outlined" clickable />
-          <Chip label="Tên Z-A" variant="outlined" clickable />
-          <Chip label="Hàng mới" variant="outlined" clickable />
-          <Chip label="Giá thấp đến cao" variant="outlined" clickable />
-          <Chip label="Giá cao xuống thấp" variant="outlined" clickable />
+          <Chip
+            label="Hàng mới"
+            variant="outlined"
+            onClick={() => setSortType("newest")}
+          />
+          <Chip
+            label="Giá thấp đến cao"
+            variant="outlined"
+            onClick={() => setSortType("asc")}
+          />
+          <Chip
+            label="Giá cao xuống thấp"
+            variant="outlined"
+            onClick={() => setSortType("desc")}
+          />
+          <InputBase
+            placeholder="Tìm kiếm sản phẩm..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            sx={{ ml: 2, border: "1px solid #ccc", px: 2, borderRadius: 1 }}
+          />
         </Box>
 
         <Grid container spacing={2}>
@@ -140,35 +187,21 @@ export default function ProductListLayout() {
             <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.id}>
               <Paper
                 elevation={2}
-                onClick={() =>
-                  router.push(`/product/detail?productId=${item.id}`)
-                }
-                sx={{
-                  borderRadius: 1,
-                  overflow: "hidden",
-                  position: "relative",
-                  p: 2,
-                  height: "100%",
-                  cursor: "pointer",
-                  transition: "transform 0.2s ease",
-                  "&:hover": {
-                    transform: "translateY(-4px)",
-                    boxShadow: "0 6px 16px rgba(0,0,0,0.12)",
-                  },
-                }}
+                sx={{ p: 2, position: "relative", cursor: "pointer" }}
+                onClick={() => router.push(`/product/detail?name=${item.slug}`)}
               >
                 {item.badge && (
                   <Box
                     sx={{
+                      position: "absolute",
+                      top: 8,
+                      left: 8,
                       bgcolor: "#f25c05",
                       color: "white",
                       px: 1,
                       py: 0.2,
                       fontSize: 12,
                       fontWeight: "bold",
-                      position: "absolute",
-                      top: 8,
-                      left: 8,
                     }}
                   >
                     {item.badge}
@@ -192,7 +225,6 @@ export default function ProductListLayout() {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      cursor: "pointer",
                     }}
                   >
                     {favorites.includes(startIndex + idx) ? (
@@ -216,10 +248,12 @@ export default function ProductListLayout() {
                     justifyContent: "center",
                   }}
                 >
-                  <img
+                  <Image
                     src={item.image}
                     alt={item.name}
-                    style={{ maxHeight: "100%", objectFit: "contain" }}
+                    width={120}
+                    height={120}
+                    style={{ objectFit: "contain" }}
                   />
                 </Box>
                 <Box minHeight={24} mt={1}>
@@ -278,7 +312,7 @@ export default function ProductListLayout() {
           ))}
         </Grid>
 
-        {products.length > ITEMS_PER_PAGE && (
+        {filteredProducts.length > ITEMS_PER_PAGE && (
           <Box display="flex" justifyContent="center" mt={5}>
             <Pagination
               count={pageCount}

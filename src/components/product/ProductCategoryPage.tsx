@@ -1,55 +1,26 @@
 "use client";
 
-// ProductCategoryPage.tsx
 import { Box, Typography, IconButton } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { useRef, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-const categories = [
-  {
-    name: "Máy khoan",
-    count: 10,
-    image: "/images/product/2-31b0f11c-68ae-4462-a707-4071c1a644eb.jpg",
-  },
-  {
-    name: "Máy nông nghiệp",
-    count: 9,
-    image: "/images/product/2-31b0f11c-68ae-4462-a707-4071c1a644eb.jpg",
-  },
-  {
-    name: "Máy hàn điện tử",
-    count: 5,
-    image: "/images/product/2-31b0f11c-68ae-4462-a707-4071c1a644eb.jpg",
-  },
-  {
-    name: "Máy rửa xe",
-    count: 10,
-    image: "/images/product/2-31b0f11c-68ae-4462-a707-4071c1a644eb.jpg",
-  },
-  {
-    name: "Máy bơm nước",
-    count: 0,
-    image: "/images/product/2-31b0f11c-68ae-4462-a707-4071c1a644eb.jpg",
-  },
-  {
-    name: "Thang nhôm",
-    count: 2,
-    image: "/images/product/2-31b0f11c-68ae-4462-a707-4071c1a644eb.jpg",
-  },
-  {
-    name: "Máy phát điện",
-    count: 4,
-    image: "/images/product/2-31b0f11c-68ae-4462-a707-4071c1a644eb.jpg",
-  },
-  {
-    name: "Máy cắt cỏ",
-    count: 7,
-    image: "/images/product/2-31b0f11c-68ae-4462-a707-4071c1a644eb.jpg",
-  },
-];
+interface Category {
+  id: number;
+  name: string;
+  slug?: string;
+  image?: string;
+  products?: { id: number }[];
+  count: number;
+}
 
-export default function ProductCategoryPage() {
+interface Props {
+  categories: Category[];
+}
+
+export default function ProductCategoryPage({ categories }: Props) {
+  const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(false);
@@ -82,6 +53,12 @@ export default function ProductCategoryPage() {
       const scrollAmount = direction === "left" ? -240 : 240;
       container.scrollBy({ left: scrollAmount, behavior: "smooth" });
     }
+  };
+
+  const handleClickCategory = (slug?: string) => {
+    if (!slug) return;
+    const url = `/product?category=${slug}`;
+    router.push(url);
   };
 
   return (
@@ -132,9 +109,10 @@ export default function ProductCategoryPage() {
             px: { xs: 1, sm: 4 },
           }}
         >
-          {categories.map((cat, index) => (
+          {categories.map((cat) => (
             <Box
-              key={index}
+              key={`cat-${cat.id}-${cat.slug ?? cat.name}`}
+              onClick={() => handleClickCategory(cat.slug)}
               sx={{
                 flex: "0 0 auto",
                 width: { xs: 220, md: 240 },
@@ -156,7 +134,11 @@ export default function ProductCategoryPage() {
             >
               <Box
                 component="img"
-                src={cat.image}
+                src={
+                  cat.image
+                    ? `http://localhost:8080/api/v1/files/${cat.image}`
+                    : "/images/product/placeholder.jpg"
+                }
                 alt={cat.name}
                 sx={{
                   width: 56,

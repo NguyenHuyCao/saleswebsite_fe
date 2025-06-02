@@ -12,6 +12,13 @@ declare global {
     nextOption?: any;
   }
 
+  interface Category {
+    id: number;
+    name: string;
+    image?: string;
+    products: any[];
+  }
+
   export interface Brand {
     id: number;
     name: string;

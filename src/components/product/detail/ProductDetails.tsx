@@ -13,50 +13,61 @@ import {
 } from "@mui/material";
 import { ShoppingCart, Heart, Minus, Plus } from "lucide-react";
 
-export const ProductDetails = () => (
+interface Props {
+  product: any;
+  category: { name: string } | null;
+}
+
+export const ProductDetails = ({ product, category }: Props) => (
   <Box component={Paper} elevation={1} p={3} borderRadius={3}>
     <Typography variant="h5" fontWeight={700} gutterBottom>
-      Máy xay cỏ
+      {product.name}
     </Typography>
 
     <Typography variant="body2" color="text.secondary" mb={1.5}>
       Thương hiệu:{" "}
       <Box component="span" color="warning.main" fontWeight={500}>
-        Máy cadf
+        {category?.name || "Không rõ"}
       </Box>{" "}
-      | Loại: Máy cắt cỏ adf | Xuất xứ: Việt Nam | Công suất: 20000W
+      | Loại: {product?.type || "--"} | Xuất xứ: {product.origin} | Công suất:{" "}
+      {product.power}
     </Typography>
 
     <Divider sx={{ my: 2 }} />
 
     <Typography variant="h4" fontWeight={700} color="error.main" gutterBottom>
-      Liên hệ báo giá
+      {product.price > 0
+        ? `${product.price.toLocaleString()}₫`
+        : "Liên hệ báo giá"}
     </Typography>
     <Typography color="success.main" variant="body2" mb={2}>
-      Còn hàng: 92 sản phẩm
+      Còn hàng: {product.stockQuantity} sản phẩm
     </Typography>
 
     <Grid container spacing={2} sx={{ mb: 2 }}>
       <Grid size={{ xs: 12, sm: 6 }}>
         <Typography variant="body2">
-          <b>Loại nhiên liệu:</b> Điện
+          <b>Loại nhiên liệu:</b> {product.fuelType}
         </Typography>
         <Typography variant="body2">
-          <b>Loại động cơ:</b> STEAM
+          <b>Loại động cơ:</b> {product.engineType}
         </Typography>
         <Typography variant="body2">
-          <b>Dung tích bình:</b> 60L
+          <b>Dung tích bình:</b> {product.tankCapacity}L
         </Typography>
       </Grid>
       <Grid size={{ xs: 12, sm: 6 }}>
         <Typography variant="body2">
-          <b>Kích thước:</b> 80x60x45 cm
+          <b>Kích thước:</b> {product.dimensions}
         </Typography>
         <Typography variant="body2">
-          <b>Trọng lượng:</b> 1500g
+          <b>Trọng lượng:</b> {product.weight}g
         </Typography>
         <Typography variant="body2">
-          <b>Bảo hành:</b> Không có
+          <b>Bảo hành:</b>{" "}
+          {product.warrantyMonths > 0
+            ? `${product.warrantyMonths} tháng`
+            : "Không có"}
         </Typography>
       </Grid>
     </Grid>

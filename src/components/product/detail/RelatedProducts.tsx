@@ -8,8 +8,6 @@ import {
   CardContent,
   CardActions,
   Button,
-  Chip,
-  Rating,
   IconButton,
 } from "@mui/material";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
@@ -19,21 +17,35 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
-const related = Array.from({ length: 10 }).map((_, index) => ({
-  name: `Sản phẩm demo ${index + 1}`,
-  image: "/images/product/mpd-daewoo-dag-9900dbx-1_20210514115542.jpg",
-  price: 1000000 + index * 100000,
-  oldPrice: 1200000 + index * 100000,
-  tags: index % 2 === 0 ? ["Mới"] : ["Bán chạy"],
-  rating: 4,
-  soldOut: index % 4 === 0,
-}));
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  imageAvt: string | null;
+  slug: string;
+  stockQuantity: number;
+  origin: string;
+  warrantyMonths: number;
+}
 
-export const RelatedProducts = () => {
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  products: Product[];
+}
+
+interface RelatedProductsProps {
+  category: Category | null;
+}
+
+export const RelatedProducts = ({ category }: RelatedProductsProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [liked, setLiked] = useState<number[]>([]);
+
+  const related = category?.products || [];
 
   const updateScrollButtons = () => {
     const container = scrollRef.current;
@@ -70,9 +82,9 @@ export const RelatedProducts = () => {
     });
   };
 
-  const toggleLike = (idx: number) => {
+  const toggleLike = (id: number) => {
     setLiked((prev) =>
-      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   };
 
@@ -140,7 +152,7 @@ export const RelatedProducts = () => {
         >
           {related.map((item, idx) => (
             <motion.div
-              key={idx}
+              key={item.id}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4, delay: idx * 0.05, ease: "easeOut" }}
@@ -159,29 +171,8 @@ export const RelatedProducts = () => {
                   overflow: "hidden",
                 }}
               >
-                {item.tags.map((tag, i) => (
-                  <Chip
-                    key={i}
-                    label={tag}
-                    color={
-                      tag === "Mới"
-                        ? "warning"
-                        : tag === "Bán chạy"
-                        ? "success"
-                        : "error"
-                    }
-                    size="small"
-                    sx={{
-                      position: "absolute",
-                      top: 8,
-                      left: 8,
-                      zIndex: 2,
-                      fontSize: 12,
-                    }}
-                  />
-                ))}
                 <IconButton
-                  onClick={() => toggleLike(idx)}
+                  onClick={() => toggleLike(item.id)}
                   sx={{
                     position: "absolute",
                     top: 8,
@@ -190,11 +181,11 @@ export const RelatedProducts = () => {
                     borderRadius: 1,
                     transition: "all 0.3s",
                     "&:hover": {
-                      bgcolor: liked.includes(idx) ? "#ffe5e5" : "grey.100",
+                      bgcolor: liked.includes(item.id) ? "#ffe5e5" : "grey.100",
                     },
                   }}
                 >
-                  {liked.includes(idx) ? (
+                  {liked.includes(item.id) ? (
                     <FavoriteIcon fontSize="small" color="error" />
                   ) : (
                     <FavoriteBorderIcon fontSize="small" />
@@ -202,7 +193,11 @@ export const RelatedProducts = () => {
                 </IconButton>
                 <CardMedia
                   component="img"
-                  image={item.image}
+                  image={
+                    item.imageAvt
+                      ? `http://localhost:8080/api/v1/files/${item.imageAvt}`
+                      : "/images/product/placeholder.jpg"
+                  }
                   alt={item.name}
                   sx={{ height: 120, objectFit: "cover" }}
                 />
@@ -210,24 +205,12 @@ export const RelatedProducts = () => {
                   <Typography variant="body2" fontWeight={600} noWrap>
                     {item.name}
                   </Typography>
-                  <Rating value={item.rating} readOnly size="small" />
                   <Typography
                     variant="body2"
                     color="error.main"
                     fontWeight={700}
                   >
                     {item.price.toLocaleString()}₫
-                    <Typography
-                      component="span"
-                      variant="caption"
-                      sx={{
-                        textDecoration: "line-through",
-                        color: "text.secondary",
-                        ml: 0.5,
-                      }}
-                    >
-                      {item.oldPrice.toLocaleString()}₫
-                    </Typography>
                   </Typography>
                 </CardContent>
                 <CardActions sx={{ px: 1, pb: 1 }}>
@@ -235,7 +218,7 @@ export const RelatedProducts = () => {
                     fullWidth
                     variant="contained"
                     color="warning"
-                    disabled={item.soldOut}
+                    disabled={item.stockQuantity === 0}
                     sx={{
                       fontWeight: 600,
                       borderRadius: 2,
@@ -243,7 +226,7 @@ export const RelatedProducts = () => {
                       py: 0.5,
                     }}
                   >
-                    {item.soldOut ? "Hết hàng" : "Thêm vào giỏ"}
+                    {item.stockQuantity === 0 ? "Hết hàng" : "Thêm vào giỏ"}
                   </Button>
                 </CardActions>
               </Card>
