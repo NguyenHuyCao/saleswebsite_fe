@@ -5,14 +5,25 @@ import BrandPageFinalSections from "@/components/brand/BrandPageFinalSections";
 import WhyChooseUs from "@/components/brand/WhyChooseUs ";
 import { Container } from "@mui/material";
 
-const BrandPage = () => {
+export async function getBrands(): Promise<Brand[]> {
+  const res = await fetch("http://localhost:8080/api/v1/brands", {
+    headers: { "Content-Type": "application/json" },
+    cache: "no-store",
+  });
+  const raw = await res.json();
+  return raw.data?.result || [];
+}
+
+const BrandPage = async () => {
+  const brands = await getBrands();
+
   return (
     <>
       <BrandHeroSection />
       <Container>
-        <BrandListSection />
+        <BrandListSection brands={brands} />
         <WhyChooseUs />
-        <BrandAccordionSection />
+        <BrandAccordionSection brands={brands} />
         <BrandPageFinalSections />
       </Container>
     </>

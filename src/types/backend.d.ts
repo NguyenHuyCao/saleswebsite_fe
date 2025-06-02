@@ -12,6 +12,16 @@ declare global {
     nextOption?: any;
   }
 
+  export interface Brand {
+    id: number;
+    name: string;
+    logo: string;
+    originCountry: string;
+    website?: string;
+    description?: string;
+    year?: number;
+  }
+
   interface Category {
     id: number;
     name: string;

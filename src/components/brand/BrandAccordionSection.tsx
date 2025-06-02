@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import {
   Box,
   Typography,
@@ -13,46 +14,23 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Image from "next/image";
 
-const brands = [
-  {
-    name: "DEWALT",
-    founded: 1924,
-    highlight: "Máy khoan, máy cắt, pin công nghiệp",
-    image: "/images/brands/images.png",
-    testimonial: {
-      user: "Anh Tuấn – Kỹ sư điện",
-      comment:
-        "Dòng máy DEWALT dùng cực bền, hiệu năng ổn định. Pin khỏe, dùng được cả ngày!",
-      rating: 5,
-    },
-  },
-  {
-    name: "Makita",
-    founded: 1915,
-    highlight: "Máy cưa, máy thổi lá, dụng cụ cầm tay",
-    image: "/images/brands/Stihl_Logo_WhiteOnOrange.svg.png",
-    testimonial: {
-      user: "Chị Hạnh – Làm vườn chuyên nghiệp",
-      comment:
-        "Thiết kế gọn nhẹ, phù hợp cho công việc vườn tược. Giá cả hợp lý!",
-      rating: 4.5,
-    },
-  },
-];
+interface Props {
+  brands: Brand[];
+}
 
-const BrandAccordionSection = () => {
+const BrandAccordionSection = ({ brands }: Props) => {
   return (
     <Box px={4} py={6}>
       <Typography variant="h5" fontWeight="bold" mb={4} textAlign="center">
         Giới thiệu từng thương hiệu
       </Typography>
       {brands.map((brand, i) => (
-        <Accordion key={i}>
+        <Accordion key={i} sx={{ mb: 2, borderRadius: 2 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography fontWeight="bold">{brand.name}</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <Grid container spacing={2} alignItems="center">
+            <Grid container spacing={3} alignItems="center">
               <Grid size={{ xs: 12, md: 4 }}>
                 <Box
                   sx={{
@@ -61,10 +39,11 @@ const BrandAccordionSection = () => {
                     height: 200,
                     borderRadius: 2,
                     overflow: "hidden",
+                    boxShadow: 2,
                   }}
                 >
                   <Image
-                    src={brand.image}
+                    src={`http://localhost:8080/api/v1/files/${brand.logo}`}
                     alt={brand.name}
                     fill
                     style={{ objectFit: "cover" }}
@@ -73,23 +52,45 @@ const BrandAccordionSection = () => {
               </Grid>
               <Grid size={{ xs: 12, md: 8 }}>
                 <Typography fontSize={16} mb={1}>
-                  <strong>Năm thành lập:</strong> {brand.founded}
+                  <strong>Năm thành lập:</strong>{" "}
+                  {brand.year > 0 ? brand.year : "Chưa rõ"}
+                </Typography>
+                <Typography fontSize={16} mb={1}>
+                  <strong>Quốc gia:</strong> {brand.originCountry}
                 </Typography>
                 <Typography fontSize={16} mb={2}>
-                  <strong>Sản phẩm nổi bật:</strong> {brand.highlight}
+                  <strong>Website:</strong> {brand.website}
                 </Typography>
-                <Typography fontSize={15} fontStyle="italic">
-                  “{brand.testimonial.comment}”
-                </Typography>
-                <Box mt={1} display="flex" alignItems="center" gap={1}>
+                {brand.description ? (
+                  <Typography
+                    fontSize={15}
+                    fontStyle="italic"
+                    color="text.secondary"
+                  >
+                    “{brand.description}”
+                  </Typography>
+                ) : (
+                  <Typography
+                    fontSize={15}
+                    fontStyle="italic"
+                    color="text.disabled"
+                  >
+                    Thương hiệu chưa có mô tả cụ thể.
+                  </Typography>
+                )}
+                <Box mt={2} display="flex" alignItems="center" gap={1}>
                   <Avatar sx={{ width: 32, height: 32 }}>
-                    {brand.testimonial.user.charAt(0)}
+                    {brand.name.charAt(0)}
                   </Avatar>
-                  <Typography fontSize={14} fontWeight={500}>
-                    {brand.testimonial.user}
+                  <Typography
+                    fontSize={14}
+                    fontWeight={500}
+                    color="text.primary"
+                  >
+                    {brand.name} Official
                   </Typography>
                   <Rating
-                    value={brand.testimonial.rating}
+                    value={4 + (i % 2) * 0.5}
                     precision={0.5}
                     readOnly
                     size="small"
