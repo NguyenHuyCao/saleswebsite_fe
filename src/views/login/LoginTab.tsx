@@ -40,14 +40,24 @@ const LoginTab: React.FC<LoginTabProps> = ({ showMessage }) => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Đăng nhập thất bại");
 
-      localStorage.setItem("accessToken", data.data.accessToken);
-      localStorage.setItem("user", JSON.stringify(data.data.user));
+      const token = data.data.accessToken;
+      const user = data.data.user;
+
+      // Lưu vào localStorage
+      localStorage.setItem("accessToken", token);
+      localStorage.setItem("user", JSON.stringify(user));
+
+      // Gửi token lên server để set cookie
+      await fetch("/api/auth/set-cookie", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
 
       showMessage("success", "Đăng nhập thành công!");
       setEmail("");
       setPassword("");
-
-      router.push("/"); // 👉 Điều hướng về trang chủ
+      router.push("/");
     } catch (err: any) {
       showMessage("error", err.message);
     }

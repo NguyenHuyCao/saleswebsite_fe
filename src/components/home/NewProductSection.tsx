@@ -6,65 +6,11 @@ import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import ProductCard, { Product } from "../product/ProductCard";
 
-const newProducts: Product[] = [
-  {
-    title: "Demo sản phẩm thuộc tính",
-    price: 2920000,
-    originalPrice: 3500000,
-    image: "/images/product/12.jpg",
-    status: ["Mới"],
-    sale: true,
-    inStock: true,
-    label: "Xem chi tiết",
-    rating: 4.5,
-  },
-  {
-    title: "Máy cắt sắt 2300W Dewalt D28730-B1",
-    price: 2920000,
-    originalPrice: 3500000,
-    image: "/images/product/12.jpg",
-    status: ["Mới"],
-    sale: true,
-    inStock: false,
-    label: "Hết hàng",
-    rating: 4.0,
-  },
-  {
-    title: "Máy cắt sắt Bosch GCO 220",
-    price: 2880000,
-    originalPrice: 3500000,
-    image: "/images/product/12.jpg",
-    status: ["Mới"],
-    sale: true,
-    inStock: true,
-    label: "Thêm vào giỏ",
-    rating: 4.2,
-  },
-  {
-    title: "Máy cưa xích điện Kenmax KMEC004",
-    price: 1500000,
-    originalPrice: 1800000,
-    image: "/images/product/12.jpg",
-    status: ["Mới", "Bán chạy"],
-    sale: true,
-    inStock: true,
-    label: "Thêm vào giỏ",
-    rating: 4.8,
-  },
-  {
-    title: "Tời quay tay Kenbo cao cấp 1200LBS 20m",
-    price: 859000,
-    originalPrice: 1210000,
-    image: "/images/product/12.jpg",
-    status: ["Mới", "Bán chạy"],
-    sale: true,
-    inStock: false,
-    label: "Hết hàng",
-    rating: 3.5,
-  },
-];
+interface NewProductSectionProps {
+  products: Product[];
+}
 
-const NewProductSection = () => {
+const NewProductSection: React.FC<NewProductSectionProps> = ({ products }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(false);
@@ -130,7 +76,7 @@ const NewProductSection = () => {
           px: 5,
         }}
       >
-        {newProducts.map((product, index) => (
+        {products.map((product, index) => (
           <Box
             key={index}
             sx={{ width: 250, scrollSnapAlign: "start", flexShrink: 0 }}

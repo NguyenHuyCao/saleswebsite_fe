@@ -13,15 +13,85 @@ import PromotionBanner from "@/components/home/PromotionBanner";
 import VoucherCardList from "@/components/home/VoucherCardList";
 import { Box, Container } from "@mui/material";
 import Image from "next/image";
+import { cookies } from "next/headers";
 
-const HomePage = () => {
-  // const accessToken = localStorage.getItem("accessToken");
-  // if (accessToken) {
-  //   // Redirect to home page if already logged in
-  //   window.location.href = "/login";
-  //   return null;
-  // }
+export type Product = {
+  title: string;
+  price: number;
+  originalPrice: number;
+  image: string;
+  status: string[];
+  sale: boolean;
+  inStock: boolean;
+  label: string;
+  rating?: number;
+};
+
+export type Category = {
+  title: string;
+  image: string;
+};
+
+export async function getNewProducts(): Promise<Product[]> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("accessToken")?.value;
+
+  const res = await fetch(
+    "http://localhost:8080/api/v1/products?sort=createdAt,desc",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    }
+  );
+
+  const rawData = await res.json();
+  const productsFromApi = rawData?.data?.result || [];
+
+  return productsFromApi.map(
+    (item: any): Product => ({
+      title: item.name,
+      price: item.price,
+      originalPrice: item.price > 0 ? Math.floor(item.price * 1.2) : 1000000,
+      image: item.imageAvt
+        ? `http://localhost:8080/api/v1/files/${item.imageAvt}`
+        : "/images/product/placeholder.jpg",
+      status: item.stockQuantity === 0 ? ["Hết hàng"] : ["Mới"],
+      sale: true,
+      inStock: item.stockQuantity > 0,
+      label: item.stockQuantity > 0 ? "Thêm vào giỏ" : "Hết hàng",
+      rating: 4.0,
+    })
+  );
+}
+
+export async function getCategories(): Promise<Category[]> {
+  const res = await fetch("http://localhost:8080/api/v1/categories", {
+    headers: { "Content-Type": "application/json" },
+    cache: "no-store",
+  });
+
+  const rawData = await res.json();
+  const categoriesFromApi = rawData?.data?.result || [];
+
+  const mappedCategories: Category[] = categoriesFromApi.map((item: any) => ({
+    title: item.name,
+    image: item.image
+      ? `http://localhost:8080/api/v1/files/${item.image}`
+      : "/images/product/placeholder.jpg",
+  }));
+
+  return mappedCategories;
+}
+
+export default async function HomePage() {
   const deadline = "2025-06-30T23:59:59";
+  const [newProducts, categories] = await Promise.all([
+    getNewProducts(),
+    getCategories(),
+  ]);
 
   return (
     <>
@@ -41,9 +111,9 @@ const HomePage = () => {
         <VoucherCardList />
         <CountdownPromotion deadline={deadline} />
         <FlashSaleSlider />
-        <NewProductSection />
+        <NewProductSection products={newProducts} />
         <PromotionBanner />
-        <CategoryCarousel />
+        <CategoryCarousel categories={categories} />
         <AboutDolaTool />
         <OtherToolsSection />
         <NewsSection />
@@ -54,6 +124,4 @@ const HomePage = () => {
       </Container>
     </>
   );
-};
-
-export default HomePage;
+}

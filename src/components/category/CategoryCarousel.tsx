@@ -4,20 +4,43 @@ import { Box, Typography, IconButton } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import Image from "next/image";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 
-const categories = [
-  { title: "Sản phẩm Hot", image: "/images/product/12.jpg" },
-  { title: "Thiết bị giải trí", image: "/images/product/12.jpg" },
-  { title: "Thiết bị điện lạnh", image: "/images/product/12.jpg" },
-  { title: "Gia dụng nhà bếp", image: "/images/product/12.jpg" },
-  { title: "Thiết bị di động", image: "/images/product/12.jpg" },
-  { title: "Gia dụng sắc màu", image: "/images/product/12.jpg" },
-  { title: "Gia dụng sức khỏe", image: "/images/product/12.jpg" },
-];
+export type Category = {
+  title: string;
+  image: string;
+};
 
-const CategoryCarousel = () => {
+interface CategoryCarouselProps {
+  categories: Category[];
+}
+
+const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ categories }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [showLeft, setShowLeft] = useState(false);
+  const [showRight, setShowRight] = useState(false);
+
+  const checkScroll = () => {
+    const el = scrollRef.current;
+    if (el) {
+      setShowLeft(el.scrollLeft > 10);
+      setShowRight(el.scrollLeft + el.offsetWidth < el.scrollWidth - 10);
+    }
+  };
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const handleScroll = () => checkScroll();
+    const timeout = setTimeout(() => checkScroll(), 100);
+
+    el.addEventListener("scroll", handleScroll);
+    return () => {
+      el.removeEventListener("scroll", handleScroll);
+      clearTimeout(timeout);
+    };
+  }, [categories]);
 
   const scroll = (direction: "left" | "right") => {
     if (scrollRef.current) {
@@ -41,22 +64,24 @@ const CategoryCarousel = () => {
         Danh mục sản phẩm
       </Typography>
 
-      <IconButton
-        onClick={() => scroll("left")}
-        sx={{
-          position: "absolute",
-          top: "50%",
-          left: 0,
-          transform: "translateY(-50%)",
-          zIndex: 2,
-          bgcolor: "#ffb700",
-          color: "#000",
-          borderRadius: "50%",
-          boxShadow: 2,
-        }}
-      >
-        <ArrowBackIosNewIcon fontSize="small" />
-      </IconButton>
+      {showLeft && (
+        <IconButton
+          onClick={() => scroll("left")}
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: 0,
+            transform: "translateY(-50%)",
+            zIndex: 2,
+            bgcolor: "#ffb700",
+            color: "#000",
+            borderRadius: "50%",
+            boxShadow: 2,
+          }}
+        >
+          <ArrowBackIosNewIcon fontSize="small" />
+        </IconButton>
+      )}
 
       <Box
         ref={scrollRef}
@@ -77,8 +102,11 @@ const CategoryCarousel = () => {
               flex: "0 0 auto",
               textAlign: "center",
               width: 140,
-              transition: "transform 0.3s",
-              "&:hover": { transform: "scale(1.05)" },
+              transition: "box-shadow 0.3s",
+              "&:hover": {
+                boxShadow: 6,
+                cursor: "pointer",
+              },
             }}
           >
             <Box
@@ -111,22 +139,24 @@ const CategoryCarousel = () => {
         ))}
       </Box>
 
-      <IconButton
-        onClick={() => scroll("right")}
-        sx={{
-          position: "absolute",
-          top: "50%",
-          right: 0,
-          transform: "translateY(-50%)",
-          zIndex: 2,
-          bgcolor: "#f25c05",
-          color: "#fff",
-          borderRadius: "50%",
-          boxShadow: 2,
-        }}
-      >
-        <ArrowForwardIosIcon fontSize="small" />
-      </IconButton>
+      {showRight && (
+        <IconButton
+          onClick={() => scroll("right")}
+          sx={{
+            position: "absolute",
+            top: "50%",
+            right: 0,
+            transform: "translateY(-50%)",
+            zIndex: 2,
+            bgcolor: "#f25c05",
+            color: "#fff",
+            borderRadius: "50%",
+            boxShadow: 2,
+          }}
+        >
+          <ArrowForwardIosIcon fontSize="small" />
+        </IconButton>
+      )}
     </Box>
   );
 };
