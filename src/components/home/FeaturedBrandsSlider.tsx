@@ -3,19 +3,13 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
 import Marquee from "react-fast-marquee";
+import Image from "next/image";
 
-const brands = [
-  "/images/brands/images.png",
-  "/images/brands/Stihl_Logo_WhiteOnOrange.svg.png",
-  "/images/brands/TGPT Husqvarna.jpg",
-  "/images/brands/thuong-hieu-makita-cua-nuoc-nao-co-nhung-san-pham-nao-3.jpg",
-  "/images/brands/images.png",
-  "/images/brands/Stihl_Logo_WhiteOnOrange.svg.png",
-  "/images/brands/TGPT Husqvarna.jpg",
-  "/images/brands/thuong-hieu-makita-cua-nuoc-nao-co-nhung-san-pham-nao-3.jpg",
-];
+interface Props {
+  brands: string[];
+}
 
-const FeaturedBrandsSlider = () => {
+const FeaturedBrandsSlider = ({ brands }: Props) => {
   return (
     <Box sx={{ px: 3, py: 6, bgcolor: "#fff", textAlign: "center" }}>
       <Typography variant="h5" fontWeight="bold" mb={4}>
@@ -25,17 +19,19 @@ const FeaturedBrandsSlider = () => {
         </Box>
       </Typography>
 
-      <Box sx={{ overflow: "hidden" }}>
+      <Box
+        sx={{
+          overflow: "hidden",
+          "& .marquee-container": {
+            overflowY: "hidden !important", // Ngăn scroll Y
+          },
+        }}
+      >
         <Marquee
           pauseOnHover
           gradient={false}
           speed={40}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            overflowY: "hidden", // ✨ Ngăn cuộn dọc
-            scrollbarWidth: "none", // Firefox
-          }}
+          className="marquee-container"
         >
           {brands.map((logo, index) => (
             <Box
@@ -44,6 +40,7 @@ const FeaturedBrandsSlider = () => {
                 mx: 4,
                 width: 120,
                 height: 60,
+                position: "relative",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -55,14 +52,12 @@ const FeaturedBrandsSlider = () => {
                 },
               }}
             >
-              <img
+              <Image
                 src={logo}
                 alt={`brand-${index}`}
-                style={{
-                  maxWidth: "100%",
-                  maxHeight: "100%",
-                  display: "block", // tránh inline-element overflow
-                }}
+                fill
+                style={{ objectFit: "contain" }}
+                sizes="(max-width: 600px) 100px, 120px"
               />
             </Box>
           ))}

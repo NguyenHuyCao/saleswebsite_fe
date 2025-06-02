@@ -74,6 +74,22 @@ export async function getNewProducts(): Promise<Product[]> {
   );
 }
 
+export async function getBrands(): Promise<string[]> {
+  const res = await fetch("http://localhost:8080/api/v1/brands", {
+    headers: { "Content-Type": "application/json" },
+    cache: "no-store",
+  });
+
+  const raw = await res.json();
+  const result = raw?.data?.result || [];
+
+  return result.map((brand: any) =>
+    brand.logo
+      ? `http://localhost:8080/api/v1/files/${brand.logo}`
+      : "/images/product/placeholder.jpg"
+  );
+}
+
 export async function getCategories(): Promise<Category[]> {
   const res = await fetch("http://localhost:8080/api/v1/categories", {
     headers: { "Content-Type": "application/json" },
@@ -126,11 +142,13 @@ export async function getCategoriesWithProducts(): Promise<
 
 export default async function HomePage() {
   const deadline = "2025-06-30T23:59:59";
-  const [newProducts, categories, categoriesWithProducts] = await Promise.all([
-    getNewProducts(),
-    getCategories(),
-    getCategoriesWithProducts(),
-  ]);
+  const [newProducts, categories, categoriesWithProducts, brands] =
+    await Promise.all([
+      getNewProducts(),
+      getCategories(),
+      getCategoriesWithProducts(),
+      getBrands(),
+    ]);
 
   return (
     <>
@@ -159,7 +177,7 @@ export default async function HomePage() {
         <PromoBanner />
         <CustomerFeedback />
         <KnowledgeShare />
-        <FeaturedBrandsSlider />
+        <FeaturedBrandsSlider brands={brands} />
       </Container>
     </>
   );
