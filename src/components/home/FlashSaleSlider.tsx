@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useRef, useState, useEffect } from "react";
 import { Box, IconButton, Tooltip } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
@@ -12,7 +13,7 @@ const FlashSaleSlider = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(false);
-  const [wishlist, setWishlist] = useState<number[]>([]); // product IDs
+  const [wishlist, setWishlist] = useState<number[]>([]);
 
   const checkScroll = () => {
     const el = containerRef.current;
@@ -36,8 +37,6 @@ const FlashSaleSlider = () => {
         if (isNew) status.push("Mới");
         if (isHot) status.push("Bán chạy");
 
-        if (item.wishListUser) setWishlist((prev) => [...prev, item.id]);
-
         return {
           id: item.id,
           title: item.name,
@@ -60,6 +59,29 @@ const FlashSaleSlider = () => {
     }
   };
 
+  const fetchWishlist = async () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+
+    try {
+      const res = await fetch("http://localhost:8080/api/v1/wish_list", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      if (data?.data?.result) {
+        const productIds = data.data.result.map(
+          (entry: any) => entry.product.id
+        );
+        setWishlist(productIds);
+      }
+    } catch (error) {
+      console.error("Failed to fetch wishlist", error);
+    }
+  };
+
   const toggleWishlist = async (productId: number) => {
     const token = localStorage.getItem("accessToken");
     if (!token) {
@@ -67,9 +89,9 @@ const FlashSaleSlider = () => {
       return;
     }
 
-    // Tối ưu UX: cập nhật ngay UI
+    const isAlreadyInWishlist = wishlist.includes(productId);
     setWishlist((prev) =>
-      prev.includes(productId)
+      isAlreadyInWishlist
         ? prev.filter((id) => id !== productId)
         : [...prev, productId]
     );
@@ -91,6 +113,7 @@ const FlashSaleSlider = () => {
 
   useEffect(() => {
     fetchProducts();
+    fetchWishlist();
     checkScroll();
     const el = containerRef.current;
     if (!el) return;
@@ -150,30 +173,45 @@ const FlashSaleSlider = () => {
             }}
           >
             <Tooltip title="Yêu thích">
-              <IconButton
-                onClick={() => toggleWishlist(product.id!)}
+              <Box
                 sx={{
                   position: "absolute",
                   top: 8,
                   right: 8,
-                  bgcolor: "white",
-                  borderRadius: "50%",
                   zIndex: 5,
-                  boxShadow: 1,
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleWishlist(product.id!);
                 }}
               >
-                {wishlist.includes(product.id!) ? (
-                  <FavoriteIcon sx={{ color: "#f25c05" }} fontSize="small" />
-                ) : (
-                  <FavoriteBorderIcon
-                    sx={{ color: "#f25c05" }}
-                    fontSize="small"
-                  />
-                )}
-              </IconButton>
+                <IconButton
+                  sx={{
+                    bgcolor: "white",
+                    borderRadius: "50%",
+                    boxShadow: 1,
+                    width: 32,
+                    height: 32,
+                    "&:hover": { bgcolor: "#ffe0b2" },
+                  }}
+                >
+                  {wishlist.includes(product.id!) ? (
+                    <FavoriteIcon sx={{ color: "#f25c05" }} fontSize="small" />
+                  ) : (
+                    <FavoriteBorderIcon
+                      sx={{ color: "#f25c05" }}
+                      fontSize="small"
+                    />
+                  )}
+                </IconButton>
+              </Box>
             </Tooltip>
 
-            <ProductCard product={product} />
+            <ProductCard
+              product={product}
+              isFavorite={wishlist.includes(product.id!)}
+              onToggleFavorite={() => toggleWishlist(product.id!)}
+            />
           </Box>
         ))}
       </Box>

@@ -3,22 +3,93 @@ import ProductCategoryPage from "@/components/product/ProductCategoryPage";
 import ProductListLayout from "@/components/product/ProductListLayout";
 import { Container } from "@mui/material";
 
-export async function getCategories(): Promise<any[]> {
+export type Product = {
+  id: number;
+  title: string;
+  slug: string;
+  image: string;
+  price: number;
+  pricePerUnit: number;
+  originalPrice: number;
+  sale: boolean;
+  inStock: boolean;
+  label: string;
+  stockQuantity: number;
+  totalStock: number;
+  power: string;
+  fuelType: string;
+  engineType: string;
+  weight: number;
+  dimensions: string;
+  tankCapacity: number;
+  origin: string;
+  warrantyMonths: number;
+  createdAt: string;
+  createdBy?: string;
+  updatedAt?: string | null;
+  updatedBy?: string | null;
+  rating?: number;
+  status: string[];
+  favorite: boolean;
+};
+export type CategoryWithProducts = {
+  id: number;
+  name: string;
+  slug: string;
+  products: Product[];
+};
+
+export async function getCategories(): Promise<CategoryWithProducts[]> {
   const res = await fetch("http://localhost:8080/api/v1/categories", {
-    headers: { "Content-Type": "application/json" },
     cache: "no-store",
   });
-
   const raw = await res.json();
-  const categories = raw?.data?.result || [];
+  const data = raw?.data?.result || [];
+  const now = new Date();
 
-  return categories.map((cat: any) => ({
-    name: cat.name,
-    count: cat.products?.length || 0,
-    image: cat.image
-      ? `http://localhost:8080/api/v1/files/${cat.image}`
-      : "/images/product/placeholder.jpg",
-    slug: cat.slug,
+  return data.map((category: any) => ({
+    id: category.id,
+    name: category.name,
+    slug: category.slug,
+    products: (category.products || [])
+      .slice(0, 4)
+      .map((item: any): Product => {
+        const createdAt = new Date(item.createdAt);
+        const isNew =
+          (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
+        return {
+          id: item.id,
+          title: item.name,
+          slug: item.slug,
+          image: item.imageAvt
+            ? `http://localhost:8080/api/v1/files/${item.imageAvt}`
+            : "/images/product/placeholder.jpg",
+          price: item.pricePerUnit,
+          pricePerUnit: item.pricePerUnit,
+          originalPrice: item.price,
+          sale: item.price !== item.pricePerUnit,
+          inStock: item.active === true,
+          label: item.active ? "Thêm vào giỏ" : "Hết hàng",
+          stockQuantity: item.stockQuantity,
+          totalStock: item.totalStock,
+          power: item.power,
+          fuelType: item.fuelType,
+          engineType: item.engineType,
+          weight: item.weight,
+          dimensions: item.dimensions,
+          tankCapacity: item.tankCapacity,
+          origin: item.origin,
+          warrantyMonths: item.warrantyMonths,
+          createdAt: item.createdAt,
+          createdBy: item.createdBy,
+          updatedAt: item.updatedAt,
+          updatedBy: item.updatedBy,
+          rating: item.rating || 0,
+          status:
+            item.stockQuantity === 0 ? ["Hết hàng"] : isNew ? ["Mới"] : [],
+          favorite: item.wishListUser || false,
+        };
+      }),
   }));
 }
 

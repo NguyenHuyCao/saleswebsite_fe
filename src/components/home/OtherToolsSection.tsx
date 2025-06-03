@@ -21,12 +21,60 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
 }) => {
   const router = useRouter();
   const [activeIndex, setActiveIndex] = useState(0);
+  const [wishlist, setWishlist] = useState<number[]>([]);
 
   useEffect(() => {
     if (categories.length > 0 && activeIndex >= categories.length) {
       setActiveIndex(0);
     }
   }, [categories, activeIndex]);
+
+  useEffect(() => {
+    fetchWishlist();
+  }, []);
+
+  const fetchWishlist = async () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+    try {
+      const res = await fetch("http://localhost:8080/api/v1/wish_list", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      const ids =
+        data?.data?.result?.map((entry: any) => entry.product.id) || [];
+      setWishlist(ids);
+    } catch (err) {
+      console.error("Lỗi khi lấy danh sách yêu thích:", err);
+    }
+  };
+
+  const toggleWishlist = async (productId: number) => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      alert("Bạn cần đăng nhập để thêm vào yêu thích.");
+      return;
+    }
+    const isFavorite = wishlist.includes(productId);
+    setWishlist((prev) =>
+      isFavorite ? prev.filter((id) => id !== productId) : [...prev, productId]
+    );
+    try {
+      const formData = new FormData();
+      formData.append("productId", String(productId));
+      await fetch("http://localhost:8080/api/v1/wish_list", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+    } catch (err) {
+      console.error("Lỗi khi cập nhật yêu thích:", err);
+    }
+  };
 
   const handleCategoryClick = (index: number) => {
     setActiveIndex(index);
@@ -120,7 +168,11 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
                 </Box>
               )}
             </Stack>
-            <ProductCard product={product} />
+            <ProductCard
+              product={product}
+              isFavorite={wishlist.includes(product.id)}
+              onToggleFavorite={() => toggleWishlist(product.id)}
+            />
           </Box>
         ))}
       </Box>

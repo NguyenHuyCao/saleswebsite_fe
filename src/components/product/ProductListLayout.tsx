@@ -64,6 +64,53 @@ export default function ProductListLayout({ categories, brands }: Props) {
   };
 
   useEffect(() => {
+    fetchWishlist();
+  }, []);
+
+  const fetchWishlist = async () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+    try {
+      const res = await fetch("http://localhost:8080/api/v1/wish_list", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      const ids =
+        data?.data?.result?.map((entry: any) => entry.product.id) || [];
+      setFavorites(ids);
+    } catch (err) {
+      console.error("Lỗi khi lấy danh sách yêu thích:", err);
+    }
+  };
+
+  const toggleFavorite = async (productId: number) => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      alert("Bạn cần đăng nhập để thêm vào yêu thích.");
+      return;
+    }
+    const isFavorite = favorites.includes(productId);
+    setFavorites((prev) =>
+      isFavorite ? prev.filter((id) => id !== productId) : [...prev, productId]
+    );
+    try {
+      const formData = new FormData();
+      formData.append("productId", String(productId));
+      await fetch("http://localhost:8080/api/v1/wish_list", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+    } catch (err) {
+      console.error("Lỗi khi cập nhật yêu thích:", err);
+    }
+  };
+
+  useEffect(() => {
     async function fetchProducts() {
       try {
         const res = await fetch(getFilterUrl());
@@ -109,12 +156,6 @@ export default function ProductListLayout({ categories, brands }: Props) {
     value: number
   ) => {
     setPage(value);
-  };
-
-  const toggleFavorite = (index: number) => {
-    setFavorites((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
-    );
   };
 
   const normalized = (text: string) =>
@@ -227,7 +268,7 @@ export default function ProductListLayout({ categories, brands }: Props) {
                   <Box
                     onClick={(e) => {
                       e.stopPropagation();
-                      toggleFavorite(startIndex + idx);
+                      toggleFavorite(item.id);
                     }}
                     sx={{
                       position: "absolute",
@@ -243,8 +284,7 @@ export default function ProductListLayout({ categories, brands }: Props) {
                       justifyContent: "center",
                     }}
                   >
-                    {item.wishListUser ||
-                    favorites.includes(startIndex + idx) ? (
+                    {favorites.includes(item.id) ? (
                       <FavoriteIcon
                         fontSize="small"
                         sx={{ color: "#f25c05" }}

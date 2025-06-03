@@ -47,6 +47,53 @@ export const RelatedProducts = ({ category }: RelatedProductsProps) => {
 
   const related = category?.products || [];
 
+  useEffect(() => {
+    fetchWishlist();
+  }, []);
+
+  const fetchWishlist = async () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+    try {
+      const res = await fetch("http://localhost:8080/api/v1/wish_list", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      const ids =
+        data?.data?.result?.map((entry: any) => entry.product.id) || [];
+      setLiked(ids);
+    } catch (err) {
+      console.error("Lỗi khi lấy danh sách yêu thích:", err);
+    }
+  };
+
+  const toggleLike = async (id: number) => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      alert("Bạn cần đăng nhập để thêm vào yêu thích.");
+      return;
+    }
+    const isLiked = liked.includes(id);
+    setLiked((prev) =>
+      isLiked ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+    try {
+      const formData = new FormData();
+      formData.append("productId", String(id));
+      await fetch("http://localhost:8080/api/v1/wish_list", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+    } catch (err) {
+      console.error("Lỗi khi cập nhật yêu thích:", err);
+    }
+  };
+
   const updateScrollButtons = () => {
     const container = scrollRef.current;
     if (container) {
@@ -80,12 +127,6 @@ export const RelatedProducts = ({ category }: RelatedProductsProps) => {
       left: direction === "left" ? -scrollAmount : scrollAmount,
       behavior: "smooth",
     });
-  };
-
-  const toggleLike = (id: number) => {
-    setLiked((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
   };
 
   return (

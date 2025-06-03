@@ -10,30 +10,41 @@ import { PromotionBox } from "./PromotionBox";
 import { ProductTabs } from "./ProductTabs";
 import { RelatedProducts } from "./RelatedProducts";
 
-interface Product {
-  name: string;
-  description: string;
+export type Product = {
+  id: number;
+  title: string;
+  slug: string;
+  image: string;
   price: number;
+  pricePerUnit: number;
+  originalPrice: number;
+  sale: boolean;
+  inStock: boolean;
+  label: string;
   stockQuantity: number;
+  totalStock: number;
   power: string;
   fuelType: string;
-  imageAvt: string;
-  imageDetail1: string | null;
-  imageDetail2: string | null;
-  imageDetail3: string | null;
   engineType: string;
   weight: number;
   dimensions: string;
   tankCapacity: number;
   origin: string;
   warrantyMonths: number;
-  slug: string;
-}
+  createdAt: string;
+  createdBy?: string;
+  updatedAt?: string | null;
+  updatedBy?: string | null;
+  rating?: number;
+  status: string[];
+  favorite: boolean;
+};
 
 interface Category {
   id: number;
   name: string;
   slug: string;
+  products: Product[];
 }
 
 interface ProductDetailPageProps {

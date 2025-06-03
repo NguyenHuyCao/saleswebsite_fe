@@ -1,7 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Pagination } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Pagination,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
+import FavoriteIcon from "@mui/icons-material/Favorite";
 import ProductCard, { Product } from "@/components/product/ProductCard";
 
 const ITEMS_PER_PAGE = 15;
@@ -34,7 +41,8 @@ const WishlistPage = () => {
 
       const now = new Date();
 
-      const mapped: Product[] = data.data.result.map((item: any) => {
+      const mapped: Product[] = data.data.result.map((entry: any) => {
+        const item = entry.product;
         const createdAt = new Date(item.createdAt);
         const isNew =
           (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
@@ -57,12 +65,41 @@ const WishlistPage = () => {
           label: item.stockQuantity > 0 ? "Thêm vào giỏ" : "Hết hàng",
           rating: item.rating || 0,
           slug: item.slug,
+          createdAt: item.createdAt,
+          stockQuantity: item.stockQuantity,
+          totalStock: item.totalStock,
+          isFavorite: true, // luôn sáng vì đây là danh sách yêu thích
         };
       });
 
       setAllItems(mapped);
     } catch (error) {
       console.error("Lỗi khi lấy danh sách yêu thích:", error);
+    }
+  };
+
+  const toggleWishlist = async (productId: number) => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      alert("Bạn cần đăng nhập để xoá khỏi yêu thích.");
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("productId", String(productId));
+      await fetch("http://localhost:8080/api/v1/wish_list", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      // Xoá khỏi danh sách hiện tại
+      setAllItems((prev) => prev.filter((p) => p.id !== productId));
+    } catch (error) {
+      console.error("Lỗi khi xoá sản phẩm yêu thích:", error);
     }
   };
 
@@ -98,7 +135,12 @@ const WishlistPage = () => {
             justifyContent="center"
           >
             {displayedItems.map((product, index) => (
-              <ProductCard key={index} product={product} />
+              <ProductCard
+                key={index}
+                product={product}
+                isFavorite
+                onToggleFavorite={() => toggleWishlist(product.id!)}
+              />
             ))}
           </Box>
 
