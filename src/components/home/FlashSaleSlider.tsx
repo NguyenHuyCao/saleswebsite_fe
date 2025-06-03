@@ -1,9 +1,10 @@
 "use client";
-
 import React, { useRef, useState, useEffect } from "react";
-import { Box, IconButton } from "@mui/material";
+import { Box, IconButton, Tooltip } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import FavoriteIcon from "@mui/icons-material/Favorite";
 import ProductCard, { Product } from "../product/ProductCard";
 
 const FlashSaleSlider = () => {
@@ -11,6 +12,7 @@ const FlashSaleSlider = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(false);
+  const [wishlist, setWishlist] = useState<number[]>([]); // product IDs
 
   const checkScroll = () => {
     const el = containerRef.current;
@@ -34,7 +36,10 @@ const FlashSaleSlider = () => {
         if (isNew) status.push("Mới");
         if (isHot) status.push("Bán chạy");
 
+        if (item.wishListUser) setWishlist((prev) => [...prev, item.id]);
+
         return {
+          id: item.id,
           title: item.name,
           price: item.pricePerUnit,
           originalPrice: item.price,
@@ -52,6 +57,35 @@ const FlashSaleSlider = () => {
       setProducts(mapped);
     } catch (error) {
       console.error("Failed to fetch products", error);
+    }
+  };
+
+  const toggleWishlist = async (productId: number) => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      alert("Bạn cần đăng nhập để thêm vào yêu thích.");
+      return;
+    }
+
+    // Tối ưu UX: cập nhật ngay UI
+    setWishlist((prev) =>
+      prev.includes(productId)
+        ? prev.filter((id) => id !== productId)
+        : [...prev, productId]
+    );
+
+    try {
+      const formData = new FormData();
+      formData.append("productId", String(productId));
+      await fetch("http://localhost:8080/api/v1/wish_list", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+    } catch (error) {
+      console.error("Lỗi khi cập nhật yêu thích:", error);
     }
   };
 
@@ -107,7 +141,38 @@ const FlashSaleSlider = () => {
         }}
       >
         {products.map((product, idx) => (
-          <Box key={idx} sx={{ scrollSnapAlign: "start", flex: "0 0 auto" }}>
+          <Box
+            key={idx}
+            sx={{
+              scrollSnapAlign: "start",
+              flex: "0 0 auto",
+              position: "relative",
+            }}
+          >
+            <Tooltip title="Yêu thích">
+              <IconButton
+                onClick={() => toggleWishlist(product.id!)}
+                sx={{
+                  position: "absolute",
+                  top: 8,
+                  right: 8,
+                  bgcolor: "white",
+                  borderRadius: "50%",
+                  zIndex: 5,
+                  boxShadow: 1,
+                }}
+              >
+                {wishlist.includes(product.id!) ? (
+                  <FavoriteIcon sx={{ color: "#f25c05" }} fontSize="small" />
+                ) : (
+                  <FavoriteBorderIcon
+                    sx={{ color: "#f25c05" }}
+                    fontSize="small"
+                  />
+                )}
+              </IconButton>
+            </Tooltip>
+
             <ProductCard product={product} />
           </Box>
         ))}
