@@ -83,60 +83,62 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ categories }) => {
         </IconButton>
       )}
 
-      <Box
-        ref={scrollRef}
-        sx={{
-          display: "flex",
-          overflowX: "auto",
-          gap: 4,
-          px: 6,
-          scrollBehavior: "smooth",
-          scrollbarWidth: "none",
-          "&::-webkit-scrollbar": { display: "none" },
-        }}
-      >
-        {categories.map((item, idx) => (
-          <Box
-            key={idx}
-            sx={{
-              flex: "0 0 auto",
-              textAlign: "center",
-              width: 140,
-              transition: "box-shadow 0.3s",
-              "&:hover": {
-                boxShadow: 6,
-                cursor: "pointer",
-              },
-            }}
-          >
+      <Box sx={{ display: "flex", justifyContent: "center" }}>
+        <Box
+          ref={scrollRef}
+          sx={{
+            display: "flex",
+            overflowX: "auto",
+            gap: 4,
+            px: 6,
+            scrollBehavior: "smooth",
+            scrollbarWidth: "none",
+            "&::-webkit-scrollbar": { display: "none" },
+          }}
+        >
+          {categories.map((item, idx) => (
             <Box
+              key={idx}
               sx={{
-                width: 120,
-                height: 120,
-                borderRadius: "50%",
-                mx: "auto",
-                p: 1.5,
-                border: "3px solid #ffb700",
-                boxShadow: 3,
-                bgcolor: "#fff",
-                position: "relative",
+                flex: "0 0 auto",
+                textAlign: "center",
+                width: 140,
+                transition: "box-shadow 0.3s",
+                "&:hover": {
+                  boxShadow: 6,
+                  cursor: "pointer",
+                },
               }}
             >
-              <Image
-                src={item.image}
-                alt={item.title}
-                fill
-                style={{
-                  objectFit: "cover",
+              <Box
+                sx={{
+                  width: 120,
+                  height: 120,
                   borderRadius: "50%",
+                  mx: "auto",
+                  p: 1.5,
+                  border: "3px solid #ffb700",
+                  boxShadow: 3,
+                  bgcolor: "#fff",
+                  position: "relative",
                 }}
-              />
+              >
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  fill
+                  style={{
+                    objectFit: "cover",
+                    borderRadius: "50%",
+                  }}
+                />
+              </Box>
+              <Typography mt={1.5} fontSize={14} fontWeight={600} color="#000">
+                {item.title}
+              </Typography>
             </Box>
-            <Typography mt={1.5} fontSize={14} fontWeight={600} color="#000">
-              {item.title}
-            </Typography>
-          </Box>
-        ))}
+          ))}
+        </Box>
       </Box>
 
       {showRight && (

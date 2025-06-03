@@ -6,99 +6,9 @@ import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import ProductCard, { Product } from "../product/ProductCard";
 
-const products: Product[] = [
-  {
-    title: "Demo sản phẩm thuộc tính",
-    price: 2920000,
-    originalPrice: 3500000,
-    image: "/images/product/12.jpg",
-    status: ["Mới"],
-    sale: true,
-    inStock: false,
-    label: "Hết hàng",
-    rating: 4.5,
-  },
-  {
-    title: "Máy cắt sắt 2300W Dewalt D28730-B1",
-    price: 2920000,
-    originalPrice: 3500000,
-    image: "/images/product/12.jpg",
-    status: ["Mới"],
-    sale: true,
-    inStock: false,
-    label: "Hết hàng",
-    rating: 4.0,
-  },
-  {
-    title: "Tời quay tay Kenbo cao cấp 1200LBS 20m",
-    price: 859000,
-    originalPrice: 1210000,
-    image: "/images/product/12.jpg",
-    status: ["Mới", "Bán chạy"],
-    sale: true,
-    inStock: false,
-    label: "Hết hàng",
-    rating: 3.5,
-  },
-  {
-    title: "Tời điện Kenbo PA500-12m/30m 220v",
-    price: 2180000,
-    originalPrice: 2915000,
-    image: "/images/product/12.jpg",
-    status: [],
-    sale: true,
-    inStock: true,
-    label: "Thêm vào giỏ",
-    rating: 4.2,
-  },
-  {
-    title: "Máy bơm nước tự động tăng áp Shining SHP-128EA",
-    price: 1090000,
-    originalPrice: 1370000,
-    image: "/images/product/12.jpg",
-    status: ["Bán chạy"],
-    sale: true,
-    inStock: true,
-    label: "Thêm vào giỏ",
-    rating: 3.8,
-  },
-  {
-    title: "Máy cưa đĩa 1800W Bosch GKS 190",
-    price: 2290000,
-    originalPrice: 2650000,
-    image: "/images/product/12.jpg",
-    status: ["Hot"],
-    sale: true,
-    inStock: true,
-    label: "Thêm vào giỏ",
-    rating: 4.7,
-  },
-  {
-    title: "Máy mài góc 850W Makita GA4030",
-    price: 890000,
-    originalPrice: 1120000,
-    image: "/images/product/12.jpg",
-    status: [],
-    sale: true,
-    inStock: true,
-    label: "Thêm vào giỏ",
-    rating: 4.0,
-  },
-  {
-    title: "Máy khoan bê tông Bosch GBH 2-26 DRE",
-    price: 3120000,
-    originalPrice: 3650000,
-    image: "/images/product/12.jpg",
-    status: ["Sale"],
-    sale: true,
-    inStock: true,
-    label: "Thêm vào giỏ",
-    rating: 4.6,
-  },
-];
-
 const FlashSaleSlider = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [products, setProducts] = useState<Product[]>([]);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(false);
 
@@ -110,7 +20,43 @@ const FlashSaleSlider = () => {
     }
   };
 
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch("http://localhost:8080/api/v1/products");
+      const data = await res.json();
+      const now = new Date();
+      const mapped = data?.data?.result.map((item: any) => {
+        const createdAt = new Date(item.createdAt);
+        const isNew =
+          (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
+        const isHot = item.totalStock - item.stockQuantity > 10;
+        const status = [];
+        if (isNew) status.push("Mới");
+        if (isHot) status.push("Bán chạy");
+
+        return {
+          title: item.name,
+          price: item.pricePerUnit,
+          originalPrice: item.price,
+          image: item.imageAvt
+            ? `http://localhost:8080/api/v1/files/${item.imageAvt}`
+            : "/images/product/placeholder.jpg",
+          status,
+          sale: item.pricePerUnit < item.price,
+          inStock: item.stockQuantity > 0,
+          label: item.stockQuantity > 0 ? "Thêm vào giỏ" : "Hết hàng",
+          rating: item.rating || 0,
+          slug: item.slug,
+        };
+      });
+      setProducts(mapped);
+    } catch (error) {
+      console.error("Failed to fetch products", error);
+    }
+  };
+
   useEffect(() => {
+    fetchProducts();
     checkScroll();
     const el = containerRef.current;
     if (!el) return;
@@ -128,7 +74,7 @@ const FlashSaleSlider = () => {
   };
 
   return (
-    <Box sx={{ position: "relative", px: 2 }}>
+    <Box sx={{ position: "relative", px: 2, textAlign: "center" }}>
       {showLeft && (
         <IconButton
           onClick={() => scroll("left")}
@@ -153,6 +99,7 @@ const FlashSaleSlider = () => {
           overflowX: "auto",
           scrollBehavior: "smooth",
           scrollbarWidth: "none",
+          justifyContent: "center",
           "&::-webkit-scrollbar": { display: "none" },
           gap: 1,
           px: 5,

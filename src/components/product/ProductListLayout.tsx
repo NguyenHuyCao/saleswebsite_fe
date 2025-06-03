@@ -27,11 +27,13 @@ interface ProductIprop {
   image: string;
   price: number;
   oldPrice: number;
-  tag?: string;
+  tags?: string[];
   badge?: string;
   rating?: number;
   createdAt?: string;
   slug?: string;
+  active: boolean;
+  wishListUser: boolean;
 }
 
 interface Props {
@@ -66,20 +68,34 @@ export default function ProductListLayout({ categories, brands }: Props) {
       try {
         const res = await fetch(getFilterUrl());
         const data = await res.json();
-        const mapped = data?.data?.result.map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          image: item.imageAvt
-            ? `http://localhost:8080/api/v1/files/${item.imageAvt}`
-            : "/images/product/placeholder.jpg",
-          price: item.price,
-          oldPrice: item.price > 0 ? Math.floor(item.price * 1.2) : 1000000,
-          rating: Math.floor(Math.random() * 2) + 4,
-          tag: item.stockQuantity > 10 ? "Bán chạy" : undefined,
-          badge: item.stockQuantity === 0 ? "Hết hàng" : undefined,
-          createdAt: item.createdAt,
-          slug: item.slug,
-        }));
+        const now = new Date();
+        const mapped = data?.data?.result.map((item: any) => {
+          const createdAt = new Date(item.createdAt);
+          const isNew =
+            (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
+          const isBestSeller = item.totalStock - item.stockQuantity > 10;
+
+          const tags: string[] = [];
+          if (isNew) tags.push("Mới");
+          if (isBestSeller) tags.push("Bán chạy");
+
+          return {
+            id: item.id,
+            name: item.name,
+            image: item.imageAvt
+              ? `http://localhost:8080/api/v1/files/${item.imageAvt}`
+              : "/images/product/placeholder.jpg",
+            price: item.pricePerUnit,
+            oldPrice: item.price,
+            rating: item.rating || 0,
+            tags,
+            badge: item.stockQuantity === 0 ? "Hết hàng" : undefined,
+            createdAt: item.createdAt,
+            slug: item.slug,
+            active: item.active,
+            wishListUser: item.wishListUser,
+          };
+        });
         setProducts(mapped);
       } catch (err) {
         console.error("Failed to fetch products", err);
@@ -184,7 +200,7 @@ export default function ProductListLayout({ categories, brands }: Props) {
 
         <Grid container spacing={2}>
           {paginatedProducts.map((item, idx) => (
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.id}>
+            <Grid key={item.id} size={{ xs: 12, sm: 6, md: 4 }}>
               <Paper
                 elevation={2}
                 sx={{ p: 2, position: "relative", cursor: "pointer" }}
@@ -227,7 +243,8 @@ export default function ProductListLayout({ categories, brands }: Props) {
                       justifyContent: "center",
                     }}
                   >
-                    {favorites.includes(startIndex + idx) ? (
+                    {item.wishListUser ||
+                    favorites.includes(startIndex + idx) ? (
                       <FavoriteIcon
                         fontSize="small"
                         sx={{ color: "#f25c05" }}
@@ -256,11 +273,18 @@ export default function ProductListLayout({ categories, brands }: Props) {
                     style={{ objectFit: "contain" }}
                   />
                 </Box>
-                <Box minHeight={24} mt={1}>
-                  {item.tag && (
+                <Box
+                  minHeight={24}
+                  mt={1}
+                  display="flex"
+                  gap={1}
+                  flexWrap="wrap"
+                >
+                  {item.tags?.map((tag) => (
                     <Box
+                      key={tag}
                       sx={{
-                        bgcolor: "#ffb700",
+                        bgcolor: tag === "Mới" ? "red" : "#ffb700",
                         color: "white",
                         fontSize: 12,
                         fontWeight: "bold",
@@ -269,9 +293,9 @@ export default function ProductListLayout({ categories, brands }: Props) {
                         display: "inline-block",
                       }}
                     >
-                      {item.tag}
+                      {tag}
                     </Box>
-                  )}
+                  ))}
                 </Box>
                 <Typography fontSize={14} fontWeight={600} mt={1} height={40}>
                   {item.name}
@@ -304,8 +328,9 @@ export default function ProductListLayout({ categories, brands }: Props) {
                     textTransform: "none",
                     fontSize: 14,
                   }}
+                  disabled={!item.active}
                 >
-                  Thêm vào giỏ hàng
+                  {item.active ? "Thêm vào giỏ hàng" : "Hết hàng"}
                 </Button>
               </Paper>
             </Grid>

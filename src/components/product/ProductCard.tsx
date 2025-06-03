@@ -22,6 +22,9 @@ export type Product = {
   sale: boolean;
   inStock: boolean;
   label: string;
+  totalStock: number;
+  stockQuantity: number;
+  createdAt: string;
   rating?: number;
 };
 

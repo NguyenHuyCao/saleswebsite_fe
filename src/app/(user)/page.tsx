@@ -25,6 +25,7 @@ export type Product = {
   inStock: boolean;
   label: string;
   rating?: number;
+  favorite: boolean;
 };
 
 export type Category = {
@@ -56,22 +57,27 @@ export async function getNewProducts(): Promise<Product[]> {
 
   const rawData = await res.json();
   const productsFromApi = rawData?.data?.result || [];
+  const now = new Date();
 
-  return productsFromApi.map(
-    (item: any): Product => ({
+  return productsFromApi.map((item: any): Product => {
+    const createdAt = new Date(item.createdAt);
+    const isNew =
+      (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
+    return {
       title: item.name,
-      price: item.price,
-      originalPrice: item.price > 0 ? Math.floor(item.price * 1.2) : 1000000,
+      price: item.pricePerUnit,
+      originalPrice: item.price,
       image: item.imageAvt
         ? `http://localhost:8080/api/v1/files/${item.imageAvt}`
         : "/images/product/placeholder.jpg",
-      status: item.stockQuantity === 0 ? ["Hết hàng"] : ["Mới"],
-      sale: true,
-      inStock: item.stockQuantity > 0,
-      label: item.stockQuantity > 0 ? "Thêm vào giỏ" : "Hết hàng",
-      rating: 4.0,
-    })
-  );
+      status: item.stockQuantity === 0 ? ["Hết hàng"] : isNew ? ["Mới"] : [],
+      sale: item.price !== item.pricePerUnit,
+      inStock: item.active === true,
+      label: item.active ? "Thêm vào giỏ" : "Hết hàng",
+      rating: item.rating || 0,
+      favorite: item.wishListUser || false,
+    };
+  });
 }
 
 export async function getBrands(): Promise<string[]> {
@@ -117,26 +123,34 @@ export async function getCategoriesWithProducts(): Promise<
   });
   const raw = await res.json();
   const data = raw?.data?.result || [];
+  const now = new Date();
 
   return data.map((category: any) => ({
     id: category.id,
     name: category.name,
     slug: category.slug,
-    products: (category.products || []).slice(0, 4).map(
-      (item: any): Product => ({
-        title: item.name,
-        price: item.price,
-        originalPrice: item.price > 0 ? Math.floor(item.price * 1.2) : 1000000,
-        image: item.imageAvt
-          ? `http://localhost:8080/api/v1/files/${item.imageAvt}`
-          : "/images/product/placeholder.jpg",
-        status: item.stockQuantity === 0 ? ["Hết hàng"] : ["Mới"],
-        sale: true,
-        inStock: item.stockQuantity > 0,
-        label: item.stockQuantity > 0 ? "Thêm vào giỏ" : "Hết hàng",
-        rating: 4.0,
-      })
-    ),
+    products: (category.products || [])
+      .slice(0, 4)
+      .map((item: any): Product => {
+        const createdAt = new Date(item.createdAt);
+        const isNew =
+          (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
+        return {
+          title: item.name,
+          price: item.pricePerUnit,
+          originalPrice: item.price,
+          image: item.imageAvt
+            ? `http://localhost:8080/api/v1/files/${item.imageAvt}`
+            : "/images/product/placeholder.jpg",
+          status:
+            item.stockQuantity === 0 ? ["Hết hàng"] : isNew ? ["Mới"] : [],
+          sale: item.price !== item.pricePerUnit,
+          inStock: item.active === true,
+          label: item.active ? "Thêm vào giỏ" : "Hết hàng",
+          rating: item.rating || 0,
+          favorite: item.wishListUser || false,
+        };
+      }),
   }));
 }
 

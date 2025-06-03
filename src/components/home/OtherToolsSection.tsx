@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Box, Typography, Button } from "@mui/material";
+import { Box, Typography, Button, Stack } from "@mui/material";
 import { useRouter } from "next/navigation";
 import ProductCard, { Product } from "../product/ProductCard";
 
@@ -79,7 +79,47 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
         px={5}
       >
         {activeCategory?.products?.map((product, index) => (
-          <Box key={index} sx={{ width: 230 }}>
+          <Box key={index} sx={{ width: 230, position: "relative" }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              position="absolute"
+              top={8}
+              left={8}
+              zIndex={2}
+            >
+              {product.createdAt &&
+                (new Date().getTime() - new Date(product.createdAt).getTime()) /
+                  (1000 * 60 * 60 * 24) <=
+                  30 && (
+                  <Box
+                    sx={{
+                      bgcolor: "red",
+                      color: "white",
+                      fontSize: 12,
+                      fontWeight: "bold",
+                      px: 1,
+                      borderRadius: 0.5,
+                    }}
+                  >
+                    Mới
+                  </Box>
+                )}
+              {product.totalStock - product.stockQuantity > 10 && (
+                <Box
+                  sx={{
+                    bgcolor: "#ffb700",
+                    color: "white",
+                    fontSize: 12,
+                    fontWeight: "bold",
+                    px: 1,
+                    borderRadius: 0.5,
+                  }}
+                >
+                  Bán chạy
+                </Box>
+              )}
+            </Stack>
             <ProductCard product={product} />
           </Box>
         ))}
