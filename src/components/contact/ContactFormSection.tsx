@@ -164,6 +164,12 @@ const ContactFormSection = () => {
                     </InputAdornment>
                   ),
                 }}
+                SelectProps={{
+                  MenuProps: {
+                    disablePortal: false, // ✅ Hiển thị menu ra ngoài layout gốc
+                    disableScrollLock: true, // ✅ Không khóa scroll khi mở dropdown
+                  },
+                }}
               >
                 {topics.map((topic, index) => (
                   <MenuItem key={index} value={topic}>

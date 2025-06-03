@@ -8,11 +8,7 @@ import { useRouter } from "next/navigation";
 interface Product {
   id: number;
   name: string;
-  slug: string;
-  active: boolean;
-  brand?: {
-    id: number;
-  };
+  slug?: string;
 }
 
 interface Category {
@@ -25,6 +21,7 @@ interface Brand {
   id: number;
   name: string;
   logo: string;
+  category: Category[];
 }
 
 interface Props {
@@ -32,38 +29,16 @@ interface Props {
   categories: Category[];
 }
 
-const BrandMegaMenu = ({ brands, categories }: Props) => {
+const BrandMegaMenu = ({ brands }: Props) => {
   const [hoveredBrandIndex, setHoveredBrandIndex] = useState<number | null>(
     null
   );
   const router = useRouter();
 
-  const getCategoriesByBrand = (brand: Brand) => {
-    const map = new Map<
-      number,
-      { id: number; name: string; products: { name: string; slug: string }[] }
-    >();
-
-    categories.forEach((cat) => {
-      const filtered = cat.products.filter(
-        (p) => p.active && p.brand?.id === brand.id
-      );
-
-      if (filtered.length > 0) {
-        if (!map.has(cat.id)) {
-          map.set(cat.id, {
-            id: cat.id,
-            name: cat.name,
-            products: filtered.map((p) => ({
-              name: p.name,
-              slug: p.slug,
-            })),
-          });
-        }
-      }
-    });
-
-    return Array.from(map.values());
+  const getCategoriesForHoveredBrand = () => {
+    if (hoveredBrandIndex === null) return [];
+    const brand = brands[hoveredBrandIndex];
+    return brand.category.filter((cat) => cat.products.length > 0);
   };
 
   return (
@@ -126,7 +101,7 @@ const BrandMegaMenu = ({ brands, categories }: Props) => {
             borderTop: "4px solid #ffb700",
           }}
         >
-          {getCategoriesByBrand(brands[hoveredBrandIndex]).map((cat) => (
+          {getCategoriesForHoveredBrand().map((cat) => (
             <Box key={cat.id} minWidth={200} maxWidth={250}>
               <Typography fontWeight="bold" mb={1} fontSize={14}>
                 {cat.name}

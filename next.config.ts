@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   // output: "standalone",
   devIndicators: false,
-  swcMinify: true,
+  // swcMinify: true,
   modularizeImports: {
     "@mui/icons-material": {
       transform: "@mui/icons-material/{{member}}",
