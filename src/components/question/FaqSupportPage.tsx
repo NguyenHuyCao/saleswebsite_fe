@@ -20,6 +20,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
 import MessageIcon from "@mui/icons-material/Message";
+import GlobalSnackbar from "../alert/GlobalSnackbar";
 
 const faqData = [
   {
@@ -97,11 +98,60 @@ const faqData = [
 
 const FaqSupportPage = () => {
   const [expanded, setExpanded] = useState<string | false>(false);
+  const [form, setForm] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    messageContent: "",
+  });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    type: "success" as "success" | "error",
+    message: "",
+  });
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const handleChange = (panel: string) => (_: any, isExpanded: boolean) => {
     setExpanded(isExpanded ? panel : false);
+  };
+
+  const handleSubmit = async () => {
+    const payload = {
+      ...form,
+      subject: "Giải đáp thắc mắc",
+    };
+    try {
+      const res = await fetch("http://localhost:8080/api/v1/contacts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.status === 201) {
+        setSnackbar({
+          open: true,
+          type: "success",
+          message: "Gửi thắc mắc thành công!",
+        });
+        setForm({ fullName: "", email: "", phone: "", messageContent: "" });
+      } else {
+        setSnackbar({
+          open: true,
+          type: "error",
+          message: "Gửi thất bại, vui lòng thử lại.",
+        });
+      }
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        type: "error",
+        message: "Đã xảy ra lỗi, vui lòng thử lại sau.",
+      });
+    }
   };
 
   return (
@@ -163,6 +213,8 @@ const FaqSupportPage = () => {
               fullWidth
               size="small"
               sx={{ mb: 2 }}
+              value={form.fullName}
+              onChange={(e) => setForm({ ...form, fullName: e.target.value })}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -176,6 +228,8 @@ const FaqSupportPage = () => {
               fullWidth
               size="small"
               sx={{ mb: 2 }}
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -189,6 +243,8 @@ const FaqSupportPage = () => {
               fullWidth
               size="small"
               sx={{ mb: 2 }}
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -204,6 +260,10 @@ const FaqSupportPage = () => {
               minRows={4}
               size="small"
               sx={{ mb: 2 }}
+              value={form.messageContent}
+              onChange={(e) =>
+                setForm({ ...form, messageContent: e.target.value })
+              }
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -212,12 +272,24 @@ const FaqSupportPage = () => {
                 ),
               }}
             />
-            <Button variant="contained" color="warning" fullWidth size="large">
+            <Button
+              variant="contained"
+              color="warning"
+              fullWidth
+              size="large"
+              onClick={handleSubmit}
+            >
               Gửi thông tin
             </Button>
           </Paper>
         </Grid>
       </Grid>
+      <GlobalSnackbar
+        type={snackbar.type}
+        message={snackbar.message}
+        open={snackbar.open}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      />
     </Box>
   );
 };

@@ -5,10 +5,12 @@ import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import Image from "next/image";
 import { useRef, useState, useEffect } from "react";
+import { useRouter } from "next/navigation"; // dùng router
 
 export type Category = {
   title: string;
   image: string;
+  slug: string; // Thêm slug để điều hướng
 };
 
 interface CategoryCarouselProps {
@@ -19,6 +21,7 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ categories }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(false);
+  const router = useRouter();
 
   const checkScroll = () => {
     const el = scrollRef.current;
@@ -27,6 +30,8 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ categories }) => {
       setShowRight(el.scrollLeft + el.offsetWidth < el.scrollWidth - 10);
     }
   };
+
+  console.log("categories", categories);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -50,6 +55,10 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ categories }) => {
         behavior: "smooth",
       });
     }
+  };
+
+  const handleClick = (slug: string) => {
+    router.push(`/product?category=${slug}`);
   };
 
   return (
@@ -99,6 +108,7 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ categories }) => {
           {categories.map((item, idx) => (
             <Box
               key={idx}
+              onClick={() => handleClick(item.slug)} // Điều hướng khi click
               sx={{
                 flex: "0 0 auto",
                 textAlign: "center",

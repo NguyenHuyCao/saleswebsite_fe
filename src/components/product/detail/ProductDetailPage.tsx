@@ -12,7 +12,9 @@ import { RelatedProducts } from "./RelatedProducts";
 
 export type Product = {
   id: number;
-  title: string;
+  name: string;
+  imageAvt: string;
+  description: string;
   slug: string;
   image: string;
   price: number;

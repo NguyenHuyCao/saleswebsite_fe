@@ -3,14 +3,37 @@
 import { Box, Typography, Tabs, Tab, Paper } from "@mui/material";
 import { useState } from "react";
 
-interface Product {
+export type Product = {
   id: number;
+  description: string;
+  imageAvt: string;
   name: string;
-  price: number;
   slug: string;
-  imageAvt: string | null;
+  image: string;
+  price: number;
+  pricePerUnit: number;
+  originalPrice: number;
+  sale: boolean;
+  inStock: boolean;
+  label: string;
   stockQuantity: number;
-}
+  totalStock: number;
+  power: string;
+  fuelType: string;
+  engineType: string;
+  weight: number;
+  dimensions: string;
+  tankCapacity: number;
+  origin: string;
+  warrantyMonths: number;
+  createdAt: string;
+  createdBy?: string;
+  updatedAt?: string | null;
+  updatedBy?: string | null;
+  rating?: number;
+  status: string[];
+  favorite: boolean;
+};
 
 interface Category {
   id: number;

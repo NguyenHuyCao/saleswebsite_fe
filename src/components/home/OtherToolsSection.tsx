@@ -127,7 +127,11 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
         px={5}
       >
         {activeCategory?.products?.map((product, index) => (
-          <Box key={index} sx={{ width: 230, position: "relative" }}>
+          <Box
+            key={index}
+            sx={{ width: 230, position: "relative", cursor: "pointer" }}
+            onClick={() => router.push(`/product/detail?name=${product.slug}`)}
+          >
             <Stack
               direction="row"
               spacing={1}

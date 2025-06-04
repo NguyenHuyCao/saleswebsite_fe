@@ -5,6 +5,7 @@ import { Box, Typography, IconButton } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import ProductCard, { Product } from "../product/ProductCard";
+import { useRouter } from "next/navigation";
 
 const NewProductSection: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -12,6 +13,7 @@ const NewProductSection: React.FC = () => {
   const [wishlist, setWishlist] = useState<number[]>([]);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(false);
+  const router = useRouter();
 
   const checkScroll = () => {
     const el = containerRef.current;
@@ -122,6 +124,10 @@ const NewProductSection: React.FC = () => {
     }
   };
 
+  const handleProductClick = (slug: string) => {
+    router.push(`/product/detail?name=${slug}`);
+  };
+
   return (
     <Box sx={{ position: "relative", px: 2, py: 4 }}>
       <Typography variant="h5" fontWeight="bold" mb={2}>
@@ -167,6 +173,7 @@ const NewProductSection: React.FC = () => {
               flexShrink: 0,
               position: "relative",
             }}
+            onClick={() => handleProductClick(product.slug)}
           >
             <ProductCard
               product={product}

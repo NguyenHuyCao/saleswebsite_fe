@@ -29,7 +29,7 @@ export type Product = {
   stockQuantity: number;
   createdAt: string;
   rating?: number;
-  slug?: string;
+  slug: string;
 };
 
 type Props = {

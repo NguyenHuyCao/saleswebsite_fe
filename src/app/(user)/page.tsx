@@ -126,6 +126,7 @@ export async function getCategories(): Promise<Category[]> {
     image: item.image
       ? `http://localhost:8080/api/v1/files/${item.image}`
       : "/images/product/placeholder.jpg",
+    slug: item.slug,
   }));
 
   return mappedCategories;

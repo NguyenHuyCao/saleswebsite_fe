@@ -7,6 +7,7 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ProductCard, { Product } from "../product/ProductCard";
+import { useRouter } from "next/navigation";
 
 const FlashSaleSlider = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -14,6 +15,7 @@ const FlashSaleSlider = () => {
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(false);
   const [wishlist, setWishlist] = useState<number[]>([]);
+  const router = useRouter();
 
   const checkScroll = () => {
     const el = containerRef.current;
@@ -170,7 +172,9 @@ const FlashSaleSlider = () => {
               scrollSnapAlign: "start",
               flex: "0 0 auto",
               position: "relative",
+              cursor: "pointer",
             }}
+            onClick={() => router.push(`/product/detail?name=${product.slug}`)}
           >
             <Tooltip title="Yêu thích">
               <Box
