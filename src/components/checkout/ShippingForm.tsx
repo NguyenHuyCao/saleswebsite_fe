@@ -80,6 +80,24 @@ export default function ShippingForm() {
             ))}
           </TextField>
         </Grid>
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <TextField
+            select
+            required
+            fullWidth
+            label="Xã/Thị trấn"
+            value={form.province}
+            onChange={(e) => handleChange("province", e.target.value)}
+            error={!form.province}
+            helperText={!form.province && "Bạn chưa chọn Xã/Thị trấn"}
+          >
+            {provinces.map((p) => (
+              <MenuItem key={p} value={p}>
+                {p}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Grid>
         <Grid size={{ xs: 12 }}>
           <TextField
             label="Ghi chú giao hàng"

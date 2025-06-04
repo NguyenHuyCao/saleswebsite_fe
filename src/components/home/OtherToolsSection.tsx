@@ -21,35 +21,23 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
 }) => {
   const router = useRouter();
   const [activeIndex, setActiveIndex] = useState(0);
-  const [wishlist, setWishlist] = useState<number[]>([]);
+  const [categoryProducts, setCategoryProducts] = useState<
+    CategoryWithProducts[]
+  >([]);
 
   useEffect(() => {
-    if (categories.length > 0 && activeIndex >= categories.length) {
-      setActiveIndex(0);
-    }
-  }, [categories, activeIndex]);
-
-  useEffect(() => {
-    fetchWishlist();
-  }, []);
-
-  const fetchWishlist = async () => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return;
-    try {
-      const res = await fetch("http://localhost:8080/api/v1/wish_list", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await res.json();
-      const ids =
-        data?.data?.result?.map((entry: any) => entry.product.id) || [];
-      setWishlist(ids);
-    } catch (err) {
-      console.error("Lỗi khi lấy danh sách yêu thích:", err);
-    }
-  };
+    // Đồng bộ favorite từ wishListUser nếu cần
+    const updatedCategories = categories.map((cat) => ({
+      ...cat,
+      products: cat.products.map(
+        (item: any): Product => ({
+          ...item,
+          favorite: item.favorite || item.wishListUser === true,
+        })
+      ),
+    }));
+    setCategoryProducts(updatedCategories);
+  }, [categories]);
 
   const toggleWishlist = async (productId: number) => {
     const token = localStorage.getItem("accessToken");
@@ -57,10 +45,16 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
       alert("Bạn cần đăng nhập để thêm vào yêu thích.");
       return;
     }
-    const isFavorite = wishlist.includes(productId);
-    setWishlist((prev) =>
-      isFavorite ? prev.filter((id) => id !== productId) : [...prev, productId]
+
+    setCategoryProducts((prev) =>
+      prev.map((cat) => ({
+        ...cat,
+        products: cat.products.map((p) =>
+          p.id === productId ? { ...p, favorite: !p.favorite } : p
+        ),
+      }))
     );
+
     try {
       const formData = new FormData();
       formData.append("productId", String(productId));
@@ -80,7 +74,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
     setActiveIndex(index);
   };
 
-  const activeCategory = categories[activeIndex];
+  const activeCategory = categoryProducts[activeIndex];
 
   return (
     <Box sx={{ px: 2, py: 4 }}>
@@ -96,7 +90,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
         px={5}
         justifyContent="center"
       >
-        {categories.map((cat, idx) => (
+        {categoryProducts.map((cat, idx) => (
           <Button
             key={cat.id}
             variant={idx === activeIndex ? "contained" : "outlined"}
@@ -174,7 +168,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
             </Stack>
             <ProductCard
               product={product}
-              isFavorite={wishlist.includes(product.id)}
+              isFavorite={product.favorite}
               onToggleFavorite={() => toggleWishlist(product.id)}
             />
           </Box>
@@ -184,7 +178,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
       <Box display="flex" justifyContent="center" mt={3}>
         <Button
           onClick={() =>
-            router.push(`/product?category=${activeCategory.slug}`)
+            router.push(`/product?category=${activeCategory?.slug}`)
           }
           variant="outlined"
           sx={{

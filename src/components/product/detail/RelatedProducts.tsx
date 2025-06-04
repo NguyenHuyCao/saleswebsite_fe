@@ -26,6 +26,7 @@ interface Product {
   stockQuantity: number;
   origin: string;
   warrantyMonths: number;
+  wishListUser?: boolean;
 }
 
 interface Category {
@@ -43,31 +44,8 @@ export const RelatedProducts = ({ category }: RelatedProductsProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
-  const [liked, setLiked] = useState<number[]>([]);
 
   const related = category?.products || [];
-
-  useEffect(() => {
-    fetchWishlist();
-  }, []);
-
-  const fetchWishlist = async () => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return;
-    try {
-      const res = await fetch("http://localhost:8080/api/v1/wish_list", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await res.json();
-      const ids =
-        data?.data?.result?.map((entry: any) => entry.product.id) || [];
-      setLiked(ids);
-    } catch (err) {
-      console.error("Lỗi khi lấy danh sách yêu thích:", err);
-    }
-  };
 
   const toggleLike = async (id: number) => {
     const token = localStorage.getItem("accessToken");
@@ -75,10 +53,7 @@ export const RelatedProducts = ({ category }: RelatedProductsProps) => {
       alert("Bạn cần đăng nhập để thêm vào yêu thích.");
       return;
     }
-    const isLiked = liked.includes(id);
-    setLiked((prev) =>
-      isLiked ? prev.filter((i) => i !== id) : [...prev, id]
-    );
+
     try {
       const formData = new FormData();
       formData.append("productId", String(id));
@@ -89,6 +64,9 @@ export const RelatedProducts = ({ category }: RelatedProductsProps) => {
         },
         body: formData,
       });
+
+      // Cập nhật lại trạng thái yêu thích bằng reload nhẹ
+      window.location.reload();
     } catch (err) {
       console.error("Lỗi khi cập nhật yêu thích:", err);
     }
@@ -151,7 +129,6 @@ export const RelatedProducts = ({ category }: RelatedProductsProps) => {
               bgcolor: "white",
               boxShadow: 2,
               border: "1px solid #ddd",
-              transition: "all 0.3s",
               "&:hover": { bgcolor: "grey.100" },
             }}
           >
@@ -171,7 +148,6 @@ export const RelatedProducts = ({ category }: RelatedProductsProps) => {
               bgcolor: "white",
               boxShadow: 2,
               border: "1px solid #ddd",
-              transition: "all 0.3s",
               "&:hover": { bgcolor: "grey.100" },
             }}
           >
@@ -220,18 +196,18 @@ export const RelatedProducts = ({ category }: RelatedProductsProps) => {
                     right: 8,
                     bgcolor: "white",
                     borderRadius: 1,
-                    transition: "all 0.3s",
                     "&:hover": {
-                      bgcolor: liked.includes(item.id) ? "#ffe5e5" : "grey.100",
+                      bgcolor: item.wishListUser ? "#ffe5e5" : "grey.100",
                     },
                   }}
                 >
-                  {liked.includes(item.id) ? (
+                  {item.wishListUser ? (
                     <FavoriteIcon fontSize="small" color="error" />
                   ) : (
                     <FavoriteBorderIcon fontSize="small" />
                   )}
                 </IconButton>
+
                 <CardMedia
                   component="img"
                   image={

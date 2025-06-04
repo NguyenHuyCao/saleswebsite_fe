@@ -12,39 +12,81 @@ import {
   Grid,
 } from "@mui/material";
 import { ShoppingCart, Heart, Minus, Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import GlobalSnackbar from "@/components/alert/GlobalSnackbar";
 
 interface Props {
-  product: any;
+  product: {
+    id: number;
+    name: string;
+    price: number;
+    stockQuantity: number;
+    totalStock: number;
+    origin: string;
+    power: string;
+    fuelType: string;
+    engineType: string;
+    tankCapacity: number;
+    dimensions: string;
+    weight: number;
+    warrantyMonths: number;
+    wishListUser: boolean;
+    type: string;
+  };
   category: { name: string } | null;
 }
 
 export const ProductDetails = ({ product, category }: Props) => {
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [quantity, setQuantity] = useState<number>(1);
+  const [isFavorite, setIsFavorite] = useState<boolean>(
+    product.wishListUser || false
+  );
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    type: "success" as "success" | "error",
+    message: "",
+  });
 
-  console.log("product", product);
+  const handleAddToCart = async () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      setSnackbar({
+        open: true,
+        type: "error",
+        message: "Bạn cần đăng nhập để thêm vào giỏ hàng.",
+      });
+      return;
+    }
 
-  useEffect(() => {
-    const fetchWishlist = async () => {
-      const token = localStorage.getItem("accessToken");
-      if (!token) return;
-      try {
-        const res = await fetch("http://localhost:8080/api/v1/wish_list", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const data = await res.json();
-        const isInWishlist = data?.data?.result?.some(
-          (entry: any) => entry.product.id === product.id
-        );
-        setIsFavorite(isInWishlist);
-      } catch (err) {
-        console.error("Lỗi khi lấy danh sách yêu thích:", err);
-      }
-    };
-    fetchWishlist();
-  }, [product.id]);
+    try {
+      const res = await fetch("http://localhost:8080/api/v1/carts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          quantity: quantity,
+          productId: product.id,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Lỗi khi thêm vào giỏ hàng");
+
+      setSnackbar({
+        open: true,
+        type: "success",
+        message: "Thêm vào giỏ hàng thành công!",
+      });
+      setQuantity(1);
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        type: "error",
+        message: "Không thể thêm vào giỏ hàng. Vui lòng thử lại.",
+      });
+    }
+  };
 
   const toggleFavorite = async () => {
     const token = localStorage.getItem("accessToken");
@@ -52,6 +94,7 @@ export const ProductDetails = ({ product, category }: Props) => {
       alert("Bạn cần đăng nhập để thêm vào yêu thích.");
       return;
     }
+
     try {
       setIsFavorite((prev) => !prev);
       const formData = new FormData();
@@ -67,6 +110,14 @@ export const ProductDetails = ({ product, category }: Props) => {
       console.error("Lỗi khi cập nhật yêu thích:", err);
     }
   };
+
+  const progressPercent =
+    product.totalStock > 0
+      ? Math.round(
+          ((product.totalStock - product.stockQuantity) / product.totalStock) *
+            100
+        )
+      : 0;
 
   return (
     <Box component={Paper} elevation={1} p={3} borderRadius={3}>
@@ -122,26 +173,7 @@ export const ProductDetails = ({ product, category }: Props) => {
         </Grid>
       </Grid>
 
-      <Box
-        sx={{
-          bgcolor: "#212121",
-          color: "white",
-          borderRadius: 1,
-          px: 2,
-          py: 1,
-          mb: 1,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          fontWeight: 600,
-        }}
-      >
-        <span>Kết thúc còn:</span>
-        <Typography variant="body2" fontWeight={400}>
-          Chương trình đã kết thúc, hẹn gặp lại trong thời gian sớm nhất!
-        </Typography>
-      </Box>
-
+      {/* Tiến độ bán hàng */}
       <Box
         sx={{
           bgcolor: "#ffc107",
@@ -163,7 +195,7 @@ export const ProductDetails = ({ product, category }: Props) => {
         >
           <Box
             sx={{
-              width: "75%",
+              width: `${progressPercent}%`,
               height: "100%",
               bgcolor: "#f44336",
               backgroundImage:
@@ -174,10 +206,11 @@ export const ProductDetails = ({ product, category }: Props) => {
           />
         </Box>
         <Typography variant="body2" fontWeight={600} mt={1}>
-          Đã bán 12
+          Đã bán {product.totalStock - product.stockQuantity}
         </Typography>
       </Box>
 
+      {/* Tương tác người dùng */}
       <Stack direction="row" spacing={2} alignItems="center" mt={3}>
         <Stack
           direction="row"
@@ -190,19 +223,28 @@ export const ProductDetails = ({ product, category }: Props) => {
             height: 40,
           }}
         >
-          <IconButton size="small" sx={{ borderRadius: 0 }}>
+          <IconButton
+            size="small"
+            sx={{ borderRadius: 0 }}
+            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+          >
             <Minus size={16} />
           </IconButton>
           <TextField
             size="small"
-            value={1}
+            value={quantity}
+            onChange={(e) => setQuantity(Number(e.target.value) || 1)}
             sx={{
               width: 50,
               input: { textAlign: "center", py: 1 },
               "& fieldset": { border: "none" },
             }}
           />
-          <IconButton size="small" sx={{ borderRadius: 0 }}>
+          <IconButton
+            size="small"
+            sx={{ borderRadius: 0 }}
+            onClick={() => setQuantity((q) => q + 1)}
+          >
             <Plus size={16} />
           </IconButton>
         </Stack>
@@ -212,6 +254,7 @@ export const ProductDetails = ({ product, category }: Props) => {
           color="warning"
           startIcon={<ShoppingCart size={18} />}
           sx={{ borderRadius: 3, px: 3, py: 1.5, fontWeight: 600 }}
+          onClick={handleAddToCart}
         >
           Thêm vào giỏ
         </Button>
@@ -220,6 +263,13 @@ export const ProductDetails = ({ product, category }: Props) => {
           <Heart fill={isFavorite ? "#f44336" : "none"} color="#f44336" />
         </IconButton>
       </Stack>
+
+      <GlobalSnackbar
+        type={snackbar.type}
+        message={snackbar.message}
+        open={snackbar.open}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      />
     </Box>
   );
 };

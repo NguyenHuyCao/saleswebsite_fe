@@ -153,7 +153,7 @@ export default function ProductCategoryPage({ categories }: Props) {
                   {cat.name}
                 </Typography>
                 <Typography variant="body2" color="orange">
-                  ({cat.count} sản phẩm)
+                  ({cat.products?.length} sản phẩm)
                 </Typography>
               </Box>
             </Box>

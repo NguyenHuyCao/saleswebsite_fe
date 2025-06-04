@@ -7,7 +7,7 @@ interface CategorySidebarProps {
   categories: {
     name: string;
     slug: string;
-    count: number;
+    products: Product[];
   }[];
 }
 
@@ -64,7 +64,7 @@ export default function CategorySidebar({ categories }: CategorySidebarProps) {
               }}
             >
               <Typography>{cat.name}</Typography>
-              <Typography>({cat.count})</Typography>
+              <Typography>({cat.products?.length})</Typography>
             </Box>
           );
         })}

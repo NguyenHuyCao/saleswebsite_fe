@@ -2,6 +2,7 @@ import CategoryBanner from "@/components/product/CategoryBanner";
 import ProductCategoryPage from "@/components/product/ProductCategoryPage";
 import ProductListLayout from "@/components/product/ProductListLayout";
 import { Container } from "@mui/material";
+import { cookies } from "next/headers";
 
 export type Product = {
   id: number;
@@ -39,8 +40,16 @@ export type CategoryWithProducts = {
   products: Product[];
 };
 
-export async function getCategories(): Promise<CategoryWithProducts[]> {
+export async function getCategoriesWithProducts(): Promise<
+  CategoryWithProducts[]
+> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("accessToken")?.value;
   const res = await fetch("http://localhost:8080/api/v1/categories", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
     cache: "no-store",
   });
   const raw = await res.json();
@@ -103,7 +112,7 @@ export async function getBrands(): Promise<Brand[]> {
 }
 
 const ProductsPage = async () => {
-  const categories = await getCategories();
+  const categories = await getCategoriesWithProducts();
   const brands = await getBrands();
 
   return (

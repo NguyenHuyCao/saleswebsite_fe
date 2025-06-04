@@ -10,7 +10,6 @@ import { useRouter } from "next/navigation";
 const NewProductSection: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [wishlist, setWishlist] = useState<number[]>([]);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(false);
   const router = useRouter();
@@ -25,8 +24,14 @@ const NewProductSection: React.FC = () => {
 
   const fetchNewProducts = async () => {
     try {
+      const token = localStorage.getItem("accessToken");
       const res = await fetch(
-        "http://localhost:8080/api/v1/products?sort=createdAt,desc"
+        "http://localhost:8080/api/v1/products?sort=createdAt,desc",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       const json = await res.json();
       const data = json?.data?.result || [];
@@ -37,6 +42,7 @@ const NewProductSection: React.FC = () => {
           (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
         const status =
           item.stockQuantity === 0 ? ["Hết hàng"] : isNew ? ["Mới"] : [];
+
         return {
           id: item.id,
           title: item.name,
@@ -54,29 +60,12 @@ const NewProductSection: React.FC = () => {
           stockQuantity: item.stockQuantity,
           totalStock: item.totalStock,
           slug: item.slug,
+          isFavorite: item.wishListUser === true, 
         };
       });
       setProducts(mapped);
     } catch (err) {
       console.error("Lỗi khi lấy sản phẩm mới:", err);
-    }
-  };
-
-  const fetchWishlist = async () => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return;
-    try {
-      const res = await fetch("http://localhost:8080/api/v1/wish_list", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await res.json();
-      const ids =
-        data?.data?.result?.map((entry: any) => entry.product.id) || [];
-      setWishlist(ids);
-    } catch (err) {
-      console.error("Lỗi khi lấy danh sách yêu thích:", err);
     }
   };
 
@@ -86,10 +75,13 @@ const NewProductSection: React.FC = () => {
       alert("Bạn cần đăng nhập để thêm vào yêu thích.");
       return;
     }
-    const isFavorite = wishlist.includes(productId);
-    setWishlist((prev) =>
-      isFavorite ? prev.filter((id) => id !== productId) : [...prev, productId]
+
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === productId ? { ...p, isFavorite: !p.isFavorite } : p
+      )
     );
+
     try {
       const formData = new FormData();
       formData.append("productId", String(productId));
@@ -107,7 +99,6 @@ const NewProductSection: React.FC = () => {
 
   useEffect(() => {
     fetchNewProducts();
-    fetchWishlist();
     checkScroll();
     const el = containerRef.current;
     if (!el) return;
@@ -177,7 +168,7 @@ const NewProductSection: React.FC = () => {
           >
             <ProductCard
               product={product}
-              isFavorite={wishlist.includes(product.id)}
+              isFavorite={product.isFavorite}
               onToggleFavorite={() => toggleWishlist(product.id)}
             />
           </Box>

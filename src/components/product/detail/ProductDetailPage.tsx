@@ -39,7 +39,7 @@ export type Product = {
   updatedBy?: string | null;
   rating?: number;
   status: string[];
-  favorite: boolean;
+  wishListUser: boolean;
 };
 
 interface Category {

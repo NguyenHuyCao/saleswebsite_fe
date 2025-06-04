@@ -1,14 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  Box,
-  Typography,
-  Pagination,
-  IconButton,
-  Tooltip,
-} from "@mui/material";
-import FavoriteIcon from "@mui/icons-material/Favorite";
+import { Box, Typography, Pagination } from "@mui/material";
 import ProductCard, { Product } from "@/components/product/ProductCard";
 
 const ITEMS_PER_PAGE = 15;
@@ -33,16 +26,11 @@ const WishlistPage = () => {
       });
 
       const data = await res.json();
-
-      if (!data?.data?.result) {
-        setAllItems([]);
-        return;
-      }
+      const items = data?.data?.result || [];
 
       const now = new Date();
 
-      const mapped: Product[] = data.data.result.map((entry: any) => {
-        const item = entry.product;
+      const mapped: Product[] = items.map((item: any) => {
         const createdAt = new Date(item.createdAt);
         const isNew =
           (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
@@ -68,13 +56,14 @@ const WishlistPage = () => {
           createdAt: item.createdAt,
           stockQuantity: item.stockQuantity,
           totalStock: item.totalStock,
-          isFavorite: true, // luôn sáng vì đây là danh sách yêu thích
+          isFavorite: true, // luôn sáng vì đây là wishlist
         };
       });
 
       setAllItems(mapped);
     } catch (error) {
       console.error("Lỗi khi lấy danh sách yêu thích:", error);
+      setAllItems([]);
     }
   };
 
@@ -96,7 +85,6 @@ const WishlistPage = () => {
         body: formData,
       });
 
-      // Xoá khỏi danh sách hiện tại
       setAllItems((prev) => prev.filter((p) => p.id !== productId));
     } catch (error) {
       console.error("Lỗi khi xoá sản phẩm yêu thích:", error);

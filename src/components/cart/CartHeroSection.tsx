@@ -18,7 +18,7 @@ const CartHeroSection = () => {
       <Button
         variant="outlined"
         component={Link}
-        href="/products"
+        href="/product"
         color="primary"
       >
         Tiếp tục mua hàng

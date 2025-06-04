@@ -135,7 +135,13 @@ export async function getCategories(): Promise<Category[]> {
 export async function getCategoriesWithProducts(): Promise<
   CategoryWithProducts[]
 > {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("accessToken")?.value;
   const res = await fetch("http://localhost:8080/api/v1/categories", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
     cache: "no-store",
   });
   const raw = await res.json();

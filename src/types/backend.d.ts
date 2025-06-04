@@ -12,6 +12,16 @@ declare global {
     nextOption?: any;
   }
 
+  interface CartItem {
+    productId: number;
+    productName: string;
+    productDescription: string;
+    productImage: string;
+    unitPrice: number;
+    quantity: number;
+    totalPrice: number;
+  }
+
   interface Category {
     id: number;
     name: string;

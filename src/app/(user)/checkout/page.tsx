@@ -12,7 +12,7 @@ const CheckoutPage = () => {
         {/* Left Column */}
         <Grid size={{ xs: 12, md: 8 }}>
           <ShippingForm />
-          <ShippingMethod />
+          {/* <ShippingMethod /> */}
           <PaymentMethod />
         </Grid>
 

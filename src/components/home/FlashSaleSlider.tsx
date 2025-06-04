@@ -12,10 +12,9 @@ import { useRouter } from "next/navigation";
 const FlashSaleSlider = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const router = useRouter();
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(false);
-  const [wishlist, setWishlist] = useState<number[]>([]);
-  const router = useRouter();
 
   const checkScroll = () => {
     const el = containerRef.current;
@@ -27,7 +26,12 @@ const FlashSaleSlider = () => {
 
   const fetchProducts = async () => {
     try {
-      const res = await fetch("http://localhost:8080/api/v1/products");
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch("http://localhost:8080/api/v1/products", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const data = await res.json();
       const now = new Date();
       const mapped = data?.data?.result.map((item: any) => {
@@ -53,49 +57,30 @@ const FlashSaleSlider = () => {
           label: item.stockQuantity > 0 ? "Thêm vào giỏ" : "Hết hàng",
           rating: item.rating || 0,
           slug: item.slug,
-        };
+          totalStock: item.totalStock,
+          stockQuantity: item.stockQuantity,
+          createdAt: item.createdAt,
+          isFavorite: item.wishListUser === true, // ✅ Lấy từ backend
+        } as Product;
       });
+
       setProducts(mapped);
     } catch (error) {
-      console.error("Failed to fetch products", error);
-    }
-  };
-
-  const fetchWishlist = async () => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return;
-
-    try {
-      const res = await fetch("http://localhost:8080/api/v1/wish_list", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await res.json();
-      if (data?.data?.result) {
-        const productIds = data.data.result.map(
-          (entry: any) => entry.product.id
-        );
-        setWishlist(productIds);
-      }
-    } catch (error) {
-      console.error("Failed to fetch wishlist", error);
+      console.error("Lỗi khi tải sản phẩm:", error);
     }
   };
 
   const toggleWishlist = async (productId: number) => {
     const token = localStorage.getItem("accessToken");
     if (!token) {
-      alert("Bạn cần đăng nhập để thêm vào yêu thích.");
+      alert("Bạn cần đăng nhập để thao tác yêu thích.");
       return;
     }
 
-    const isAlreadyInWishlist = wishlist.includes(productId);
-    setWishlist((prev) =>
-      isAlreadyInWishlist
-        ? prev.filter((id) => id !== productId)
-        : [...prev, productId]
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === productId ? { ...p, isFavorite: !p.isFavorite } : p
+      )
     );
 
     try {
@@ -115,7 +100,6 @@ const FlashSaleSlider = () => {
 
   useEffect(() => {
     fetchProducts();
-    fetchWishlist();
     checkScroll();
     const el = containerRef.current;
     if (!el) return;
@@ -199,7 +183,7 @@ const FlashSaleSlider = () => {
                     "&:hover": { bgcolor: "#ffe0b2" },
                   }}
                 >
-                  {wishlist.includes(product.id!) ? (
+                  {product.isFavorite ? (
                     <FavoriteIcon sx={{ color: "#f25c05" }} fontSize="small" />
                   ) : (
                     <FavoriteBorderIcon
@@ -213,7 +197,7 @@ const FlashSaleSlider = () => {
 
             <ProductCard
               product={product}
-              isFavorite={wishlist.includes(product.id!)}
+              isFavorite={product.isFavorite}
               onToggleFavorite={() => toggleWishlist(product.id!)}
             />
           </Box>
