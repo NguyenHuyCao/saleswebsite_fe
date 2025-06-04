@@ -30,10 +30,12 @@ const TopBar = () => {
   const router = useRouter();
   const [index, setIndex] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     const token = localStorage.getItem("accessToken");
     setIsLoggedIn(!!token);
   }, []);
@@ -57,17 +59,32 @@ const TopBar = () => {
     setOpen(false);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    setIsLoggedIn(false);
-    setOpen(false);
-    router.push("/");
+  const handleLogout = async () => {
+    const token = localStorage.getItem("accessToken");
+
+    try {
+      if (token) {
+        await fetch("http://localhost:8080/api/v1/auth/logout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("user");
+      setIsLoggedIn(false);
+      setOpen(false);
+      router.push("/");
+    }
   };
 
   return (
     <Container sx={{ position: "relative", zIndex: 1201 }}>
-      {" "}
-      {/* Ensure Popper stays above all */}
       <Box
         sx={{
           display: "flex",
@@ -108,7 +125,7 @@ const TopBar = () => {
             gap: 1,
           }}
         >
-          {isLoggedIn ? (
+          {isClient && isLoggedIn ? (
             <>
               <IconButton
                 onClick={handleToggle}
@@ -167,6 +184,7 @@ const TopBar = () => {
               </Popper>
             </>
           ) : (
+            isClient &&
             ["Đăng ký", "Đăng nhập"].map((label, index) => (
               <Box key={label} sx={{ display: "flex", alignItems: "center" }}>
                 {index > 0 && <Typography sx={{ mx: 0.2 }}>|</Typography>}

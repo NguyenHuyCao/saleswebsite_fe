@@ -1,12 +1,6 @@
-// import { Roboto } from "next/font/google";
+"use client";
 import { createTheme } from "@mui/material/styles";
 import { Quicksand } from "next/font/google";
-
-// const roboto = Roboto({
-//   weight: ["300", "400", "500", "700"],
-//   subsets: ["latin"],
-//   display: "swap",
-// });
 
 const quicksand = Quicksand({
   subsets: ["latin"], // hoặc ['vietnamese'] nếu cần Tiếng Việt chuẩn

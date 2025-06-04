@@ -17,21 +17,53 @@ import {
   Alert,
 } from "@mui/material";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const genders = ["Nam", "Nữ", "Khác"];
 
 export default function AccountPage() {
   const [formData, setFormData] = useState({
-    username: "user",
-    email: "user@gmail.com",
-    phone: "0813421432",
-    address: "1234 Maple St, Springfield, IL 62701",
+    username: "",
+    email: "",
+    phone: "",
+    address: "",
     gender: "Nam",
   });
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+    if (!user?.id || !token) return;
+
+    const fetchUserData = async () => {
+      try {
+        const res = await fetch(
+          `http://localhost:8080/api/v1/users/${user.id}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await res.json();
+        if (res.ok && data.data) {
+          setFormData(data.data);
+        } else {
+          console.error(data.message || "Không lấy được thông tin người dùng");
+        }
+      } catch (err) {
+        console.error("Lỗi lấy thông tin người dùng:", err);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -39,11 +71,37 @@ export default function AccountPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Updated Data:", formData);
-    setSnackbarMessage("Cập nhật thông tin thành công!");
-    setSnackbarOpen(true);
+    const token = localStorage.getItem("accessToken");
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+    if (!user?.id || !token) return;
+
+    try {
+      const res = await fetch(`http://localhost:8080/api/v1/users/${user.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setSnackbarMessage("Cập nhật thông tin thành công!");
+        // Cập nhật localStorage
+        localStorage.setItem("user", JSON.stringify({ ...user, ...formData }));
+      } else {
+        setSnackbarMessage(data.message || "Cập nhật thất bại!");
+      }
+    } catch (err) {
+      console.error("Lỗi cập nhật:", err);
+      setSnackbarMessage("Lỗi kết nối tới máy chủ!");
+    } finally {
+      setSnackbarOpen(true);
+    }
   };
 
   return (

@@ -21,20 +21,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <SettingsProvider>
           <SettingsConsumer>
             {({ settings }) => (
-              <ThemeComponent settings={settings}>
-                {children}
-                {/* <ScrollToTop
-                  smooth
-                  top={300} // bao nhiêu px thì hiện nút
-                  color="#fff"
-                  style={{
-                    background: "#ffb700",
-                    borderRadius: "50%",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                    zIndex: 9999,
-                  }}
-                /> */}
-              </ThemeComponent>
+              <ThemeComponent settings={settings}>{children}</ThemeComponent>
             )}
           </SettingsConsumer>
         </SettingsProvider>

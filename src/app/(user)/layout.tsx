@@ -6,6 +6,7 @@ import AppFooter from "@/views/footer/app.footer";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import ClientLayoutWrapper from "@/components/fixed_elements/ClientLayoutWrapper";
+import Providers from "@/components/redux/Providers";
 
 // const quicksand = Quicksand({
 //   subsets: ["latin"],
@@ -29,10 +30,12 @@ export default function RootLayout({
   return (
     <>
       <ThemeRegistry>
-        <AppHeader />
-        {children}
+        <Providers>
+          <AppHeader />
+          {children}
 
-        <AppFooter />
+          <AppFooter />
+        </Providers>
         <ClientLayoutWrapper />
       </ThemeRegistry>
     </>

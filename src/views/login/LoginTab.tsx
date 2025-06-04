@@ -21,12 +21,13 @@ const LoginTab: React.FC<LoginTabProps> = ({ showMessage }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
-  const canLogin = email.trim() && password.trim();
+  const [loading, setLoading] = useState(false);
 
   const router = useRouter();
+  const canLogin = email.trim() && password.trim();
 
   const handleLogin = async () => {
+    setLoading(true);
     try {
       const res = await fetch("http://localhost:8080/api/v1/auth/login", {
         method: "POST",
@@ -43,23 +44,19 @@ const LoginTab: React.FC<LoginTabProps> = ({ showMessage }) => {
       const token = data.data.accessToken;
       const user = data.data.user;
 
-      // Lưu vào localStorage
+      // Chỉ lưu vào localStorage
       localStorage.setItem("accessToken", token);
       localStorage.setItem("user", JSON.stringify(user));
 
-      // Gửi token lên server để set cookie
-      await fetch("/api/auth/set-cookie", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-      });
-
       showMessage("success", "Đăng nhập thành công!");
-      setEmail("");
-      setPassword("");
       router.push("/");
     } catch (err: any) {
-      showMessage("error", err.message);
+      const msg = err?.message?.includes("Failed to fetch")
+        ? "Không thể kết nối tới máy chủ"
+        : err.message || "Lỗi không xác định";
+      showMessage("error", msg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -67,7 +64,7 @@ const LoginTab: React.FC<LoginTabProps> = ({ showMessage }) => {
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        if (canLogin) handleLogin();
+        if (canLogin && !loading) handleLogin();
       }}
     >
       <Stack spacing={2}>
@@ -103,9 +100,9 @@ const LoginTab: React.FC<LoginTabProps> = ({ showMessage }) => {
           type="submit"
           variant="contained"
           sx={{ bgcolor: "#ffb700", color: "#fff", fontWeight: 600 }}
-          disabled={!canLogin}
+          disabled={!canLogin || loading}
         >
-          Đăng nhập
+          {loading ? "Đang đăng nhập..." : "Đăng nhập"}
         </Button>
       </Stack>
 
