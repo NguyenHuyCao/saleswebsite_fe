@@ -56,7 +56,7 @@ const CartPage = () => {
 
   if (!isLoading && cartItems.length === 0) {
     return (
-      <Container sx={{ mt: 8, textAlign: "center" }}>
+      <Container sx={{ mt: 8, textAlign: "center", mb: 10 }}>
         <Typography variant="h6" mb={2}>
           Giỏ hàng của bạn đang trống.
         </Typography>

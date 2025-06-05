@@ -27,11 +27,17 @@ const FlashSaleSlider = () => {
   const fetchProducts = async () => {
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await fetch("http://localhost:8080/api/v1/products", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      let res;
+      if (token != null) {
+        res = await fetch("http://localhost:8080/api/v1/products", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      } else {
+        res = await fetch("http://localhost:8080/api/v1/products");
+      }
+
       const data = await res.json();
       const now = new Date();
       const mapped = data?.data?.result.map((item: any) => {
@@ -149,7 +155,7 @@ const FlashSaleSlider = () => {
           scrollSnapType: "x mandatory",
         }}
       >
-        {products.map((product, idx) => (
+        {products?.map((product, idx) => (
           <Box
             key={idx}
             sx={{

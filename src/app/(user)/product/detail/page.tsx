@@ -8,7 +8,7 @@ export default async function DetailProduct({ searchParams }: any) {
   const slug = searchParams?.name;
   if (!slug) return notFound();
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token = cookieStore.get("accessToken")?.value;
 
   const headers = token

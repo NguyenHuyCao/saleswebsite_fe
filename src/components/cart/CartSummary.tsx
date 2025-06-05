@@ -141,32 +141,36 @@ const CartSummary = ({ items }: Props) => {
       });
 
       const text = await res.text();
-
-      // Điều hướng về trang chủ trước (chắc chắn xảy ra)
-      router.push("/");
-
+      let data;
       try {
-        const data = JSON.parse(text);
-
-        if (res.ok && data?.orderId) {
-          setSnackbarType("success");
-          setSnackbarMessage("Đặt hàng thành công!");
-        } else {
-          setSnackbarType("error");
-          setSnackbarMessage("Đặt hàng thất bại. Vui lòng thử lại.");
-        }
+        data = JSON.parse(text);
       } catch (e) {
-        console.error("Phản hồi không hợp lệ:", text);
-        setSnackbarType("error");
-        setSnackbarMessage("Dữ liệu phản hồi không hợp lệ.");
+        throw new Error("Dữ liệu phản hồi không hợp lệ.");
       }
-    } catch (error) {
-      console.error("Lỗi kết nối:", error);
+
+      if (res.ok && data?.data?.orderId) {
+        setSnackbarType("success");
+        setSnackbarMessage("Đặt hàng thành công!");
+        setSnackbarOpen(true);
+
+        // Điều hướng sau 2s để người dùng thấy toast message
+        setTimeout(() => {
+          if (paymentMethod === "MOMO") {
+            router.push("http://localhost:3000/momo-payment");
+          } else {
+            router.push("/");
+          }
+        }, 2000);
+      } else {
+        throw new Error(
+          data?.message || "Đặt hàng thất bại. Vui lòng thử lại."
+        );
+      }
+    } catch (error: any) {
+      console.error("Lỗi:", error);
       setSnackbarType("error");
-      setSnackbarMessage("Không thể kết nối đến máy chủ.");
-    } finally {
+      setSnackbarMessage(error.message || "Đã xảy ra lỗi.");
       setSnackbarOpen(true);
-      setLoading(false);
     }
   };
 

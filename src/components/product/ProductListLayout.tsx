@@ -48,14 +48,17 @@ export default function ProductListLayout({ categories, brands }: Props) {
 
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await fetch(
-        `http://localhost:8080/api/v1/products?${query}`,
-        {
+      let res;
+      if (token != null) {
+        res = await fetch(`http://localhost:8080/api/v1/products?${query}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
-      );
+        });
+      } else {
+        res = await fetch(`http://localhost:8080/api/v1/products?${query}`);
+      }
+
       const data = await res.json();
       const now = new Date();
 

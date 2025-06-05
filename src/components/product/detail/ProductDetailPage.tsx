@@ -9,6 +9,7 @@ import { SupportBox } from "./SupportBox";
 import { PromotionBox } from "./PromotionBox";
 import { ProductTabs } from "./ProductTabs";
 import { RelatedProducts } from "./RelatedProducts";
+import { ProductReviewList } from "@/components/review/ProductReviewList";
 
 export type Product = {
   id: number;
@@ -93,6 +94,10 @@ export default function ProductDetailPage({
 
       <Box mt={6}>
         <ProductTabs product={product} category={category} />
+      </Box>
+
+      <Box mt={6}>
+        <ProductReviewList productId={product.id} />
       </Box>
 
       <Box mt={6}>

@@ -45,13 +45,19 @@ export async function getCategoriesWithProducts(): Promise<
 > {
   const cookieStore = await cookies();
   const token = cookieStore.get("accessToken")?.value;
-  const res = await fetch("http://localhost:8080/api/v1/categories", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    cache: "no-store",
-  });
+  let res;
+  if (token != null) {
+    res = await fetch("http://localhost:8080/api/v1/categories", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
+  } else {
+    res = await fetch("http://localhost:8080/api/v1/categories");
+  }
+
   const raw = await res.json();
   const data = raw?.data?.result || [];
   const now = new Date();
@@ -114,6 +120,8 @@ export async function getBrands(): Promise<Brand[]> {
 const ProductsPage = async () => {
   const categories = await getCategoriesWithProducts();
   const brands = await getBrands();
+
+  console.log("categories", categories);
 
   return (
     <Container>
