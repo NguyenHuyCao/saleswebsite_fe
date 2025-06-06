@@ -27,12 +27,10 @@ const CountdownPromotion = ({ deadline }: { deadline: string }) => {
   };
 
   useEffect(() => {
-    setHasMounted(true); // Đảm bảo chỉ render sau khi mount
-
+    setHasMounted(true);
     const timer = setInterval(() => {
       setTimeLeft(calculateTimeLeft());
     }, 1000);
-
     return () => clearInterval(timer);
   }, [deadline]);
 
@@ -64,7 +62,6 @@ const CountdownPromotion = ({ deadline }: { deadline: string }) => {
     </Paper>
   );
 
-  // ⚠️ Tránh render nếu chưa mount
   if (!hasMounted) return null;
 
   return (
@@ -74,21 +71,15 @@ const CountdownPromotion = ({ deadline }: { deadline: string }) => {
         alignItems="center"
         justifyContent="center"
         spacing={1}
-        mb={2}
+        mb={1}
       >
         <BoltIcon sx={{ color: "#f25c05" }} />
-        <Typography
-          variant="h6"
-          fontWeight="bold"
-          textAlign="center"
-          mb={2}
-          mt={3}
-          color="black"
-        >
+        <Typography variant="h6" fontWeight="bold" mt={2} color="black">
           THỜI GIAN CHỈ CÒN
         </Typography>
       </Stack>
-      <Grid container justifyContent="center">
+
+      <Grid container justifyContent="center" mt={2}>
         {renderTimeBox(timeLeft.days, "Days")}
         {renderTimeBox(timeLeft.hours, "Hours")}
         {renderTimeBox(timeLeft.minutes, "Minutes")}

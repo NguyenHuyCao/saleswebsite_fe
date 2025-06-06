@@ -1,15 +1,31 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
-import { Box, IconButton, Tooltip } from "@mui/material";
+import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ProductCard, { Product } from "../product/ProductCard";
 import { useRouter } from "next/navigation";
+import CountdownPromotion from "./CountdownPromotion";
 
-const FlashSaleSlider = () => {
+export type Promotion = {
+  id: number;
+  name: string;
+  code: string | null;
+  discount: number;
+  maxDiscount: number;
+  startDate: string;
+  endDate: string;
+  requiresCode: boolean;
+};
+
+type FlashSaleSliderProps = {
+  promotion: Promotion;
+};
+
+const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({ promotion }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const router = useRouter();
@@ -28,19 +44,22 @@ const FlashSaleSlider = () => {
     try {
       const token = localStorage.getItem("accessToken");
       let res;
-      if (token != null) {
-        res = await fetch("http://localhost:8080/api/v1/products", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+      if (token) {
+        res = await fetch(
+          `http://localhost:8080/api/v1/promotions/${promotion.id}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
       } else {
-        res = await fetch("http://localhost:8080/api/v1/products");
+        res = await fetch(
+          `http://localhost:8080/api/v1/promotions/${promotion.id}`
+        );
       }
 
       const data = await res.json();
       const now = new Date();
-      const mapped = data?.data?.result.map((item: any) => {
+      const mapped = data?.data?.map((item: any) => {
         const createdAt = new Date(item.createdAt);
         const isNew =
           (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
@@ -66,7 +85,7 @@ const FlashSaleSlider = () => {
           totalStock: item.totalStock,
           stockQuantity: item.stockQuantity,
           createdAt: item.createdAt,
-          isFavorite: item.wishListUser === true, // ✅ Lấy từ backend
+          isFavorite: item.wishListUser === true,
         } as Product;
       });
 
@@ -94,9 +113,7 @@ const FlashSaleSlider = () => {
       formData.append("productId", String(productId));
       await fetch("http://localhost:8080/api/v1/wish_list", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
     } catch (error) {
@@ -123,110 +140,134 @@ const FlashSaleSlider = () => {
   };
 
   return (
-    <Box sx={{ position: "relative", px: 2, textAlign: "center" }}>
-      {showLeft && (
-        <IconButton
-          onClick={() => scroll("left")}
-          sx={{
-            position: "absolute",
-            top: "45%",
-            left: 0,
-            zIndex: 10,
-            bgcolor: "white",
-            boxShadow: 2,
-            "&:hover": { bgcolor: "#ffb700" },
-          }}
-        >
-          <ArrowBackIosNewIcon />
-        </IconButton>
-      )}
+    <>
+      <CountdownPromotion
+        deadline={new Date(promotion.endDate).toISOString()}
+      />
 
-      <Box
-        ref={containerRef}
-        sx={{
-          display: "flex",
-          overflowX: "auto",
-          scrollBehavior: "smooth",
-          scrollbarWidth: "none",
-          justifyContent: "center",
-          "&::-webkit-scrollbar": { display: "none" },
-          gap: 1,
-          px: 5,
-          scrollSnapType: "x mandatory",
-        }}
-      >
-        {products?.map((product, idx) => (
-          <Box
-            key={idx}
-            sx={{
-              scrollSnapAlign: "start",
-              flex: "0 0 auto",
-              position: "relative",
-              cursor: "pointer",
-            }}
-            onClick={() => router.push(`/product/detail?name=${product.slug}`)}
-          >
-            <Tooltip title="Yêu thích">
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: 8,
-                  right: 8,
-                  zIndex: 5,
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleWishlist(product.id!);
-                }}
-              >
-                <IconButton
-                  sx={{
-                    bgcolor: "white",
-                    borderRadius: "50%",
-                    boxShadow: 1,
-                    width: 32,
-                    height: 32,
-                    "&:hover": { bgcolor: "#ffe0b2" },
-                  }}
-                >
-                  {product.isFavorite ? (
-                    <FavoriteIcon sx={{ color: "#f25c05" }} fontSize="small" />
-                  ) : (
-                    <FavoriteBorderIcon
-                      sx={{ color: "#f25c05" }}
-                      fontSize="small"
-                    />
-                  )}
-                </IconButton>
-              </Box>
-            </Tooltip>
+      <Box textAlign="center" mb={5}>
+        <Typography variant="subtitle1" color="text.secondary">
+          {promotion.name} | Giảm đến {(promotion.discount * 100).toFixed(0)}% –
+          tối đa {promotion.maxDiscount.toLocaleString()}₫
+        </Typography>
 
-            <ProductCard
-              product={product}
-              isFavorite={product.isFavorite}
-              onToggleFavorite={() => toggleWishlist(product.id!)}
-            />
-          </Box>
-        ))}
+        {promotion.requiresCode && promotion.code && (
+          <Typography variant="body2" sx={{ mt: 1, color: "#dc2626" }}>
+            🎁 Mã khuyến mãi: <b>{promotion.code}</b>
+          </Typography>
+        )}
       </Box>
 
-      {showRight && (
-        <IconButton
-          onClick={() => scroll("right")}
+      <Box sx={{ position: "relative", px: 2, textAlign: "center" }}>
+        {showLeft && (
+          <IconButton
+            onClick={() => scroll("left")}
+            sx={{
+              position: "absolute",
+              top: "45%",
+              left: 0,
+              zIndex: 10,
+              bgcolor: "white",
+              boxShadow: 2,
+              "&:hover": { bgcolor: "#ffb700" },
+            }}
+          >
+            <ArrowBackIosNewIcon />
+          </IconButton>
+        )}
+
+        <Box
+          ref={containerRef}
           sx={{
-            position: "absolute",
-            top: "45%",
-            right: 0,
-            zIndex: 10,
-            bgcolor: "white",
-            boxShadow: 2,
-            "&:hover": { bgcolor: "#ffb700" },
+            display: "flex",
+            overflowX: "auto",
+            scrollBehavior: "smooth",
+            scrollbarWidth: "none",
+            justifyContent: "center",
+            "&::-webkit-scrollbar": { display: "none" },
+            gap: 1,
+            px: 5,
+            scrollSnapType: "x mandatory",
           }}
         >
-          <ArrowForwardIosIcon />
-        </IconButton>
-      )}
-    </Box>
+          {products?.map((product, idx) => (
+            <Box
+              key={idx}
+              sx={{
+                scrollSnapAlign: "start",
+                flex: "0 0 auto",
+                position: "relative",
+                cursor: "pointer",
+              }}
+              onClick={() =>
+                router.push(`/product/detail?name=${product.slug}`)
+              }
+            >
+              <Tooltip title="Yêu thích">
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    zIndex: 5,
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleWishlist(product.id!);
+                  }}
+                >
+                  <IconButton
+                    sx={{
+                      bgcolor: "white",
+                      borderRadius: "50%",
+                      boxShadow: 1,
+                      width: 32,
+                      height: 32,
+                      "&:hover": { bgcolor: "#ffe0b2" },
+                    }}
+                  >
+                    {product.isFavorite ? (
+                      <FavoriteIcon
+                        sx={{ color: "#f25c05" }}
+                        fontSize="small"
+                      />
+                    ) : (
+                      <FavoriteBorderIcon
+                        sx={{ color: "#f25c05" }}
+                        fontSize="small"
+                      />
+                    )}
+                  </IconButton>
+                </Box>
+              </Tooltip>
+
+              <ProductCard
+                product={product}
+                isFavorite={product.isFavorite}
+                onToggleFavorite={() => toggleWishlist(product.id!)}
+              />
+            </Box>
+          ))}
+        </Box>
+
+        {showRight && (
+          <IconButton
+            onClick={() => scroll("right")}
+            sx={{
+              position: "absolute",
+              top: "45%",
+              right: 0,
+              zIndex: 10,
+              bgcolor: "white",
+              boxShadow: 2,
+              "&:hover": { bgcolor: "#ffb700" },
+            }}
+          >
+            <ArrowForwardIosIcon />
+          </IconButton>
+        )}
+      </Box>
+    </>
   );
 };
 

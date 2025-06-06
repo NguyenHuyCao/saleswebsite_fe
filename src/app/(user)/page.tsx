@@ -1,6 +1,5 @@
 import AboutDolaTool from "@/components/home/AboutDolaTool";
 import CategoryCarousel from "@/components/category/CategoryCarousel";
-import CountdownPromotion from "@/components/home/CountdownPromotion";
 import CustomerFeedback from "@/components/home/CustomerFeedback";
 import FeaturedBrandsSlider from "@/components/home/FeaturedBrandsSlider";
 import FlashSaleSlider from "@/components/home/FlashSaleSlider";
@@ -14,6 +13,7 @@ import VoucherCardList from "@/components/home/VoucherCardList";
 import { Box, Container } from "@mui/material";
 import Image from "next/image";
 import { cookies } from "next/headers";
+import FlashSaleSection from "@/components/home/FlashSaleSection";
 
 export type Product = {
   id: number;
@@ -60,16 +60,23 @@ export async function getNewProducts(): Promise<Product[]> {
   const cookieStore = await cookies();
   const token = cookieStore.get("accessToken")?.value;
 
-  const res = await fetch(
-    "http://localhost:8080/api/v1/products?sort=createdAt,desc",
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      cache: "no-store",
-    }
-  );
+  let res;
+  if (token != null) {
+    res = await fetch(
+      "http://localhost:8080/api/v1/products?sort=createdAt,desc",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
+      }
+    );
+  } else {
+    res = await fetch(
+      "http://localhost:8080/api/v1/products?sort=createdAt,desc"
+    );
+  }
 
   const rawData = await res.json();
   const productsFromApi = rawData?.data?.result || [];
@@ -130,6 +137,41 @@ export async function getCategories(): Promise<Category[]> {
   }));
 
   return mappedCategories;
+}
+
+export type Promotion = {
+  id: number;
+  name: string;
+  code: string | null;
+  discount: number;
+  maxDiscount: number;
+  startDate: string;
+  endDate: string;
+  requiresCode: boolean;
+};
+
+export async function getPromotions(): Promise<Promotion[]> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("accessToken")?.value;
+  let res;
+
+  if (token != null) {
+    res = await fetch("http://localhost:8080/api/v1/promotions", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
+  } else {
+    res = await fetch("http://localhost:8080/api/v1/promotions", {
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+    });
+  }
+
+  const rawData = await res.json();
+  return rawData?.data || [];
 }
 
 export async function getCategoriesWithProducts(): Promise<
@@ -201,14 +243,16 @@ export async function getCategoriesWithProducts(): Promise<
 }
 
 export default async function HomePage() {
-  const deadline = "2025-06-30T23:59:59";
-  const [newProducts, categories, categoriesWithProducts, brands] =
+  const [newProducts, categories, categoriesWithProducts, brands, promotions] =
     await Promise.all([
       getNewProducts(),
       getCategories(),
       getCategoriesWithProducts(),
       getBrands(),
+      getPromotions(),
     ]);
+
+  const flashPromotions = promotions.filter((promo) => !promo.requiresCode);
 
   return (
     <>
@@ -224,10 +268,15 @@ export default async function HomePage() {
           />
         </Container>
       </Box>
+
       <Container>
         <VoucherCardList />
-        <CountdownPromotion deadline={deadline} />
-        <FlashSaleSlider />
+
+        {/* {flashPromotions.map((promo) => (
+          <FlashSaleSlider key={promo.id} promotion={promo} />
+        ))} */}
+        <FlashSaleSection />
+
         <NewProductSection />
         <PromotionBanner />
         <CategoryCarousel categories={categories} />
