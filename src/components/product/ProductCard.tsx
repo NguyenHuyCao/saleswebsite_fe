@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -55,12 +55,39 @@ const ProductCard = ({
   const [authAction, setAuthAction] = useState<"favorite" | "cart" | null>(
     null
   );
-
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     type: "success" as "success" | "error",
   });
+  const [isOnSale, setIsOnSale] = useState(false);
+  const [discountPercent, setDiscountPercent] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchSaleProducts = async () => {
+      try {
+        const res = await fetch(
+          "http://localhost:8080/api/v1/promotions/active-products"
+        );
+        const data = await res.json();
+        const ids = data?.data?.map((p: any) => p.id);
+        if (ids.includes(product.id)) {
+          setIsOnSale(true);
+
+          const promoRes = await fetch(
+            `http://localhost:8080/api/v1/promotions/product?productId=${product.id}`
+          );
+          const promoData = await promoRes.json();
+          if (promoData?.data?.discount) {
+            setDiscountPercent(promoData.data.discount);
+          }
+        }
+      } catch (error) {
+        console.error("Lỗi kiểm tra khuyến mãi:", error);
+      }
+    };
+    fetchSaleProducts();
+  }, [product.id]);
 
   const handleRequireLogin = (action: "favorite" | "cart") => {
     setAuthAction(action);
@@ -69,14 +96,11 @@ const ProductCard = ({
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation();
-
     const token = localStorage.getItem("accessToken");
-
     if (!token) {
       handleRequireLogin("cart");
       return;
     }
-
     try {
       const res = await fetch("http://localhost:8080/api/v1/carts", {
         method: "POST",
@@ -84,14 +108,9 @@ const ProductCard = ({
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          productId: product.id,
-          quantity: 1,
-        }),
+        body: JSON.stringify({ productId: product.id, quantity: 1 }),
       });
-
       const data = await res.json();
-
       if (res.ok) {
         setSnackbar({
           open: true,
@@ -106,24 +125,22 @@ const ProductCard = ({
         });
       }
     } catch (error) {
-      console.error("Lỗi khi thêm vào giỏ hàng:", error);
       setSnackbar({
         open: true,
         message: "Lỗi kết nối đến máy chủ.",
         type: "error",
       });
+      console.log(error);
     }
   };
 
   const handleFavoriteToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
-
     const token = localStorage.getItem("accessToken");
     if (!token) {
       handleRequireLogin("favorite");
       return;
     }
-
     onToggleFavorite?.(product.id);
   };
 
@@ -152,7 +169,7 @@ const ProductCard = ({
             },
           }}
         >
-          {product.sale && (
+          {isOnSale && (
             <Box
               sx={{
                 bgcolor: "#f25c05",
@@ -167,7 +184,8 @@ const ProductCard = ({
                 zIndex: 2,
               }}
             >
-              Sale
+              Sale{" "}
+              {discountPercent ? `- ${Math.round(discountPercent * 100)}%` : ""}
             </Box>
           )}
 
@@ -185,7 +203,6 @@ const ProductCard = ({
                 zIndex: 2,
                 "&:hover": { bgcolor: "#ffe0b2" },
               }}
-              aria-label="toggle favorite"
             >
               {isFavorite ? (
                 <FavoriteIcon fontSize="small" sx={{ color: "#f25c05" }} />
@@ -275,7 +292,7 @@ const ProductCard = ({
             />
           )}
 
-          <Box mt={"auto"}>
+          <Box mt="auto">
             <Button
               fullWidth
               variant={product.inStock ? "contained" : "outlined"}
