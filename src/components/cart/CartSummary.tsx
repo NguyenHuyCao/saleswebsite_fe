@@ -20,7 +20,7 @@ import {
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-type CartItem = {
+export type CartItem = {
   productId: number;
   productName: string;
   productDescription: string;
@@ -28,10 +28,19 @@ type CartItem = {
   unitPrice: number;
   quantity: number;
   totalPrice: number;
+  discount?: number;
+  maxDiscount?: number;
 };
+
+interface OrderResponse {
+  orderId: number;
+  status: string;
+  paymentUrl?: string;
+}
 
 type Props = {
   items: CartItem[];
+  onApplyVoucher: (code: string) => void;
 };
 
 const provinces = ["Hồ Chí Minh", "Hà Nội", "Đà Nẵng"];
@@ -41,9 +50,8 @@ const communesMap: Record<string, string[]> = {
   "Đà Nẵng": ["Hải Châu", "Sơn Trà"],
 };
 
-const CartSummary = ({ items }: Props) => {
+const CartSummary = ({ items, onApplyVoucher }: Props) => {
   const router = useRouter();
-
   const [userAddress, setUserAddress] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProvince, setSelectedProvince] = useState("");
@@ -53,9 +61,7 @@ const CartSummary = ({ items }: Props) => {
   const [shippingType, setShippingType] = useState("standard");
   const [orderNote, setOrderNote] = useState("");
   const [voucherCode, setVoucherCode] = useState("");
-
   const [loading, setLoading] = useState(false);
-
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarType, setSnackbarType] = useState<"success" | "error">(
     "success"
@@ -80,7 +86,6 @@ const CartSummary = ({ items }: Props) => {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-
         const data = await res.json();
         if (res.ok && data?.data?.address) {
           setUserAddress(data.data.address);
@@ -93,10 +98,7 @@ const CartSummary = ({ items }: Props) => {
     fetchUserInfo();
   }, []);
 
-  const handleOpenModal = () => {
-    setModalOpen(true);
-  };
-
+  const handleOpenModal = () => setModalOpen(true);
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedProvince("");
@@ -111,6 +113,10 @@ const CartSummary = ({ items }: Props) => {
     handleCloseModal();
   };
 
+  const handleApplyVoucher = () => {
+    if (voucherCode.trim()) onApplyVoucher(voucherCode.trim());
+  };
+
   const handlePlaceOrder = async () => {
     const token = localStorage.getItem("accessToken");
     if (!token || !userAddress) {
@@ -122,12 +128,19 @@ const CartSummary = ({ items }: Props) => {
 
     setLoading(true);
 
+    const promotionCodeByProductId: Record<number, string> = {};
+    if (voucherCode) {
+      for (const item of items) {
+        promotionCodeByProductId[item.productId] = voucherCode;
+      }
+    }
+
     const payload = {
       shippingAddress: userAddress,
       paymentMethod,
       shippingNote: orderNote,
       shippingAmount: shippingFee,
-      codeVoucher: voucherCode || null,
+      promotionCodeByProductId,
     };
 
     try {
@@ -140,37 +153,30 @@ const CartSummary = ({ items }: Props) => {
         body: JSON.stringify(payload),
       });
 
-      const text = await res.text();
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (e) {
-        throw new Error("Dữ liệu phản hồi không hợp lệ.");
-      }
+      const data: { data: OrderResponse; message?: string } = await res.json();
 
-      if (res.ok && data?.data?.orderId) {
+      if (res.ok && data.data?.orderId) {
         setSnackbarType("success");
         setSnackbarMessage("Đặt hàng thành công!");
         setSnackbarOpen(true);
 
-        // Điều hướng sau 2s để người dùng thấy toast message
         setTimeout(() => {
-          if (paymentMethod === "MOMO") {
-            router.push("http://localhost:3000/momo-payment");
+          if (data.data.paymentUrl) {
+            window.location.href = data.data.paymentUrl;
           } else {
             router.push("/");
           }
-        }, 2000);
+        }, 1500);
       } else {
-        throw new Error(
-          data?.message || "Đặt hàng thất bại. Vui lòng thử lại."
-        );
+        throw new Error(data?.message || "Đặt hàng thất bại");
       }
     } catch (error: any) {
-      console.error("Lỗi:", error);
+      console.error("Lỗi khi đặt hàng:", error);
       setSnackbarType("error");
-      setSnackbarMessage(error.message || "Đã xảy ra lỗi.");
+      setSnackbarMessage(error.message || "Lỗi không xác định");
       setSnackbarOpen(true);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -258,7 +264,9 @@ const CartSummary = ({ items }: Props) => {
           value={voucherCode}
           onChange={(e) => setVoucherCode(e.target.value)}
         />
-        <Button variant="contained">Áp dụng</Button>
+        <Button variant="contained" onClick={handleApplyVoucher}>
+          Áp dụng
+        </Button>
       </Stack>
 
       <Divider sx={{ my: 2 }} />

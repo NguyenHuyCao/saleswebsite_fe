@@ -24,11 +24,24 @@ import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import { useState, useEffect } from "react";
 
-type Props = {
-  items: CartItem[];
+export type CartItem = {
+  productId: number;
+  productName: string;
+  productDescription: string;
+  productImage: string;
+  unitPrice: number;
+  quantity: number;
+  totalPrice: number;
+  discount: number;
+  maxDiscount?: number;
 };
 
-const CartItemList = ({ items: initialItems }: Props) => {
+type Props = {
+  items: CartItem[];
+  onItemsChange?: (items: CartItem[]) => void;
+};
+
+const CartItemList = ({ items: initialItems, onItemsChange }: Props) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [items, setItems] = useState<CartItem[]>(initialItems);
@@ -40,6 +53,12 @@ const CartItemList = ({ items: initialItems }: Props) => {
   useEffect(() => {
     setItems(initialItems);
   }, [initialItems]);
+
+  useEffect(() => {
+    if (onItemsChange) {
+      onItemsChange(items);
+    }
+  }, [items, onItemsChange]);
 
   const handleQuantityChange = async (
     productId: number,
@@ -55,24 +74,20 @@ const CartItemList = ({ items: initialItems }: Props) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          productId,
-          quantity: newQuantity,
-        }),
+        body: JSON.stringify({ productId, quantity: newQuantity }),
       });
 
       if (res.ok) {
-        setItems((prev) =>
-          prev.map((item) =>
-            item.productId === productId
-              ? {
-                  ...item,
-                  quantity: newQuantity,
-                  totalPrice: newQuantity * item.unitPrice,
-                }
-              : item
-          )
+        const updated = items.map((item) =>
+          item.productId === productId
+            ? {
+                ...item,
+                quantity: newQuantity,
+                totalPrice: newQuantity * item.unitPrice,
+              }
+            : item
         );
+        setItems(updated);
       }
     } catch (err) {
       console.error("Lỗi khi cập nhật số lượng:", err);
@@ -88,17 +103,14 @@ const CartItemList = ({ items: initialItems }: Props) => {
         `http://localhost:8080/api/v1/carts?productId=${productId}`,
         {
           method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
       if (res.ok) {
-        setItems((prev) => prev.filter((item) => item.productId !== productId));
+        const filtered = items.filter((item) => item.productId !== productId);
+        setItems(filtered);
         setSnackbar({ open: true, message: "Đã xoá sản phẩm khỏi giỏ hàng." });
-      } else {
-        console.error("Xoá thất bại");
       }
     } catch (err) {
       console.error("Lỗi khi xoá sản phẩm:", err);
@@ -119,6 +131,7 @@ const CartItemList = ({ items: initialItems }: Props) => {
               <TableCell>Tên</TableCell>
               <TableCell>Số lượng</TableCell>
               <TableCell>Đơn giá</TableCell>
+              <TableCell>Sale</TableCell>
               <TableCell>Tổng</TableCell>
               <TableCell />
             </TableRow>
@@ -168,6 +181,16 @@ const CartItemList = ({ items: initialItems }: Props) => {
                   </Box>
                 </TableCell>
                 <TableCell>{item.unitPrice.toLocaleString("vi-VN")}₫</TableCell>
+                <TableCell>
+                  <Typography fontWeight={500}>
+                    {Math.round(item.discount * 100)}%
+                  </Typography>
+                  {item.maxDiscount && (
+                    <Typography fontSize={12} color="text.secondary">
+                      Tối đa: {item.maxDiscount.toLocaleString()}₫
+                    </Typography>
+                  )}
+                </TableCell>
                 <TableCell>
                   {item.totalPrice.toLocaleString("vi-VN")}₫
                 </TableCell>
@@ -243,6 +266,17 @@ const CartItemList = ({ items: initialItems }: Props) => {
                 </Typography>
               </Box>
               <Box display="flex" justifyContent="space-between" mt={1}>
+                <Typography>Sale:</Typography>
+                <Box textAlign="right">
+                  <Typography>{Math.round(item.discount * 100)}%</Typography>
+                  {item.maxDiscount && (
+                    <Typography fontSize={12} color="text.secondary">
+                      Tối đa: {item.maxDiscount.toLocaleString()}₫
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+              <Box display="flex" justifyContent="space-between" mt={1}>
                 <Typography>Tổng:</Typography>
                 <Typography fontWeight={600}>
                   {item.totalPrice.toLocaleString("vi-VN")}₫
@@ -262,7 +296,6 @@ const CartItemList = ({ items: initialItems }: Props) => {
         </Stack>
       )}
 
-      {/* Snackbar thông báo xoá */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
