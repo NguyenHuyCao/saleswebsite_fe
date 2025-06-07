@@ -122,7 +122,7 @@ const OrderTablePage = () => {
       />
       <CardContent>
         <Paper sx={{ width: "100%", overflow: "hidden" }}>
-          <TableContainer sx={{ maxHeight: 440 }}>
+          <TableContainer>
             <Table stickyHeader>
               <TableHead>
                 <TableRow>

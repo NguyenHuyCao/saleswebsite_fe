@@ -20,14 +20,39 @@ import {
   Select,
   MenuItem,
 } from "@mui/material";
+import GlobalSnackbar from "@/components/alert/GlobalSnackbar";
 
 const TAX_RATE = 0.07;
 const ccyFormat = (num: number) => `${num.toLocaleString("vi-VN")} ₫`;
+
+const formatDateTime = (dateString: string | null) => {
+  if (!dateString) return "-";
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString; // fallback nếu không parse được
+  return date.toLocaleString("vi-VN", {
+    hour12: false,
+    dateStyle: "short",
+    timeStyle: "short",
+  });
+};
+
+const orderStatusMap: Record<string, string> = {
+  PENDING: "Chờ xác nhận",
+  CONFIRMED: "Đã xác nhận",
+  DELIVERED: "Đã giao hàng",
+  CANCELLED: "Đã huỷ",
+};
 
 interface OrderItem {
   productName: string;
   quantity: number;
   unitPrice: number;
+  promotions?: {
+    promotionName: string;
+    discount: number;
+    maxDiscount: number;
+    discountAmount: number;
+  }[];
 }
 
 interface UserInfo {
@@ -60,6 +85,12 @@ const OrderDetailTable = () => {
   const [paymentStatus, setPaymentStatus] = useState("");
   const [orderStatus, setOrderStatus] = useState("");
 
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarType, setSnackbarType] = useState<"success" | "error">(
+    "success"
+  );
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+
   useEffect(() => {
     if (!orderId) return;
 
@@ -87,6 +118,63 @@ const OrderDetailTable = () => {
     fetchOrder();
   }, [orderId]);
 
+  const handlePaymentStatusChange = async (newStatus: string) => {
+    setPaymentStatus(newStatus);
+
+    if (newStatus === "PAID" && order && paymentStatus !== "PAID") {
+      try {
+        const res = await fetch(
+          `http://localhost:8080/api/v1/payments/${order.orderId}/cod-paid`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          }
+        );
+        const data = await res.json();
+        if (!res.ok || data.status !== 200) {
+          throw new Error(data.message || "Lỗi xác nhận COD");
+        }
+
+        setSnackbarType("success");
+        setSnackbarMessage(data.message || "Đã xác nhận thanh toán thành công");
+      } catch (error: any) {
+        setSnackbarType("error");
+        setSnackbarMessage(
+          error?.message || "Đã xảy ra lỗi khi xác nhận thanh toán COD"
+        );
+      } finally {
+        setSnackbarOpen(true);
+      }
+    }
+  };
+
+  const handleStatusChange = async (value: string) => {
+    if (!order) return;
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/v1/orders/${order.orderId}/status`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+          body: JSON.stringify({
+            status: value,
+            shippingStatusFromPartner: null,
+          }),
+        }
+      );
+      if (!res.ok) throw new Error("Lỗi khi cập nhật trạng thái");
+      setOrderStatus(value);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   if (!order) return <div>Đang tải dữ liệu...</div>;
 
   const subtotal = order.items.reduce(
@@ -104,6 +192,7 @@ const OrderDetailTable = () => {
 
   return (
     <Box>
+      {/* Thông tin người đặt */}
       <Card sx={{ mb: 4 }}>
         <CardHeader
           title="Thông tin người đặt hàng"
@@ -116,7 +205,7 @@ const OrderDetailTable = () => {
               size="small"
               label="Họ tên"
               value={order.user.userName}
-              InputProps={{ readOnly: true, sx: { fontSize: "0.875rem" } }}
+              InputProps={{ readOnly: true }}
               sx={fieldStyle}
             />
             <TextField
@@ -124,7 +213,7 @@ const OrderDetailTable = () => {
               size="small"
               label="Email"
               value={order.user.email}
-              InputProps={{ readOnly: true, sx: { fontSize: "0.875rem" } }}
+              InputProps={{ readOnly: true }}
               sx={fieldStyle}
             />
             <TextField
@@ -132,7 +221,7 @@ const OrderDetailTable = () => {
               size="small"
               label="Số điện thoại"
               value={order.user.phone}
-              InputProps={{ readOnly: true, sx: { fontSize: "0.875rem" } }}
+              InputProps={{ readOnly: true }}
               sx={fieldStyle}
             />
             <TextField
@@ -140,16 +229,17 @@ const OrderDetailTable = () => {
               size="small"
               label="Địa chỉ người dùng"
               value={order.user.address}
-              InputProps={{ readOnly: true, sx: { fontSize: "0.875rem" } }}
+              InputProps={{ readOnly: true }}
               sx={fieldStyle}
             />
           </Box>
         </CardContent>
       </Card>
 
+      {/* Chi tiết đơn hàng */}
       <Card sx={{ mb: 4 }}>
         <CardHeader
-          title={`Chi tiết đơn hàng`}
+          title="Chi tiết đơn hàng"
           titleTypographyProps={{ variant: "h6" }}
         />
         <CardContent>
@@ -158,8 +248,8 @@ const OrderDetailTable = () => {
               fullWidth
               size="small"
               label="Ngày đặt hàng"
-              value={new Date(order.createdAt).toLocaleString("vi-VN")}
-              InputProps={{ readOnly: true, sx: { fontSize: "0.875rem" } }}
+              value={formatDateTime(order.createdAt)}
+              InputProps={{ readOnly: true }}
               sx={fieldStyle}
             />
             <TextField
@@ -167,7 +257,7 @@ const OrderDetailTable = () => {
               size="small"
               label="Địa chỉ giao hàng"
               value={order.shippingAddress}
-              InputProps={{ readOnly: true, sx: { fontSize: "0.875rem" } }}
+              InputProps={{ readOnly: true }}
               sx={fieldStyle}
             />
             <TextField
@@ -175,26 +265,23 @@ const OrderDetailTable = () => {
               size="small"
               label="Phương thức thanh toán"
               value={order.paymentMethod}
-              InputProps={{ readOnly: true, sx: { fontSize: "0.875rem" } }}
+              InputProps={{ readOnly: true }}
               sx={fieldStyle}
             />
             <TextField
               fullWidth
               size="small"
               label="Ngày thanh toán"
-              value={
-                order.paidAt
-                  ? new Date(order.paidAt).toLocaleString("vi-VN")
-                  : "-"
-              }
-              InputProps={{ readOnly: true, sx: { fontSize: "0.875rem" } }}
+              value={formatDateTime(order.paidAt)}
+              InputProps={{ readOnly: true }}
               sx={fieldStyle}
             />
           </Box>
         </CardContent>
       </Card>
 
-      <Card sx={{ mb: 4, border: "1px solid #f0f0f0" }}>
+      {/* Cập nhật trạng thái */}
+      <Card sx={{ mb: 4 }}>
         <CardHeader
           title="Cập nhật trạng thái"
           titleTypographyProps={{ variant: "h6" }}
@@ -206,7 +293,7 @@ const OrderDetailTable = () => {
               size="small"
               sx={{
                 ...fieldStyle,
-                flex: "1 1 calc(40% - 16px)",
+                flex: "1 1 40%",
                 backgroundColor: "#fef3c7",
                 borderRadius: 2,
               }}
@@ -214,13 +301,11 @@ const OrderDetailTable = () => {
               <InputLabel>Trạng thái thanh toán</InputLabel>
               <Select
                 value={paymentStatus}
-                onChange={(e) => setPaymentStatus(e.target.value)}
+                onChange={(e) => handlePaymentStatusChange(e.target.value)}
                 label="Trạng thái thanh toán"
-                sx={{ fontSize: "0.875rem" }}
               >
-                <MenuItem value="PENDING">PENDING</MenuItem>
-                <MenuItem value="PAID">PAID</MenuItem>
-                <MenuItem value="FAILED">FAILED</MenuItem>
+                <MenuItem value="PENDING">CHỜ THANH TOÁN</MenuItem>
+                <MenuItem value="PAID">ĐÃ THANH TOÁN</MenuItem>
               </Select>
             </FormControl>
 
@@ -229,7 +314,7 @@ const OrderDetailTable = () => {
               size="small"
               sx={{
                 ...fieldStyle,
-                flex: "1 1 calc(60% - 16px)",
+                flex: "1 1 60%",
                 backgroundColor: "#e0f7fa",
                 borderRadius: 2,
               }}
@@ -237,21 +322,21 @@ const OrderDetailTable = () => {
               <InputLabel>Trạng thái đơn hàng</InputLabel>
               <Select
                 value={orderStatus}
-                onChange={(e) => setOrderStatus(e.target.value)}
+                onChange={(e) => handleStatusChange(e.target.value)}
                 label="Trạng thái đơn hàng"
-                sx={{ fontSize: "0.875rem" }}
               >
-                <MenuItem value="PENDING">PENDING</MenuItem>
-                <MenuItem value="CONFIRMED">CONFIRMED</MenuItem>
-                <MenuItem value="DELIVERED">DELIVERED</MenuItem>
-                <MenuItem value="CANCELLED">CANCELLED</MenuItem>
-                <MenuItem value="FAILED">FAILED</MenuItem>
+                {Object.entries(orderStatusMap).map(([value, label]) => (
+                  <MenuItem key={value} value={value}>
+                    {label}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Box>
         </CardContent>
       </Card>
 
+      {/* Bảng sản phẩm */}
       <Card>
         <CardHeader
           title="Sản phẩm trong đơn hàng"
@@ -259,10 +344,11 @@ const OrderDetailTable = () => {
         />
         <CardContent>
           <TableContainer component={Paper}>
-            <Table sx={{ minWidth: 650 }}>
+            <Table sx={{ minWidth: 650 }} size="small">
               <TableHead>
                 <TableRow>
                   <TableCell>Sản phẩm</TableCell>
+                  <TableCell align="center">Khuyến mãi</TableCell>
                   <TableCell align="right">Số lượng</TableCell>
                   <TableCell align="right">Đơn giá</TableCell>
                   <TableCell align="right">Thành tiền</TableCell>
@@ -272,6 +358,24 @@ const OrderDetailTable = () => {
                 {order.items.map((item, index) => (
                   <TableRow key={index}>
                     <TableCell>{item.productName}</TableCell>
+                    <TableCell align="center">
+                      {item.promotions && item.promotions.length > 0 ? (
+                        item.promotions.map((promo, idx) => (
+                          <span
+                            key={idx}
+                            style={{ fontSize: "0.85rem", display: "block" }}
+                          >
+                            {promo.promotionName} –{" "}
+                            {Math.round(promo.discount * 100)}% (↓{" "}
+                            {ccyFormat(promo.discountAmount)})
+                          </span>
+                        ))
+                      ) : (
+                        <span style={{ color: "#888", fontSize: "0.85rem" }}>
+                          Không có
+                        </span>
+                      )}
+                    </TableCell>
                     <TableCell align="right">{item.quantity}</TableCell>
                     <TableCell align="right">
                       {ccyFormat(item.unitPrice)}
@@ -283,18 +387,21 @@ const OrderDetailTable = () => {
                 ))}
                 <TableRow>
                   <TableCell rowSpan={3} />
-                  <TableCell colSpan={2}>Tạm tính</TableCell>
+                  <TableCell colSpan={3} align="right" sx={{ fontWeight: 500 }}>
+                    Tạm tính
+                  </TableCell>
                   <TableCell align="right">{ccyFormat(subtotal)}</TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell>Thuế VAT</TableCell>
-                  <TableCell align="right">
-                    {(TAX_RATE * 100).toFixed(0)}%
+                  <TableCell colSpan={3} align="right" sx={{ fontWeight: 500 }}>
+                    Thuế VAT ({(TAX_RATE * 100).toFixed(0)}%)
                   </TableCell>
                   <TableCell align="right">{ccyFormat(tax)}</TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell colSpan={2}>Tổng tiền</TableCell>
+                  <TableCell colSpan={3} align="right" sx={{ fontWeight: 600 }}>
+                    Tổng tiền
+                  </TableCell>
                   <TableCell align="right">{ccyFormat(total)}</TableCell>
                 </TableRow>
               </TableBody>
@@ -302,6 +409,12 @@ const OrderDetailTable = () => {
           </TableContainer>
         </CardContent>
       </Card>
+      <GlobalSnackbar
+        open={snackbarOpen}
+        type={snackbarType}
+        message={snackbarMessage}
+        onClose={() => setSnackbarOpen(false)}
+      />
     </Box>
   );
 };
