@@ -23,19 +23,6 @@ const formatDate = (dateString: string) => {
   return date.toLocaleDateString("vi-VN");
 };
 
-const statusColor = (status: string) => {
-  switch (status) {
-    case "PENDING":
-      return "warning";
-    case "COMPLETED":
-      return "success";
-    case "CANCELLED":
-      return "error";
-    default:
-      return "default";
-  }
-};
-
 const OrderListSection = () => {
   const router = useRouter();
   const [orders, setOrders] = useState<any[]>([]);
@@ -92,27 +79,28 @@ const OrderListSection = () => {
                   </Typography>
                 </Grid>
 
-                <Grid size={{ xs: 6, md: 3 }}>
+                <Grid size={{ xs: 6, md: 2 }}>
                   <Chip
                     sx={{ width: 150 }}
                     label={
-                      order.status === "PENDING"
-                        ? "Chờ xác nhận"
-                        : order.status === "COMPLETED"
-                        ? "Đã hoàn tất"
-                        : "Đã hủy"
+                      order.paymentStatus === null
+                        ? "Chờ thanh toán"
+                        : order.paymentStatus === "PAID"
+                        ? "Đã thanh toán"
+                        : "Chờ thanh toán"
                     }
-                    color={statusColor(order.status)}
+                    color={
+                      order.paymentStatus === "PAID" ? "success" : "warning"
+                    }
                   />
                 </Grid>
 
                 <Grid size={{ xs: 12, md: 2 }}>
-                  <ShippingStatusChip status={order.shippingMethod} />
+                  <ShippingStatusChip status={order.status || "Không rõ"} />
                 </Grid>
 
-                <Grid size={{ xs: 12, md: 2 }}>
+                <Grid size={{ xs: 12, md: 3 }}>
                   <Stack direction="row" spacing={1}>
-                    {/* HỖ TRỢ */}
                     <Box
                       onClick={() => router.push("/contact")}
                       display="flex"
@@ -138,7 +126,6 @@ const OrderListSection = () => {
                       Hỗ trợ
                     </Box>
 
-                    {/* BẢO HÀNH */}
                     <Box
                       onClick={() => router.push("/warranty")}
                       display="flex"
@@ -173,18 +160,17 @@ const OrderListSection = () => {
                 Sản phẩm trong đơn:
               </Typography>
               {order.items.map((item: any, i: number) => (
-                <Box
-                  key={i}
-                  display="flex"
-                  justifyContent="space-between"
-                  mb={1}
-                >
+                <Box key={i} mb={1}>
                   <Typography>
-                    {item.productName} × {item.quantity}
-                  </Typography>
-                  <Typography>
+                    {item.productName} × {item.quantity} -{" "}
                     {(item.unitPrice * item.quantity).toLocaleString("vi-VN")}₫
                   </Typography>
+                  {item.promotions.length > 0 && (
+                    <Typography variant="body2" color="text.secondary">
+                      Áp dụng khuyến mãi:{" "}
+                      {item.promotions.map((p: any) => p.name).join(", ")}
+                    </Typography>
+                  )}
                 </Box>
               ))}
               <Divider sx={{ my: 2 }} />
@@ -195,9 +181,13 @@ const OrderListSection = () => {
                 <strong>Phương thức thanh toán:</strong> {order.paymentMethod}
               </Typography>
               <Typography>
-                <strong>Phương thức vận chuyển:</strong>{" "}
-                {order.shippingMethod || "Không rõ"}
+                <strong>Trạng thái thanh toán:</strong>{" "}
+                {order.paymentStatus || "Chờ thanh toán"}
               </Typography>
+              {/* <Typography>
+                <strong>Phương thức vận chuyển:</strong>{" "}
+                {mapShippingStatus(order.shippingMethod)}
+              </Typography> */}
             </AccordionDetails>
           </Accordion>
         </Box>
