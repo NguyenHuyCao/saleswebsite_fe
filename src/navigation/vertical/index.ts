@@ -29,7 +29,7 @@ const navigation = (): VerticalNavItemsType => {
       path: "/admin/contacts",
     },
     {
-      title: "Khách hàng",
+      title: "Người dùng",
       icon: PersonOutlineOutlinedIcon,
       path: "/admin/users",
     },
@@ -57,6 +57,11 @@ const navigation = (): VerticalNavItemsType => {
       title: "Đơn vị vận chuyển",
       icon: LocalShippingOutlinedIcon,
       path: "/admin/shippings",
+    },
+    {
+      title: "Khuyến mãi",
+      icon: LocalShippingOutlinedIcon,
+      path: "/admin/events",
     },
     {
       sectionTitle: "Điều hướng",

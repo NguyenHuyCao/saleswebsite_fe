@@ -90,7 +90,7 @@ const UserCombinedForm = ({ onNext, userData }: Props) => {
         Thông tin cá nhân
       </Typography>
       <Grid container spacing={4}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <TextField
             fullWidth
             label="Họ và tên"
@@ -98,7 +98,7 @@ const UserCombinedForm = ({ onNext, userData }: Props) => {
             onChange={(e) => handleChange("username", e.target.value)}
           />
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <TextField
             fullWidth
             type="email"
@@ -107,7 +107,7 @@ const UserCombinedForm = ({ onNext, userData }: Props) => {
             onChange={(e) => handleChange("email", e.target.value)}
           />
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <TextField
             fullWidth
             label="Số điện thoại"
@@ -115,7 +115,7 @@ const UserCombinedForm = ({ onNext, userData }: Props) => {
             onChange={(e) => handleChange("phone", e.target.value)}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <TextField
             fullWidth
             label="Địa chỉ"

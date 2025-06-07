@@ -9,11 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@date-io/dayjs": "^3.2.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^7.1.0",
     "@mui/lab": "^5.0.0-alpha.70",
     "@mui/material": "^7.1.0",
+    "@mui/x-date-pickers": "^8.5.1",
     "@popperjs/core": "^2.11.8",
     "@reduxjs/toolkit": "^2.8.2",
     "@rpldy/upload-drop-zone": "^1.10.0",
@@ -22,6 +24,7 @@
     "apexcharts": "^4.7.0",
     "apexcharts-clevision": "3.28.5",
     "clsx": "^1.2.1",
+    "dayjs": "^1.11.13",
     "framer-motion": "^12.15.0",
     "lucide-react": "^0.511.0",
     "mdi-material-ui": "^7.1.0",
