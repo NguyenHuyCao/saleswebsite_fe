@@ -1,7 +1,16 @@
+// Modified FlashSaleSlider.tsx
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
-import { Box, IconButton, Tooltip, Typography } from "@mui/material";
+import {
+  Box,
+  IconButton,
+  Tooltip,
+  Typography,
+  useMediaQuery,
+  useTheme,
+  Paper,
+} from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
@@ -23,14 +32,22 @@ export type Promotion = {
 
 type FlashSaleSliderProps = {
   promotion: Promotion;
+  allPromotions?: Promotion[];
 };
 
-const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({ promotion }) => {
+const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
+  promotion,
+  allPromotions = [],
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const router = useRouter();
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(false);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const checkScroll = () => {
     const el = containerRef.current;
@@ -43,20 +60,12 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({ promotion }) => {
   const fetchProducts = async () => {
     try {
       const token = localStorage.getItem("accessToken");
-      let res;
-      if (token) {
-        res = await fetch(
-          `http://localhost:8080/api/v1/promotions/${promotion.id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-      } else {
-        res = await fetch(
-          `http://localhost:8080/api/v1/promotions/${promotion.id}`
-        );
-      }
-
+      const res = await fetch(
+        `http://localhost:8080/api/v1/promotions/${promotion.id}`,
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }
+      );
       const data = await res.json();
       const now = new Date();
       const mapped = data?.data?.map((item: any) => {
@@ -139,34 +148,85 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({ promotion }) => {
     }
   };
 
+  const renderBanner = (pos: "left" | "right") => {
+    const banners = allPromotions.filter((p) => p.id !== promotion.id);
+    const banner = pos === "left" ? banners[0] : banners[1];
+    if (!banner) return null;
+    return (
+      <Paper
+        elevation={4}
+        sx={{
+          minWidth: 160,
+          maxWidth: 180,
+          mx: 1,
+          p: 2,
+          bgcolor: "#fff8e1",
+          borderRadius: 2,
+          display: { xs: "none", sm: "block" },
+        }}
+      >
+        <Typography variant="subtitle2" color="#e65100" fontWeight={700}>
+          🎊 {banner.name}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Giảm đến {(banner.discount * 100).toFixed(0)}% <br />
+          Tối đa {banner.maxDiscount.toLocaleString()}₫
+        </Typography>
+      </Paper>
+    );
+  };
+
   return (
     <>
       <CountdownPromotion
         deadline={new Date(promotion.endDate).toISOString()}
       />
 
-      <Box textAlign="center" mb={5}>
-        <Typography variant="subtitle1" color="text.secondary">
-          {promotion.name} | Giảm đến {(promotion.discount * 100).toFixed(0)}% –
-          tối đa {promotion.maxDiscount.toLocaleString()}₫
-        </Typography>
-
-        {promotion.requiresCode && promotion.code && (
-          <Typography variant="body2" sx={{ mt: 1, color: "#dc2626" }}>
-            🎁 Mã khuyến mãi: <b>{promotion.code}</b>
-          </Typography>
-        )}
+      <Box textAlign="center" mt={-2} mb={2}>
+        <Paper
+          elevation={3}
+          sx={{
+            display: "inline-block",
+            px: 4,
+            py: 1.5,
+            background: "linear-gradient(to right, #facc15, #f59e0b)",
+            borderRadius: "50px",
+            color: "#fff",
+            fontWeight: 700,
+            fontSize: "1rem",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+            animation: "bounce 1s infinite alternate",
+            "@keyframes bounce": {
+              from: { transform: "translateY(0px)" },
+              to: { transform: "translateY(-4px)" },
+            },
+          }}
+        >
+          🎁 {promotion.name} - GIẢM ĐẾN {Math.round(promotion.discount * 100)}%
+        </Paper>
       </Box>
 
-      <Box sx={{ position: "relative", px: 2, textAlign: "center" }}>
-        {showLeft && (
+      <Box
+        ref={wrapperRef}
+        sx={{
+          position: "relative",
+          px: isMobile ? 1 : 0,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        {products.length <= 3 && renderBanner("left")}
+
+        {showLeft && !isMobile && products.length > 3 && (
           <IconButton
             onClick={() => scroll("left")}
             sx={{
               position: "absolute",
-              top: "45%",
+              top: "50%",
               left: 0,
-              zIndex: 10,
+              transform: "translateY(-50%)",
+              zIndex: 15,
               bgcolor: "white",
               boxShadow: 2,
               "&:hover": { bgcolor: "#ffb700" },
@@ -176,18 +236,37 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({ promotion }) => {
           </IconButton>
         )}
 
+        {showRight && !isMobile && products.length > 3 && (
+          <IconButton
+            onClick={() => scroll("right")}
+            sx={{
+              position: "absolute",
+              top: "50%",
+              right: 0,
+              transform: "translateY(-50%)",
+              zIndex: 15,
+              bgcolor: "white",
+              boxShadow: 2,
+              "&:hover": { bgcolor: "#ffb700" },
+            }}
+          >
+            <ArrowForwardIosIcon />
+          </IconButton>
+        )}
+
         <Box
           ref={containerRef}
           sx={{
             display: "flex",
-            overflowX: "auto",
+            overflowX: products.length > 3 ? "auto" : "hidden",
+            justifyContent: products.length <= 3 ? "center" : "flex-start",
             scrollBehavior: "smooth",
             scrollbarWidth: "none",
-            justifyContent: "center",
             "&::-webkit-scrollbar": { display: "none" },
             gap: 1,
-            px: 5,
             scrollSnapType: "x mandatory",
+            px: 3,
+            flexWrap: products.length <= 3 ? "wrap" : "nowrap",
           }}
         >
           {products?.map((product, idx) => (
@@ -250,22 +329,7 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({ promotion }) => {
           ))}
         </Box>
 
-        {showRight && (
-          <IconButton
-            onClick={() => scroll("right")}
-            sx={{
-              position: "absolute",
-              top: "45%",
-              right: 0,
-              zIndex: 10,
-              bgcolor: "white",
-              boxShadow: 2,
-              "&:hover": { bgcolor: "#ffb700" },
-            }}
-          >
-            <ArrowForwardIosIcon />
-          </IconButton>
-        )}
+        {products.length <= 3 && renderBanner("right")}
       </Box>
     </>
   );

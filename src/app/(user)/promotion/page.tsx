@@ -1,5 +1,5 @@
-import FlashSaleSection from "@/components/home/FlashSaleSection";
 import PromoBanner from "@/components/home/PromoBanner";
+import FlashSaleShowcasePage from "@/components/promotion/FlashSaleShowcasePage";
 import PromotionInfoBlock from "@/components/promotion/PromotionInfoBlock";
 import { Container } from "@mui/material";
 
@@ -8,7 +8,8 @@ const PromotionPage = () => {
     <>
       <Container sx={{ marginBottom: 10 }}>
         <PromoBanner />
-        <FlashSaleSection />
+        {/* <FlashSaleSection /> */}
+        <FlashSaleShowcasePage />
         <PromotionInfoBlock />
       </Container>
     </>

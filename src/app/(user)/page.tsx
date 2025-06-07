@@ -14,6 +14,7 @@ import { Box, Container } from "@mui/material";
 import Image from "next/image";
 import { cookies } from "next/headers";
 import FlashSaleSection from "@/components/home/FlashSaleSection";
+import FlashSaleShowcasePage from "@/components/promotion/FlashSaleShowcasePage";
 
 export type Product = {
   id: number;
@@ -275,8 +276,8 @@ export default async function HomePage() {
         {/* {flashPromotions.map((promo) => (
           <FlashSaleSlider key={promo.id} promotion={promo} />
         ))} */}
-        <FlashSaleSection />
-
+        {/* <FlashSaleSection /> */}
+        <FlashSaleShowcasePage />
         <NewProductSection />
         <PromotionBanner />
         <CategoryCarousel categories={categories} />
