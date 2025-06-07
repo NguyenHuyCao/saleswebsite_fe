@@ -10,6 +10,7 @@ import {
   useMediaQuery,
   useTheme,
   Paper,
+  Fade,
 } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
@@ -45,7 +46,6 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
   const router = useRouter();
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(false);
-
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -158,7 +158,6 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
         sx={{
           minWidth: 160,
           maxWidth: 180,
-          mx: 1,
           p: 2,
           bgcolor: "#fff8e1",
           borderRadius: 2,
@@ -173,6 +172,30 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
           Tối đa {banner.maxDiscount.toLocaleString()}₫
         </Typography>
       </Paper>
+    );
+  };
+
+  const renderScrollHint = () => {
+    if (!isMobile || products.length <= 2) return null;
+    return (
+      <Fade in timeout={600}>
+        <Typography
+          variant="caption"
+          sx={{
+            mt: 1,
+            color: "text.secondary",
+            fontStyle: "italic",
+            textAlign: "center",
+            animation: "slideLeft 1.5s infinite",
+            "@keyframes slideLeft": {
+              from: { transform: "translateX(0px)" },
+              to: { transform: "translateX(-10px)" },
+            },
+          }}
+        >
+          👉 Kéo sang để xem thêm sản phẩm hấp dẫn!
+        </Typography>
+      </Fade>
     );
   };
 
@@ -331,6 +354,8 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
 
         {products.length <= 3 && renderBanner("right")}
       </Box>
+
+      {renderScrollHint()}
     </>
   );
 };
