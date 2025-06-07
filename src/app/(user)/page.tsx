@@ -272,11 +272,6 @@ export default async function HomePage() {
 
       <Container>
         <VoucherCardList />
-
-        {/* {flashPromotions.map((promo) => (
-          <FlashSaleSlider key={promo.id} promotion={promo} />
-        ))} */}
-        {/* <FlashSaleSection /> */}
         <FlashSaleShowcasePage />
         <NewProductSection />
         <PromotionBanner />

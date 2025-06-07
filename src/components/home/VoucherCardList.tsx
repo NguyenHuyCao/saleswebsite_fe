@@ -1,35 +1,30 @@
 "use client";
 
-import * as React from "react";
-import { Box, Typography, Button, Grid, Paper, Divider } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import {
+  Box,
+  Typography,
+  Button,
+  Divider,
+  Paper,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
-const vouchers = [
-  {
-    code: "EGA15",
-    description: "Giảm 15% cho đơn hàng từ 500K.",
-    expiry: "28/03/2025",
-    expired: true,
-  },
-  {
-    code: "EGA30",
-    description: "Giảm 30% cho đơn hàng từ 1500K.",
-    expiry: "20/03/2025",
-    expired: true,
-  },
-  {
-    code: "FSHIP",
-    description: "Miễn phí ship cho đơn hàng trên 200K.",
-    expiry: "30/12/2025",
-    expired: false,
-  },
-  {
-    code: "EGA50",
-    description: "Giảm 50% cho đơn hàng từ 10 triệu.",
-    expiry: "01/01/2026",
-    expired: false,
-  },
-];
+interface Promotion {
+  name: string;
+  code: string;
+  discount: number;
+  maxDiscount: number;
+  startDate: string;
+  endDate: string;
+  requiresCode: boolean;
+  applicableProductIds: number[];
+}
 
 const Item = (props: { children: React.ReactNode }) => (
   <Paper
@@ -48,16 +43,48 @@ const Item = (props: { children: React.ReactNode }) => (
   </Paper>
 );
 
-export default function VoucherCardList() {
+export default function VoucherCardSlider() {
+  const [vouchers, setVouchers] = useState<Promotion[]>([]);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  useEffect(() => {
+    const fetchPromotions = async () => {
+      try {
+        const res = await fetch(
+          "http://localhost:8080/api/v1/promotions/requires-products"
+        );
+        const data = await res.json();
+        setVouchers(data.data);
+      } catch (error) {
+        console.error("Lỗi khi gọi API:", error);
+      }
+    };
+    fetchPromotions();
+  }, []);
+
+  const settings = {
+    dots: false,
+    infinite: vouchers.length > (isMobile ? 1 : 3),
+    speed: 500,
+    slidesToShow: isMobile ? 1 : 3,
+    slidesToScroll: 1,
+    arrows: vouchers.length > (isMobile ? 1 : 3),
+    responsive: [
+      {
+        breakpoint: 600,
+        settings: {
+          slidesToShow: 1,
+        },
+      },
+    ],
+  };
+
   return (
-    <Box sx={{ flexGrow: 1, py: 2 }}>
-      <Grid
-        container
-        spacing={{ xs: 2, md: 3 }}
-        columns={{ xs: 4, sm: 8, md: 12 }}
-      >
+    <Box sx={{ py: 2 }}>
+      <Slider {...settings}>
         {vouchers.map((voucher, index) => (
-          <Grid key={index} size={{ xs: 4, sm: 4, md: 3 }}>
+          <Box key={index} px={1}>
             <Item>
               <Box
                 sx={{
@@ -87,7 +114,8 @@ export default function VoucherCardList() {
               >
                 <Box>
                   <Typography fontSize={13} fontWeight={600} color="#000">
-                    {voucher.description}
+                    Giảm {(voucher.discount * 100).toFixed(0)}% - Tối đa{" "}
+                    {voucher.maxDiscount.toLocaleString()}₫
                   </Typography>
                   <Box display="flex" alignItems="center" gap={0.5} mt={0.5}>
                     <InfoOutlinedIcon sx={{ fontSize: 13, color: "#f25c05" }} />
@@ -96,47 +124,33 @@ export default function VoucherCardList() {
                     </Typography>
                   </Box>
                   <Typography fontSize={12} color="#555" mt={0.5}>
-                    HSD: {voucher.expiry}
+                    HSD: {voucher.endDate}
                   </Typography>
                 </Box>
                 <Box mt={1} textAlign="right">
-                  {voucher.expired ? (
-                    <Button
-                      disabled
-                      variant="outlined"
-                      size="small"
-                      sx={{
-                        color: "#000",
-                        borderColor: "#eee",
-                        fontSize: 11,
-                        px: 1.5,
-                        py: 0.3,
-                      }}
-                    >
-                      Hết hạn
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="contained"
-                      size="small"
-                      sx={{
-                        bgcolor: "#f25c05",
-                        color: "#fff",
-                        fontSize: 11,
-                        px: 1.5,
-                        py: 0.3,
-                        textTransform: "none",
-                      }}
-                    >
-                      Sao chép
-                    </Button>
-                  )}
+                  <Button
+                    variant="contained"
+                    size="small"
+                    sx={{
+                      bgcolor: "#d35400",
+                      color: "#fff",
+                      fontSize: 11,
+                      px: 1.5,
+                      py: 0.3,
+                      textTransform: "none",
+                      "&:hover": {
+                        bgcolor: "#e67e22",
+                      },
+                    }}
+                  >
+                    Sao chép
+                  </Button>
                 </Box>
               </Box>
             </Item>
-          </Grid>
+          </Box>
         ))}
-      </Grid>
+      </Slider>
     </Box>
   );
 }

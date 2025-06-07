@@ -34,3 +34,15 @@ code[class*="language-"] {
   width: 100%;
   min-height: 100vh;
 }
+
+.slick-prev:before,
+.slick-next:before {
+  color: #f25c05 !important; /* Màu cam chủ đạo của bạn */
+  font-size: 24px;
+  opacity: 1 !important; /* Đảm bảo nó hiển thị rõ */
+}
+
+.slick-prev:hover:before,
+.slick-next:hover:before {
+  color: #ff9800;
+}
