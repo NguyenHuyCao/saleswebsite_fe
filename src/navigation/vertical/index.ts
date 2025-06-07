@@ -64,6 +64,11 @@ const navigation = (): VerticalNavItemsType => {
       path: "/admin/events",
     },
     {
+      title: "Bảo hành",
+      icon: LocalShippingOutlinedIcon,
+      path: "/admin/warranties",
+    },
+    {
       sectionTitle: "Điều hướng",
     },
     {
