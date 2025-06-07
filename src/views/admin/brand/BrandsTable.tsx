@@ -106,12 +106,16 @@ const BrandTablePage = () => {
     logoFile?: File;
     website: string;
     originCountry: string;
+    year: string;
+    description: string;
   }) => {
     try {
       const formData = new FormData();
       formData.append("name", data.name);
       formData.append("website", data.website);
       formData.append("originCountry", data.originCountry);
+      formData.append("year", data.year);
+      formData.append("description", data.description);
       if (data.logoFile) {
         formData.append("logo", data.logoFile);
       }
@@ -251,16 +255,7 @@ const BrandTablePage = () => {
                     </TableCell>
                     <TableCell align="center">
                       <Button
-                        size="small"
                         variant="outlined"
-                        sx={{
-                          backgroundColor: "#ff700",
-                          textTransform: "none",
-                          fontWeight: 500,
-                          px: 2,
-                          py: 0.5,
-                          fontSize: "0.8rem",
-                        }}
                         onClick={() => handleOpenEdit(brand)}
                       >
                         Cập nhật

@@ -9,17 +9,33 @@ import {
   TextField,
   Typography,
   Paper,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  FormGroup,
 } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { DatePicker } from "@mui/x-date-pickers";
-import Autocomplete from "@mui/material/Autocomplete";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import GlobalSnackbar from "@/components/alert/GlobalSnackbar";
 
-interface ProductOption {
+interface Product {
   id: number;
   name: string;
+}
+
+interface Category {
+  id: number;
+  name: string;
+  products: Product[];
+}
+
+interface Brand {
+  id: number;
+  name: string;
+  category: Category[];
 }
 
 const PromotionFormPage = () => {
@@ -39,24 +55,25 @@ const PromotionFormPage = () => {
     productIds: [] as number[],
   });
 
-  const [products, setProducts] = useState<ProductOption[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [snackbar, setSnackbar] = useState({
     open: false,
     type: "success" as "success" | "error",
     message: "",
   });
 
-  const fetchProducts = async () => {
+  const fetchBrands = async () => {
     try {
-      const res = await fetch("http://localhost:8080/api/v1/products");
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch("http://localhost:8080/api/v1/brands", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const json = await res.json();
-      const list = (json?.data?.result || []).map((p: any) => ({
-        id: p.id,
-        name: p.name,
-      }));
-      setProducts(list);
+      setBrands(json.data.result || []);
     } catch (err) {
-      console.error("Lỗi lấy sản phẩm:", err);
+      console.error("Lỗi lấy thương hiệu:", err);
     }
   };
 
@@ -68,17 +85,15 @@ const PromotionFormPage = () => {
         );
         const json = await res.json();
         const promo = json.data;
-
         setForm((prev) => ({
           ...prev,
-          name: promo.name || "",
-          code: promo.code || "",
+          name: promo.name,
+          code: promo.code,
           requiresCode: promo.requiresCode,
-          discount: promo.discount || 0,
-          maxDiscount: promo.maxDiscount || 0,
+          discount: promo.discount,
+          maxDiscount: promo.maxDiscount,
           startDate: dayjs(promo.startDate),
           endDate: dayjs(promo.endDate),
-          productIds: promo.productIds || [],
         }));
       } catch (err) {
         console.error("Lỗi khi lấy thông tin khuyến mãi:", err);
@@ -91,25 +106,39 @@ const PromotionFormPage = () => {
     }
   };
 
+  const fetchAppliedProducts = async () => {
+    if (action === "edit" && promotionId) {
+      try {
+        const token = localStorage.getItem("accessToken");
+        const res = await fetch(
+          `http://localhost:8080/api/v1/promotions/${promotionId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const json = await res.json();
+        const ids = (json.data || []).map((p: any) => p.id);
+        setForm((prev) => ({ ...prev, productIds: ids }));
+      } catch (err) {
+        console.error("Lỗi khi lấy sản phẩm đã áp dụng:", err);
+      }
+    }
+  };
+
   const handleSubmit = async () => {
     try {
       const token = localStorage.getItem("accessToken");
       const payload = {
-        name: form.name,
+        ...form,
         code: form.requiresCode ? form.code : null,
-        requiresCode: form.requiresCode,
-        discount: form.discount,
-        maxDiscount: form.maxDiscount,
         startDate: form.startDate.format("YYYY-MM-DD"),
         endDate: form.endDate.format("YYYY-MM-DD"),
-        productIds: form.productIds,
       };
 
-      const isEditing = action === "edit" && promotionId;
-      const url = isEditing
-        ? `http://localhost:8080/api/v1/promotions/${promotionId}`
-        : "http://localhost:8080/api/v1/promotions";
-      const method = isEditing ? "PUT" : "POST";
+      const url =
+        action === "edit"
+          ? `http://localhost:8080/api/v1/promotions/${promotionId}`
+          : "http://localhost:8080/api/v1/promotions";
+
+      const method = action === "edit" ? "PUT" : "POST";
 
       const res = await fetch(url, {
         method,
@@ -120,7 +149,7 @@ const PromotionFormPage = () => {
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("Lỗi khi gửi dữ liệu khuyến mãi");
+      if (!res.ok) throw new Error("Lỗi gửi dữ liệu");
       const result = await res.json();
 
       setSnackbar({
@@ -129,45 +158,43 @@ const PromotionFormPage = () => {
         message: result.message || "Thành công",
       });
 
-      // Nếu là cập nhật → chuyển trang sau 1.5s
-      if (isEditing) {
+      if (action === "edit")
         setTimeout(() => router.push("/admin/events"), 1500);
-      } else {
-        // Nếu là thêm mới → reset form
-        setForm({
-          name: "",
-          code: "",
-          requiresCode: false,
-          discount: 0,
-          maxDiscount: 0,
-          startDate: dayjs(),
-          endDate: dayjs().add(7, "day"),
-          productIds: [],
-        });
-      }
+      else setForm({ ...form, name: "", code: "", productIds: [] });
     } catch (err) {
       console.error("Lỗi gửi dữ liệu:", err);
       setSnackbar({
         open: true,
         type: "error",
-        message: "Thất bại khi gửi dữ liệu khuyến mãi",
+        message: "Thất bại khi gửi dữ liệu",
       });
     }
   };
 
+  const toggleProduct = (id: number) => {
+    setForm((prev) => ({
+      ...prev,
+      productIds: prev.productIds.includes(id)
+        ? prev.productIds.filter((pid) => pid !== id)
+        : [...prev.productIds, id],
+    }));
+  };
+
   useEffect(() => {
-    fetchProducts();
+    fetchBrands();
     fetchPromotionById();
+    fetchAppliedProducts();
   }, []);
 
   return (
-    <Box p={4} maxWidth={720} mx="auto">
+    <Box p={4} maxWidth={900} mx="auto">
       <Paper elevation={3} sx={{ p: 4 }}>
         <Typography variant="h5" mb={3} textAlign="center">
           {action === "edit" ? "Cập nhật khuyến mãi" : "Tạo khuyến mãi mới"}
         </Typography>
 
         <Grid container spacing={3}>
+          {/* Tên khuyến mãi và Mã giảm giá */}
           <Grid size={{ xs: 12, md: 6 }}>
             <TextField
               label="Tên khuyến mãi"
@@ -200,7 +227,8 @@ const PromotionFormPage = () => {
             )}
           </Grid>
 
-          <Grid size={{ xs: 12, md: 6 }}>
+          {/* Thông tin giảm giá */}
+          <Grid size={{ xs: 6 }}>
             <TextField
               type="number"
               label="Tỷ lệ giảm (%)"
@@ -208,33 +236,25 @@ const PromotionFormPage = () => {
               value={
                 form.discount === 0 ? "" : (form.discount * 100).toString()
               }
-              onChange={(e) => {
-                const value = e.target.value;
-                setForm({
-                  ...form,
-                  discount: value === "" ? 0 : +value / 100,
-                });
-              }}
+              onChange={(e) =>
+                setForm({ ...form, discount: +e.target.value / 100 })
+              }
             />
           </Grid>
-
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ xs: 6 }}>
             <TextField
               type="number"
               label="Giảm tối đa (VNĐ)"
               fullWidth
               value={form.maxDiscount === 0 ? "" : form.maxDiscount.toString()}
-              onChange={(e) => {
-                const value = e.target.value;
-                setForm({
-                  ...form,
-                  maxDiscount: value === "" ? 0 : +value,
-                });
-              }}
+              onChange={(e) =>
+                setForm({ ...form, maxDiscount: +e.target.value })
+              }
             />
           </Grid>
 
-          <Grid size={{ xs: 12, md: 6 }}>
+          {/* Ngày bắt đầu/kết thúc */}
+          <Grid size={{ xs: 6 }}>
             <DatePicker
               label="Ngày bắt đầu"
               value={form.startDate}
@@ -243,8 +263,7 @@ const PromotionFormPage = () => {
               }
             />
           </Grid>
-
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ xs: 6 }}>
             <DatePicker
               label="Ngày kết thúc"
               value={form.endDate}
@@ -254,23 +273,45 @@ const PromotionFormPage = () => {
             />
           </Grid>
 
+          {/* Sản phẩm áp dụng */}
           <Grid size={{ xs: 12 }}>
-            <Autocomplete
-              multiple
-              options={products}
-              getOptionLabel={(option) => option.name}
-              value={products.filter((p) => form.productIds.includes(p.id))}
-              onChange={(_, selected) =>
-                setForm({ ...form, productIds: selected.map((s) => s.id) })
-              }
-              renderInput={(params) => (
-                <TextField {...params} label="Sản phẩm áp dụng" />
-              )}
-            />
+            <Typography variant="h6" mb={2}>
+              Chọn sản phẩm áp dụng
+            </Typography>
+            {brands.map((brand) => (
+              <Accordion key={brand.id}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography fontWeight={600}>{brand.name}</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  {brand.category.map((cat) => (
+                    <Box key={cat.id} mb={2}>
+                      <Typography variant="subtitle1" fontWeight={500} mb={1}>
+                        {cat.name}
+                      </Typography>
+                      <FormGroup row>
+                        {cat.products.map((product) => (
+                          <FormControlLabel
+                            key={`${cat.id}-${product.id}`}
+                            control={
+                              <Checkbox
+                                checked={form.productIds.includes(product.id)}
+                                onChange={() => toggleProduct(product.id)}
+                              />
+                            }
+                            label={product.name}
+                          />
+                        ))}
+                      </FormGroup>
+                    </Box>
+                  ))}
+                </AccordionDetails>
+              </Accordion>
+            ))}
           </Grid>
 
           <Grid size={{ xs: 12 }} textAlign="center">
-            <Button variant="contained" onClick={handleSubmit} size="large">
+            <Button variant="contained" size="large" onClick={handleSubmit}>
               {action === "edit" ? "Cập nhật" : "Tạo mới"}
             </Button>
           </Grid>

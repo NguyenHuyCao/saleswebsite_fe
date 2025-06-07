@@ -1,87 +1,80 @@
-// ** React & MUI Imports
 "use client";
 
-import { useState } from "react";
-import Typography from "@mui/material/Typography";
-import Paper from "@mui/material/Paper";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TablePagination from "@mui/material/TablePagination";
-import TableRow from "@mui/material/TableRow";
-import IconButton from "@mui/material/IconButton";
+import { useState, useEffect } from "react";
+import {
+  Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  IconButton,
+  Card,
+  CardHeader,
+  CardContent,
+} from "@mui/material";
 import UploadOutlinedIcon from "@mui/icons-material/UploadOutlined";
-import Card from "@mui/material/Card";
-import CardHeader from "@mui/material/CardHeader";
-import CardContent from "@mui/material/CardContent";
 import { useRouter } from "next/navigation";
 
-const userData = {
-  meta: {
-    page: 1,
-    pageSize: 10,
-    pages: 1,
-    total: 7,
-  },
-  result: [
-    {
-      id: 1,
-      username: "user",
-      email: "user@gmail.com",
-      phone: "1-800-123-4567",
-      address: "1234 Maple St, Springfield, IL 62701",
-    },
-    {
-      id: 2,
-      username: "admin",
-      email: "admin@gmail.com",
-      phone: "123456",
-      address: "1234 Maple St, Springfield, IL 62701",
-    },
-    {
-      id: 3,
-      username: "a",
-      email: "a@gmail.com",
-      phone: "123456",
-      address: "1234 Maple St, Springfield, IL 62701",
-    },
-    {
-      id: 4,
-      username: "aa",
-      email: "afds@gmail.com",
-      phone: "123456",
-      address: "1234 Maple St, Springfield, IL 62701",
-    },
-    {
-      id: 5,
-      username: "fasd",
-      email: "admaain@gmail.com",
-      phone: "132457",
-      address: "huycaas fdsafsa",
-    },
-    {
-      id: 6,
-      username: "huycao",
-      email: "cao@gmail.com",
-      phone: "1234567`",
-      address: "cao dum",
-    },
-    {
-      id: 7,
-      username: "h",
-      email: "fasdf@gmail.com",
-      phone: "13242",
-      address: "huya",
-    },
-  ],
-};
+interface User {
+  id: number;
+  username: string;
+  email: string;
+  phone: string;
+  address: string;
+  gender: string;
+}
+
+interface MetaData {
+  page: number;
+  pageSize: number;
+  pages: number;
+  total: number;
+}
 
 const UserTablePage = () => {
+  const [users, setUsers] = useState<User[]>([]);
+  const [meta, setMeta] = useState<MetaData>({
+    page: 1,
+    pageSize: 5,
+    pages: 1,
+    total: 0,
+  });
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const router = useRouter();
+
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users?page=${page}&size=${rowsPerPage}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const data = await res.json();
+
+      if (data.status === 200 && Array.isArray(data.data.result)) {
+        const filteredUsers = data.data.result.filter(
+          (user: User) => user.email !== "admin@gmail.com"
+        );
+        setUsers(filteredUsers);
+        setMeta(data.data.meta);
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách người dùng:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, [page, rowsPerPage]);
 
   const handleRowClick = (userId: number) => {
     router.push(`/admin/users?userId=${userId}`);
@@ -124,32 +117,30 @@ const UserTablePage = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {userData.result
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((user) => (
-                    <TableRow hover key={user.id}>
-                      <TableCell>{user.id}</TableCell>
-                      <TableCell>{user.username}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>{user.phone}</TableCell>
-                      <TableCell>{user.address}</TableCell>
-                      <TableCell align="center">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleRowClick(user.id)}
-                        >
-                          <UploadOutlinedIcon sx={{ fontSize: 19 }} />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                {users.map((user) => (
+                  <TableRow hover key={user.id}>
+                    <TableCell>{user.id}</TableCell>
+                    <TableCell>{user.username}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.phone}</TableCell>
+                    <TableCell>{user.address}</TableCell>
+                    <TableCell align="center">
+                      <IconButton
+                        size="small"
+                        onClick={() => handleRowClick(user.id)}
+                      >
+                        <UploadOutlinedIcon sx={{ fontSize: 19 }} />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </TableContainer>
           <TablePagination
             rowsPerPageOptions={[5, 10, 20]}
             component="div"
-            count={userData.result.length}
+            count={meta.total}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}

@@ -158,7 +158,7 @@ const ShippingPartnerList = () => {
       />
       <CardContent>
         <Paper>
-          <TableContainer sx={{ maxHeight: 440 }}>
+          <TableContainer>
             <Table stickyHeader>
               <TableHead>
                 <TableRow>
@@ -182,7 +182,6 @@ const ShippingPartnerList = () => {
                     </TableCell>
                     <TableCell align="center">
                       <Button
-                        size="small"
                         variant="outlined"
                         onClick={() => {
                           setSelectedPartner(partner);

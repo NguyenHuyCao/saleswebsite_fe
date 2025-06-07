@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, ChangeEvent } from "react";
+import { useState, useEffect, ChangeEvent, useCallback } from "react";
 import {
   Button,
   Paper,
@@ -16,16 +16,24 @@ import {
   TablePagination,
   Snackbar,
   Alert as MuiAlert,
+  TextField,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Box,
+  Typography,
 } from "@mui/material";
-
+import Image from "next/image";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import ModalEditCategory from "@/model/category/ModalEditCategory";
-import ModalCreateCategory from "@/model/category/ModalCreateCategory";
 
 const Alert = MuiAlert as React.ElementType;
 
 interface CategoryData {
   id: number;
   name: string;
+  image: string;
   createdAt: string;
   updatedAt: string | null;
 }
@@ -36,6 +44,10 @@ const CategoryTablePage = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [totalRows, setTotalRows] = useState(0);
   const [openModal, setOpenModal] = useState(false);
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newImage, setNewImage] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<CategoryData | null>(
     null
   );
@@ -49,7 +61,7 @@ const CategoryTablePage = () => {
 
   const handleCloseSnackbar = () => setOpenSnackbar(false);
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const token = localStorage.getItem("accessToken");
       const res = await fetch(
@@ -57,92 +69,102 @@ const CategoryTablePage = () => {
           page + 1
         }&size=${rowsPerPage}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-
       const data = await res.json();
-
-      if (!data.data || !Array.isArray(data.data.result)) {
+      if (!data.data || !Array.isArray(data.data.result))
         throw new Error("Invalid API response format");
-      }
-
       setCategories(data.data.result);
       setTotalRows(data.data.meta.total);
     } catch (error) {
       console.error("Lỗi fetch categories:", error);
     }
-  };
+  }, [page, rowsPerPage]);
 
   useEffect(() => {
     fetchCategories();
-  }, [page, rowsPerPage]);
+  }, [fetchCategories]);
 
-  const handleOpenCreate = () => {
-    setEditingCategory(null);
-    setOpenModal(true);
-  };
-
-  const handleOpenEdit = (category: CategoryData) => {
-    setEditingCategory(category);
-    setOpenModal(true);
-  };
-
-  const handleChangePage = (_event: unknown, newPage: number) => {
+  const handleChangePage = (_event: unknown, newPage: number) =>
     setPage(newPage);
-  };
-
   const handleChangeRowsPerPage = (event: ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(+event.target.value);
     setPage(0);
   };
 
-  const handleSave = async (name: string) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNewImage(file);
+      setPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleUpdateCategory = async (
+    id: number,
+    name: string,
+    imageFile?: File
+  ) => {
     try {
-      if (editingCategory) {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories/${editingCategory.id}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-            },
-            body: JSON.stringify({ name }),
-          }
-        );
-
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Lỗi không xác định");
-
-        setSuccessMessage("Cập nhật danh mục thành công");
-        setSnackbarType("success");
-      } else {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-            },
-            body: JSON.stringify({ name }),
-          }
-        );
-
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Lỗi không xác định");
-
-        setSuccessMessage("Thêm danh mục thành công");
-        setSnackbarType("success");
-
-        setPage(0);
+      const token = localStorage.getItem("accessToken");
+      const formData = new FormData();
+      formData.append("name", name);
+      if (imageFile) {
+        formData.append("image", imageFile);
       }
 
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Lỗi cập nhật danh mục");
+
+      setSuccessMessage("Cập nhật danh mục thành công");
+      setSnackbarType("success");
+      setOpenSnackbar(true);
+      fetchCategories(); // cập nhật lại bảng
+    } catch (error: any) {
+      setErrorMessage(error.message || "Lỗi không xác định");
+      setSnackbarType("error");
+      setOpenSnackbar(true);
+    }
+  };
+
+  const handleCreateCategory = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const formData = new FormData();
+      formData.append("name", newName);
+      if (newImage) formData.append("image", newImage);
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Lỗi không xác định");
+
+      setSuccessMessage("Thêm danh mục thành công");
+      setSnackbarType("success");
       setOpenSnackbar(true);
       setOpenModal(false);
+      setNewName("");
+      setNewImage(null);
+      setPreview(null);
       fetchCategories();
     } catch (error: any) {
       setErrorMessage(error.message || "Lỗi không xác định");
@@ -157,7 +179,7 @@ const CategoryTablePage = () => {
         title="Danh mục sản phẩm"
         titleTypographyProps={{ variant: "h6" }}
         action={
-          <Button variant="contained" onClick={handleOpenCreate}>
+          <Button variant="contained" onClick={() => setOpenModal(true)}>
             Thêm danh mục
           </Button>
         }
@@ -169,6 +191,7 @@ const CategoryTablePage = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>ID</TableCell>
+                  <TableCell>Ảnh đại diện</TableCell>
                   <TableCell>Tên danh mục</TableCell>
                   <TableCell>Ngày tạo</TableCell>
                   <TableCell>Cập nhật gần nhất</TableCell>
@@ -179,6 +202,23 @@ const CategoryTablePage = () => {
                 {categories.map((category) => (
                   <TableRow key={category.id} hover>
                     <TableCell>{category.id}</TableCell>
+                    <TableCell>
+                      <Image
+                        src={
+                          category.image
+                            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/images/${category.image}`
+                            : "/no-image.png"
+                        }
+                        alt={category.name}
+                        width={80}
+                        height={80}
+                        style={{
+                          borderRadius: 8,
+                          objectFit: "cover",
+                          border: "1px solid #eee",
+                        }}
+                      />
+                    </TableCell>
                     <TableCell>{category.name}</TableCell>
                     <TableCell>
                       {new Date(category.createdAt).toLocaleDateString("vi-VN")}
@@ -193,9 +233,10 @@ const CategoryTablePage = () => {
                     <TableCell align="center">
                       <Button
                         variant="outlined"
-                        color="primary"
-                        onClick={() => handleOpenEdit(category)}
-                        sx={{ textTransform: "none", fontWeight: 500 }}
+                        onClick={() => {
+                          setEditingCategory(category);
+                          setOpenEditModal(true);
+                        }}
                       >
                         Cập nhật
                       </Button>
@@ -217,18 +258,84 @@ const CategoryTablePage = () => {
         </Paper>
       </CardContent>
 
-      {editingCategory ? (
+      <Dialog open={openModal} onClose={() => setOpenModal(false)} fullWidth>
+        <DialogTitle>Thêm danh mục</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Tên danh mục"
+            fullWidth
+            margin="dense"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+          />
+          <Box mt={2}>
+            <Typography variant="subtitle2" fontWeight={600} mb={1}>
+              Hình ảnh danh mục
+            </Typography>
+            <Box
+              sx={{
+                border: "1px dashed #ddd",
+                borderRadius: "8px",
+                p: 2,
+                textAlign: "center",
+              }}
+            >
+              <Button
+                component="label"
+                variant="outlined"
+                startIcon={<CloudUploadIcon />}
+              >
+                Chọn ảnh
+                <input
+                  type="file"
+                  hidden
+                  accept="image/*"
+                  onChange={handleFileChange}
+                />
+              </Button>
+              {preview && (
+                <Box mt={2}>
+                  <Image
+                    src={preview}
+                    alt="Preview"
+                    width={120}
+                    height={120}
+                    style={{
+                      objectFit: "contain",
+                      borderRadius: 4,
+                      border: "1px solid #eee",
+                    }}
+                  />
+                </Box>
+              )}
+            </Box>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenModal(false)}>Hủy</Button>
+          <Button
+            onClick={handleCreateCategory}
+            variant="contained"
+            disabled={!newName.trim()}
+          >
+            Lưu
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {editingCategory && (
         <ModalEditCategory
-          open={openModal}
-          onClose={() => setOpenModal(false)}
-          onSubmit={handleSave}
+          open={openEditModal}
+          onClose={() => setOpenEditModal(false)}
+          onSubmit={(name, imageFile) =>
+            handleUpdateCategory(editingCategory.id, name, imageFile)
+          }
           initialName={editingCategory.name}
-        />
-      ) : (
-        <ModalCreateCategory
-          open={openModal}
-          onClose={() => setOpenModal(false)}
-          onSubmit={handleSave}
+          initialImageUrl={
+            editingCategory.image
+              ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/images/${editingCategory.image}`
+              : undefined
+          }
         />
       )}
 

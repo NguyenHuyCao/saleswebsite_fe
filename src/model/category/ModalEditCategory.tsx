@@ -1,18 +1,25 @@
 "use client";
 
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
-import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
-import { useEffect, useState } from "react";
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Button,
+  TextField,
+  Box,
+  Typography,
+} from "@mui/material";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import Image from "next/image";
+import { useEffect, useState, ChangeEvent } from "react";
 
 interface ModalEditCategoryProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (name: string) => void;
+  onSubmit: (name: string, imageFile?: File) => void;
   initialName: string;
+  initialImageUrl?: string; // full URL của ảnh hiện tại
 }
 
 const ModalEditCategory = ({
@@ -20,20 +27,32 @@ const ModalEditCategory = ({
   onClose,
   onSubmit,
   initialName,
+  initialImageUrl,
 }: ModalEditCategoryProps) => {
   const [name, setName] = useState(initialName);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(
+    initialImageUrl || null
+  );
 
   useEffect(() => {
     if (open) {
-      setName(initialName); // Set lại khi mở modal
+      setName(initialName);
+      setImageFile(null);
+      setPreview(initialImageUrl || null);
     }
-    if (!open) {
-      setName(""); // Reset khi đóng
+  }, [open, initialName, initialImageUrl]);
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      setPreview(URL.createObjectURL(file));
     }
-  }, [open, initialName]);
+  };
 
   const handleSubmit = () => {
-    onSubmit(name);
+    onSubmit(name, imageFile || undefined);
     onClose();
   };
 
@@ -50,6 +69,49 @@ const ModalEditCategory = ({
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
+
+        <Box mt={2}>
+          <Typography variant="subtitle2" fontWeight={600} mb={1}>
+            Hình ảnh danh mục
+          </Typography>
+          <Box
+            sx={{
+              border: "1px dashed #ddd",
+              borderRadius: "8px",
+              p: 2,
+              textAlign: "center",
+            }}
+          >
+            <Button
+              component="label"
+              variant="outlined"
+              startIcon={<CloudUploadIcon />}
+            >
+              Chọn ảnh mới
+              <input
+                type="file"
+                hidden
+                accept="image/*"
+                onChange={handleFileChange}
+              />
+            </Button>
+            {preview && (
+              <Box mt={2}>
+                <Image
+                  src={preview}
+                  alt="Preview"
+                  width={120}
+                  height={120}
+                  style={{
+                    objectFit: "contain",
+                    borderRadius: 4,
+                    border: "1px solid #eee",
+                  }}
+                />
+              </Box>
+            )}
+          </Box>
+        </Box>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Hủy</Button>

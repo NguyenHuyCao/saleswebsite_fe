@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -11,11 +11,9 @@ import {
   MenuItem,
   Box,
   Typography,
-  styled,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import Image from "next/image";
-import { useEffect } from "react";
 
 interface ModalFormBrandCreateProps {
   open: boolean;
@@ -25,19 +23,10 @@ interface ModalFormBrandCreateProps {
     logoFile?: File;
     website: string;
     originCountry: string;
+    year: string;
+    description: string;
   }) => void;
 }
-
-const StyledUploadButton = styled(Button)(({ theme }) => ({
-  padding: "8px 16px",
-  border: `1px solid ${theme.palette.divider}`,
-  backgroundColor: theme.palette.background.paper,
-  color: theme.palette.text.primary,
-  textTransform: "none",
-  "&:hover": {
-    backgroundColor: theme.palette.action.hover,
-  },
-}));
 
 const countries = [
   { value: "VN", label: "Việt Nam" },
@@ -56,18 +45,21 @@ const ModalFormBrandCreate = ({
     logoFile: undefined as File | undefined,
     website: "",
     originCountry: "VN",
+    year: "",
+    description: "",
   });
-
   const [preview, setPreview] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) {
-      // Reset form khi modal đóng
       setFormData({
         name: "",
         logoFile: undefined,
         website: "",
         originCountry: "VN",
+        year: "",
+        description: "",
       });
       setPreview("");
     }
@@ -78,23 +70,34 @@ const ModalFormBrandCreate = ({
     onClose();
   };
 
+  const handleFile = (file: File) => {
+    setFormData({ ...formData, logoFile: file });
+    setPreview(URL.createObjectURL(file));
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setFormData({ ...formData, logoFile: file });
-      setPreview(URL.createObjectURL(file));
-    }
+    if (file) handleFile(file);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
+  const openFileDialog = () => {
+    fileInputRef.current?.click();
   };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle
-        sx={{
-          borderBottom: "1px solid #eee",
-          py: 2,
-          fontWeight: 600,
-          fontSize: "1.2rem",
-        }}
+        sx={{ borderBottom: "1px solid #eee", py: 2, fontWeight: 600 }}
       >
         Thêm thương hiệu mới
       </DialogTitle>
@@ -109,6 +112,19 @@ const ModalFormBrandCreate = ({
             placeholder="Nhập tên thương hiệu"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          />
+        </Box>
+
+        <Box mb={3}>
+          <Typography variant="subtitle2" fontWeight={600} mb={1}>
+            Năm thành lập *
+          </Typography>
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="VD: 2010"
+            value={formData.year}
+            onChange={(e) => setFormData({ ...formData, year: e.target.value })}
           />
         </Box>
 
@@ -148,6 +164,23 @@ const ModalFormBrandCreate = ({
           </TextField>
         </Box>
 
+        <Box mb={3}>
+          <Typography variant="subtitle2" fontWeight={600} mb={1}>
+            Mô tả thương hiệu
+          </Typography>
+          <TextField
+            fullWidth
+            multiline
+            rows={3}
+            size="small"
+            placeholder="Mô tả ngắn về thương hiệu"
+            value={formData.description}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
+          />
+        </Box>
+
         <Box>
           <Typography variant="subtitle2" fontWeight={600} mb={1}>
             Logo thương hiệu *
@@ -158,20 +191,23 @@ const ModalFormBrandCreate = ({
               borderRadius: "8px",
               p: 2,
               textAlign: "center",
+              cursor: "pointer",
             }}
+            onClick={openFileDialog}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
           >
-            <Box component="label">
-              <StyledUploadButton startIcon={<CloudUploadIcon />}>
-                Tải lên logo
-              </StyledUploadButton>
-              <input
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={handleFileChange}
-              />
-            </Box>
-
+            <CloudUploadIcon fontSize="large" />
+            <Typography variant="body2" mt={1}>
+              Kéo & thả hoặc nhấn để tải ảnh lên
+            </Typography>
+            <input
+              ref={fileInputRef}
+              type="file"
+              hidden
+              accept="image/*"
+              onChange={handleFileChange}
+            />
             {preview && (
               <Box mt={2}>
                 <Image
@@ -181,7 +217,7 @@ const ModalFormBrandCreate = ({
                   height={120}
                   style={{
                     objectFit: "contain",
-                    borderRadius: "4px",
+                    borderRadius: 4,
                     border: "1px solid #eee",
                   }}
                 />
@@ -191,17 +227,13 @@ const ModalFormBrandCreate = ({
         </Box>
       </DialogContent>
       <DialogActions sx={{ borderTop: "1px solid #eee", px: 3, py: 2 }}>
-        <Button
-          onClick={onClose}
-          sx={{ color: "#666", borderRadius: "6px", px: 3, py: 1 }}
-        >
+        <Button onClick={onClose} sx={{ color: "#666" }}>
           Hủy
         </Button>
         <Button
           variant="contained"
           onClick={handleSubmit}
-          disabled={!formData.name || !formData.logoFile}
-          sx={{ borderRadius: "6px", px: 3, py: 1, textTransform: "none" }}
+          disabled={!formData.name || !formData.logoFile || !formData.year}
         >
           Lưu
         </Button>
