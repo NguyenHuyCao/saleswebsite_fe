@@ -1,128 +1,163 @@
 "use client";
 
-// ** React Imports
-import { ReactElement } from "react";
-
-// ** MUI Imports
-import Box from "@mui/material/Box";
-import Card from "@mui/material/Card";
-import Avatar from "@mui/material/Avatar";
-import CardHeader from "@mui/material/CardHeader";
-import IconButton from "@mui/material/IconButton";
-import Typography from "@mui/material/Typography";
-import CardContent from "@mui/material/CardContent";
-import { Grid } from "@mui/material";
-
-// ** Icons Imports
+import {
+  Box,
+  Card,
+  Avatar,
+  CardHeader,
+  IconButton,
+  Typography,
+  CardContent,
+  Grid,
+  Menu,
+  MenuItem,
+  Stack,
+} from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import { ReactElement, useEffect, useState } from "react";
 import TrendingUp from "mdi-material-ui/TrendingUp";
 import CurrencyUsd from "mdi-material-ui/CurrencyUsd";
 import DotsVertical from "mdi-material-ui/DotsVertical";
 import CellphoneLink from "mdi-material-ui/CellphoneLink";
 import AccountOutline from "mdi-material-ui/AccountOutline";
-
-// ** Types
-import { ThemeColor } from "src/@core/layouts/types";
+import ArrowDownward from "@mui/icons-material/ArrowDownward";
+import ArrowUpward from "@mui/icons-material/ArrowUpward";
 
 interface DataType {
-  stats: string;
   title: string;
-  color: ThemeColor;
+  value: number;
+  growth: number;
+  color: string;
   icon: ReactElement;
+  unit?: string;
 }
 
-// Thống kê tùy chỉnh theo website bán máy 2 thì
-const salesData: DataType[] = [
-  {
-    stats: "245k",
-    title: "Đơn hàng",
-    color: "primary",
-    icon: <TrendingUp sx={{ fontSize: "1.75rem" }} />,
-  },
-  {
-    stats: "12.5k",
-    title: "Khách hàng",
-    color: "success",
-    icon: <AccountOutline sx={{ fontSize: "1.75rem" }} />,
-  },
-  {
-    stats: "1.54k",
-    title: "Sản phẩm 2 thì",
-    color: "warning",
-    icon: <CellphoneLink sx={{ fontSize: "1.75rem" }} />,
-  },
-  {
-    stats: "2.1 tỷ ₫",
-    title: "Doanh thu",
-    color: "info",
-    icon: <CurrencyUsd sx={{ fontSize: "1.75rem" }} />,
-  },
-];
-
-const renderStats = () => {
-  return salesData.map((item: DataType, index: number) => (
-    <Grid size={{ xs: 12, sm: 3 }} key={index}>
-      <Box sx={{ display: "flex", alignItems: "center" }}>
-        <Avatar
-          variant="rounded"
-          sx={{
-            mr: 3,
-            width: 44,
-            height: 44,
-            boxShadow: 3,
-            color: "common.white",
-            backgroundColor: `${item.color}.main`,
-          }}
-        >
-          {item.icon}
-        </Avatar>
-        <Box sx={{ display: "flex", flexDirection: "column" }}>
-          <Typography variant="caption">{item.title}</Typography>
-          <Typography variant="h6">{item.stats}</Typography>
-        </Box>
-      </Box>
-    </Grid>
-  ));
-};
-
 const StatisticsCard = () => {
+  const theme = useTheme();
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [period, setPeriod] = useState<"week" | "month" | "year">("month");
+  const [data, setData] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        const res = await fetch(
+          "http://localhost:8080/api/v1/dashboard/overview/summary",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const json = await res.json();
+        if (json.status === 200) {
+          setData(json.data);
+        }
+      } catch (error) {
+        console.error("Fetch summary error:", error);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleSelectPeriod = (value: "week" | "month" | "year") => {
+    setPeriod(value);
+    setAnchorEl(null);
+  };
+
+  const summary = data?.[period];
+  const current = summary?.current;
+  const growth = summary?.growthRate;
+
+  const formatGrowth = (value: number) => {
+    const isPositive = value >= 0;
+    return (
+      <Stack
+        direction="row"
+        spacing={0.5}
+        alignItems="center"
+        color={isPositive ? "success.main" : "error.main"}
+      >
+        {isPositive ? (
+          <ArrowUpward fontSize="small" />
+        ) : (
+          <ArrowDownward fontSize="small" />
+        )}
+        <Typography variant="caption" color="inherit">
+          {Math.abs(value).toFixed(2)}%
+        </Typography>
+      </Stack>
+    );
+  };
+
+  const statsData: DataType[] = current
+    ? [
+        {
+          title: "Đơn hàng",
+          value: current.orders,
+          growth: growth.orders.growthRate,
+          color: theme.palette.primary.main,
+          icon: <TrendingUp sx={{ fontSize: "1.75rem" }} />,
+        },
+        {
+          title: "Khách hàng",
+          value: current.users,
+          growth: growth.users.growthRate,
+          color: theme.palette.success.main,
+          icon: <AccountOutline sx={{ fontSize: "1.75rem" }} />,
+        },
+        {
+          title: "Sản phẩm 2 thì",
+          value: current.products,
+          growth: growth.products.growthRate,
+          color: theme.palette.warning.main,
+          icon: <CellphoneLink sx={{ fontSize: "1.75rem" }} />,
+        },
+        {
+          title: "Doanh thu",
+          value: current.revenue,
+          growth: growth.revenue.growthRate,
+          color: theme.palette.info.main,
+          icon: <CurrencyUsd sx={{ fontSize: "1.75rem" }} />,
+          unit: "₫",
+        },
+      ]
+    : [];
+
   return (
-    <Card
-      sx={{
-        minHeight: 210,
-        px: 4,
-        pb: 4,
-        "& .MuiCardContent-root": {
-          pt: 0,
-          px: 2,
-        },
-        "& .MuiGrid2-root": {
-          columnGap: 4,
-          rowGap: 3,
-        },
-        "& .MuiAvatar-root": {
-          width: 50,
-          height: 50,
-        },
-        "& .MuiTypography-h6": {
-          fontSize: "1.25rem",
-        },
-        "& .MuiTypography-caption": {
-          fontSize: "0.875rem",
-          color: "text.secondary",
-        },
-      }}
-    >
+    <Card sx={{ px: 4, pb: 4 }}>
       <CardHeader
         title="Thống kê tổng quan"
         action={
-          <IconButton
-            size="small"
-            aria-label="settings"
-            className="card-more-options"
-            sx={{ color: "text.secondary" }}
-          >
-            <DotsVertical />
-          </IconButton>
+          <>
+            <IconButton size="small" onClick={handleMenuOpen}>
+              <DotsVertical />
+            </IconButton>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+            >
+              <MenuItem onClick={() => handleSelectPeriod("week")}>
+                Tuần này
+              </MenuItem>
+              <MenuItem onClick={() => handleSelectPeriod("month")}>
+                Tháng này
+              </MenuItem>
+              <MenuItem onClick={() => handleSelectPeriod("year")}>
+                Năm nay
+              </MenuItem>
+            </Menu>
+          </>
         }
         subheader={
           <Typography variant="body2">
@@ -130,9 +165,13 @@ const StatisticsCard = () => {
               component="span"
               sx={{ fontWeight: 600, color: "text.primary" }}
             >
-              Tăng trưởng 48.5%
+              {period === "week"
+                ? "Theo tuần"
+                : period === "month"
+                ? "Theo tháng"
+                : "Theo năm"}
             </Box>{" "}
-            trong tháng này 🚀
+            - So sánh với kỳ trước
           </Typography>
         }
         titleTypographyProps={{
@@ -143,9 +182,36 @@ const StatisticsCard = () => {
           },
         }}
       />
-      <CardContent sx={{ pt: (theme) => `${theme.spacing(3)} !important` }}>
+      <CardContent>
         <Grid container spacing={3}>
-          {renderStats()}
+          {statsData.map((item, index) => (
+            <Grid size={{ xs: 12, sm: 3 }} key={index}>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <Avatar
+                  variant="rounded"
+                  sx={{
+                    mr: 3,
+                    width: 44,
+                    height: 44,
+                    boxShadow: 3,
+                    color: "common.white",
+                    backgroundColor: item.color,
+                  }}
+                >
+                  {item.icon}
+                </Avatar>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    {item.title}
+                  </Typography>
+                  <Typography variant="h6">
+                    {item.value.toLocaleString("vi-VN")} {item.unit || ""}
+                  </Typography>
+                  {formatGrowth(item.growth)}
+                </Box>
+              </Box>
+            </Grid>
+          ))}
         </Grid>
       </CardContent>
     </Card>
