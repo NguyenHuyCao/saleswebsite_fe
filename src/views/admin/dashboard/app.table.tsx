@@ -1,4 +1,3 @@
-"use client";
 // ** MUI Imports
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
@@ -117,15 +116,15 @@ const DashboardTable = () => {
   return (
     <Card>
       <TableContainer>
-        <Table sx={{ minWidth: 800 }} aria-label="table in dashboard">
+        <Table sx={{ minWidth: 800 }} aria-label="Bảng trạng thái nhân sự">
           <TableHead>
             <TableRow>
-              <TableCell>Name</TableCell>
+              <TableCell>Họ và tên</TableCell>
               <TableCell>Email</TableCell>
-              <TableCell>Date</TableCell>
-              <TableCell>Salary</TableCell>
-              <TableCell>Age</TableCell>
-              <TableCell>Status</TableCell>
+              <TableCell>Ngày bắt đầu</TableCell>
+              <TableCell>Lương</TableCell>
+              <TableCell>Tuổi</TableCell>
+              <TableCell>Trạng thái</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>

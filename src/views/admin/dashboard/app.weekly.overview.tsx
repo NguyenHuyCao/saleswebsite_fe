@@ -1,4 +1,5 @@
 "use client";
+
 // ** MUI Imports
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
@@ -19,7 +20,6 @@ import ApexOptions from "apexcharts";
 import ReactApexcharts from "src/@core/components/react-apexcharts";
 
 const WeeklyOverview = () => {
-  // ** Hook
   const theme = useTheme();
 
   const options: ApexOptions = {
@@ -60,15 +60,11 @@ const WeeklyOverview = () => {
       theme.palette.background.default,
     ],
     states: {
-      hover: {
-        filter: { type: "none" },
-      },
-      active: {
-        filter: { type: "none" },
-      },
+      hover: { filter: { type: "none" } },
+      active: { filter: { type: "none" } },
     },
     xaxis: {
-      categories: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+      categories: ["CN", "T2", "T3", "T4", "T5", "T6", "T7"],
       tickPlacement: "on",
       labels: { show: false },
       axisTicks: { show: false },
@@ -88,7 +84,7 @@ const WeeklyOverview = () => {
   return (
     <Card>
       <CardHeader
-        title="Weekly Overview"
+        title="Tổng quan tuần"
         titleTypographyProps={{
           sx: {
             lineHeight: "2rem !important",
@@ -111,7 +107,7 @@ const WeeklyOverview = () => {
       >
         <ReactApexcharts
           type="bar"
-          height={205}
+          height={215}
           options={options}
           series={[{ data: [37, 57, 45, 75, 57, 40, 65] }]}
         />
@@ -120,11 +116,11 @@ const WeeklyOverview = () => {
             45%
           </Typography>
           <Typography variant="body2">
-            Your sales performance is 45% 😎 better compared to last month
+            Hiệu suất bán hàng tăng 45% 😎 so với tháng trước
           </Typography>
         </Box>
         <Button fullWidth variant="contained">
-          Details
+          Xem chi tiết
         </Button>
       </CardContent>
     </Card>

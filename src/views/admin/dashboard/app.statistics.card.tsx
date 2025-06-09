@@ -1,16 +1,17 @@
 "use client";
+
 // ** React Imports
 import { ReactElement } from "react";
 
 // ** MUI Imports
 import Box from "@mui/material/Box";
-import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
 import Avatar from "@mui/material/Avatar";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import CardContent from "@mui/material/CardContent";
+import { Grid } from "@mui/material";
 
 // ** Icons Imports
 import TrendingUp from "mdi-material-ui/TrendingUp";
@@ -29,37 +30,38 @@ interface DataType {
   icon: ReactElement;
 }
 
+// Thống kê tùy chỉnh theo website bán máy 2 thì
 const salesData: DataType[] = [
   {
     stats: "245k",
-    title: "Sales",
+    title: "Đơn hàng",
     color: "primary",
     icon: <TrendingUp sx={{ fontSize: "1.75rem" }} />,
   },
   {
     stats: "12.5k",
-    title: "Customers",
+    title: "Khách hàng",
     color: "success",
     icon: <AccountOutline sx={{ fontSize: "1.75rem" }} />,
   },
   {
     stats: "1.54k",
+    title: "Sản phẩm 2 thì",
     color: "warning",
-    title: "Products",
     icon: <CellphoneLink sx={{ fontSize: "1.75rem" }} />,
   },
   {
-    stats: "$88k",
+    stats: "2.1 tỷ ₫",
+    title: "Doanh thu",
     color: "info",
-    title: "Revenue",
     icon: <CurrencyUsd sx={{ fontSize: "1.75rem" }} />,
   },
 ];
 
 const renderStats = () => {
   return salesData.map((item: DataType, index: number) => (
-    <Grid item xs={12} sm={3} key={index}>
-      <Box key={index} sx={{ display: "flex", alignItems: "center" }}>
+    <Grid size={{ xs: 12, sm: 3 }} key={index}>
+      <Box sx={{ display: "flex", alignItems: "center" }}>
         <Avatar
           variant="rounded"
           sx={{
@@ -93,7 +95,7 @@ const StatisticsCard = () => {
           pt: 0,
           px: 2,
         },
-        "& .MuiGrid-root": {
+        "& .MuiGrid2-root": {
           columnGap: 4,
           rowGap: 3,
         },
@@ -111,7 +113,7 @@ const StatisticsCard = () => {
       }}
     >
       <CardHeader
-        title="Statistics Card"
+        title="Thống kê tổng quan"
         action={
           <IconButton
             size="small"
@@ -128,9 +130,9 @@ const StatisticsCard = () => {
               component="span"
               sx={{ fontWeight: 600, color: "text.primary" }}
             >
-              Total 48.5% growth
+              Tăng trưởng 48.5%
             </Box>{" "}
-            😎 this month
+            trong tháng này 🚀
           </Typography>
         }
         titleTypographyProps={{
@@ -142,7 +144,7 @@ const StatisticsCard = () => {
         }}
       />
       <CardContent sx={{ pt: (theme) => `${theme.spacing(3)} !important` }}>
-        <Grid container spacing={[5, 0]}>
+        <Grid container spacing={3}>
           {renderStats()}
         </Grid>
       </CardContent>
