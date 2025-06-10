@@ -31,7 +31,21 @@ export default function ProductListLayout({ categories, brands }: Props) {
   const [sortType, setSortType] = useState("");
   const [page, setPage] = useState(1);
 
+  // ✅ Hàm chuẩn hóa tiếng Việt -> slug
+  const toSlug = (str: string): string => {
+    return str
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/[^a-z0-9\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-");
+  };
+
   useEffect(() => {
+    const s = searchParams.get("search") || "";
+    setSearch(s); // search từ URL (slug)
     fetchProducts();
     fetchWishlist();
   }, [searchParams.toString()]);
@@ -149,14 +163,9 @@ export default function ProductListLayout({ categories, brands }: Props) {
     router.push(`/product?${params.toString()}`);
   };
 
-  const normalized = (text: string) =>
-    text
-      .normalize("NFD")
-      .replace(/\p{Diacritic}/gu, "")
-      .toLowerCase();
-
+  // ✅ Tìm kiếm theo slug
   const filteredProducts = products
-    .filter((p) => normalized(p.title).includes(normalized(search)))
+    .filter((p) => toSlug(p.title).includes(toSlug(search)))
     .sort((a, b) => {
       if (sortType === "newest")
         return (

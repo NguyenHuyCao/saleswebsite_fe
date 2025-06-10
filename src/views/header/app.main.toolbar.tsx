@@ -23,11 +23,23 @@ const searchPhrases = [
   "Tìm sản phẩm hot nhất!",
 ];
 
+const toSlug = (str: string): string => {
+  return str
+    .toLowerCase()
+    .normalize("NFD") // tách dấu
+    .replace(/[\u0300-\u036f]/g, "") // xóa dấu
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9\s-]/g, "") // loại bỏ ký tự đặc biệt
+    .trim()
+    .replace(/\s+/g, "-"); // khoảng trắng -> dấu -
+};
+
 const MainToolbar = () => {
   const router = useRouter();
   const [currentText, setCurrentText] = useState("");
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
+  const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
     const currentPhrase = searchPhrases[phraseIndex];
@@ -46,6 +58,16 @@ const MainToolbar = () => {
       return () => clearTimeout(resetTimeout);
     }
   }, [charIndex, phraseIndex]);
+
+  const handleSearch = () => {
+    const trimmed = searchText.trim();
+    if (trimmed) {
+      const slug = toSlug(trimmed);
+      router.push(`/product?search=${encodeURIComponent(slug)}`);
+    } else {
+      router.push("/product");
+    }
+  };
 
   const navRoutes: Record<string, string> = {
     "Yêu thích": "/wishlist",
@@ -96,9 +118,14 @@ const MainToolbar = () => {
             <InputBase
               placeholder={currentText}
               fullWidth
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSearch();
+              }}
               sx={{ fontSize: { xs: "14px", sm: "16px" } }}
             />
-            <IconButton>
+            <IconButton onClick={handleSearch}>
               <Search sx={{ color: "#ffb700" }} />
             </IconButton>
           </Box>
