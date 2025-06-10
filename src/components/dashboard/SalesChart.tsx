@@ -5,12 +5,30 @@ import { useTheme } from "@mui/material/styles";
 import { BarChart } from "@mui/x-charts";
 import { useState } from "react";
 
+interface FinancialData {
+  revenue: number;
+  cost: number;
+  profit: number;
+}
+
+interface MonthlyData {
+  month: number;
+  revenue: number;
+  cost: number;
+  profit: number;
+}
+
+interface SalesChartProps {
+  filter: "today" | "month" | "year";
+  data: FinancialData[] | MonthlyData[];
+}
+
 const axisFontStyle = (theme: any) => ({
   fontSize: 10,
   fill: theme.palette.text.secondary,
 });
 
-export default function DashboardSalesChart() {
+export default function SalesChart({ filter, data }: SalesChartProps) {
   const theme = useTheme();
   const [showIncome, setShowIncome] = useState(true);
   const [showCostOfSales, setShowCostOfSales] = useState(true);
@@ -18,37 +36,37 @@ export default function DashboardSalesChart() {
   const handleIncomeChange = () => setShowIncome((prev) => !prev);
   const handleCostOfSalesChange = () => setShowCostOfSales((prev) => !prev);
 
-  const labels = [
-    "Th1",
-    "Th2",
-    "Th3",
-    "Th4",
-    "Th5",
-    "Th6",
-    "Th7",
-    "Th8",
-    "Th9",
-    "Th10",
-    "Th11",
-    "Th12",
-  ];
+  const isYearly = filter === "year";
 
-  const valueFormatter = (value: number) => `$ ${value} Nghìn`;
+  const labels = isYearly
+    ? (data as MonthlyData[]).map((item) => `Th${item.month}`)
+    : ["Hiện tại"];
 
-  const data = [
-    {
-      data: [180, 90, 135, 114, 120, 145, 170, 200, 170, 230, 210, 180],
+  const revenueData = data.map((item) => Math.round(item.revenue / 1000));
+  const costData = data.map((item) => Math.round(item.cost / 1000));
+  const profitTotal = data.reduce((sum, item) => sum + item.profit, 0);
+
+  const valueFormatter = (value: number) => `${value}K ₫`;
+
+  const series = [];
+
+  if (showIncome) {
+    series.push({
+      data: revenueData,
       label: "Doanh thu",
       color: theme.palette.warning.main,
       valueFormatter,
-    },
-    {
-      data: [120, 45, 78, 150, 168, 99, 180, 220, 180, 210, 220, 200],
+    });
+  }
+
+  if (showCostOfSales) {
+    series.push({
+      data: costData,
       label: "Giá vốn",
       color: theme.palette.primary.main,
       valueFormatter,
-    },
-  ];
+    });
+  }
 
   return (
     <Card sx={{ p: 3 }}>
@@ -62,40 +80,38 @@ export default function DashboardSalesChart() {
       >
         <Box>
           <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
-            Lợi nhuận ròng
+            Tổng lợi nhuận ròng
           </Typography>
-          <Typography variant="h4">$1560</Typography>
+          <Typography variant="h4">{profitTotal.toLocaleString()} ₫</Typography>
         </Box>
-        <Box>
-          <Stack direction="row" spacing={2}>
-            <label>
-              <input
-                type="checkbox"
-                checked={showIncome}
-                onChange={handleIncomeChange}
-                style={{ accentColor: theme.palette.warning.main }}
-              />
-              <Typography variant="body2" component="span" ml={0.5}>
-                Doanh thu
-              </Typography>
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={showCostOfSales}
-                onChange={handleCostOfSalesChange}
-                style={{ accentColor: theme.palette.primary.main }}
-              />
-              <Typography variant="body2" component="span" ml={0.5}>
-                Giá vốn
-              </Typography>
-            </label>
-          </Stack>
-        </Box>
+        <Stack direction="row" spacing={2}>
+          <label>
+            <input
+              type="checkbox"
+              checked={showIncome}
+              onChange={handleIncomeChange}
+              style={{ accentColor: theme.palette.warning.main }}
+            />
+            <Typography variant="body2" component="span" ml={0.5}>
+              Doanh thu
+            </Typography>
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={showCostOfSales}
+              onChange={handleCostOfSalesChange}
+              style={{ accentColor: theme.palette.primary.main }}
+            />
+            <Typography variant="body2" component="span" ml={0.5}>
+              Giá vốn
+            </Typography>
+          </label>
+        </Stack>
       </Box>
 
       <BarChart
-        height={380}
+        height={360}
         grid={{ horizontal: true }}
         xAxis={[
           {
@@ -108,20 +124,13 @@ export default function DashboardSalesChart() {
           {
             disableLine: true,
             disableTicks: true,
-            tickMaxStep: 20,
             tickLabelStyle: axisFontStyle(theme),
           },
         ]}
-        series={data
-          .filter(
-            (series) =>
-              (series.label === "Doanh thu" && showIncome) ||
-              (series.label === "Giá vốn" && showCostOfSales)
-          )
-          .map((series) => ({ ...series, type: "bar" }))}
+        series={series.map((s) => ({ ...s, type: "bar" }))}
+        margin={{ top: 30, left: 40, right: 10 }}
         slotProps={{ legend: { hidden: true }, bar: { rx: 5, ry: 5 } }}
         axisHighlight={{ x: "none" }}
-        margin={{ top: 30, left: 40, right: 10 }}
         tooltip={{ trigger: "item" }}
         sx={{
           "& .MuiBarElement-root:hover": { opacity: 0.6 },

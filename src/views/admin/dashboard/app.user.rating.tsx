@@ -11,16 +11,85 @@ import {
   CardContent,
   Button,
   Divider,
+  Menu,
+  MenuItem,
+  Modal,
+  Fade,
+  Avatar,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
+import { useEffect, useState } from "react";
 import StarIcon from "@mui/icons-material/Star";
 import DotsVertical from "mdi-material-ui/DotsVertical";
+import Image from "next/image";
+
+const formatDate = (date: string) =>
+  new Date(date).toLocaleString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+type ReviewData = {
+  createdAt: string;
+  productImage: string;
+  rating: number;
+  comment: string;
+  productName: string;
+  username: string;
+};
 
 const UserRatingPage = () => {
-  const ratings = [5, 4, 3, 2, 1];
-  const counts = [384, 145, 24, 1, 0];
-  const percents = [70, 35, 25, 10, 0];
-  const total = counts.reduce((sum, val) => sum + val, 0);
-  const positiveRate = Math.round(((counts[0] + counts[1]) / total) * 100);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [timeRange, setTimeRange] = useState<"weekly" | "monthly" | "yearly">(
+    "monthly"
+  );
+  const [ratings, setRatings] = useState<number[]>([0, 0, 0, 0, 0]);
+  const [reviewDetails, setReviewDetails] = useState<ReviewData[]>([]);
+  const [openModal, setOpenModal] = useState(false);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const total = ratings.reduce((a, b) => a + b, 0);
+  const percents = ratings.map((r) => (total === 0 ? 0 : (r / total) * 100));
+  const positiveRate =
+    total === 0 ? 0 : Math.round(((ratings[0] + ratings[1]) / total) * 100);
+
+  const handleMenuOpen = (e: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(e.currentTarget);
+  };
+
+  const handleMenuClose = (range: "weekly" | "monthly" | "yearly") => {
+    setTimeRange(range);
+    setAnchorEl(null);
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(
+        "http://localhost:8080/api/v1/dashboard/overview/review-stats",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const json = await res.json();
+      if (json.status === 200) {
+        const data = json.data[timeRange] as number[][];
+        const ratingMap = [0, 0, 0, 0, 0];
+        data.forEach(([_, rating, count]) => {
+          if (rating >= 1 && rating <= 5) ratingMap[5 - rating] += count;
+        });
+        setRatings(ratingMap);
+        setReviewDetails(json.data.reviewDetails);
+      }
+    };
+    fetchData();
+  }, [timeRange]);
 
   return (
     <Card>
@@ -34,14 +103,24 @@ const UserRatingPage = () => {
           },
         }}
         action={
-          <IconButton
-            size="small"
-            aria-label="tùy chọn"
-            className="card-more-options"
-            sx={{ color: "text.secondary" }}
-          >
-            <DotsVertical />
-          </IconButton>
+          <>
+            <IconButton onClick={handleMenuOpen}>
+              <DotsVertical />
+            </IconButton>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={() => setAnchorEl(null)}
+            >
+              <MenuItem onClick={() => handleMenuClose("weekly")}>
+                Tuần
+              </MenuItem>
+              <MenuItem onClick={() => handleMenuClose("monthly")}>
+                Tháng
+              </MenuItem>
+              <MenuItem onClick={() => handleMenuClose("yearly")}>Năm</MenuItem>
+            </Menu>
+          </>
         }
       />
 
@@ -54,36 +133,37 @@ const UserRatingPage = () => {
         >
           <Stack direction="row" spacing={1} alignItems="center">
             <Typography variant="h4" fontWeight={600}>
-              4.7
+              {total === 0
+                ? "0.0"
+                : (
+                    ratings.reduce((a, c, i) => a + c * (5 - i), 0) / total
+                  ).toFixed(1)}
             </Typography>
             <StarIcon sx={{ color: "#ffb400" }} />
           </Stack>
           <Typography variant="subtitle1" color="success.main">
-            +0.4
+            +{positiveRate}%
           </Typography>
         </Stack>
 
-        {ratings.map((rating, idx) => (
-          <Box key={rating} sx={{ mb: 3 }}>
+        {[5, 4, 3, 2, 1].map((r, i) => (
+          <Box key={r} sx={{ mb: 3 }}>
             <Stack direction="row" justifyContent="space-between">
-              <Typography
-                variant="body2"
-                sx={{ fontWeight: 500, color: "text.primary" }}
-              >
-                {rating} sao
+              <Typography variant="body2" fontWeight={500}>
+                {r} sao
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {counts[idx]} lượt
+                {ratings[5 - r]} lượt
               </Typography>
             </Stack>
             <LinearProgress
               variant="determinate"
-              value={percents[idx]}
+              value={percents[5 - r]}
               sx={{
                 mt: 1,
                 height: 8,
                 borderRadius: 5,
-                backgroundColor: (theme) => theme.palette.grey[200],
+                backgroundColor: theme.palette.grey[200],
                 "& .MuiLinearProgress-bar": {
                   borderRadius: 5,
                   backgroundColor: "#a855f7",
@@ -105,10 +185,66 @@ const UserRatingPage = () => {
           size="small"
           fullWidth
           sx={{ mt: 3, textTransform: "none" }}
+          onClick={() => setOpenModal(true)}
         >
           Xem tất cả đánh giá
         </Button>
       </CardContent>
+
+      {/* Modal hiển thị đánh giá chi tiết */}
+      <Modal open={openModal} onClose={() => setOpenModal(false)}>
+        <Fade in={openModal}>
+          <Box
+            sx={{
+              maxWidth: 700,
+              mx: "auto",
+              mt: isMobile ? 4 : 10,
+              bgcolor: "background.paper",
+              borderRadius: 2,
+              boxShadow: 24,
+              p: 4,
+              maxHeight: "90vh",
+              overflowY: "auto",
+            }}
+          >
+            <Typography variant="h6" mb={3}>
+              Chi tiết đánh giá
+            </Typography>
+            <Stack spacing={3}>
+              {reviewDetails.map((review, i) => (
+                <Stack
+                  key={i}
+                  direction="row"
+                  spacing={2}
+                  alignItems="flex-start"
+                >
+                  <Avatar
+                    src={`/images/products/${review.productImage}`}
+                    variant="rounded"
+                  />
+                  <Box>
+                    <Typography fontWeight={600}>
+                      {review.productName}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {formatDate(review.createdAt)} - {review.username}
+                    </Typography>
+                    <Typography variant="body2" color="warning.main">
+                      {Array(review.rating).fill("⭐").join("")}
+                    </Typography>
+                    <Typography variant="body2" mt={0.5}>
+                      {review.comment}
+                    </Typography>
+                  </Box>
+                </Stack>
+              ))}
+            </Stack>
+            <Stack alignItems="flex-end" mt={4}>
+              <Button onClick={() => setOpenModal(false)}>Đóng</Button>
+            </Stack>
+          </Box>
+        </Fade>
+      </Modal>
     </Card>
   );
 };

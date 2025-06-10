@@ -10,52 +10,35 @@ import {
   Card,
   Divider,
 } from "@mui/material";
-import { LineChart, chartsGridClasses } from "@mui/x-charts";
-import { useTheme } from "@mui/material/styles";
+import { useEffect, useState } from "react";
+import ReportChart from "./app.report.chart";
 
-// Biểu đồ đường thể hiện dữ liệu tăng trưởng
-const ReportChart = () => {
-  const theme = useTheme();
-  const data = [58, 115, 28, 83, 63, 75, 35];
-  const labels = ["Th6", "Th7", "Th8", "Th9", "Th10", "Th11", "Th12"];
-  const axisStyle = { fill: theme.palette.text.secondary };
+const DashboardDefault = () => {
+  const [insights, setInsights] = useState({
+    profitMargin: 0,
+    costRatio: 0,
+    riskLevel: "Chưa rõ",
+  });
 
-  return (
-    <Box sx={{ px: 3, pt: 1 }}>
-      <LineChart
-        grid={{ horizontal: true }}
-        xAxis={[
-          {
-            data: labels,
-            scaleType: "point",
-            disableLine: true,
-            disableTicks: true,
-            tickLabelStyle: axisStyle,
+  useEffect(() => {
+    const fetchInsights = async () => {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(
+        "http://localhost:8080/api/v1/dashboard/advanced/financial-insights",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
-        ]}
-        yAxis={[{ tickMaxStep: 10 }]}
-        series={[
-          {
-            data,
-            showMark: false,
-            id: "report-series",
-            color: theme.palette.warning.main,
-            label: "Dữ liệu báo cáo",
-          },
-        ]}
-        slotProps={{ legend: { hidden: true } }}
-        height={260}
-        margin={{ top: 20, bottom: 30, left: 20, right: 20 }}
-        sx={{
-          "& .MuiLineElement-root": { strokeWidth: 2 },
-          [`& .${chartsGridClasses.line}`]: { strokeDasharray: "5 3" },
-        }}
-      />
-    </Box>
-  );
-};
+        }
+      );
+      const json = await res.json();
+      if (json.status === 200) {
+        setInsights(json.data);
+      }
+    };
+    fetchInsights();
+  }, []);
 
-export default function DashboardDefault() {
   return (
     <Box>
       <Card sx={{ px: 2, py: 3, height: "100%" }}>
@@ -67,7 +50,7 @@ export default function DashboardDefault() {
             <ListItemButton>
               <ListItemText primary="Tăng trưởng tài chính công ty" />
               <Typography variant="h6" color="success.main">
-                +45.14%
+                +{insights.profitMargin.toFixed(2)}%
               </Typography>
             </ListItemButton>
           </ListItem>
@@ -76,7 +59,7 @@ export default function DashboardDefault() {
             <ListItemButton>
               <ListItemText primary="Tỷ lệ chi phí doanh nghiệp" />
               <Typography variant="h6" color="primary.main">
-                0.58%
+                {insights.costRatio.toFixed(2)}%
               </Typography>
             </ListItemButton>
           </ListItem>
@@ -85,7 +68,7 @@ export default function DashboardDefault() {
             <ListItemButton>
               <ListItemText primary="Rủi ro kinh doanh" />
               <Typography variant="h6" color="warning.main">
-                Thấp
+                {insights.riskLevel}
               </Typography>
             </ListItemButton>
           </ListItem>
@@ -94,4 +77,6 @@ export default function DashboardDefault() {
       </Card>
     </Box>
   );
-}
+};
+
+export default DashboardDefault;

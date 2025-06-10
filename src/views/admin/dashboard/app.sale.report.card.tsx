@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Grid,
   MenuItem,
@@ -8,6 +8,7 @@ import {
   Typography,
   Card,
   Box,
+  CircularProgress,
 } from "@mui/material";
 import SalesChart from "@/components/dashboard/SalesChart";
 
@@ -22,8 +23,66 @@ const statusOptions: StatusOption[] = [
   { value: "year", label: "Năm nay" },
 ];
 
+interface FinancialData {
+  revenue: number;
+  cost: number;
+  profit: number;
+}
+
+interface MonthlyData {
+  month: number;
+  revenue: number;
+  cost: number;
+  profit: number;
+}
+
 const SaleReportCard = () => {
-  const [value, setValue] = useState<string>("today");
+  const [value, setValue] = useState<string>("year");
+  const [loading, setLoading] = useState<boolean>(true);
+  const [today, setToday] = useState<FinancialData | null>(null);
+  const [thisMonth, setThisMonth] = useState<FinancialData | null>(null);
+  const [thisYear, setThisYear] = useState<MonthlyData[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        const res = await fetch(
+          "http://localhost:8080/api/v1/dashboard/overview/financial-overview",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const result = await res.json();
+        const { today, thisMonth, thisYear } = result.data;
+        setToday(today);
+        setThisMonth(thisMonth);
+        setThisYear(thisYear);
+      } catch (error) {
+        console.error("Error fetching financial data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const getChartData = () => {
+    switch (value) {
+      case "today":
+        return today ? [today] : [];
+      case "month":
+        return thisMonth ? [thisMonth] : [];
+      case "year":
+        return thisYear;
+      default:
+        return [];
+    }
+  };
 
   return (
     <Card sx={{ p: 3 }}>
@@ -58,7 +117,11 @@ const SaleReportCard = () => {
       </Grid>
 
       <Box sx={{ mt: 3 }}>
-        <SalesChart filter={value} />
+        {loading ? (
+          <CircularProgress />
+        ) : (
+          <SalesChart filter={value} data={getChartData()} />
+        )}
       </Box>
     </Card>
   );

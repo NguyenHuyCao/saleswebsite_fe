@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import {
   Avatar,
   AvatarGroup,
@@ -15,61 +14,62 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import GiftOutlined from "@mui/icons-material/CardGiftcardOutlined";
-import MessageOutlined from "@mui/icons-material/ChatBubbleOutlineOutlined";
-import SettingsOutlined from "@mui/icons-material/SettingsOutlined";
+import { useEffect, useState } from "react";
 import MainCard from "@/components/dashboard/MainCard";
+import PaidOutlinedIcon from "@mui/icons-material/PaidOutlined";
+import Image from "next/image";
 
-const transactionData = [
-  {
-    id: "#002434",
-    icon: <GiftOutlined />,
-    color: "success",
-    amount: "+ 1.430$",
-    time: "Hôm nay, 2:00 sáng",
-    percent: "78%",
-  },
-  {
-    id: "#984947",
-    icon: <MessageOutlined />,
-    color: "primary",
-    amount: "+ 302$",
-    time: "5 Tháng 8, 1:45 chiều",
-    percent: "8%",
-  },
-  {
-    id: "#988784",
-    icon: <SettingsOutlined />,
-    color: "error",
-    amount: "+ 682$",
-    time: "7 giờ trước",
-    percent: "16%",
-  },
-  {
-    id: "#778452",
-    icon: <GiftOutlined />,
-    color: "warning",
-    amount: "+ 200$",
-    time: "Hôm qua, 11:00 sáng",
-    percent: "5%",
-  },
-  {
-    id: "#654321",
-    icon: <SettingsOutlined />,
-    color: "info",
-    amount: "+ 950$",
-    time: "2 ngày trước",
-    percent: "21%",
-  },
-];
+interface Transaction {
+  profitPercent: number;
+  orderId: number;
+  paidAt: string;
+  paidAmount: number;
+  customer: {
+    name: string;
+    email: string;
+  };
+}
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(value);
+};
 
 const TransactionHistoryCard = () => {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        const res = await fetch(
+          "http://localhost:8080/api/v1/dashboard/overview/transaction-history",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const json = await res.json();
+        if (json.status === 200) {
+          setTransactions(json.data.slice(0, 7));
+        }
+      } catch (error) {
+        console.error("Lỗi khi gọi API:", error);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
+
   return (
     <Box>
       <MainCard
         title="Lịch sử giao dịch"
-        sx={{ mb: 2, borderColor: "common.white" }}
         content={false}
+        sx={{ border: "none", boxShadow: "none" }}
       >
         <List
           component="nav"
@@ -82,42 +82,55 @@ const TransactionHistoryCard = () => {
               py: 1.5,
               px: 2,
             },
+            // Scrollbar customization
+            "&::-webkit-scrollbar": {
+              width: "6px",
+            },
+            "&::-webkit-scrollbar-track": {
+              backgroundColor: "transparent",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              backgroundColor: "#c1c1c1",
+              borderRadius: "3px",
+            },
+            "&::-webkit-scrollbar-thumb:hover": {
+              backgroundColor: "#a0a0a0",
+            },
           }}
         >
-          {transactionData.map((item, index) => (
-            <ListItem component={ListItemButton} divider key={index}>
+          {transactions.map((item) => (
+            <ListItem component={ListItemButton} divider key={item.orderId}>
               <ListItemAvatar>
                 <Avatar
                   sx={{
-                    color: `${item.color}.main`,
-                    bgcolor: `${item.color}.lighter`,
+                    color: "success.main",
+                    bgcolor: "success.lighter",
                   }}
                 >
-                  {item.icon}
+                  <PaidOutlinedIcon />
                 </Avatar>
               </ListItemAvatar>
               <ListItemText
                 primary={
                   <Typography variant="subtitle1">
-                    Đơn hàng {item.id}
+                    Đơn hàng #{item.orderId} - {item.customer.name}
                   </Typography>
                 }
-                secondary={item.time}
+                secondary={new Date(item.paidAt).toLocaleString("vi-VN")}
               />
               <Stack sx={{ alignItems: "flex-end" }}>
                 <Typography variant="subtitle1" noWrap>
-                  {item.amount}
+                  {formatCurrency(item.paidAmount)}
                 </Typography>
-                <Typography variant="h6" color="secondary" noWrap>
-                  {item.percent}
+                <Typography variant="caption" color="secondary" noWrap>
+                  {item.profitPercent.toFixed(2)}%
                 </Typography>
               </Stack>
             </ListItem>
           ))}
         </List>
       </MainCard>
-
-      <MainCard sx={{ mt: 2, borderColor: "common.white" }}>
+      <MainCard sx={{ mt: 2, border: "none", boxShadow: "none" }}>
         <Stack sx={{ gap: 3 }}>
           <Grid container justifyContent="space-between" alignItems="center">
             <Grid>

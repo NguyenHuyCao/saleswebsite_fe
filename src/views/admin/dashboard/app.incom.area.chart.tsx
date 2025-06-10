@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTheme, alpha } from "@mui/material/styles";
 import {
   Box,
@@ -11,52 +11,91 @@ import {
 } from "@mui/material";
 import { LineChart, areaElementClasses } from "@mui/x-charts";
 
-// Dữ liệu mẫu
-const monthlyLabels = [
-  "Th1",
-  "Th2",
-  "Th3",
-  "Th4",
-  "Th5",
-  "Th6",
-  "Th7",
-  "Th8",
-  "Th9",
-  "Th10",
-  "Th11",
-  "Th12",
-];
-const weeklyLabels = [
-  "Thứ 2",
-  "Thứ 3",
-  "Thứ 4",
-  "Thứ 5",
-  "Thứ 6",
-  "Thứ 7",
-  "CN",
-];
-
-const monthlyData1 = [76, 85, 101, 98, 87, 105, 91, 114, 94, 86, 115, 35];
-const weeklyData1 = [31, 40, 28, 51, 42, 109, 100];
-
-const monthlyData2 = [110, 60, 150, 35, 60, 36, 26, 45, 65, 52, 53, 41];
-const weeklyData2 = [11, 32, 45, 32, 34, 52, 41];
-
-type Props = {
-  view?: "monthly" | "weekly";
-};
-
-const IncomeAreaChart = ({ view: initialView = "monthly" }: Props) => {
-  const [view, setView] = useState(initialView);
+const IncomeAreaChart = () => {
+  const [view, setView] = useState<"monthly" | "weekly">("monthly");
   const theme = useTheme();
   const [visibility, setVisibility] = useState<Record<string, boolean>>({
     "Lượt xem trang": true,
     "Phiên truy cập": true,
   });
 
+  const [weeklyStats, setWeeklyStats] = useState([]);
+  const [monthlyStats, setMonthlyStats] = useState([]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    const fetchTraffic = async () => {
+      const res = await fetch(
+        "http://localhost:8080/api/v1/dashboard/overview/traffic",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const json = await res.json();
+      if (json.status === 200) {
+        setWeeklyStats(json.data.weeklyStats);
+        setMonthlyStats(json.data.monthlyStats);
+      }
+    };
+    fetchTraffic();
+  }, []);
+
+  const weeklyLabels = [
+    "Thứ 2",
+    "Thứ 3",
+    "Thứ 4",
+    "Thứ 5",
+    "Thứ 6",
+    "Thứ 7",
+    "CN",
+  ];
+  const monthlyLabels = [
+    "Th1",
+    "Th2",
+    "Th3",
+    "Th4",
+    "Th5",
+    "Th6",
+    "Th7",
+    "Th8",
+    "Th9",
+    "Th10",
+    "Th11",
+    "Th12",
+  ];
+
+  const dataFromStats = (stats: any[], key: string, length: number) => {
+    const map = new Array(length).fill(0);
+    stats.forEach((item: any) => {
+      if (view === "weekly") {
+        const days = [
+          "MONDAY",
+          "TUESDAY",
+          "WEDNESDAY",
+          "THURSDAY",
+          "FRIDAY",
+          "SATURDAY",
+          "SUNDAY",
+        ];
+        const idx = days.indexOf(item.day);
+        if (idx !== -1) map[idx] = item[key];
+      } else {
+        const idx = item.month - 1;
+        if (idx >= 0 && idx < 12) map[idx] = item[key];
+      }
+    });
+    return map;
+  };
+
   const labels = view === "monthly" ? monthlyLabels : weeklyLabels;
-  const data1 = view === "monthly" ? monthlyData1 : weeklyData1;
-  const data2 = view === "monthly" ? monthlyData2 : weeklyData2;
+  const data1 =
+    view === "monthly"
+      ? dataFromStats(monthlyStats, "pageViews", 12)
+      : dataFromStats(weeklyStats, "pageViews", 7);
+  const data2 =
+    view === "monthly"
+      ? dataFromStats(monthlyStats, "traffic", 12)
+      : dataFromStats(weeklyStats, "traffic", 7);
 
   const toggleVisibility = (label: string) => {
     setVisibility((prev) => ({ ...prev, [label]: !prev[label] }));
@@ -69,7 +108,7 @@ const IncomeAreaChart = ({ view: initialView = "monthly" }: Props) => {
       showMark: false,
       area: true,
       id: "PageViews",
-      color: theme.palette.primary.main,
+      color: "#1976d2", // Màu xanh lam đậm
       visible: visibility["Lượt xem trang"],
     },
     {
@@ -78,14 +117,10 @@ const IncomeAreaChart = ({ view: initialView = "monthly" }: Props) => {
       showMark: false,
       area: true,
       id: "Sessions",
-      color:
-        theme.palette.mode === "light"
-          ? theme.palette.primary.dark
-          : theme.palette.primary.light,
+      color: "#ff9800", // Màu cam nổi bật
       visible: visibility["Phiên truy cập"],
     },
   ];
-
   const axisFontStyle = { fontSize: 10, fill: theme.palette.text.secondary };
 
   return (
@@ -159,20 +194,14 @@ const IncomeAreaChart = ({ view: initialView = "monthly" }: Props) => {
       >
         <defs>
           <linearGradient id="gradient1" gradientTransform="rotate(90)">
-            <stop
-              offset="10%"
-              stopColor={alpha(theme.palette.primary.main, 0.4)}
-            />
+            <stop offset="10%" stopColor={alpha("#1976d2", 0.4)} />
             <stop
               offset="90%"
               stopColor={alpha(theme.palette.background.default, 0.4)}
             />
           </linearGradient>
           <linearGradient id="gradient2" gradientTransform="rotate(90)">
-            <stop
-              offset="10%"
-              stopColor={alpha(theme.palette.primary.dark, 0.4)}
-            />
+            <stop offset="10%" stopColor={alpha("#ff9800", 0.4)} />
             <stop
               offset="90%"
               stopColor={alpha(theme.palette.background.default, 0.4)}

@@ -1,20 +1,54 @@
-// ** MUI Imports
-import Box from "@mui/material/Box";
-import Card from "@mui/material/Card";
-import Avatar from "@mui/material/Avatar";
-import IconButton from "@mui/material/IconButton";
-import Typography from "@mui/material/Typography";
-import CardContent from "@mui/material/CardContent";
+// components/CardStatsVerticalComponent.tsx
+"use client";
 
-// ** Icons Imports
+import {
+  Box,
+  Card,
+  Avatar,
+  IconButton,
+  Typography,
+  CardContent,
+  Menu,
+  MenuItem,
+} from "@mui/material";
 import DotsVertical from "mdi-material-ui/DotsVertical";
+import { ReactNode, useState } from "react";
 
-// ** Types Imports
-import { CardStatsVerticalProps } from "src/@core/components/card-statistics/types";
+interface CardStatsVerticalProps {
+  icon: ReactNode;
+  color?: "primary" | "secondary" | "success" | "error" | "warning" | "info";
+  title: string;
+  subtitle: string;
+  stats: string;
+  trend: "positive" | "negative";
+  trendNumber: string;
+  onPeriodChange?: (period: "week" | "month" | "year") => void;
+}
 
-const CardStatsVertical = (props: CardStatsVerticalProps) => {
-  // ** Props
-  const { title, subtitle, color, icon, stats, trend, trendNumber } = props;
+const CardStatsVerticalComponent = ({
+  icon,
+  color = "primary",
+  title,
+  subtitle,
+  stats,
+  trend = "positive",
+  trendNumber,
+  onPeriodChange,
+}: CardStatsVerticalProps) => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleSelect = (period: "week" | "month" | "year") => {
+    handleMenuClose();
+    onPeriodChange?.(period);
+  };
 
   return (
     <Card>
@@ -37,14 +71,25 @@ const CardStatsVertical = (props: CardStatsVerticalProps) => {
           >
             {icon}
           </Avatar>
-          <IconButton
-            size="small"
-            aria-label="cài đặt"
-            className="card-more-options"
-            sx={{ color: "text.secondary" }}
-          >
-            <DotsVertical />
-          </IconButton>
+          <Box>
+            <IconButton
+              size="small"
+              aria-label="menu"
+              sx={{ color: "text.secondary" }}
+              onClick={handleMenuOpen}
+            >
+              <DotsVertical />
+            </IconButton>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+            >
+              <MenuItem onClick={() => handleSelect("week")}>Tuần</MenuItem>
+              <MenuItem onClick={() => handleSelect("month")}>Tháng</MenuItem>
+              <MenuItem onClick={() => handleSelect("year")}>Năm</MenuItem>
+            </Menu>
+          </Box>
         </Box>
         <Typography sx={{ fontWeight: 600, fontSize: "0.875rem" }}>
           {title}
@@ -75,9 +120,4 @@ const CardStatsVertical = (props: CardStatsVerticalProps) => {
   );
 };
 
-export default CardStatsVertical;
-
-CardStatsVertical.defaultProps = {
-  color: "primary",
-  trend: "positive",
-};
+export default CardStatsVerticalComponent;
