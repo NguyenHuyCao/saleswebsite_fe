@@ -25,6 +25,8 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useSelector } from "react-redux";
+import { AppState } from "@/redux/store";
 
 interface WarrantyClaim {
   id: number;
@@ -46,6 +48,7 @@ interface MetaData {
 
 const WarrantyManagementPage = () => {
   const [claims, setClaims] = useState<WarrantyClaim[]>([]);
+  const [filteredClaims, setFilteredClaims] = useState<WarrantyClaim[]>([]);
   const [meta, setMeta] = useState<MetaData>({
     page: 1,
     pageSize: 5,
@@ -65,6 +68,10 @@ const WarrantyManagementPage = () => {
     type: "success",
     message: "",
   });
+
+  const keyword = useSelector((state: AppState) =>
+    state.search.keyword.trim().toLowerCase()
+  );
 
   const fetchClaims = async () => {
     try {
@@ -92,6 +99,18 @@ const WarrantyManagementPage = () => {
   useEffect(() => {
     fetchClaims();
   }, [page, rowsPerPage]);
+
+  useEffect(() => {
+    const filtered = claims.filter((claim) => {
+      return (
+        claim.userName.toLowerCase().includes(keyword) ||
+        claim.issueDesc.toLowerCase().includes(keyword) ||
+        claim.status.toLowerCase().includes(keyword)
+      );
+    });
+    setFilteredClaims(filtered);
+    if (keyword) setPage(0);
+  }, [claims, keyword]);
 
   const handleOpenDialog = (claim: WarrantyClaim) => {
     setSelectedClaim(claim);
@@ -170,7 +189,7 @@ const WarrantyManagementPage = () => {
       />
       <CardContent>
         <Paper sx={{ width: "100%", overflow: "hidden" }}>
-          <TableContainer sx={{ maxHeight: 600, minHeight: 350 }}>
+          <TableContainer>
             <Table stickyHeader>
               <TableHead>
                 <TableRow>
@@ -183,42 +202,50 @@ const WarrantyManagementPage = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {claims.map((claim) => (
-                  <TableRow key={claim.id} hover>
-                    <TableCell>{claim.id}</TableCell>
-                    <TableCell>{claim.userName}</TableCell>
-                    <TableCell>{claim.issueDesc}</TableCell>
-                    <TableCell>{claim.status}</TableCell>
-                    <TableCell>
-                      <Image
-                        src={`http://localhost:8080/api/v1/public/images/${claim.imageUrl}`}
-                        alt="Ảnh lỗi"
-                        width={60}
-                        height={60}
-                        style={{ objectFit: "contain" }}
-                      />
-                    </TableCell>
-                    <TableCell align="center">
-                      <Button
-                        variant="outlined"
-                        onClick={() => handleOpenDialog(claim)}
-                      >
-                        Cập nhật
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {filteredClaims
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((claim) => (
+                    <TableRow key={claim.id} hover>
+                      <TableCell>{claim.id}</TableCell>
+                      <TableCell>{claim.userName}</TableCell>
+                      <TableCell>{claim.issueDesc}</TableCell>
+                      <TableCell>{claim.status}</TableCell>
+                      <TableCell>
+                        <Image
+                          src={`http://localhost:8080/api/v1/public/images/${claim.imageUrl}`}
+                          alt="Ảnh lỗi"
+                          width={60}
+                          height={60}
+                          style={{ objectFit: "contain" }}
+                        />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Button
+                          variant="outlined"
+                          onClick={() => handleOpenDialog(claim)}
+                        >
+                          Cập nhật
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
               </TableBody>
             </Table>
           </TableContainer>
           <TablePagination
             rowsPerPageOptions={[5, 10, 20]}
             component="div"
-            count={meta.total}
+            count={filteredClaims.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
+            labelRowsPerPage="Hiển thị"
+            SelectProps={{
+              MenuProps: {
+                disableScrollLock: true,
+              },
+            }}
           />
         </Paper>
 
@@ -237,6 +264,11 @@ const WarrantyManagementPage = () => {
               margin="normal"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
+              SelectProps={{
+                MenuProps: {
+                  disableScrollLock: true,
+                },
+              }}
             >
               <MenuItem value="PENDING">PENDING</MenuItem>
               <MenuItem value="Approved">Approved</MenuItem>

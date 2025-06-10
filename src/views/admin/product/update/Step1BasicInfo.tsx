@@ -49,7 +49,6 @@ const Step1BasicInfo = ({ formData, onChange, onNext }: Props) => {
   const [brands, setBrands] = useState<Brand[]>([]);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const productId = searchParams.get("productId");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -89,7 +88,7 @@ const Step1BasicInfo = ({ formData, onChange, onNext }: Props) => {
 
     try {
       const res = await fetch(
-        `http://localhost:8080/api/v1/products/step1/${productId}`,
+        `http://localhost:8080/api/v1/products/step1/${formData.id}`,
         {
           method: "PUT",
           headers: {
@@ -166,6 +165,11 @@ const Step1BasicInfo = ({ formData, onChange, onNext }: Props) => {
             onChange={(e) => onChange("origin", e.target.value)}
             fullWidth
             error={hasError("Xuất xứ")}
+            SelectProps={{
+              MenuProps: {
+                disableScrollLock: true,
+              },
+            }}
           >
             {countries.map((country) => (
               <MenuItem key={country} value={country}>
@@ -183,7 +187,13 @@ const Step1BasicInfo = ({ formData, onChange, onNext }: Props) => {
             onChange={(e) => onChange("categoryId", Number(e.target.value))}
             fullWidth
             error={hasError("Danh mục") || hasError("category")}
+            SelectProps={{ MenuProps: { disableScrollLock: true } }}
           >
+            {categories.length === 0 && formData.categoryId && (
+              <MenuItem value={formData.categoryId}>
+                {formData.categoryName}
+              </MenuItem>
+            )}
             {categories.map((category) => (
               <MenuItem key={category.id} value={category.id}>
                 {category.name}
@@ -200,7 +210,11 @@ const Step1BasicInfo = ({ formData, onChange, onNext }: Props) => {
             onChange={(e) => onChange("brandId", Number(e.target.value))}
             fullWidth
             error={hasError("Thương hiệu") || hasError("brand")}
+            SelectProps={{ MenuProps: { disableScrollLock: true } }}
           >
+            {brands.length === 0 && formData.brandId && (
+              <MenuItem value={formData.brandId}>{formData.brandName}</MenuItem>
+            )}
             {brands.map((brand) => (
               <MenuItem key={brand.id} value={brand.id}>
                 {brand.name}

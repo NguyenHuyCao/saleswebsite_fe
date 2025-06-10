@@ -151,6 +151,11 @@ const Step1BasicInfo = ({ formData, onChange }: Props) => {
             onChange={(e) => onChange("origin", e.target.value)}
             fullWidth
             error={hasError("Xuất xứ")}
+            SelectProps={{
+              MenuProps: {
+                disableScrollLock: true,
+              },
+            }}
           >
             {countries.map((country) => (
               <MenuItem key={country} value={country}>
@@ -168,6 +173,11 @@ const Step1BasicInfo = ({ formData, onChange }: Props) => {
             onChange={(e) => onChange("categoryId", Number(e.target.value))}
             fullWidth
             error={hasError("Danh mục") || hasError("category")}
+            SelectProps={{
+              MenuProps: {
+                disableScrollLock: true,
+              },
+            }}
           >
             {categories.map((category) => (
               <MenuItem key={category.id} value={category.id}>
@@ -185,6 +195,11 @@ const Step1BasicInfo = ({ formData, onChange }: Props) => {
             onChange={(e) => onChange("brandId", Number(e.target.value))}
             fullWidth
             error={hasError("Thương hiệu") || hasError("brand")}
+            SelectProps={{
+              MenuProps: {
+                disableScrollLock: true,
+              },
+            }}
           >
             {brands.map((brand) => (
               <MenuItem key={brand.id} value={brand.id}>

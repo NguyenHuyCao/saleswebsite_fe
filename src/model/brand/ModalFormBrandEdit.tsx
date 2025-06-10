@@ -173,6 +173,11 @@ const ModalFormBrandEdit = ({
               setFormData({ ...formData, originCountry: e.target.value })
             }
             sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
+            SelectProps={{
+              MenuProps: {
+                disableScrollLock: true,
+              },
+            }}
           >
             {countries.map((country) => (
               <MenuItem key={country.value} value={country.value}>

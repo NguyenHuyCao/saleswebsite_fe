@@ -49,7 +49,7 @@ const ModalCreateCategory = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth>
+    <Dialog open={open} onClose={onClose} fullWidth disableScrollLock={true}>
       <DialogTitle>Thêm danh mục mới</DialogTitle>
       <DialogContent>
         <TextField

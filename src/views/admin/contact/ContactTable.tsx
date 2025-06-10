@@ -1,16 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import Paper from "@mui/material/Paper";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TablePagination from "@mui/material/TablePagination";
-import TableRow from "@mui/material/TableRow";
+import {
+  Box,
+  Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+} from "@mui/material";
+import { useSelector } from "react-redux";
+import { AppState } from "@/redux/store";
 
 interface Contact {
   id: number;
@@ -25,27 +29,26 @@ interface Contact {
 
 const ContactTablePage = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [totalRows, setTotalRows] = useState(0);
+  const keyword = useSelector((state: AppState) =>
+    state.search.keyword.toLowerCase()
+  );
 
   const fetchContacts = async () => {
     try {
       const token = localStorage.getItem("accessToken");
       const res = await fetch(
-        `http://localhost:8080/api/v1/contacts?page=${
-          page + 1
-        }&size=${rowsPerPage}`,
+        `http://localhost:8080/api/v1/contacts?page=1&size=1000`, // fetch toàn bộ trước, lọc sau
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-
       const data = await res.json();
       setContacts(data.data.result);
-      setTotalRows(data.data.meta.total);
     } catch (error) {
       console.error("Lỗi khi tải danh sách liên hệ:", error);
     }
@@ -53,7 +56,18 @@ const ContactTablePage = () => {
 
   useEffect(() => {
     fetchContacts();
-  }, [page, rowsPerPage]);
+  }, []);
+
+  useEffect(() => {
+    const filtered = contacts.filter(
+      (item) =>
+        item.fullName.toLowerCase().includes(keyword) ||
+        item.email.toLowerCase().includes(keyword) ||
+        item.phone.toLowerCase().includes(keyword)
+    );
+    setFilteredContacts(filtered);
+    setPage(0);
+  }, [contacts, keyword]);
 
   const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
@@ -83,7 +97,7 @@ const ContactTablePage = () => {
 
       <Paper sx={{ width: "100%", overflow: "hidden" }}>
         <TableContainer sx={{ maxHeight: 600 }}>
-          <Table stickyHeader aria-label="contact table">
+          <Table stickyHeader>
             <TableHead>
               <TableRow>
                 <TableCell>ID</TableCell>
@@ -96,35 +110,43 @@ const ContactTablePage = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {contacts.map((row) => (
-                <TableRow hover key={row.id}>
-                  <TableCell>{row.id}</TableCell>
-                  <TableCell>{row.fullName}</TableCell>
-                  <TableCell>{row.email}</TableCell>
-                  <TableCell>{row.phone}</TableCell>
-                  <TableCell>{row.subject}</TableCell>
-                  <TableCell sx={{ maxWidth: 300, whiteSpace: "pre-wrap" }}>
-                    {row.messageContent}
-                  </TableCell>
-                  <TableCell>
-                    {new Date(row.createdAt).toLocaleString("vi-VN", {
-                      dateStyle: "short",
-                      timeStyle: "short",
-                    })}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {filteredContacts
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((row) => (
+                  <TableRow hover key={row.id}>
+                    <TableCell>{row.id}</TableCell>
+                    <TableCell>{row.fullName}</TableCell>
+                    <TableCell>{row.email}</TableCell>
+                    <TableCell>{row.phone}</TableCell>
+                    <TableCell>{row.subject}</TableCell>
+                    <TableCell sx={{ maxWidth: 300, whiteSpace: "pre-wrap" }}>
+                      {row.messageContent}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(row.createdAt).toLocaleString("vi-VN", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })}
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </TableContainer>
         <TablePagination
-          rowsPerPageOptions={[2, 5, 10]}
+          rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={totalRows}
+          count={filteredContacts.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage="Hiển thị"
+          SelectProps={{
+            MenuProps: {
+              disableScrollLock: true,
+            },
+          }}
         />
       </Paper>
     </Box>

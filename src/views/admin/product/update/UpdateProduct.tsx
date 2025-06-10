@@ -12,6 +12,7 @@ import Step1BasicInfo from "./Step1BasicInfo";
 import Step2TechnicalInfo from "./Step2TechnicalInfo";
 import Step3PricingInventory from "./Step3PricingInventory";
 import Step4Images from "./Step4Images";
+import { number } from "framer-motion";
 
 const steps = [
   "Thông tin cơ bản",
@@ -25,16 +26,19 @@ const UpdateProduct = () => {
   const searchParams = useSearchParams();
 
   const initialStep = parseInt(searchParams.get("step") || "0", 10);
-  const productId = searchParams.get("productId");
+  const productSlug = searchParams.get("productSlug");
   const [activeStep, setActiveStep] = useState(initialStep);
   const [slug, setSlug] = useState("");
 
   const [formData, setFormData] = useState({
+    id: number,
     name: "",
     description: "",
     origin: "",
     categoryId: null,
     brandId: null,
+    categoryName: "",
+    brandName: "",
     power: "",
     fuelType: "",
     engineType: "",
@@ -42,6 +46,7 @@ const UpdateProduct = () => {
     dimensions: "",
     tankCapacity: null,
     price: null,
+    costPrice: null,
     stockQuantity: null,
     warrantyMonths: null,
     imageAvt: null,
@@ -82,11 +87,11 @@ const UpdateProduct = () => {
 
   useEffect(() => {
     const fetchProductData = async () => {
-      if (!productId) return;
+      if (!productSlug) return;
 
       try {
         const res = await fetch(
-          `http://localhost:8080/api/v1/products/${productId}`,
+          `http://localhost:8080/api/v1/products/${productSlug}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
@@ -98,11 +103,14 @@ const UpdateProduct = () => {
           const product = data.data;
           setSlug(product.slug);
           setFormData({
+            id: product.id,
             name: product.name,
             description: product.description,
             origin: product.origin,
-            categoryId: product.productCategory?.id || null,
-            brandId: product.brand?.id || null,
+            categoryId: product.categoryId,
+            brandId: product.brandId,
+            categoryName: product.categoryName,
+            brandName: product.brandName,
             power: product.power,
             fuelType: product.fuelType,
             engineType: product.engineType,
@@ -110,6 +118,7 @@ const UpdateProduct = () => {
             dimensions: product.dimensions,
             tankCapacity: product.tankCapacity,
             price: product.price,
+            costPrice: product.costPrice,
             stockQuantity: product.stockQuantity,
             warrantyMonths: product.warrantyMonths,
             imageAvt: product.imageAvt,
@@ -124,7 +133,9 @@ const UpdateProduct = () => {
     };
 
     fetchProductData();
-  }, [productId]);
+  }, [productSlug]);
+
+  console.log("formData", formData);
 
   const renderStepContent = () => {
     switch (activeStep) {

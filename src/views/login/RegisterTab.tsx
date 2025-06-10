@@ -130,6 +130,9 @@ const RegisterTab: React.FC<RegisterTabProps> = ({ showMessage }) => {
                   setProvince(e.target.value);
                   setDistrict("");
                 }}
+                MenuProps={{
+                  disableScrollLock: true,
+                }}
               >
                 {Object.keys(provincesData).map((provinceName) => (
                   <MenuItem key={provinceName} value={provinceName}>
@@ -149,6 +152,9 @@ const RegisterTab: React.FC<RegisterTabProps> = ({ showMessage }) => {
                 value={district}
                 onChange={(e) => setDistrict(e.target.value)}
                 disabled={!province}
+                MenuProps={{
+                  disableScrollLock: true,
+                }}
               >
                 {province &&
                   provincesData[province]?.map((districtName) => (
@@ -168,6 +174,9 @@ const RegisterTab: React.FC<RegisterTabProps> = ({ showMessage }) => {
             label="Giới tính"
             value={gender}
             onChange={(e) => setGender(e.target.value)}
+            MenuProps={{
+              disableScrollLock: true,
+            }}
           >
             <MenuItem value="Nam">Nam</MenuItem>
             <MenuItem value="Nữ">Nữ</MenuItem>

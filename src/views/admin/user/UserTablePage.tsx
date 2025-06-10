@@ -18,6 +18,8 @@ import {
 } from "@mui/material";
 import UploadOutlinedIcon from "@mui/icons-material/UploadOutlined";
 import { useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
+import { AppState } from "@/redux/store";
 
 interface User {
   id: number;
@@ -28,30 +30,21 @@ interface User {
   gender: string;
 }
 
-interface MetaData {
-  page: number;
-  pageSize: number;
-  pages: number;
-  total: number;
-}
-
 const UserTablePage = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [meta, setMeta] = useState<MetaData>({
-    page: 1,
-    pageSize: 5,
-    pages: 1,
-    total: 0,
-  });
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const router = useRouter();
 
+  const keyword = useSelector((state: AppState) =>
+    state.search.keyword.trim().toLowerCase()
+  );
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("accessToken");
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users?page=${page}&size=${rowsPerPage}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users?page=1&size=1000`, // lấy nhiều nhất có thể
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -61,11 +54,10 @@ const UserTablePage = () => {
       const data = await res.json();
 
       if (data.status === 200 && Array.isArray(data.data.result)) {
-        const filteredUsers = data.data.result.filter(
+        const nonAdminUsers = data.data.result.filter(
           (user: User) => user.email !== "admin@gmail.com"
         );
-        setUsers(filteredUsers);
-        setMeta(data.data.meta);
+        setAllUsers(nonAdminUsers);
       }
     } catch (error) {
       console.error("Lỗi khi lấy danh sách người dùng:", error);
@@ -74,7 +66,24 @@ const UserTablePage = () => {
 
   useEffect(() => {
     fetchUsers();
-  }, [page, rowsPerPage]);
+  }, []);
+
+  useEffect(() => {
+    const filtered = allUsers.filter(
+      (user) =>
+        user.username.toLowerCase().includes(keyword) ||
+        user.email.toLowerCase().includes(keyword) ||
+        user.phone.toLowerCase().includes(keyword)
+    );
+    setFilteredUsers(filtered);
+    setPage(0); // reset về trang đầu khi tìm kiếm
+  }, [keyword, allUsers]);
+
+  // Tính dữ liệu hiển thị dựa trên trang và số dòng
+  const paginatedUsers = filteredUsers.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
 
   const handleRowClick = (userId: number) => {
     router.push(`/admin/users?userId=${userId}`);
@@ -117,7 +126,7 @@ const UserTablePage = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {users.map((user) => (
+                {paginatedUsers.map((user) => (
                   <TableRow hover key={user.id}>
                     <TableCell>{user.id}</TableCell>
                     <TableCell>{user.username}</TableCell>
@@ -137,10 +146,11 @@ const UserTablePage = () => {
               </TableBody>
             </Table>
           </TableContainer>
+
           <TablePagination
             rowsPerPageOptions={[5, 10, 20]}
             component="div"
-            count={meta.total}
+            count={filteredUsers.length} // Đúng số sau lọc
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}

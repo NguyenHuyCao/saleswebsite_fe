@@ -51,6 +51,7 @@ const Step4Images = ({ formData, onChange, onBack }: Step4Props) => {
     detail2: "",
     detail3: "",
   });
+
   const [alert, setAlert] = useState({
     open: false,
     message: "",
@@ -59,17 +60,26 @@ const Step4Images = ({ formData, onChange, onBack }: Step4Props) => {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const slug = searchParams.get("name");
+  const slug = searchParams.get("productSlug");
 
   const handleSave = async () => {
     const formDataUpload = new FormData();
-    if (formData.imageAvt) formDataUpload.append("imageAvt", formData.imageAvt);
-    if (formData.imageDetail1)
-      formDataUpload.append("imageDetails", formData.imageDetail1);
-    if (formData.imageDetail2)
-      formDataUpload.append("imageDetails", formData.imageDetail2);
-    if (formData.imageDetail3)
-      formDataUpload.append("imageDetails", formData.imageDetail3);
+
+    if (formData.imageAvt instanceof File) {
+      formDataUpload.append("imageAvt", formData.imageAvt);
+    }
+
+    const detailImages = [
+      formData.imageDetail1,
+      formData.imageDetail2,
+      formData.imageDetail3,
+    ];
+
+    detailImages.forEach((img) => {
+      if (img instanceof File) {
+        formDataUpload.append("imageDetails", img);
+      }
+    });
 
     try {
       const res = await fetch(
@@ -84,7 +94,8 @@ const Step4Images = ({ formData, onChange, onBack }: Step4Props) => {
       );
 
       const data = await res.json();
-      if (res.status === 200) {
+
+      if (res.ok) {
         setAlert({
           open: true,
           message: "Tải ảnh thành công!",
@@ -94,57 +105,56 @@ const Step4Images = ({ formData, onChange, onBack }: Step4Props) => {
       } else {
         setAlert({
           open: true,
-          message: data.message || "Tải ảnh thất bại.",
+          message: data.message || "Cập nhật ảnh thất bại.",
           type: "error",
         });
       }
     } catch (err) {
-      setAlert({ open: true, message: "Lỗi kết nối máy chủ.", type: "error" });
-      console.error("Upload error:", err);
+      console.error(err);
+      setAlert({
+        open: true,
+        message: "Lỗi kết nối máy chủ.",
+        type: "error",
+      });
     }
   };
 
-  useEffect(() => {
-    const createPreview = (file: File | string | null) => {
-      if (!file) return "";
-      if (typeof file === "string") return file;
-      try {
-        return URL.createObjectURL(file);
-      } catch {
-        return "";
-      }
-    };
+  const createPreviewUrl = (file: File | string | null) => {
+    if (!file) return "";
+    if (typeof file === "string") return `/uploads/product/${file}`;
+    return URL.createObjectURL(file);
+  };
 
+  useEffect(() => {
     setPreview({
-      avatar: createPreview(formData.imageAvt),
-      detail1: createPreview(formData.imageDetail1),
-      detail2: createPreview(formData.imageDetail2),
-      detail3: createPreview(formData.imageDetail3),
+      avatar: createPreviewUrl(formData.imageAvt),
+      detail1: createPreviewUrl(formData.imageDetail1),
+      detail2: createPreviewUrl(formData.imageDetail2),
+      detail3: createPreviewUrl(formData.imageDetail3),
     });
   }, [formData]);
 
   const handleUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
     field: keyof typeof preview,
-    keyMapValue: string
+    formKey: string
   ) => {
     const file = e.target.files?.[0] || null;
     if (file) {
-      onChange(keyMapValue, file);
-      setPreview((prev) => ({ ...prev, [field]: URL.createObjectURL(file) }));
+      onChange(formKey, file);
+      setPreview((prev) => ({
+        ...prev,
+        [field]: URL.createObjectURL(file),
+      }));
     }
   };
 
   const renderUploadField = (
     label: string,
     field: keyof typeof preview,
-    keyMapValue: string
+    formKey: string
   ) => {
-    const imageSrc =
-      preview[field] &&
-      (preview[field].startsWith("blob:") || preview[field].startsWith("http"))
-        ? preview[field]
-        : "/images/favicon.png";
+    const imageSrc = preview[field] || "/images/no-image.png";
 
     return (
       <Box>
@@ -157,7 +167,7 @@ const Step4Images = ({ formData, onChange, onBack }: Step4Props) => {
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => handleUpload(e, field, keyMapValue)}
+              onChange={(e) => handleUpload(e, field, formKey)}
             />
           </StyledInput>
           <Box mt={2} display="flex" justifyContent="center">

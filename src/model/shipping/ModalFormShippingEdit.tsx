@@ -60,7 +60,7 @@ const ModalFormShippingEdit = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth>
+    <Dialog open={open} onClose={onClose} fullWidth disableScrollLock={true}>
       <DialogTitle>Chỉnh sửa đơn vị vận chuyển</DialogTitle>
       <DialogContent
         sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}

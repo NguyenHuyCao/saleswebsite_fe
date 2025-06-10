@@ -166,8 +166,7 @@ const ContactFormSection = () => {
                 }}
                 SelectProps={{
                   MenuProps: {
-                    disablePortal: false, // ✅ Hiển thị menu ra ngoài layout gốc
-                    disableScrollLock: true, // ✅ Không khóa scroll khi mở dropdown
+                    disableScrollLock: true,
                   },
                 }}
               >

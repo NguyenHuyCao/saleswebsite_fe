@@ -15,6 +15,9 @@ import {
   Alert,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
+// import { useAppSelector } from "@/lib/hooks";
+import { useSelector } from "react-redux";
+import { AppState } from "@/redux/store";
 
 interface Promotion {
   id: number;
@@ -48,6 +51,9 @@ const PromotionListPage = () => {
     type: "success" as "success" | "error",
   });
   const router = useRouter();
+  const keyword = useSelector((state: AppState) =>
+    state.search.keyword.trim().toLowerCase()
+  );
 
   const fetchPromotions = async () => {
     try {
@@ -115,6 +121,22 @@ const PromotionListPage = () => {
     fetchPromotions();
   }, []);
 
+  const sortedPromotions = [...promotions].sort((a, b) => {
+    const normalize = (str: string) => str.toLowerCase().trim();
+    const keywordMatch = (promo: Promotion) =>
+      normalize(promo.name).includes(keyword) ||
+      promo.startDate.includes(keyword) ||
+      (promo.code || "").toLowerCase().includes(keyword) ||
+      (promo.discount * 100).toFixed(0) === keyword;
+
+    const aMatch = keywordMatch(a);
+    const bMatch = keywordMatch(b);
+
+    if (aMatch && !bMatch) return -1;
+    if (!aMatch && bMatch) return 1;
+    return 0;
+  });
+
   return (
     <Box p={3}>
       <Box mb={3} display="flex" justifyContent="space-between">
@@ -128,8 +150,8 @@ const PromotionListPage = () => {
       </Box>
 
       <Grid container spacing={3}>
-        {promotions.map((promo) => (
-          <Grid size={{ xs: 12, md: 6 }} key={promo.id}>
+        {sortedPromotions.map((promo) => (
+          <Grid key={promo.id} size={{ xs: 12, md: 6 }}>
             <Card>
               <CardHeader
                 title={promo.name}
@@ -159,7 +181,7 @@ const PromotionListPage = () => {
                 <Grid container spacing={2} mt={1}>
                   {productsMap[promo.id]?.length ? (
                     productsMap[promo.id].map((product) => (
-                      <Grid size={{ xs: 12 }} key={product.id}>
+                      <Grid key={product.id} size={{ xs: 12 }}>
                         <Box
                           display="flex"
                           justifyContent="space-between"

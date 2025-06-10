@@ -1,9 +1,6 @@
 "use client";
 
-import Box from "@mui/material/Box";
-import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
+import { Box, Grid, TextField, Button, Typography } from "@mui/material";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import AlertSnackbar from "@/model/notify/AlertSnackbar";
@@ -33,6 +30,7 @@ const Step3PricingInventory = ({
   const handleSubmit = async () => {
     const payload = {
       price: formData.price,
+      costPrice: formData.costPrice,
       stockQuantity: formData.stockQuantity,
       warrantyMonths: formData.warrantyMonths,
     };
@@ -63,7 +61,11 @@ const Step3PricingInventory = ({
       }
     } catch (err) {
       console.error("Lỗi kết nối máy chủ:", err);
-      setAlert({ open: true, message: "Lỗi kết nối máy chủ.", type: "error" });
+      setAlert({
+        open: true,
+        message: "Lỗi kết nối máy chủ.",
+        type: "error",
+      });
     }
   };
 
@@ -73,20 +75,8 @@ const Step3PricingInventory = ({
         Bước 3: Giá và tồn kho
       </Typography>
 
-      <Box
-        display="flex"
-        flexWrap="wrap"
-        gap={4}
-        justifyContent="space-between"
-      >
-        <Box
-          flex={{
-            xs: "100%",
-            sm: "calc(50% - 16px)",
-            lg: "calc(33.33% - 16px)",
-          }}
-          minWidth={250}
-        >
+      <Grid container spacing={4}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <TextField
             fullWidth
             label="Giá bán (VND)"
@@ -94,16 +84,19 @@ const Step3PricingInventory = ({
             value={formData.price || ""}
             onChange={(e) => onChange("price", Number(e.target.value))}
           />
-        </Box>
+        </Grid>
 
-        <Box
-          flex={{
-            xs: "100%",
-            sm: "calc(50% - 16px)",
-            lg: "calc(33.33% - 16px)",
-          }}
-          minWidth={250}
-        >
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <TextField
+            fullWidth
+            label="Giá gốc (VND)"
+            type="number"
+            value={formData.costPrice || ""}
+            onChange={(e) => onChange("costPrice", Number(e.target.value))}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <TextField
             fullWidth
             label="Số lượng trong kho"
@@ -111,16 +104,9 @@ const Step3PricingInventory = ({
             value={formData.stockQuantity || ""}
             onChange={(e) => onChange("stockQuantity", Number(e.target.value))}
           />
-        </Box>
+        </Grid>
 
-        <Box
-          flex={{
-            xs: "100%",
-            sm: "calc(50% - 16px)",
-            lg: "calc(33.33% - 16px)",
-          }}
-          minWidth={250}
-        >
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <TextField
             fullWidth
             label="Bảo hành (tháng)"
@@ -128,10 +114,10 @@ const Step3PricingInventory = ({
             value={formData.warrantyMonths || ""}
             onChange={(e) => onChange("warrantyMonths", Number(e.target.value))}
           />
-        </Box>
-      </Box>
+        </Grid>
+      </Grid>
 
-      <Box display="flex" justifyContent="space-between" mt={2}>
+      <Box display="flex" justifyContent="space-between" mt={4}>
         <Button variant="outlined" onClick={onBack}>
           Quay lại
         </Button>

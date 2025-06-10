@@ -17,7 +17,7 @@ const ConfirmDeleteBrand = ({
   onConfirm,
 }: ConfirmDeleteProps) => {
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog open={open} onClose={onClose} disableScrollLock={true}>
       <DialogTitle>Bạn có chắc muốn xoá thương hiệu này?</DialogTitle>
       <DialogActions>
         <Button onClick={onClose}>Hủy</Button>

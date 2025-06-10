@@ -1,5 +1,6 @@
 "use client";
 
+import ReduxProvider from "@/components/redux/Providers";
 import { Quicksand } from "next/font/google";
 import { ReactNode } from "react";
 import {
@@ -21,7 +22,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <SettingsProvider>
           <SettingsConsumer>
             {({ settings }) => (
-              <ThemeComponent settings={settings}>{children}</ThemeComponent>
+              <ThemeComponent settings={settings}>
+                <ReduxProvider>{children}</ReduxProvider>
+              </ThemeComponent>
             )}
           </SettingsConsumer>
         </SettingsProvider>

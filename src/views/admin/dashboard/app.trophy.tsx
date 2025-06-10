@@ -147,6 +147,7 @@ const Trophy = () => {
         fullScreen={isFullScreen}
         maxWidth="sm"
         fullWidth
+        disableScrollLock={true}
       >
         <DialogTitle>
           Chi tiết doanh số

@@ -150,6 +150,11 @@ const DashboardTable = () => {
         rowsPerPage={rowsPerPage}
         onRowsPerPageChange={handleChangeRowsPerPage}
         labelRowsPerPage="Số dòng mỗi trang:"
+        SelectProps={{
+          MenuProps: {
+            disableScrollLock: true,
+          },
+        }}
       />
     </Card>
   );

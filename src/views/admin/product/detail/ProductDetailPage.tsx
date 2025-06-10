@@ -3,16 +3,19 @@
 import { useTheme } from "@mui/material/styles";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import Paper from "@mui/material/Paper";
+import {
+  Box,
+  Typography,
+  Paper,
+  TextField,
+  Divider,
+  Chip,
+  Grid,
+} from "@mui/material";
 import Image from "next/image";
-import TextField from "@mui/material/TextField";
-import Divider from "@mui/material/Divider";
-import Chip from "@mui/material/Chip";
 
 const ReadOnlyInput = ({ label, value }: { label: string; value: any }) => (
-  <Box flexBasis={{ xs: "100%", sm: "48%", md: "32%" }}>
+  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
     <Typography
       variant="body2"
       fontWeight={600}
@@ -27,20 +30,20 @@ const ReadOnlyInput = ({ label, value }: { label: string; value: any }) => (
       value={value}
       InputProps={{ readOnly: true }}
     />
-  </Box>
+  </Grid>
 );
 
 const ProductDetailPage = () => {
   const theme = useTheme();
   const searchParams = useSearchParams();
-  const productId = searchParams.get("productId");
+  const productSlug = searchParams.get("productSlug");
   const [product, setProduct] = useState<any>(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         const res = await fetch(
-          `http://localhost:8080/api/v1/products/${productId}`,
+          `http://localhost:8080/api/v1/products/${productSlug}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
@@ -61,8 +64,8 @@ const ProductDetailPage = () => {
         console.error("Failed to fetch product detail:", err);
       }
     };
-    if (productId) fetchProduct();
-  }, [productId]);
+    if (productSlug) fetchProduct();
+  }, [productSlug]);
 
   if (!product) return <Typography>Đang tải dữ liệu...</Typography>;
 
@@ -70,7 +73,7 @@ const ProductDetailPage = () => {
     product.imageDetail1,
     product.imageDetail2,
     product.imageDetail3,
-  ].filter((img) => !!img);
+  ].filter(Boolean);
 
   return (
     <Paper sx={{ p: 6 }} elevation={4}>
@@ -121,16 +124,15 @@ const ProductDetailPage = () => {
         </Box>
       </Box>
 
-      <Box
-        display="flex"
-        flexWrap="wrap"
-        gap={4}
-        justifyContent="space-between"
-      >
+      <Grid container spacing={4}>
         <ReadOnlyInput label="Tên sản phẩm" value={product.name} />
         <ReadOnlyInput
-          label="Giá"
+          label="Giá bán"
           value={`${product.price.toLocaleString()}₫`}
+        />
+        <ReadOnlyInput
+          label="Giá gốc"
+          value={`${product.costPrice?.toLocaleString() || "N/A"}₫`}
         />
         <ReadOnlyInput label="Tồn kho" value={product.stockQuantity} />
         <ReadOnlyInput label="Công suất" value={product.power} />
@@ -139,14 +141,15 @@ const ProductDetailPage = () => {
         <ReadOnlyInput label="Trọng lượng" value={`${product.weight}g`} />
         <ReadOnlyInput label="Kích thước" value={product.dimensions} />
         <ReadOnlyInput label="Dung tích" value={`${product.tankCapacity}L`} />
-        <ReadOnlyInput label="Thương hiệu" value={product.brand.name} />
-        <ReadOnlyInput label="Danh mục" value={product.productCategory.name} />
+        <ReadOnlyInput label="Thương hiệu" value={product.brandName} />
+        <ReadOnlyInput label="Danh mục" value={product.categoryName} />
         <ReadOnlyInput label="Xuất xứ" value={product.origin} />
         <ReadOnlyInput
           label="Bảo hành"
           value={`${product.warrantyMonths} tháng`}
         />
-        <Box flexBasis={{ xs: "100%", sm: "48%", md: "32%" }}>
+
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Typography
             variant="body2"
             fontWeight={600}
@@ -161,8 +164,8 @@ const ProductDetailPage = () => {
             variant="filled"
             sx={{ fontWeight: 600, px: 2, py: 0.5, fontSize: 13 }}
           />
-        </Box>
-      </Box>
+        </Grid>
+      </Grid>
 
       <Divider sx={{ my: 5 }} />
 

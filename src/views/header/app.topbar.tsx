@@ -13,6 +13,7 @@ import {
   ClickAwayListener,
   MenuList,
   MenuItem,
+  Menu,
 } from "@mui/material";
 import LocalPhoneOutlinedIcon from "@mui/icons-material/LocalPhoneOutlined";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
@@ -151,7 +152,15 @@ const TopBar = () => {
                       }}
                     >
                       <ClickAwayListener onClickAway={handleClose}>
-                        <MenuList autoFocusItem={open}>
+                        <Menu
+                          anchorEl={anchorEl}
+                          open={open}
+                          onClose={handleClose}
+                          disableScrollLock={true}
+                          MenuListProps={{
+                            autoFocusItem: open,
+                          }}
+                        >
                           <MenuItem
                             onClick={(e) => {
                               router.push("/account");
@@ -176,7 +185,7 @@ const TopBar = () => {
                           >
                             Đăng xuất
                           </MenuItem>
-                        </MenuList>
+                        </Menu>
                       </ClickAwayListener>
                     </Paper>
                   </Grow>

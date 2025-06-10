@@ -72,6 +72,11 @@ export default function ShippingForm() {
             onChange={(e) => handleChange("province", e.target.value)}
             error={!form.province}
             helperText={!form.province && "Bạn chưa chọn tỉnh thành"}
+            SelectProps={{
+              MenuProps: {
+                disableScrollLock: true,
+              },
+            }}
           >
             {provinces.map((p) => (
               <MenuItem key={p} value={p}>
@@ -90,6 +95,11 @@ export default function ShippingForm() {
             onChange={(e) => handleChange("province", e.target.value)}
             error={!form.province}
             helperText={!form.province && "Bạn chưa chọn Xã/Thị trấn"}
+            SelectProps={{
+              MenuProps: {
+                disableScrollLock: true,
+              },
+            }}
           >
             {provinces.map((p) => (
               <MenuItem key={p} value={p}>

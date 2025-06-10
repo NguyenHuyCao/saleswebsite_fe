@@ -320,6 +320,11 @@ const CartSummary = ({ items, onApplyVoucher }: Props) => {
               setSelectedCommune("");
             }}
             sx={{ mb: 2 }}
+            SelectProps={{
+              MenuProps: {
+                disableScrollLock: true,
+              },
+            }}
           >
             {provinces.map((province) => (
               <MenuItem key={province} value={province}>
@@ -336,6 +341,11 @@ const CartSummary = ({ items, onApplyVoucher }: Props) => {
             onChange={(e) => setSelectedCommune(e.target.value)}
             disabled={!selectedProvince}
             sx={{ mb: 2 }}
+            SelectProps={{
+              MenuProps: {
+                disableScrollLock: true,
+              },
+            }}
           >
             {(communesMap[selectedProvince] || []).map((commune) => (
               <MenuItem key={commune} value={commune}>

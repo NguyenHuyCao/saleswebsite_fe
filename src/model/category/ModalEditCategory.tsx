@@ -57,7 +57,7 @@ const ModalEditCategory = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth>
+    <Dialog open={open} onClose={onClose} fullWidth disableScrollLock={true}>
       <DialogTitle>Cập nhật danh mục</DialogTitle>
       <DialogContent>
         <TextField

@@ -43,7 +43,7 @@ const ModalFormShippingCreate = ({ open, onClose, onSubmit }: Props) => {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth>
+    <Dialog open={open} onClose={onClose} fullWidth disableScrollLock={true}>
       <DialogTitle>Thêm đơn vị vận chuyển</DialogTitle>
       <DialogContent
         sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}

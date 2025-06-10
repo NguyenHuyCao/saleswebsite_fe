@@ -339,6 +339,9 @@ const OrderDetailTable = () => {
                     value={paymentStatus}
                     onChange={(e) => handlePaymentStatusChange(e.target.value)}
                     label="Trạng thái thanh toán"
+                    MenuProps={{
+                      disableScrollLock: true,
+                    }}
                   >
                     <MenuItem value="PENDING">CHỜ THANH TOÁN</MenuItem>
                     <MenuItem value="PAID">ĐÃ THANH TOÁN</MenuItem>
@@ -352,6 +355,9 @@ const OrderDetailTable = () => {
                     value={orderStatus}
                     onChange={(e) => handleStatusChange(e.target.value)}
                     label="Trạng thái đơn hàng"
+                    MenuProps={{
+                      disableScrollLock: true,
+                    }}
                   >
                     {Object.entries(orderStatusMap).map(([val, label]) => (
                       <MenuItem key={val} value={val}>

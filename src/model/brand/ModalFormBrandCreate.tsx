@@ -95,7 +95,13 @@ const ModalFormBrandCreate = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="xs"
+      fullWidth
+      disableScrollLock={true}
+    >
       <DialogTitle
         sx={{ borderBottom: "1px solid #eee", py: 2, fontWeight: 600 }}
       >
@@ -155,6 +161,11 @@ const ModalFormBrandCreate = ({
             onChange={(e) =>
               setFormData({ ...formData, originCountry: e.target.value })
             }
+            SelectProps={{
+              MenuProps: {
+                disableScrollLock: true,
+              },
+            }}
           >
             {countries.map((country) => (
               <MenuItem key={country.value} value={country.value}>

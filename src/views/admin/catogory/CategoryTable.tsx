@@ -27,6 +27,8 @@ import {
 import Image from "next/image";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import ModalEditCategory from "@/model/category/ModalEditCategory";
+import { useSelector } from "react-redux";
+import { AppState } from "@/redux/store";
 
 const Alert = MuiAlert as React.ElementType;
 
@@ -40,9 +42,11 @@ interface CategoryData {
 
 const CategoryTablePage = () => {
   const [categories, setCategories] = useState<CategoryData[]>([]);
+  const [filteredCategories, setFilteredCategories] = useState<CategoryData[]>(
+    []
+  );
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [totalRows, setTotalRows] = useState(0);
   const [openModal, setOpenModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [newName, setNewName] = useState("");
@@ -59,15 +63,27 @@ const CategoryTablePage = () => {
     "success"
   );
 
+  const [loading, setLoading] = useState(false);
+
+  const handleChangePage = (_: unknown, newPage: number) => {
+    setLoading(true);
+    setTimeout(() => {
+      setPage(newPage);
+      setLoading(false);
+    }, 100); // delay nhỏ để tạo cảm giác chuyển mượt
+  };
+
   const handleCloseSnackbar = () => setOpenSnackbar(false);
+
+  const keyword = useSelector((state: AppState) =>
+    state.search.keyword.trim().toLowerCase()
+  );
 
   const fetchCategories = useCallback(async () => {
     try {
       const token = localStorage.getItem("accessToken");
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories?page=${
-          page + 1
-        }&size=${rowsPerPage}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories?page=1&size=1000`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -76,20 +92,31 @@ const CategoryTablePage = () => {
       if (!data.data || !Array.isArray(data.data.result))
         throw new Error("Invalid API response format");
       setCategories(data.data.result);
-      setTotalRows(data.data.meta.total);
     } catch (error) {
       console.error("Lỗi fetch categories:", error);
     }
-  }, [page, rowsPerPage]);
+  }, []);
 
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
 
-  const handleChangePage = (_event: unknown, newPage: number) =>
-    setPage(newPage);
-  const handleChangeRowsPerPage = (event: ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(+event.target.value);
+  useEffect(() => {
+    const filtered = categories.filter((category) => {
+      const nameMatch = category.name.toLowerCase().includes(keyword);
+      const createdDate = new Date(category.createdAt).toLocaleDateString(
+        "vi-VN"
+      );
+      const dateMatch = createdDate.includes(keyword);
+      return nameMatch || dateMatch;
+    });
+
+    setFilteredCategories(filtered);
+    if (keyword) setPage(0); // chỉ reset khi người dùng đang tìm kiếm
+  }, [categories, keyword]);
+
+  const handleChangeRowsPerPage = (e: ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(+e.target.value);
     setPage(0);
   };
 
@@ -110,28 +137,23 @@ const CategoryTablePage = () => {
       const token = localStorage.getItem("accessToken");
       const formData = new FormData();
       formData.append("name", name);
-      if (imageFile) {
-        formData.append("image", imageFile);
-      }
+      if (imageFile) formData.append("image", imageFile);
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories/${id}`,
         {
           method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
           body: formData,
         }
       );
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Lỗi cập nhật danh mục");
 
       setSuccessMessage("Cập nhật danh mục thành công");
       setSnackbarType("success");
       setOpenSnackbar(true);
-      fetchCategories(); // cập nhật lại bảng
+      fetchCategories();
     } catch (error: any) {
       setErrorMessage(error.message || "Lỗi không xác định");
       setSnackbarType("error");
@@ -186,7 +208,7 @@ const CategoryTablePage = () => {
       />
       <CardContent>
         <Paper sx={{ width: "100%", overflow: "hidden" }}>
-          <TableContainer sx={{ maxHeight: 440 }}>
+          <TableContainer>
             <Table stickyHeader>
               <TableHead>
                 <TableRow>
@@ -199,66 +221,85 @@ const CategoryTablePage = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {categories.map((category) => (
-                  <TableRow key={category.id} hover>
-                    <TableCell>{category.id}</TableCell>
-                    <TableCell>
-                      <Image
-                        src={
-                          category.image
-                            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/images/${category.image}`
-                            : "/no-image.png"
-                        }
-                        alt={category.name}
-                        width={80}
-                        height={80}
-                        style={{
-                          borderRadius: 8,
-                          objectFit: "cover",
-                          border: "1px solid #eee",
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>{category.name}</TableCell>
-                    <TableCell>
-                      {new Date(category.createdAt).toLocaleDateString("vi-VN")}
-                    </TableCell>
-                    <TableCell>
-                      {category.updatedAt
-                        ? new Date(category.updatedAt).toLocaleDateString(
-                            "vi-VN"
-                          )
-                        : "-"}
-                    </TableCell>
-                    <TableCell align="center">
-                      <Button
-                        variant="outlined"
-                        onClick={() => {
-                          setEditingCategory(category);
-                          setOpenEditModal(true);
-                        }}
-                      >
-                        Cập nhật
-                      </Button>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center">
+                      Đang tải...
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredCategories
+                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                    .map((category) => (
+                      <TableRow key={category.id} hover>
+                        <TableCell>{category.id}</TableCell>
+                        <TableCell>
+                          <Image
+                            src={
+                              category.image
+                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/images/${category.image}`
+                                : "/no-image.png"
+                            }
+                            alt={category.name}
+                            width={80}
+                            height={80}
+                            style={{
+                              borderRadius: 8,
+                              objectFit: "cover",
+                              border: "1px solid #eee",
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>{category.name}</TableCell>
+                        <TableCell>
+                          {new Date(category.createdAt).toLocaleDateString(
+                            "vi-VN"
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {category.updatedAt
+                            ? new Date(category.updatedAt).toLocaleDateString(
+                                "vi-VN"
+                              )
+                            : "-"}
+                        </TableCell>
+                        <TableCell align="center">
+                          <Button
+                            variant="outlined"
+                            onClick={() => {
+                              setEditingCategory(category);
+                              setOpenEditModal(true);
+                            }}
+                          >
+                            Cập nhật
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                )}
               </TableBody>
             </Table>
           </TableContainer>
           <TablePagination
             rowsPerPageOptions={[5, 10, 20]}
             component="div"
-            count={totalRows}
+            count={filteredCategories.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
+            labelRowsPerPage="Hiển thị"
+            SelectProps={{ MenuProps: { disableScrollLock: true } }}
           />
         </Paper>
       </CardContent>
 
-      <Dialog open={openModal} onClose={() => setOpenModal(false)} fullWidth>
+      <Dialog
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        fullWidth
+        disableScrollLock={true}
+      >
         <DialogTitle>Thêm danh mục</DialogTitle>
         <DialogContent>
           <TextField

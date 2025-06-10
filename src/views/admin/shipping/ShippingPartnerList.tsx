@@ -1,7 +1,7 @@
 // File: views/admin/shipping/ShippingPartnerList.tsx
 "use client";
 
-import { useEffect, useState, ChangeEvent } from "react";
+import { useEffect, useState, ChangeEvent, useCallback } from "react";
 import {
   Card,
   CardHeader,
@@ -20,6 +20,8 @@ import {
 } from "@mui/material";
 import ModalFormShippingCreate from "@/model/shipping/ModalFormShippingCreate";
 import ModalFormShippingEdit from "@/model/shipping/ModalFormShippingEdit";
+import { useSelector } from "react-redux";
+import { AppState } from "@/redux/store";
 
 const Alert = MuiAlert as React.ElementType;
 
@@ -33,6 +35,9 @@ interface ShippingPartner {
 
 const ShippingPartnerList = () => {
   const [partners, setPartners] = useState<ShippingPartner[]>([]);
+  const [filteredPartners, setFilteredPartners] = useState<ShippingPartner[]>(
+    []
+  );
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [totalRows, setTotalRows] = useState(0);
@@ -47,6 +52,10 @@ const ShippingPartnerList = () => {
   );
   const [snackbarMessage, setSnackbarMessage] = useState("");
 
+  const keyword = useSelector((state: AppState) =>
+    state.search.keyword.trim().toLowerCase()
+  );
+
   const handleSnackbar = (message: string, type: "success" | "error") => {
     setSnackbarMessage(message);
     setSnackbarType(type);
@@ -55,7 +64,7 @@ const ShippingPartnerList = () => {
 
   const handleCloseSnackbar = () => setOpenSnackbar(false);
 
-  const fetchPartners = async () => {
+  const fetchPartners = useCallback(async () => {
     try {
       const token = localStorage.getItem("accessToken");
       const res = await fetch(
@@ -72,11 +81,25 @@ const ShippingPartnerList = () => {
     } catch (error: any) {
       handleSnackbar(error.message || "Lỗi tải danh sách", "error");
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchPartners();
-  }, []);
+  }, [fetchPartners]);
+
+  useEffect(() => {
+    const filtered = partners.filter((partner) => {
+      const nameMatch = partner.name.toLowerCase().includes(keyword);
+      const codeMatch = partner.code.toLowerCase().includes(keyword);
+      const apiMatch = partner.apiUrl?.toLowerCase().includes(keyword) ?? false;
+      const status = partner.active ? "hoạt động" : "tạm ngưng";
+      const statusMatch = status.includes(keyword);
+      return nameMatch || codeMatch || apiMatch || statusMatch;
+    });
+
+    setFilteredPartners(filtered);
+    if (keyword) setPage(0);
+  }, [partners, keyword]);
 
   const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
@@ -171,39 +194,43 @@ const ShippingPartnerList = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {partners.map((partner) => (
-                  <TableRow key={partner.id} hover>
-                    <TableCell>{partner.id}</TableCell>
-                    <TableCell>{partner.name}</TableCell>
-                    <TableCell>{partner.code}</TableCell>
-                    <TableCell>{partner.apiUrl || "-"}</TableCell>
-                    <TableCell>
-                      {partner.active ? "Hoạt động" : "Tạm ngưng"}
-                    </TableCell>
-                    <TableCell align="center">
-                      <Button
-                        variant="outlined"
-                        onClick={() => {
-                          setSelectedPartner(partner);
-                          setOpenEdit(true);
-                        }}
-                      >
-                        Chỉnh sửa
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {filteredPartners
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((partner) => (
+                    <TableRow key={partner.id} hover>
+                      <TableCell>{partner.id}</TableCell>
+                      <TableCell>{partner.name}</TableCell>
+                      <TableCell>{partner.code}</TableCell>
+                      <TableCell>{partner.apiUrl || "-"}</TableCell>
+                      <TableCell>
+                        {partner.active ? "Hoạt động" : "Tạm ngưng"}
+                      </TableCell>
+                      <TableCell align="center">
+                        <Button
+                          variant="outlined"
+                          onClick={() => {
+                            setSelectedPartner(partner);
+                            setOpenEdit(true);
+                          }}
+                        >
+                          Chỉnh sửa
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
               </TableBody>
             </Table>
           </TableContainer>
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
-            count={totalRows}
+            count={filteredPartners.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
+            labelRowsPerPage="Hiển thị"
+            SelectProps={{ MenuProps: { disableScrollLock: true } }}
           />
         </Paper>
       </CardContent>

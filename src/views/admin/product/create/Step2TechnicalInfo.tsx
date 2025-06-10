@@ -178,6 +178,11 @@ const Step2TechnicalInfo = ({ formData, onChange }: Props) => {
             onChange={(e) => onChange("fuelType", e.target.value)}
             error={isError("fuelType")}
             helperText={isError("fuelType") ? "Không được để trống" : ""}
+            SelectProps={{
+              MenuProps: {
+                disableScrollLock: true,
+              },
+            }}
           >
             {fuelOptions.map((option) => (
               <MenuItem key={option} value={option}>
@@ -196,6 +201,11 @@ const Step2TechnicalInfo = ({ formData, onChange }: Props) => {
             onChange={(e) => onChange("engineType", e.target.value)}
             error={isError("engineType")}
             helperText={isError("engineType") ? "Không được để trống" : ""}
+            SelectProps={{
+              MenuProps: {
+                disableScrollLock: true,
+              },
+            }}
           >
             {engineTypes.map((type) => (
               <MenuItem key={type} value={type}>

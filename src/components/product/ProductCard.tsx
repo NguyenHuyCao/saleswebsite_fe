@@ -313,7 +313,11 @@ const ProductCard = ({
         </Paper>
       </Box>
 
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+      <Dialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        disableScrollLock={true}
+      >
         <DialogTitle>Bạn chưa đăng nhập</DialogTitle>
         <DialogContent>
           Vui lòng đăng nhập để{" "}

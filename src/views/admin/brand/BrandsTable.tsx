@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, ChangeEvent } from "react";
+import { useEffect, useState, ChangeEvent, useCallback } from "react";
 import {
   Card,
   CardHeader,
@@ -22,6 +22,8 @@ import {
 import Image from "next/image";
 import ModalFormBrandCreate from "@/model/brand/ModalFormBrandCreate";
 import ModalFormBrandEdit from "@/model/brand/ModalFormBrandEdit";
+import { useSelector } from "react-redux";
+import { AppState } from "@/redux/store";
 
 const Alert = MuiAlert as React.ElementType;
 
@@ -37,6 +39,7 @@ interface BrandData {
 
 const BrandTablePage = () => {
   const [brands, setBrands] = useState<BrandData[]>([]);
+  const [filteredBrands, setFilteredBrands] = useState<BrandData[]>([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [totalRows, setTotalRows] = useState(0);
@@ -50,27 +53,25 @@ const BrandTablePage = () => {
   );
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
+  const keyword = useSelector((state: AppState) =>
+    state.search.keyword.trim().toLowerCase()
+  );
+
   const handleCloseSnackbar = () => setOpenSnackbar(false);
 
-  const fetchBrands = async () => {
+  const fetchBrands = useCallback(async () => {
     try {
       const token = localStorage.getItem("accessToken");
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/brands?page=${
-          page + 1
-        }&size=${rowsPerPage}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/brands?page=1&size=1000`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       const data = await res.json();
-
       if (!data.data || !Array.isArray(data.data.result)) {
         throw new Error("Invalid API response format");
       }
-
       setBrands(data.data.result);
       setTotalRows(data.data.meta.total);
     } catch (error) {
@@ -79,15 +80,30 @@ const BrandTablePage = () => {
       setSnackbarType("error");
       setOpenSnackbar(true);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchBrands();
-  }, [page, rowsPerPage]);
+  }, [fetchBrands]);
 
-  const handleChangePage = (_event: unknown, newPage: number) => {
+  useEffect(() => {
+    const filtered = brands.filter((brand) => {
+      const nameMatch = brand.name.toLowerCase().includes(keyword);
+      const websiteMatch =
+        brand.website?.toLowerCase().includes(keyword) ?? false;
+      const originMatch =
+        brand.originCountry?.toLowerCase().includes(keyword) ?? false;
+      const createdDate = new Date(brand.createdAt).toLocaleDateString("vi-VN");
+      const dateMatch = createdDate.includes(keyword);
+      return nameMatch || websiteMatch || originMatch || dateMatch;
+    });
+
+    setFilteredBrands(filtered);
+    if (keyword) setPage(0); // reset trang khi tìm kiếm
+  }, [brands, keyword]);
+
+  const handleChangePage = (_event: unknown, newPage: number) =>
     setPage(newPage);
-  };
 
   const handleChangeRowsPerPage = (event: ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(+event.target.value);
@@ -116,9 +132,7 @@ const BrandTablePage = () => {
       formData.append("originCountry", data.originCountry);
       formData.append("year", data.year);
       formData.append("description", data.description);
-      if (data.logoFile) {
-        formData.append("logo", data.logoFile);
-      }
+      if (data.logoFile) formData.append("logo", data.logoFile);
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/brands`,
@@ -134,7 +148,6 @@ const BrandTablePage = () => {
       const result = await res.json();
 
       if (!res.ok) {
-        console.warn("Lỗi khi thêm thương hiệu:", result.message);
         setSnackbarMessage(result.message || "Thêm thương hiệu thất bại");
         setSnackbarType("error");
         setOpenSnackbar(true);
@@ -144,7 +157,6 @@ const BrandTablePage = () => {
       setSnackbarMessage("Thêm thương hiệu thành công");
       setSnackbarType("success");
       setOpenSnackbar(true);
-
       setOpenCreate(false);
       setPage(0);
       fetchBrands();
@@ -169,9 +181,7 @@ const BrandTablePage = () => {
       formData.append("name", data.name);
       formData.append("website", data.website);
       formData.append("originCountry", data.originCountry);
-      if (data.logoFile) {
-        formData.append("logo", data.logoFile);
-      }
+      if (data.logoFile) formData.append("logo", data.logoFile);
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/brands/${editingBrand.id}`,
@@ -191,7 +201,6 @@ const BrandTablePage = () => {
       setSnackbarMessage("Cập nhật thương hiệu thành công");
       setSnackbarType("success");
       setOpenSnackbar(true);
-
       setOpenEdit(false);
       fetchBrands();
     } catch (error: any) {
@@ -229,51 +238,61 @@ const BrandTablePage = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {brands.map((brand) => (
-                  <TableRow key={brand.id} hover>
-                    <TableCell>{brand.id}</TableCell>
-                    <TableCell
-                      style={{ display: "flex", alignItems: "center", gap: 8 }}
-                    >
-                      <Image
-                        alt="Logo Tương hiệu"
-                        src={"/images/favicon.png"}
-                        width={40}
-                        height={40}
-                      />
-                      <Typography fontSize={14}>{brand.name}</Typography>
-                    </TableCell>
-                    <TableCell>{brand.website}</TableCell>
-                    <TableCell>{brand.originCountry}</TableCell>
-                    <TableCell>
-                      {new Date(brand.createdAt).toLocaleDateString("vi-VN")}
-                    </TableCell>
-                    <TableCell>
-                      {brand.updatedAt
-                        ? new Date(brand.updatedAt).toLocaleDateString("vi-VN")
-                        : "-"}
-                    </TableCell>
-                    <TableCell align="center">
-                      <Button
-                        variant="outlined"
-                        onClick={() => handleOpenEdit(brand)}
+                {filteredBrands
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((brand) => (
+                    <TableRow key={brand.id} hover>
+                      <TableCell>{brand.id}</TableCell>
+                      <TableCell
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                        }}
                       >
-                        Cập nhật
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                        <Image
+                          alt="Logo Tương hiệu"
+                          src={"/images/favicon.png"}
+                          width={40}
+                          height={40}
+                        />
+                        <Typography fontSize={14}>{brand.name}</Typography>
+                      </TableCell>
+                      <TableCell>{brand.website}</TableCell>
+                      <TableCell>{brand.originCountry}</TableCell>
+                      <TableCell>
+                        {new Date(brand.createdAt).toLocaleDateString("vi-VN")}
+                      </TableCell>
+                      <TableCell>
+                        {brand.updatedAt
+                          ? new Date(brand.updatedAt).toLocaleDateString(
+                              "vi-VN"
+                            )
+                          : "-"}
+                      </TableCell>
+                      <TableCell align="center">
+                        <Button
+                          variant="outlined"
+                          onClick={() => handleOpenEdit(brand)}
+                        >
+                          Cập nhật
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
               </TableBody>
             </Table>
           </TableContainer>
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
-            count={totalRows}
+            count={filteredBrands.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
+            labelRowsPerPage="Hiển thị"
+            SelectProps={{ MenuProps: { disableScrollLock: true } }}
           />
         </Paper>
       </CardContent>

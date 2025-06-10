@@ -253,6 +253,11 @@ const WarrantyRequestForm = () => {
               value={formData.selectedProduct}
               onChange={(e) => handleChange("selectedProduct", e.target.value)}
               fullWidth
+              SelectProps={{
+                MenuProps: {
+                  disableScrollLock: true,
+                },
+              }}
             >
               {orderProducts.map((item) => (
                 <MenuItem key={item.productId} value={item.productId}>

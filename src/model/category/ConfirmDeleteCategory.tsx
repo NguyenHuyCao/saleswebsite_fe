@@ -17,7 +17,7 @@ const ConfirmDeleteCategory = ({
   onCancel,
 }: ConfirmDeleteProps) => {
   return (
-    <Dialog open={open} onClose={onCancel}>
+    <Dialog open={open} onClose={onCancel} disableScrollLock={true}>
       <DialogTitle>Bạn có chắc muốn xoá danh mục này?</DialogTitle>
       <DialogActions>
         <Button onClick={onCancel}>Hủy</Button>

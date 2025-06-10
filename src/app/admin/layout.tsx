@@ -1,5 +1,3 @@
-// app/admin/layout.tsx
-
 import "@/styles/app.css";
 
 import UserLayout from "@/layouts/UserLayout";
@@ -10,14 +8,16 @@ export const metadata: Metadata = {
   title: "Cửa hàng Cường Hoa",
   description: "Chào mừng bạn đến với cửa hàng Cường Hoa",
   icons: {
-    icon: "/images/store/logo-removebg-preview.png", // hoặc '/favicon.png'
+    icon: "/images/store/logo-removebg-preview.png", 
   },
 };
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
-    // <Container maxWidth="xl" sx={{ padding: 0, height: "100vh" }}>
-    <UserLayout>{children}</UserLayout>
-    // </Container>
+    <>
+      {/* <Provider store={store}> */}
+      <UserLayout>{children}</UserLayout>
+      {/* </Provider> */}
+    </>
   );
 }

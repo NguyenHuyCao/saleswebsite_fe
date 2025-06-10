@@ -1,11 +1,8 @@
 "use client";
 
-import Box from "@mui/material/Box";
-import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
-import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { Box, Grid, TextField, Button, Typography } from "@mui/material";
+import { useRouter, useSearchParams } from "next/navigation";
 import AlertSnackbar from "@/model/notify/AlertSnackbar";
 
 interface Props {
@@ -36,6 +33,8 @@ const Step3PricingInventory = ({ formData, onChange }: Props) => {
   const validateFields = () => {
     const missing = [];
     if (!formData.price || formData.price <= 0) missing.push("price");
+    if (!formData.costPrice || formData.costPrice <= 0)
+      missing.push("costPrice");
     if (!formData.stockQuantity || formData.stockQuantity <= 0)
       missing.push("stockQuantity");
     if (!formData.warrantyMonths || formData.warrantyMonths <= 0)
@@ -59,6 +58,7 @@ const Step3PricingInventory = ({ formData, onChange }: Props) => {
 
     const payload = {
       price: formData.price,
+      costPrice: formData.costPrice,
       stockQuantity: formData.stockQuantity,
       warrantyMonths: formData.warrantyMonths,
     };
@@ -90,12 +90,12 @@ const Step3PricingInventory = ({ formData, onChange }: Props) => {
         });
       }
     } catch (err) {
+      console.error("Error submitting pricing and inventory:", err);
       setAlert({
         open: true,
         message: "Đã xảy ra lỗi khi kết nối tới máy chủ.",
         type: "error",
       });
-      console.error("Error submitting pricing and inventory:", err);
     }
   };
 
@@ -105,51 +105,47 @@ const Step3PricingInventory = ({ formData, onChange }: Props) => {
         Bước 3: Giá và tồn kho
       </Typography>
 
-      <Box
-        display="flex"
-        flexWrap="wrap"
-        gap={4}
-        justifyContent="space-between"
-      >
-        <Box
-          flex={{
-            xs: "100%",
-            sm: "calc(50% - 16px)",
-            lg: "calc(33.33% - 16px)",
-          }}
-          minWidth={250}
-        >
+      <Grid container spacing={4}>
+        {/* Giá bán */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <TextField
             fullWidth
             label="Giá bán (VND)"
-            type="text"
-            value={
-              formData.price !== null && formData.price !== undefined
-                ? formatCurrency(formData.price)
-                : ""
+            value={formData.price ? formatCurrency(formData.price) : ""}
+            onChange={(e) =>
+              onChange(
+                "price",
+                Math.abs(Number(e.target.value.replace(/\D/g, "")))
+              )
             }
-            onChange={(e) => {
-              const raw = Number(e.target.value.replace(/\D/g, ""));
-              const value = Math.abs(raw);
-              onChange("price", value);
-            }}
             error={isError("price")}
             helperText={isError("price") ? "Giá phải lớn hơn 0" : ""}
           />
-        </Box>
+        </Grid>
 
-        <Box
-          flex={{
-            xs: "100%",
-            sm: "calc(50% - 16px)",
-            lg: "calc(33.33% - 16px)",
-          }}
-          minWidth={250}
-        >
+        {/* Giá gốc */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <TextField
             fullWidth
-            label="Số lượng trong kho"
+            label="Giá gốc (VND)"
+            value={formData.costPrice ? formatCurrency(formData.costPrice) : ""}
+            onChange={(e) =>
+              onChange(
+                "costPrice",
+                Math.abs(Number(e.target.value.replace(/\D/g, "")))
+              )
+            }
+            error={isError("costPrice")}
+            helperText={isError("costPrice") ? "Giá gốc phải lớn hơn 0" : ""}
+          />
+        </Grid>
+
+        {/* Tồn kho */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <TextField
+            fullWidth
             type="number"
+            label="Số lượng trong kho"
             value={formData.stockQuantity || ""}
             onChange={(e) =>
               onChange("stockQuantity", Math.abs(Number(e.target.value)))
@@ -158,22 +154,15 @@ const Step3PricingInventory = ({ formData, onChange }: Props) => {
             helperText={
               isError("stockQuantity") ? "Số lượng phải lớn hơn 0" : ""
             }
-            inputProps={{ min: 1 }}
           />
-        </Box>
+        </Grid>
 
-        <Box
-          flex={{
-            xs: "100%",
-            sm: "calc(50% - 16px)",
-            lg: "calc(33.33% - 16px)",
-          }}
-          minWidth={250}
-        >
+        {/* Bảo hành */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <TextField
             fullWidth
-            label="Bảo hành (tháng)"
             type="number"
+            label="Bảo hành (tháng)"
             value={formData.warrantyMonths || ""}
             onChange={(e) =>
               onChange("warrantyMonths", Math.abs(Number(e.target.value)))
@@ -182,10 +171,9 @@ const Step3PricingInventory = ({ formData, onChange }: Props) => {
             helperText={
               isError("warrantyMonths") ? "Bảo hành phải lớn hơn 0" : ""
             }
-            inputProps={{ min: 1 }}
           />
-        </Box>
-      </Box>
+        </Grid>
+      </Grid>
 
       <Box display="flex" justifyContent="flex-end" mt={2}>
         <Button variant="contained" onClick={handleSubmit}>
