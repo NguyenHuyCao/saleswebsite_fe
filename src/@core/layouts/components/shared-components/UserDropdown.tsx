@@ -82,6 +82,7 @@ const UserDropdown = () => {
         />
       </Badge>
       <Menu
+        disableScrollLock={true}
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={() => handleDropdownClose()}

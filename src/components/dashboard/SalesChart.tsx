@@ -19,7 +19,7 @@ interface MonthlyData {
 }
 
 interface SalesChartProps {
-  filter: "today" | "month" | "year";
+  filter: string;
   data: FinancialData[] | MonthlyData[];
 }
 

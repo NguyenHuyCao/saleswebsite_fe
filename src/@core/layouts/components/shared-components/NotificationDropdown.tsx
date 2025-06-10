@@ -128,6 +128,7 @@ const NotificationDropdown = () => {
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleDropdownClose}
+        disableScrollLock={true}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
       >

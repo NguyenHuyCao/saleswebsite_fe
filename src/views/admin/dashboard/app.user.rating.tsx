@@ -108,6 +108,7 @@ const UserRatingPage = () => {
               <DotsVertical />
             </IconButton>
             <Menu
+              disableScrollLock={true}
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
               onClose={() => setAnchorEl(null)}
@@ -192,7 +193,11 @@ const UserRatingPage = () => {
       </CardContent>
 
       {/* Modal hiển thị đánh giá chi tiết */}
-      <Modal open={openModal} onClose={() => setOpenModal(false)}>
+      <Modal
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        disableScrollLock={true}
+      >
         <Fade in={openModal}>
           <Box
             sx={{
@@ -205,6 +210,24 @@ const UserRatingPage = () => {
               p: 4,
               maxHeight: "90vh",
               overflowY: "auto",
+
+              // 🎨 Scrollbar custom styles
+              "&::-webkit-scrollbar": {
+                width: "8px",
+              },
+              "&::-webkit-scrollbar-track": {
+                backgroundColor: "#f1f1f1",
+                borderRadius: "8px",
+              },
+              "&::-webkit-scrollbar-thumb": {
+                backgroundColor: "#a855f7",
+                borderRadius: "8px",
+              },
+              "&::-webkit-scrollbar-thumb:hover": {
+                backgroundColor: "#9333ea",
+              },
+              scrollbarWidth: "thin", // Firefox
+              scrollbarColor: "#a855f7 #f1f1f1",
             }}
           >
             <Typography variant="h6" mb={3}>

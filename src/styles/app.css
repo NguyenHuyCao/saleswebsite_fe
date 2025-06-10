@@ -6,6 +6,7 @@ body {
   width: 100vw;
   min-height: 100vh;
   overflow-x: hidden;
+  overflow-y: scroll;
 }
 
 #__next {
@@ -46,4 +47,9 @@ code[class*="language-"] {
 .slick-prev:hover:before,
 .slick-next:hover:before {
   color: #ff9800;
+}
+
+.MuiMenu-paper {
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
 }

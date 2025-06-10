@@ -146,6 +146,7 @@ const StatisticsCard = () => {
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
+              disableScrollLock={true}
             >
               <MenuItem onClick={() => handleSelectPeriod("week")}>
                 Tuần này

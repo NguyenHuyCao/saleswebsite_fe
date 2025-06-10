@@ -84,6 +84,7 @@ const CardStatsVerticalComponent = ({
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
+              disableScrollLock={true}
             >
               <MenuItem onClick={() => handleSelect("week")}>Tuần</MenuItem>
               <MenuItem onClick={() => handleSelect("month")}>Tháng</MenuItem>

@@ -168,7 +168,16 @@ const TopSellingAndLowRevenue = () => {
       </Card>
 
       {/* Modal top selling */}
-      <Modal open={openTop} onClose={() => setOpenTop(false)}>
+      <Modal
+        open={openTop}
+        onClose={() => setOpenTop(false)}
+        disableScrollLock={true}
+        sx={{
+          "& .MuiBackdrop-root": {
+            backgroundColor: "none",
+          },
+        }}
+      >
         <Fade in={openTop}>
           <Box
             sx={{
@@ -177,7 +186,7 @@ const TopSellingAndLowRevenue = () => {
               mx: "auto",
               mt: isMobile ? 4 : 10,
               borderRadius: 2,
-              boxShadow: 24,
+              boxShadow: 0,
               p: 4,
               maxHeight: "90vh",
               overflowY: "auto",
@@ -197,7 +206,16 @@ const TopSellingAndLowRevenue = () => {
       </Modal>
 
       {/* Modal low revenue */}
-      <Modal open={openLow} onClose={() => setOpenLow(false)}>
+      <Modal
+        open={openLow}
+        onClose={() => setOpenLow(false)}
+        disableScrollLock={true}
+        sx={{
+          "& .MuiBackdrop-root": {
+            backgroundColor: "none",
+          },
+        }}
+      >
         <Fade in={openLow}>
           <Box
             sx={{
@@ -206,7 +224,7 @@ const TopSellingAndLowRevenue = () => {
               mx: "auto",
               mt: isMobile ? 4 : 10,
               borderRadius: 2,
-              boxShadow: 24,
+              boxShadow: 0,
               p: 4,
               maxHeight: "90vh",
               overflowY: "auto",

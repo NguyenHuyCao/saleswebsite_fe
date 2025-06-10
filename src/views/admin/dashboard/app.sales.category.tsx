@@ -107,6 +107,7 @@ const SalesByCategories = () => {
                 <DotsVertical />
               </IconButton>
               <Menu
+                disableScrollLock={true}
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
                 onClose={handleMenuClose}
@@ -157,6 +158,7 @@ const SalesByCategories = () => {
         onClose={() => setOpenModal(false)}
         closeAfterTransition
         hideBackdrop
+        disableScrollLock={true}
       >
         <Fade in={openModal}>
           <Box

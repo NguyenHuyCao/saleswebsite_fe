@@ -169,6 +169,7 @@ const WeeklyOverview = () => {
               <DotsVertical />
             </IconButton>
             <Menu
+              disableScrollLock={true}
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
@@ -222,6 +223,7 @@ const WeeklyOverview = () => {
         onClose={() => setOpenDetail(false)}
         maxWidth="sm"
         fullWidth
+        disableScrollLock={true}
       >
         <DialogTitle>Chi tiết doanh thu {data?.[period]?.range}</DialogTitle>
         <DialogContent>

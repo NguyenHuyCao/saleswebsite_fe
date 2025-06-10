@@ -202,6 +202,7 @@ const TotalEarning = () => {
         onClose={() => setOpenDetail(false)}
         maxWidth="sm"
         fullWidth
+        disableScrollLock={true}
       >
         <DialogTitle>Chi tiết doanh thu theo thương hiệu</DialogTitle>
         <DialogContent dividers sx={{ maxHeight: 400 }}>

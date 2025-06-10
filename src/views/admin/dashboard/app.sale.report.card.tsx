@@ -106,6 +106,11 @@ const SaleReportCard = () => {
               minWidth: 120,
               "& .MuiInputBase-input": { py: 0.75, fontSize: "0.875rem" },
             }}
+            SelectProps={{
+              MenuProps: {
+                disableScrollLock: true,
+              },
+            }}
           >
             {statusOptions.map((option) => (
               <MenuItem key={option.value} value={option.value}>
