@@ -5,11 +5,13 @@ import SupportCommitmentsSection from "@/components/about/SupportCommitmentsSect
 import TestimonialsSection from "@/components/about/TestimonialsSection";
 import WhoWeAre from "@/components/about/WhoWeAre";
 import WhyTwoStrokeSection from "@/components/about/WhyTwoStrokeSection";
+import PageViewTracker from "@/components/traffic/PageViewTracker";
 import { Container } from "@mui/material";
 
 const AboutUsPage = () => {
   return (
     <>
+      <PageViewTracker />
       <HeroSection />
       <Container>
         <WhoWeAre />

@@ -1,6 +1,7 @@
 import CategoryBanner from "@/components/product/CategoryBanner";
 import ProductCategoryPage from "@/components/product/ProductCategoryPage";
 import ProductListLayout from "@/components/product/ProductListLayout";
+import PageViewTracker from "@/components/traffic/PageViewTracker";
 import { Container } from "@mui/material";
 import { cookies } from "next/headers";
 
@@ -125,6 +126,7 @@ const ProductsPage = async () => {
 
   return (
     <Container>
+      <PageViewTracker />
       <CategoryBanner />
       <ProductCategoryPage categories={categories} />
       <ProductListLayout categories={categories} brands={brands} />

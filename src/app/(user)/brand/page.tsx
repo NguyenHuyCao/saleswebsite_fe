@@ -3,6 +3,7 @@ import BrandHeroSection from "@/components/brand/BrandHeroSection";
 import BrandListSection from "@/components/brand/BrandListSection";
 import BrandPageFinalSections from "@/components/brand/BrandPageFinalSections";
 import WhyChooseUs from "@/components/brand/WhyChooseUs ";
+import PageViewTracker from "@/components/traffic/PageViewTracker";
 import { Container } from "@mui/material";
 
 export async function getBrands(): Promise<Brand[]> {
@@ -19,6 +20,7 @@ const BrandPage = async () => {
 
   return (
     <>
+      <PageViewTracker />
       <BrandHeroSection />
       <Container>
         <BrandListSection brands={brands} />

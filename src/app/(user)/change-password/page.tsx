@@ -1,4 +1,5 @@
 import ChangePasswordForm from "@/components/change_password/ChangePasswordForm";
+import PageViewTracker from "@/components/traffic/PageViewTracker";
 
 export default function ChangePasswordPage() {
   let userId: number | null = null;
@@ -11,5 +12,10 @@ export default function ChangePasswordPage() {
     token = localStorage.getItem("accessToken");
   }
 
-  return <ChangePasswordForm userId={userId} token={token} />;
+  return (
+    <>
+      <PageViewTracker />
+      <ChangePasswordForm userId={userId} token={token} />
+    </>
+  );
 }

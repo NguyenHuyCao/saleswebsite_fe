@@ -3,6 +3,7 @@ import ProductDetailPage from "@/components/product/detail/ProductDetailPage";
 import { Container } from "@mui/material";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
+import PageViewTracker from "@/components/traffic/PageViewTracker";
 
 export default async function DetailProduct({ searchParams }: any) {
   const slug = searchParams?.name;
@@ -37,6 +38,7 @@ export default async function DetailProduct({ searchParams }: any) {
 
   return (
     <Container>
+      <PageViewTracker />
       <ProductDetailPage product={product} category={category} />
     </Container>
   );

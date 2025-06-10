@@ -1,7 +1,7 @@
 "use client";
 
+import PageViewTracker from "@/components/traffic/PageViewTracker";
 import WishlistHeroSection from "@/components/wishlist/WishlistHeroSection";
-// import WishlistItemCard from "@/components/wishlist/WishlistItemCard";
 import WishlistPage from "@/components/wishlist/WishlistPage";
 import { Box, Container } from "@mui/material";
 
@@ -15,6 +15,7 @@ import { Box, Container } from "@mui/material";
 const WishListPage = () => {
   return (
     <>
+      <PageViewTracker />
       <WishlistHeroSection />
       <Container>
         <Box mt={4}>

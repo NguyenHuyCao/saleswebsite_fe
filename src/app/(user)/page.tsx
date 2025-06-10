@@ -2,7 +2,6 @@ import AboutDolaTool from "@/components/home/AboutDolaTool";
 import CategoryCarousel from "@/components/category/CategoryCarousel";
 import CustomerFeedback from "@/components/home/CustomerFeedback";
 import FeaturedBrandsSlider from "@/components/home/FeaturedBrandsSlider";
-import FlashSaleSlider from "@/components/home/FlashSaleSlider";
 import KnowledgeShare from "@/components/home/KnowledgeShare";
 import NewProductSection from "@/components/home/NewProductSection";
 import NewsSection from "@/components/home/NewsSection";
@@ -13,8 +12,9 @@ import VoucherCardList from "@/components/home/VoucherCardList";
 import { Box, Container } from "@mui/material";
 import Image from "next/image";
 import { cookies } from "next/headers";
-import FlashSaleSection from "@/components/home/FlashSaleSection";
 import FlashSaleShowcasePage from "@/components/promotion/FlashSaleShowcasePage";
+import WebsiteTrafficTracker from "@/components/traffic/WebsiteTrafficTracker";
+import PageViewTracker from "@/components/traffic/PageViewTracker";
 
 export type Product = {
   id: number;
@@ -257,6 +257,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <PageViewTracker />
       <Box sx={{ width: "100%" }}>
         <Container disableGutters maxWidth={false} sx={{ p: 0 }}>
           <Image
@@ -271,6 +272,7 @@ export default async function HomePage() {
       </Box>
 
       <Container>
+        <WebsiteTrafficTracker />
         <VoucherCardList />
         <FlashSaleShowcasePage />
         <NewProductSection />

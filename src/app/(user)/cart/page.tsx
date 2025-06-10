@@ -15,6 +15,7 @@ import CartHeroSection from "@/components/cart/CartHeroSection";
 import CartItemList from "@/components/cart/CartItemList";
 import CartSummary from "@/components/cart/CartSummary";
 import ContactCTA from "@/components/cart/NewsletterBanner";
+import PageViewTracker from "@/components/traffic/PageViewTracker";
 
 export type CartItem = {
   productId: number;
@@ -147,6 +148,7 @@ const CartPage = () => {
   if (!isLoading && cartItems.length === 0) {
     return (
       <Container sx={{ mt: 8, textAlign: "center", mb: 10 }}>
+        <PageViewTracker />
         <Typography variant="h6" mb={2}>
           Giỏ hàng của bạn đang trống.
         </Typography>
@@ -163,8 +165,8 @@ const CartPage = () => {
 
   return (
     <Container sx={{ mt: 4 }}>
+      <PageViewTracker />
       <CartHeroSection />
-
       <Grid container spacing={4} mt={2}>
         <Grid size={{ xs: 12, md: 8 }}>
           <CartItemList items={cartItems} onItemsChange={setCartItems} />
