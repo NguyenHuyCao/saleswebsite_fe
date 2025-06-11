@@ -1,25 +1,23 @@
-// Modified FlashSaleSlider.tsx using react-slick
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Typography,
-  IconButton,
-  Tooltip,
   Paper,
   Fade,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-import FavoriteIcon from "@mui/icons-material/Favorite";
 import ProductCard, { Product } from "../product/ProductCard";
 import { useRouter } from "next/navigation";
 import CountdownPromotion from "./CountdownPromotion";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, AppState } from "@/redux/store";
+import { fetchWishlist } from "@/redux/slices/wishlistSlice";
 
 export type Promotion = {
   id: number;
@@ -45,6 +43,13 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
   const router = useRouter();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const dispatch = useDispatch<AppDispatch>();
+  const wishlistItems = useSelector((state: AppState) => state.wishlist.result);
+
+  const favoriteIdSet = useMemo(
+    () => new Set(wishlistItems.map((item) => item.id)),
+    [wishlistItems]
+  );
 
   const fetchProducts = async () => {
     try {
@@ -83,7 +88,7 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
           totalStock: item.totalStock,
           stockQuantity: item.stockQuantity,
           createdAt: item.createdAt,
-          isFavorite: item.wishListUser === true,
+          isFavorite: favoriteIdSet.has(item.id),
         };
       });
       setProducts(mapped);
@@ -99,12 +104,6 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
       return;
     }
 
-    setProducts((prev) =>
-      prev.map((p) =>
-        p.id === productId ? { ...p, isFavorite: !p.isFavorite } : p
-      )
-    );
-
     try {
       const formData = new FormData();
       formData.append("productId", String(productId));
@@ -113,14 +112,19 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
+      dispatch(fetchWishlist());
     } catch (err) {
       console.error("Lỗi khi cập nhật yêu thích:", err);
     }
   };
 
   useEffect(() => {
+    dispatch(fetchWishlist());
+  }, [dispatch]);
+
+  useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [promotion.id, favoriteIdSet]);
 
   const settings = {
     infinite: false,
@@ -148,80 +152,114 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
     ],
   };
 
+  const renderBanner = (pos: "left" | "right") => {
+    const banners = allPromotions.filter((p) => p.id !== promotion.id);
+    const banner = pos === "left" ? banners[0] : banners[1];
+
+    if (products.length > 3 || !banner) return <Box />;
+
+    return (
+      <Box
+        px={1}
+        display={{ xs: "none", sm: "flex" }}
+        alignItems="center"
+        justifyContent="center"
+        sx={{ ml: 1.7, mt: 5 }}
+      >
+        <Paper
+          elevation={3}
+          sx={{
+            minWidth: 160,
+            maxWidth: 180,
+            p: 2,
+            bgcolor: "#fff8e1",
+            borderRadius: 2,
+            textAlign: "center",
+          }}
+        >
+          <Typography variant="subtitle2" color="#e65100" fontWeight={700}>
+            🎊 {banner.name}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Giảm đến {(banner.discount * 100).toFixed(0)}% <br />
+            Tối đa {banner.maxDiscount.toLocaleString()}₫
+          </Typography>
+        </Paper>
+      </Box>
+    );
+  };
+
+  const renderScrollHint = () => {
+    if (!isMobile || products.length <= 2) return null;
+    return (
+      <Fade in timeout={600}>
+        <Typography
+          variant="caption"
+          sx={{
+            mt: 2,
+            color: "text.secondary",
+            fontStyle: "italic",
+            textAlign: "center",
+            animation: "slideLeft 1.5s infinite",
+            "@keyframes slideLeft": {
+              from: { transform: "translateX(0px)" },
+              to: { transform: "translateX(-10px)" },
+            },
+          }}
+        >
+          🖐 Kéo sang để xem thêm sản phẩm hấp dẫn!
+        </Typography>
+      </Fade>
+    );
+  };
+
   return (
-    <Box sx={{ px: 2, py: 4 }}>
+    <Box sx={{ px: 2, py: 2 }}>
       <CountdownPromotion
         deadline={new Date(promotion.endDate).toISOString()}
       />
 
-      <Typography
-        variant="h6"
-        textAlign="center"
-        fontWeight={700}
-        mb={2}
-        color="orange"
-      >
-        🎁 {promotion.name} - Giảm đến {Math.round(promotion.discount * 100)}%
-      </Typography>
-
-      <Slider {...settings}>
-        {products.map((product, index) => (
-          <Box key={index} px={1} position="relative">
-            <Tooltip title="Yêu thích">
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: 8,
-                  right: 8,
-                  zIndex: 5,
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleWishlist(product.id);
-                }}
-              >
-                <IconButton
-                  sx={{
-                    bgcolor: "white",
-                    borderRadius: "50%",
-                    boxShadow: 1,
-                    width: 32,
-                    height: 32,
-                    "&:hover": { bgcolor: "#ffe0b2" },
-                  }}
-                >
-                  {product.isFavorite ? (
-                    <FavoriteIcon sx={{ color: "#f25c05" }} fontSize="small" />
-                  ) : (
-                    <FavoriteBorderIcon
-                      sx={{ color: "#f25c05" }}
-                      fontSize="small"
-                    />
-                  )}
-                </IconButton>
-              </Box>
-            </Tooltip>
-
-            <ProductCard
-              product={product}
-              isFavorite={product.isFavorite}
-              onToggleFavorite={() => toggleWishlist(product.id)}
-            />
-          </Box>
-        ))}
-      </Slider>
-
-      {isMobile && products.length > 2 && (
-        <Typography
-          fontSize={13}
-          color="gray"
-          textAlign="center"
-          mt={1}
-          sx={{ fontStyle: "italic" }}
+      <Box textAlign="center" mt={-2} mb={2}>
+        <Paper
+          elevation={3}
+          sx={{
+            display: "inline-block",
+            px: 4,
+            py: 1.5,
+            background: "linear-gradient(to right, #facc15, #f59e0b)",
+            borderRadius: "50px",
+            color: "#fff",
+            fontWeight: 700,
+            fontSize: "1rem",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+            animation: "bounce 1s infinite alternate",
+            "@keyframes bounce": {
+              from: { transform: "translateY(0px)" },
+              to: { transform: "translateY(-4px)" },
+            },
+          }}
         >
-          Vuốt để xem thêm sản phẩm ➔
-        </Typography>
-      )}
+          🏱 {promotion.name} - GIẢM ĐẾN {Math.round(promotion.discount * 100)}%
+        </Paper>
+      </Box>
+
+      <Box flex={1}>
+        <Slider {...settings} className="flash-sale-slider">
+          {products.length <= 3 && renderBanner("left")}
+          {products.map((product, index) => (
+            <Box key={index} px={1}>
+              <ProductCard
+                product={product}
+                isFavorite={product.isFavorite}
+                onToggleFavorite={() => toggleWishlist(product.id)}
+              />
+            </Box>
+          ))}
+          {products.length <= 3 && renderBanner("right")}
+        </Slider>
+
+        {renderScrollHint()}
+      </Box>
     </Box>
   );
 };

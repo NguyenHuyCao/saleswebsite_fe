@@ -1,9 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Box, Typography, Button, Grid } from "@mui/material";
 import { useRouter } from "next/navigation";
 import ProductCard, { Product } from "../product/ProductCard";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, AppState } from "@/redux/store";
+import { fetchWishlist } from "@/redux/slices/wishlistSlice";
 
 export type CategoryWithProducts = {
   id: number;
@@ -20,32 +23,21 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
   categories,
 }) => {
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const wishlistItems = useSelector((state: AppState) => state.wishlist.result);
+  const favoriteIdSet = useMemo(
+    () => new Set(wishlistItems.map((item) => item.id)),
+    [wishlistItems]
+  );
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [categoryProducts, setCategoryProducts] = useState<
     CategoryWithProducts[]
   >([]);
-  const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
 
   useEffect(() => {
-    const fetchFavoriteProducts = async () => {
-      const token = localStorage.getItem("accessToken");
-      if (!token) return;
-      try {
-        const res = await fetch("http://localhost:8080/api/v1/wish_list", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const json = await res.json();
-        const favIds = json?.data?.result?.map((item: any) => item.id) || [];
-        setFavoriteIds(favIds);
-      } catch (err) {
-        console.error("Lỗi khi lấy sản phẩm yêu thích:", err);
-      }
-    };
-
-    fetchFavoriteProducts();
-  }, []);
+    dispatch(fetchWishlist());
+  }, [dispatch]);
 
   useEffect(() => {
     const now = new Date();
@@ -63,12 +55,18 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
           sale: item.price !== item.pricePerUnit,
           inStock: item.active === true,
           label: item.active ? "Thêm vào giỏ" : "Hết hàng",
-          favorite: favoriteIds.includes(item.id),
+          favorite: favoriteIdSet.has(item.id),
         };
       }),
     }));
-    setCategoryProducts(updated);
-  }, [categories, favoriteIds]);
+
+    const updatedStr = JSON.stringify(updated);
+    const currentStr = JSON.stringify(categoryProducts);
+
+    if (updatedStr !== currentStr) {
+      setCategoryProducts(updated);
+    }
+  }, [categories, favoriteIdSet]);
 
   const toggleWishlist = async (productId: number) => {
     const token = localStorage.getItem("accessToken");
@@ -96,6 +94,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
         },
         body: formData,
       });
+      dispatch(fetchWishlist());
     } catch (err) {
       console.error("Lỗi khi cập nhật yêu thích:", err);
     }
@@ -147,8 +146,8 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
       <Grid container spacing={2} px={2} justifyContent={"center"}>
         {activeCategory?.products?.map((product, index) => (
           <Grid
-            size={{ xs: 6, sm: 4, md: 3, lg: 2.4 }}
             key={index}
+            size={{ xs: 6, sm: 4, md: 3, lg: 2.4 as any }}
             justifyContent="center"
           >
             <ProductCard

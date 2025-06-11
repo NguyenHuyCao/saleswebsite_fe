@@ -1,11 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Box, Typography, useMediaQuery } from "@mui/material";
 import Slider from "react-slick";
 import ProductCard, { Product } from "../ProductCard";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, AppState } from "@/redux/store";
+import { fetchWishlist } from "@/redux/slices/wishlistSlice";
 
 interface RawProduct {
   id: number;
@@ -36,6 +39,17 @@ interface RelatedProductsProps {
 const RelatedProductsSlick: React.FC<RelatedProductsProps> = ({ category }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const isTabletOrMobile = useMediaQuery("(max-width:1024px)");
+  const dispatch = useDispatch<AppDispatch>();
+  const wishlistItems = useSelector((state: AppState) => state.wishlist.result);
+
+  const favoriteIdSet = useMemo(
+    () => new Set(wishlistItems.map((item) => item.id)),
+    [wishlistItems]
+  );
+
+  useEffect(() => {
+    dispatch(fetchWishlist());
+  }, [dispatch]);
 
   useEffect(() => {
     if (category?.products) {
@@ -64,12 +78,12 @@ const RelatedProductsSlick: React.FC<RelatedProductsProps> = ({ category }) => {
           stockQuantity: item.stockQuantity,
           totalStock: item.totalStock,
           slug: item.slug,
-          isFavorite: item.wishListUser === true,
+          isFavorite: favoriteIdSet.has(item.id),
         };
       });
       setProducts(mapped);
     }
-  }, [category]);
+  }, [category, favoriteIdSet]);
 
   const toggleWishlist = async (productId: number) => {
     const token = localStorage.getItem("accessToken");
@@ -92,6 +106,7 @@ const RelatedProductsSlick: React.FC<RelatedProductsProps> = ({ category }) => {
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
+      dispatch(fetchWishlist());
     } catch (err) {
       console.error("Lỗi khi cập nhật yêu thích:", err);
     }

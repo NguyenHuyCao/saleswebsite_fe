@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Typography,
@@ -14,6 +14,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import ProductCard, { Product } from "../product/ProductCard";
 import CategorySidebar from "./CategorySidebar";
 import ProductFilterPanel from "./ProductFilterPanel";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, AppState } from "@/redux/store";
+import { fetchWishlist } from "@/redux/slices/wishlistSlice";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -26,9 +29,15 @@ export default function ProductListLayout({ categories, brands }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isMobile = useMediaQuery("(max-width:600px)");
+  const dispatch = useDispatch<AppDispatch>();
+
+  const wishlistItems = useSelector((state: AppState) => state.wishlist.result);
+  const favoriteIdSet = useMemo(
+    () => new Set(wishlistItems.map((item) => item.id)),
+    [wishlistItems]
+  );
 
   const [products, setProducts] = useState<Product[]>([]);
-  const [favorites, setFavorites] = useState<number[]>([]);
   const [search, setSearch] = useState("");
   const [sortType, setSortType] = useState("");
   const [page, setPage] = useState(1);
@@ -48,8 +57,8 @@ export default function ProductListLayout({ categories, brands }: Props) {
     const s = searchParams.get("search") || "";
     setSearch(s);
     fetchProducts();
-    fetchWishlist();
-  }, [searchParams.toString()]);
+    dispatch(fetchWishlist());
+  }, [searchParams.toString(), dispatch]);
 
   const fetchProducts = async () => {
     const category = searchParams.get("category") || "";
@@ -114,35 +123,9 @@ export default function ProductListLayout({ categories, brands }: Props) {
     }
   };
 
-  const fetchWishlist = async () => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return;
-
-    try {
-      const res = await fetch("http://localhost:8080/api/v1/wish_list", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await res.json();
-      const ids =
-        data?.data?.result?.map((entry: any) =>
-          entry.product ? entry.product.id : entry.id
-        ) || [];
-      setFavorites(ids);
-    } catch (err) {
-      console.error("Lỗi khi lấy danh sách yêu thích:", err);
-    }
-  };
-
   const handleToggleFavorite = async (productId: number) => {
     const token = localStorage.getItem("accessToken");
     if (!token) return;
-
-    const isFavorite = favorites.includes(productId);
-    setFavorites((prev) =>
-      isFavorite ? prev.filter((id) => id !== productId) : [...prev, productId]
-    );
 
     try {
       const formData = new FormData();
@@ -153,6 +136,8 @@ export default function ProductListLayout({ categories, brands }: Props) {
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
+
+      dispatch(fetchWishlist());
     } catch (err) {
       console.error("Lỗi cập nhật yêu thích:", err);
     }
@@ -247,8 +232,6 @@ export default function ProductListLayout({ categories, brands }: Props) {
         </Box>
 
         <Grid container spacing={1.5}>
-          {" "}
-          {/* Reduced spacing */}
           {paginatedProducts.map((item) => (
             <Grid
               size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
@@ -259,7 +242,7 @@ export default function ProductListLayout({ categories, brands }: Props) {
               <Box sx={{ width: { xs: "100%", sm: 220 } }}>
                 <ProductCard
                   product={item}
-                  isFavorite={favorites.includes(item.id)}
+                  isFavorite={favoriteIdSet.has(item.id)}
                   onToggleFavorite={() => handleToggleFavorite(item.id)}
                 />
               </Box>

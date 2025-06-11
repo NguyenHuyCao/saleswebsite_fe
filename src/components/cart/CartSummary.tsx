@@ -19,6 +19,8 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ORDERS_COUNT_KEY, CART_COUNT_KEY } from "@/constants/apiKeys";
+import { mutate } from "swr";
 
 export type CartItem = {
   productId: number;
@@ -160,6 +162,9 @@ const CartSummary = ({ items, onApplyVoucher }: Props) => {
         setSnackbarMessage("Đặt hàng thành công!");
         setSnackbarOpen(true);
 
+        mutate(ORDERS_COUNT_KEY, undefined, { revalidate: true });
+        mutate(CART_COUNT_KEY, undefined, { revalidate: true });
+
         setTimeout(() => {
           if (data.data.paymentUrl) {
             window.location.href = data.data.paymentUrl;
@@ -279,9 +284,55 @@ const CartSummary = ({ items, onApplyVoucher }: Props) => {
       </Box>
 
       <Stack spacing={1}>
-        <Button variant="outlined" color="error">
+        <Button
+          variant="outlined"
+          color="error"
+          onClick={async () => {
+            const token = localStorage.getItem("accessToken");
+            if (!token) {
+              setSnackbarType("error");
+              setSnackbarMessage("Bạn cần đăng nhập để xoá giỏ hàng.");
+              setSnackbarOpen(true);
+              return;
+            }
+
+            try {
+              const res = await fetch(
+                "http://localhost:8080/api/v1/carts/user",
+                {
+                  method: "DELETE",
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                }
+              );
+
+              const data = await res.json();
+
+              if (res.ok) {
+                setSnackbarType("success");
+                setSnackbarMessage("Đã xoá toàn bộ giỏ hàng.");
+                setSnackbarOpen(true);
+
+                mutate(CART_COUNT_KEY, undefined, { revalidate: true });
+
+                setTimeout(() => {
+                  router.push("/");
+                }, 1500);
+              } else {
+                throw new Error(data?.message || "Xoá giỏ hàng thất bại.");
+              }
+            } catch (error: any) {
+              console.error("Lỗi khi xoá giỏ hàng:", error);
+              setSnackbarType("error");
+              setSnackbarMessage(error.message || "Đã xảy ra lỗi.");
+              setSnackbarOpen(true);
+            }
+          }}
+        >
           Xoá tất cả
         </Button>
+
         <Button
           variant="contained"
           color="primary"

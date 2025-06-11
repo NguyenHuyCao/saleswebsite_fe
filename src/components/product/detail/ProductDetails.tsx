@@ -12,8 +12,14 @@ import {
   Grid,
 } from "@mui/material";
 import { ShoppingCart, Heart, Minus, Plus } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, AppState } from "@/redux/store";
+import { fetchWishlist } from "@/redux/slices/wishlistSlice";
+import { selectIsProductInWishlist } from "@/redux/selectors/wishlistSelectors";
 import GlobalSnackbar from "@/components/alert/GlobalSnackbar";
+import { mutate } from "swr";
+import { CART_COUNT_KEY, WISHLIST_COUNT_KEY } from "@/constants/apiKeys";
 
 interface Props {
   product: {
@@ -37,15 +43,21 @@ interface Props {
 }
 
 export const ProductDetails = ({ product, category }: Props) => {
-  const [quantity, setQuantity] = useState<number>(1);
-  const [isFavorite, setIsFavorite] = useState<boolean>(
-    product.wishListUser || false
+  const dispatch = useDispatch<AppDispatch>();
+  const isFavorite = useSelector((state: AppState) =>
+    selectIsProductInWishlist(product.id)(state)
   );
+
+  const [quantity, setQuantity] = useState<number>(1);
   const [snackbar, setSnackbar] = useState({
     open: false,
     type: "success" as "success" | "error",
     message: "",
   });
+
+  useEffect(() => {
+    dispatch(fetchWishlist());
+  }, [dispatch]);
 
   const handleAddToCart = async () => {
     const token = localStorage.getItem("accessToken");
@@ -78,7 +90,9 @@ export const ProductDetails = ({ product, category }: Props) => {
         type: "success",
         message: "Thêm vào giỏ hàng thành công!",
       });
+
       setQuantity(1);
+      mutate(CART_COUNT_KEY, undefined, { revalidate: true });
     } catch (error) {
       setSnackbar({
         open: true,
@@ -96,9 +110,9 @@ export const ProductDetails = ({ product, category }: Props) => {
     }
 
     try {
-      setIsFavorite((prev) => !prev);
       const formData = new FormData();
       formData.append("productId", String(product.id));
+
       await fetch("http://localhost:8080/api/v1/wish_list", {
         method: "POST",
         headers: {
@@ -106,6 +120,9 @@ export const ProductDetails = ({ product, category }: Props) => {
         },
         body: formData,
       });
+
+      dispatch(fetchWishlist());
+      mutate(WISHLIST_COUNT_KEY, undefined, { revalidate: true });
     } catch (err) {
       console.error("Lỗi khi cập nhật yêu thích:", err);
     }
@@ -146,7 +163,7 @@ export const ProductDetails = ({ product, category }: Props) => {
       </Typography>
 
       <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid size={{ xs: 12, sm: 6 }}>
+        <Grid item xs={12} sm={6}>
           <Typography variant="body2">
             <b>Loại nhiên liệu:</b> {product.fuelType}
           </Typography>
@@ -157,7 +174,7 @@ export const ProductDetails = ({ product, category }: Props) => {
             <b>Dung tích bình:</b> {product.tankCapacity}L
           </Typography>
         </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
+        <Grid item xs={12} sm={6}>
           <Typography variant="body2">
             <b>Kích thước:</b> {product.dimensions}
           </Typography>
@@ -173,7 +190,6 @@ export const ProductDetails = ({ product, category }: Props) => {
         </Grid>
       </Grid>
 
-      {/* Tiến độ bán hàng */}
       <Box
         sx={{
           bgcolor: "#ffc107",
@@ -210,7 +226,6 @@ export const ProductDetails = ({ product, category }: Props) => {
         </Typography>
       </Box>
 
-      {/* Tương tác người dùng */}
       <Stack direction="row" spacing={2} alignItems="center" mt={3}>
         <Stack
           direction="row"

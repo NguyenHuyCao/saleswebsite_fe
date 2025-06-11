@@ -14,7 +14,17 @@ import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import BookmarkBorderOutlinedIcon from "@mui/icons-material/BookmarkBorderOutlined";
 import { FavoriteBorder, Search } from "@mui/icons-material";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import useSWR, { mutate } from "swr";
+import { fetcherWithToken } from "@/utils/fetcherWithToken";
+import {
+  WISHLIST_COUNT_KEY,
+  CART_COUNT_KEY,
+  ORDERS_COUNT_KEY,
+} from "@/constants/apiKeys";
+
+mutate(CART_COUNT_KEY);
+mutate(WISHLIST_COUNT_KEY);
 
 const searchPhrases = [
   "Bạn muốn tìm gì?",
@@ -26,20 +36,34 @@ const searchPhrases = [
 const toSlug = (str: string): string => {
   return str
     .toLowerCase()
-    .normalize("NFD") // tách dấu
-    .replace(/[\u0300-\u036f]/g, "") // xóa dấu
+    .normalize("NFD")
+    .replace(/\u0300-\u036f/g, "")
     .replace(/đ/g, "d")
-    .replace(/[^a-z0-9\s-]/g, "") // loại bỏ ký tự đặc biệt
+    .replace(/[^a-z0-9\s-]/g, "")
     .trim()
-    .replace(/\s+/g, "-"); // khoảng trắng -> dấu -
+    .replace(/\s+/g, "-");
+};
+
+export const refreshAllCounts = () => {
+  mutate(WISHLIST_COUNT_KEY);
+  mutate(CART_COUNT_KEY);
+  mutate(ORDERS_COUNT_KEY);
 };
 
 const MainToolbar = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const [currentText, setCurrentText] = useState("");
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
   const [searchText, setSearchText] = useState("");
+
+  const { data: wishlistCount = 0 } = useSWR(
+    WISHLIST_COUNT_KEY,
+    fetcherWithToken
+  );
+  const { data: cartCount = 0 } = useSWR(CART_COUNT_KEY, fetcherWithToken);
+  const { data: ordersCount = 0 } = useSWR(ORDERS_COUNT_KEY, fetcherWithToken);
 
   useEffect(() => {
     const currentPhrase = searchPhrases[phraseIndex];
@@ -69,11 +93,26 @@ const MainToolbar = () => {
     }
   };
 
-  const navRoutes: Record<string, string> = {
-    "Yêu thích": "/wishlist",
-    "Đơn hàng": "/order",
-    "Giỏ hàng": "/cart",
-  };
+  const navItems = [
+    {
+      label: "Yêu thích",
+      href: "/wishlist",
+      icon: FavoriteBorder,
+      count: wishlistCount,
+    },
+    {
+      label: "Đơn hàng",
+      href: "/order",
+      icon: BookmarkBorderOutlinedIcon,
+      count: ordersCount,
+    },
+    {
+      label: "Giỏ hàng",
+      href: "/cart",
+      icon: ShoppingCartOutlinedIcon,
+      count: cartCount,
+    },
+  ];
 
   return (
     <AppBar position="static" sx={{ bgcolor: "black", boxShadow: "none" }}>
@@ -137,14 +176,8 @@ const MainToolbar = () => {
             flexWrap="wrap"
             justifyContent="flex-end"
           >
-            {["Yêu thích", "Đơn hàng", "Giỏ hàng"].map((label) => {
-              const Icon =
-                label === "Yêu thích"
-                  ? FavoriteBorder
-                  : label === "Đơn hàng"
-                  ? BookmarkBorderOutlinedIcon
-                  : ShoppingCartOutlinedIcon;
-
+            {navItems.map(({ label, href, icon: Icon, count }) => {
+              const isActive = pathname === href;
               return (
                 <Box
                   key={label}
@@ -153,12 +186,20 @@ const MainToolbar = () => {
                     alignItems: "center",
                     gap: 1,
                     cursor: "pointer",
+                    color: isActive ? "#f25c05" : "#ffb700",
+                    svg: { color: isActive ? "#f25c05" : "#ffb700" },
+                    "&:hover": {
+                      color: "#f25c05",
+                      svg: { color: "#f25c05" },
+                      "& .hover-label": { color: "#f25c05" },
+                      "& .hover-count": { color: "#f25c05" },
+                    },
                   }}
-                  onClick={() => router.push(navRoutes[label])}
+                  onClick={() => router.push(href)}
                 >
                   <IconButton
                     sx={{
-                      color: "#ffb700",
+                      color: isActive ? "#f25c05" : "#ffb700",
                       border: "1px solid #ffb700",
                       width: 40,
                       height: 40,
@@ -169,17 +210,26 @@ const MainToolbar = () => {
                   </IconButton>
                   <Box>
                     <Typography
+                      className="hover-label"
                       sx={{
                         fontSize: { xs: "14px", md: "16px" },
                         fontWeight: "bold",
-                        color: "#ffb700",
+                        color: isActive ? "#f25c05" : "#ffb700",
+                        transition: "color 0.2s ease",
                       }}
                     >
                       {label}
                     </Typography>
                     <Typography fontSize="12px">
-                      <span style={{ color: "#ffb700", fontWeight: "bold" }}>
-                        0
+                      <span
+                        className="hover-count"
+                        style={{
+                          color: isActive ? "#f25c05" : "#ffb700",
+                          fontWeight: "bold",
+                          transition: "color 0.2s ease",
+                        }}
+                      >
+                        {count ?? 0}
                       </span>{" "}
                       {label === "Đơn hàng" ? "Đơn hàng" : "Sản phẩm"}
                     </Typography>

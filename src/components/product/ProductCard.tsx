@@ -20,6 +20,11 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import GlobalSnackbar from "../alert/GlobalSnackbar";
+import { mutate } from "swr";
+import { WISHLIST_COUNT_KEY, CART_COUNT_KEY } from "@/constants/apiKeys";
+
+mutate(CART_COUNT_KEY, undefined, { revalidate: true });
+mutate(WISHLIST_COUNT_KEY, undefined, { revalidate: true });
 
 export type Product = {
   id: number;
@@ -73,7 +78,6 @@ const ProductCard = ({
         const ids = data?.data?.map((p: any) => p.id);
         if (ids.includes(product.id)) {
           setIsOnSale(true);
-
           const promoRes = await fetch(
             `http://localhost:8080/api/v1/promotions/product?productId=${product.id}`
           );
@@ -117,6 +121,7 @@ const ProductCard = ({
           message: "Đã thêm sản phẩm vào giỏ hàng!",
           type: "success",
         });
+        mutate(CART_COUNT_KEY, undefined, { revalidate: true }); // Đặt đúng chỗ
       } else {
         setSnackbar({
           open: true,
@@ -134,14 +139,21 @@ const ProductCard = ({
     }
   };
 
-  const handleFavoriteToggle = (e: React.MouseEvent) => {
+  const handleFavoriteToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
     const token = localStorage.getItem("accessToken");
     if (!token) {
       handleRequireLogin("favorite");
       return;
     }
-    onToggleFavorite?.(product.id);
+
+    // Nếu onToggleFavorite là async function
+    if (onToggleFavorite) {
+      await onToggleFavorite(product.id); // Chờ cập nhật backend hoàn tất
+    }
+
+    // Sau khi chắc chắn cập nhật xong, mới gọi mutate
+    mutate(WISHLIST_COUNT_KEY, undefined, { revalidate: true });
   };
 
   return (
@@ -166,9 +178,7 @@ const ProductCard = ({
             mb: 1,
             transition: "transform 0.3s ease",
             flexShrink: 0,
-            "&:hover": {
-              transform: "translateY(-4px)",
-            },
+            "&:hover": { transform: "translateY(-4px)" },
           }}
         >
           {isOnSale && (

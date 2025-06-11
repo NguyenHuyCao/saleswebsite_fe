@@ -56,7 +56,8 @@ const CartPage = () => {
         });
 
         const data = await res.json();
-        if (res.ok && data?.data) {
+        console.log("token", token);
+        if (res.ok && Array.isArray(data?.data)) {
           setCartItems(data.data);
           setOriginalItems(data.data);
         } else {

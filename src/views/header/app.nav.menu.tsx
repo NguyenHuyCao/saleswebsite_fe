@@ -211,6 +211,10 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
                   color: pathname === href ? "#f25c05" : "#000",
                   borderBottom:
                     pathname === href ? "2px solid #f25c05" : "none",
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    color: "#f25c05",
+                  },
                 }}
               >
                 {label}

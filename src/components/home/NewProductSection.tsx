@@ -6,10 +6,14 @@ import ProductCard, { Product } from "../product/ProductCard";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { fetchWishlist } from "@/redux/slices/wishlistSlice";
 
 const NewProductSectionSlick: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const isTabletOrMobile = useMediaQuery("(max-width:1024px)");
+  const dispatch = useDispatch<AppDispatch>();
 
   const fetchNewProducts = async () => {
     try {
@@ -79,6 +83,7 @@ const NewProductSectionSlick: React.FC = () => {
         },
         body: formData,
       });
+      dispatch(fetchWishlist());
     } catch (err) {
       console.error("Lỗi khi cập nhật yêu thích:", err);
     }
@@ -86,7 +91,8 @@ const NewProductSectionSlick: React.FC = () => {
 
   useEffect(() => {
     fetchNewProducts();
-  }, []);
+    dispatch(fetchWishlist());
+  }, [dispatch]);
 
   const settings = {
     infinite: false,

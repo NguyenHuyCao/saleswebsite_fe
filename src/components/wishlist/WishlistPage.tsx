@@ -1,71 +1,63 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Box, Typography, Pagination } from "@mui/material";
 import ProductCard, { Product } from "@/components/product/ProductCard";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, AppState } from "@/redux/store";
+import { fetchWishlist } from "@/redux/slices/wishlistSlice";
 
 const ITEMS_PER_PAGE = 15;
 
 const WishlistPage = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const wishlistItems = useSelector((state: AppState) => state.wishlist.result);
   const [page, setPage] = useState(1);
-  const [allItems, setAllItems] = useState<Product[]>([]);
+
+  const allItems: Product[] = useMemo(() => {
+    const now = new Date();
+    return wishlistItems.map((item: any) => {
+      const createdAt = new Date(item.createdAt);
+      const isNew =
+        (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
+      const isHot = item.totalStock - item.stockQuantity > 10;
+      const status = [];
+      if (isNew) status.push("Mới");
+      if (isHot) status.push("Bán chạy");
+
+      return {
+        id: item.id,
+        title: item.name,
+        price: item.pricePerUnit,
+        originalPrice: item.price,
+        image: item.imageAvt
+          ? `http://localhost:8080/api/v1/files/${item.imageAvt}`
+          : "/images/product/placeholder.jpg",
+        status,
+        sale: item.pricePerUnit < item.price,
+        inStock: item.stockQuantity > 0,
+        label: item.stockQuantity > 0 ? "Thêm vào giỏ" : "Hết hàng",
+        rating: item.rating || 0,
+        slug: item.slug,
+        createdAt: item.createdAt,
+        stockQuantity: item.stockQuantity,
+        totalStock: item.totalStock,
+        isFavorite: true,
+      };
+    });
+  }, [wishlistItems]);
+
   const [displayedItems, setDisplayedItems] = useState<Product[]>([]);
 
-  const fetchWishlist = async () => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      alert("Bạn cần đăng nhập để xem danh sách yêu thích.");
-      return;
-    }
+  useEffect(() => {
+    dispatch(fetchWishlist());
+  }, [dispatch]);
 
-    try {
-      const res = await fetch("http://localhost:8080/api/v1/wish_list", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await res.json();
-      const items = data?.data?.result || [];
-
-      const now = new Date();
-
-      const mapped: Product[] = items.map((item: any) => {
-        const createdAt = new Date(item.createdAt);
-        const isNew =
-          (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
-        const isHot = item.totalStock - item.stockQuantity > 10;
-        const status = [];
-        if (isNew) status.push("Mới");
-        if (isHot) status.push("Bán chạy");
-
-        return {
-          id: item.id,
-          title: item.name,
-          price: item.pricePerUnit,
-          originalPrice: item.price,
-          image: item.imageAvt
-            ? `http://localhost:8080/api/v1/files/${item.imageAvt}`
-            : "/images/product/placeholder.jpg",
-          status,
-          sale: item.pricePerUnit < item.price,
-          inStock: item.stockQuantity > 0,
-          label: item.stockQuantity > 0 ? "Thêm vào giỏ" : "Hết hàng",
-          rating: item.rating || 0,
-          slug: item.slug,
-          createdAt: item.createdAt,
-          stockQuantity: item.stockQuantity,
-          totalStock: item.totalStock,
-          isFavorite: true, // luôn sáng vì đây là wishlist
-        };
-      });
-
-      setAllItems(mapped);
-    } catch (error) {
-      console.error("Lỗi khi lấy danh sách yêu thích:", error);
-      setAllItems([]);
-    }
-  };
+  useEffect(() => {
+    const start = (page - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    setDisplayedItems(allItems.slice(start, end));
+  }, [page, allItems]);
 
   const toggleWishlist = async (productId: number) => {
     const token = localStorage.getItem("accessToken");
@@ -85,21 +77,12 @@ const WishlistPage = () => {
         body: formData,
       });
 
-      setAllItems((prev) => prev.filter((p) => p.id !== productId));
+      // Gọi lại danh sách yêu thích mới từ backend để đảm bảo đồng bộ
+      dispatch(fetchWishlist());
     } catch (error) {
       console.error("Lỗi khi xoá sản phẩm yêu thích:", error);
     }
   };
-
-  useEffect(() => {
-    fetchWishlist();
-  }, []);
-
-  useEffect(() => {
-    const start = (page - 1) * ITEMS_PER_PAGE;
-    const end = start + ITEMS_PER_PAGE;
-    setDisplayedItems(allItems.slice(start, end));
-  }, [page, allItems]);
 
   const pageCount = Math.ceil(allItems.length / ITEMS_PER_PAGE);
 

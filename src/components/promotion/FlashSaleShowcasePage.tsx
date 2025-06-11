@@ -29,7 +29,7 @@ const FlashSaleShowcasePage = () => {
   }, []);
 
   return (
-    <Box sx={{ py: 4 }}>
+    <Box sx={{ py: 0, pt: 8, mb: -5 }}>
       <Typography variant="h4" textAlign="center" fontWeight={700} gutterBottom>
         🔥 KHUYẾN MÃI HẤP DẪN HÔM NAY 🔥
       </Typography>
