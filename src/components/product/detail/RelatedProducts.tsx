@@ -1,114 +1,130 @@
 "use client";
 
-import {
-  Box,
-  Typography,
-  Card,
-  CardMedia,
-  CardContent,
-  CardActions,
-  Button,
-  IconButton,
-} from "@mui/material";
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { useRef, useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import React, { useEffect, useState } from "react";
+import { Box, Typography, useMediaQuery } from "@mui/material";
+import Slider from "react-slick";
+import ProductCard, { Product } from "../ProductCard";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
-interface Product {
+interface RawProduct {
   id: number;
   name: string;
-  price: number;
   imageAvt: string | null;
+  price: number;
+  pricePerUnit: number;
   slug: string;
   stockQuantity: number;
-  origin: string;
-  warrantyMonths: number;
-  wishListUser?: boolean;
+  totalStock: number;
+  rating: number;
+  active: boolean;
+  createdAt: string;
+  wishListUser: boolean;
 }
 
 interface Category {
   id: number;
   name: string;
   slug: string;
-  products: Product[];
+  products: RawProduct[];
 }
 
 interface RelatedProductsProps {
   category: Category | null;
 }
 
-export const RelatedProducts = ({ category }: RelatedProductsProps) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
+const RelatedProductsSlick: React.FC<RelatedProductsProps> = ({ category }) => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const isTabletOrMobile = useMediaQuery("(max-width:1024px)");
 
-  const related = category?.products || [];
+  useEffect(() => {
+    if (category?.products) {
+      const now = new Date();
+      const mapped = category.products.map((item): Product => {
+        const createdAt = new Date(item.createdAt);
+        const isNew =
+          (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
+        const status =
+          item.stockQuantity === 0 ? ["Hết hàng"] : isNew ? ["Mới"] : [];
 
-  const toggleLike = async (id: number) => {
+        return {
+          id: item.id,
+          title: item.name,
+          price: item.pricePerUnit,
+          originalPrice: item.price,
+          image: item.imageAvt
+            ? `http://localhost:8080/api/v1/files/${item.imageAvt}`
+            : "/images/product/placeholder.jpg",
+          status,
+          sale: item.price !== item.pricePerUnit,
+          inStock: item.active,
+          label: item.active ? "Thêm vào giỏ" : "Hết hàng",
+          rating: item.rating,
+          createdAt: item.createdAt,
+          stockQuantity: item.stockQuantity,
+          totalStock: item.totalStock,
+          slug: item.slug,
+          isFavorite: item.wishListUser === true,
+        };
+      });
+      setProducts(mapped);
+    }
+  }, [category]);
+
+  const toggleWishlist = async (productId: number) => {
     const token = localStorage.getItem("accessToken");
     if (!token) {
       alert("Bạn cần đăng nhập để thêm vào yêu thích.");
       return;
     }
 
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === productId ? { ...p, isFavorite: !p.isFavorite } : p
+      )
+    );
+
     try {
       const formData = new FormData();
-      formData.append("productId", String(id));
+      formData.append("productId", String(productId));
       await fetch("http://localhost:8080/api/v1/wish_list", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
-
-      // Cập nhật lại trạng thái yêu thích bằng reload nhẹ
-      window.location.reload();
     } catch (err) {
       console.error("Lỗi khi cập nhật yêu thích:", err);
     }
   };
 
-  const updateScrollButtons = () => {
-    const container = scrollRef.current;
-    if (container) {
-      const { scrollLeft, clientWidth, scrollWidth } = container;
-      const isScrollable = scrollWidth > clientWidth;
-      setCanScrollLeft(isScrollable && scrollLeft > 0);
-      setCanScrollRight(
-        isScrollable && scrollLeft + clientWidth < scrollWidth - 1
-      );
-    }
-  };
-
-  useEffect(() => {
-    updateScrollButtons();
-    const container = scrollRef.current;
-    if (!container) return;
-    container.addEventListener("scroll", updateScrollButtons);
-    window.addEventListener("resize", updateScrollButtons);
-
-    return () => {
-      container.removeEventListener("scroll", updateScrollButtons);
-      window.removeEventListener("resize", updateScrollButtons);
-    };
-  }, []);
-
-  const scroll = (direction: "left" | "right") => {
-    const container = scrollRef.current;
-    if (!container) return;
-    const scrollAmount = 300;
-    container.scrollBy({
-      left: direction === "left" ? -scrollAmount : scrollAmount,
-      behavior: "smooth",
-    });
+  const settings = {
+    infinite: false,
+    speed: 500,
+    slidesToShow: 5,
+    slidesToScroll: 2,
+    arrows: !isTabletOrMobile,
+    responsive: [
+      {
+        breakpoint: 1024,
+        settings: {
+          slidesToShow: 3,
+          slidesToScroll: 1,
+          arrows: false,
+        },
+      },
+      {
+        breakpoint: 600,
+        settings: {
+          slidesToShow: 2,
+          slidesToScroll: 1,
+          arrows: false,
+        },
+      },
+    ],
   };
 
   return (
-    <Box position="relative">
+    <Box sx={{ px: 2, py: 4 }}>
       <Typography variant="h6" fontWeight={700} mb={2}>
         SẢN PHẨM{" "}
         <Box component="span" color="warning.main">
@@ -116,141 +132,31 @@ export const RelatedProducts = ({ category }: RelatedProductsProps) => {
         </Box>
       </Typography>
 
-      <Box sx={{ position: "relative" }}>
-        {canScrollLeft && (
-          <IconButton
-            onClick={() => scroll("left")}
-            sx={{
-              position: "absolute",
-              top: "50%",
-              left: 0,
-              transform: "translate(-50%, -50%)",
-              zIndex: 10,
-              bgcolor: "white",
-              boxShadow: 2,
-              border: "1px solid #ddd",
-              "&:hover": { bgcolor: "grey.100" },
-            }}
-          >
-            <ChevronLeftIcon />
-          </IconButton>
-        )}
+      <Slider {...settings}>
+        {products.map((product, index) => (
+          <Box key={index} px={1}>
+            <ProductCard
+              product={product}
+              isFavorite={product.isFavorite}
+              onToggleFavorite={() => toggleWishlist(product.id)}
+            />
+          </Box>
+        ))}
+      </Slider>
 
-        {canScrollRight && (
-          <IconButton
-            onClick={() => scroll("right")}
-            sx={{
-              position: "absolute",
-              top: "50%",
-              right: 0,
-              transform: "translate(50%, -50%)",
-              zIndex: 10,
-              bgcolor: "white",
-              boxShadow: 2,
-              border: "1px solid #ddd",
-              "&:hover": { bgcolor: "grey.100" },
-            }}
-          >
-            <ChevronRightIcon />
-          </IconButton>
-        )}
-
-        <Box
-          ref={scrollRef}
-          sx={{
-            display: "flex",
-            gap: 2,
-            overflowX: "auto",
-            scrollSnapType: "x mandatory",
-            pb: 1,
-            px: 1,
-            "&::-webkit-scrollbar": { display: "none" },
-          }}
+      {isTabletOrMobile && (
+        <Typography
+          fontSize={13}
+          color="gray"
+          textAlign="center"
+          mt={1}
+          sx={{ fontStyle: "italic" }}
         >
-          {related.map((item, idx) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4, delay: idx * 0.05, ease: "easeOut" }}
-              whileHover={{
-                scale: 1.02,
-                boxShadow: "0px 8px 20px rgba(0,0,0,0.08)",
-              }}
-              style={{ minWidth: 200, maxWidth: 200 }}
-            >
-              <Card
-                sx={{
-                  flexShrink: 0,
-                  scrollSnapAlign: "start",
-                  position: "relative",
-                  borderRadius: 3,
-                  overflow: "hidden",
-                }}
-              >
-                <IconButton
-                  onClick={() => toggleLike(item.id)}
-                  sx={{
-                    position: "absolute",
-                    top: 8,
-                    right: 8,
-                    bgcolor: "white",
-                    borderRadius: 1,
-                    "&:hover": {
-                      bgcolor: item.wishListUser ? "#ffe5e5" : "grey.100",
-                    },
-                  }}
-                >
-                  {item.wishListUser ? (
-                    <FavoriteIcon fontSize="small" color="error" />
-                  ) : (
-                    <FavoriteBorderIcon fontSize="small" />
-                  )}
-                </IconButton>
-
-                <CardMedia
-                  component="img"
-                  image={
-                    item.imageAvt
-                      ? `http://localhost:8080/api/v1/files/${item.imageAvt}`
-                      : "/images/product/placeholder.jpg"
-                  }
-                  alt={item.name}
-                  sx={{ height: 120, objectFit: "cover" }}
-                />
-                <CardContent sx={{ p: 1 }}>
-                  <Typography variant="body2" fontWeight={600} noWrap>
-                    {item.name}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="error.main"
-                    fontWeight={700}
-                  >
-                    {item.price.toLocaleString()}₫
-                  </Typography>
-                </CardContent>
-                <CardActions sx={{ px: 1, pb: 1 }}>
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    color="warning"
-                    disabled={item.stockQuantity === 0}
-                    sx={{
-                      fontWeight: 600,
-                      borderRadius: 2,
-                      fontSize: 12,
-                      py: 0.5,
-                    }}
-                  >
-                    {item.stockQuantity === 0 ? "Hết hàng" : "Thêm vào giỏ"}
-                  </Button>
-                </CardActions>
-              </Card>
-            </motion.div>
-          ))}
-        </Box>
-      </Box>
+          Vuốt để xem thêm sản phẩm ➡️
+        </Typography>
+      )}
     </Box>
   );
 };
+
+export default RelatedProductsSlick;

@@ -8,13 +8,14 @@ import {
   Grid,
   Pagination,
   InputBase,
+  useMediaQuery,
 } from "@mui/material";
 import { useRouter, useSearchParams } from "next/navigation";
 import ProductCard, { Product } from "../product/ProductCard";
 import CategorySidebar from "./CategorySidebar";
 import ProductFilterPanel from "./ProductFilterPanel";
 
-const ITEMS_PER_PAGE = 8;
+const ITEMS_PER_PAGE = 12;
 
 interface Props {
   categories: any[];
@@ -24,6 +25,7 @@ interface Props {
 export default function ProductListLayout({ categories, brands }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const isMobile = useMediaQuery("(max-width:600px)");
 
   const [products, setProducts] = useState<Product[]>([]);
   const [favorites, setFavorites] = useState<number[]>([]);
@@ -31,12 +33,11 @@ export default function ProductListLayout({ categories, brands }: Props) {
   const [sortType, setSortType] = useState("");
   const [page, setPage] = useState(1);
 
-  // ✅ Hàm chuẩn hóa tiếng Việt -> slug
   const toSlug = (str: string): string => {
     return str
       .toLowerCase()
       .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[̀-ͯ]/g, "")
       .replace(/đ/g, "d")
       .replace(/[^a-z0-9\s-]/g, "")
       .trim()
@@ -45,7 +46,7 @@ export default function ProductListLayout({ categories, brands }: Props) {
 
   useEffect(() => {
     const s = searchParams.get("search") || "";
-    setSearch(s); // search từ URL (slug)
+    setSearch(s);
     fetchProducts();
     fetchWishlist();
   }, [searchParams.toString()]);
@@ -103,7 +104,7 @@ export default function ProductListLayout({ categories, brands }: Props) {
           createdAt: item.createdAt,
           rating: item.rating,
           slug: item.slug,
-          favorite: item.wishListUser === true,
+          isFavorite: item.wishListUser === true,
         } as Product;
       });
 
@@ -163,7 +164,6 @@ export default function ProductListLayout({ categories, brands }: Props) {
     router.push(`/product?${params.toString()}`);
   };
 
-  // ✅ Tìm kiếm theo slug
   const filteredProducts = products
     .filter((p) => toSlug(p.title).includes(toSlug(search)))
     .sort((a, b) => {
@@ -184,7 +184,12 @@ export default function ProductListLayout({ categories, brands }: Props) {
   const pageCount = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
 
   return (
-    <Box display={{ xs: "block", md: "flex" }} py={4} gap={3}>
+    <Box
+      display={{ xs: "block", md: "flex" }}
+      py={4}
+      gap={3}
+      px={{ xs: 1, sm: 2 }}
+    >
       <Box
         width={{ xs: "100%", md: 250 }}
         mb={{ xs: 3, md: 0 }}
@@ -194,11 +199,15 @@ export default function ProductListLayout({ categories, brands }: Props) {
       >
         <CategorySidebar
           categories={categories}
-          onSelectCategory={(slug) => updateURLParam("category", slug)}
+          onSelectCategory={({ slug }: { slug: string }) =>
+            updateURLParam("category", slug)
+          }
         />
         <ProductFilterPanel
           brands={brands}
-          onSelectBrand={(slug) => updateURLParam("brand", slug)}
+          onSelectBrand={({ slug }: { slug: string }) =>
+            updateURLParam("brand", slug)
+          }
           onSelectPrice={(range) => updateURLParam("price", range)}
         />
       </Box>
@@ -227,18 +236,33 @@ export default function ProductListLayout({ categories, brands }: Props) {
             placeholder="Tìm kiếm sản phẩm..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            sx={{ ml: 2, border: "1px solid #ccc", px: 2, borderRadius: 1 }}
+            sx={{
+              ml: 2,
+              border: "1px solid #ccc",
+              px: 2,
+              borderRadius: 1,
+              minWidth: 200,
+            }}
           />
         </Box>
 
-        <Grid container spacing={2}>
+        <Grid container spacing={1.5}>
+          {" "}
+          {/* Reduced spacing */}
           {paginatedProducts.map((item) => (
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.id}>
-              <ProductCard
-                product={item}
-                isFavorite={favorites.includes(item.id)}
-                onToggleFavorite={() => handleToggleFavorite(item.id)}
-              />
+            <Grid
+              size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
+              key={item.id}
+              display="flex"
+              justifyContent="center"
+            >
+              <Box sx={{ width: { xs: "100%", sm: 220 } }}>
+                <ProductCard
+                  product={item}
+                  isFavorite={favorites.includes(item.id)}
+                  onToggleFavorite={() => handleToggleFavorite(item.id)}
+                />
+              </Box>
             </Grid>
           ))}
         </Grid>

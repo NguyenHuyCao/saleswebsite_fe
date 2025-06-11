@@ -193,6 +193,7 @@ export async function getCategoriesWithProducts(): Promise<
     res = await fetch("http://localhost:8080/api/v1/categories");
   }
 
+  console.log("token", token);
   const raw = await res.json();
   const data = raw?.data?.result || [];
   const now = new Date();
@@ -202,7 +203,7 @@ export async function getCategoriesWithProducts(): Promise<
     name: category.name,
     slug: category.slug,
     products: (category.products || [])
-      .slice(0, 4)
+      .slice(0, 5)
       .map((item: any): Product => {
         const createdAt = new Date(item.createdAt);
         const isNew =
@@ -237,7 +238,7 @@ export async function getCategoriesWithProducts(): Promise<
           rating: item.rating || 0,
           status:
             item.stockQuantity === 0 ? ["Hết hàng"] : isNew ? ["Mới"] : [],
-          favorite: item.wishListUser || false,
+          favorite: item.wishListUser,
         };
       }),
   }));

@@ -1,24 +1,25 @@
-// Modified FlashSaleSlider.tsx
+// Modified FlashSaleSlider.tsx using react-slick
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
+  Typography,
   IconButton,
   Tooltip,
-  Typography,
-  useMediaQuery,
-  useTheme,
   Paper,
   Fade,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
-import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ProductCard, { Product } from "../product/ProductCard";
 import { useRouter } from "next/navigation";
 import CountdownPromotion from "./CountdownPromotion";
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
 export type Promotion = {
   id: number;
@@ -40,22 +41,10 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
   promotion,
   allPromotions = [],
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const wrapperRef = useRef<HTMLDivElement>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const router = useRouter();
-  const [showLeft, setShowLeft] = useState(false);
-  const [showRight, setShowRight] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
-  const checkScroll = () => {
-    const el = containerRef.current;
-    if (el) {
-      setShowLeft(el.scrollLeft > 10);
-      setShowRight(el.scrollLeft + el.offsetWidth < el.scrollWidth - 10);
-    }
-  };
 
   const fetchProducts = async () => {
     try {
@@ -68,7 +57,7 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
       );
       const data = await res.json();
       const now = new Date();
-      const mapped = data?.data?.map((item: any) => {
+      const mapped = data?.data?.map((item: any): Product => {
         const createdAt = new Date(item.createdAt);
         const isNew =
           (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
@@ -95,12 +84,11 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
           stockQuantity: item.stockQuantity,
           createdAt: item.createdAt,
           isFavorite: item.wishListUser === true,
-        } as Product;
+        };
       });
-
       setProducts(mapped);
-    } catch (error) {
-      console.error("Lỗi khi tải sản phẩm:", error);
+    } catch (err) {
+      console.error("Lỗi khi tải sản phẩm:", err);
     }
   };
 
@@ -125,238 +113,116 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
-    } catch (error) {
-      console.error("Lỗi khi cập nhật yêu thích:", error);
+    } catch (err) {
+      console.error("Lỗi khi cập nhật yêu thích:", err);
     }
   };
 
   useEffect(() => {
     fetchProducts();
-    checkScroll();
-    const el = containerRef.current;
-    if (!el) return;
-    el.addEventListener("scroll", checkScroll);
-    return () => el.removeEventListener("scroll", checkScroll);
   }, []);
 
-  const scroll = (direction: "left" | "right") => {
-    if (containerRef.current) {
-      containerRef.current.scrollBy({
-        left: direction === "left" ? -300 : 300,
-        behavior: "smooth",
-      });
-    }
-  };
-
-  const renderBanner = (pos: "left" | "right") => {
-    const banners = allPromotions.filter((p) => p.id !== promotion.id);
-    const banner = pos === "left" ? banners[0] : banners[1];
-    if (!banner) return null;
-    return (
-      <Paper
-        elevation={4}
-        sx={{
-          minWidth: 160,
-          maxWidth: 180,
-          p: 2,
-          bgcolor: "#fff8e1",
-          borderRadius: 2,
-          display: { xs: "none", sm: "block" },
-        }}
-      >
-        <Typography variant="subtitle2" color="#e65100" fontWeight={700}>
-          🎊 {banner.name}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Giảm đến {(banner.discount * 100).toFixed(0)}% <br />
-          Tối đa {banner.maxDiscount.toLocaleString()}₫
-        </Typography>
-      </Paper>
-    );
-  };
-
-  const renderScrollHint = () => {
-    if (!isMobile || products.length <= 2) return null;
-    return (
-      <Fade in timeout={600}>
-        <Typography
-          variant="caption"
-          sx={{
-            mt: 1,
-            color: "text.secondary",
-            fontStyle: "italic",
-            textAlign: "center",
-            animation: "slideLeft 1.5s infinite",
-            "@keyframes slideLeft": {
-              from: { transform: "translateX(0px)" },
-              to: { transform: "translateX(-10px)" },
-            },
-          }}
-        >
-          👉 Kéo sang để xem thêm sản phẩm hấp dẫn!
-        </Typography>
-      </Fade>
-    );
+  const settings = {
+    infinite: false,
+    speed: 500,
+    slidesToShow: isMobile ? 2 : 5,
+    slidesToScroll: isMobile ? 1 : 2,
+    arrows: !isMobile,
+    responsive: [
+      {
+        breakpoint: 1024,
+        settings: {
+          slidesToShow: 3,
+          slidesToScroll: 1,
+          arrows: false,
+        },
+      },
+      {
+        breakpoint: 600,
+        settings: {
+          slidesToShow: 2,
+          slidesToScroll: 1,
+          arrows: false,
+        },
+      },
+    ],
   };
 
   return (
-    <>
+    <Box sx={{ px: 2, py: 4 }}>
       <CountdownPromotion
         deadline={new Date(promotion.endDate).toISOString()}
       />
 
-      <Box textAlign="center" mt={-2} mb={2}>
-        <Paper
-          elevation={3}
-          sx={{
-            display: "inline-block",
-            px: 4,
-            py: 1.5,
-            background: "linear-gradient(to right, #facc15, #f59e0b)",
-            borderRadius: "50px",
-            color: "#fff",
-            fontWeight: 700,
-            fontSize: "1rem",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-            animation: "bounce 1s infinite alternate",
-            "@keyframes bounce": {
-              from: { transform: "translateY(0px)" },
-              to: { transform: "translateY(-4px)" },
-            },
-          }}
-        >
-          🎁 {promotion.name} - GIẢM ĐẾN {Math.round(promotion.discount * 100)}%
-        </Paper>
-      </Box>
-
-      <Box
-        ref={wrapperRef}
-        sx={{
-          position: "relative",
-          px: isMobile ? 1 : 0,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
+      <Typography
+        variant="h6"
+        textAlign="center"
+        fontWeight={700}
+        mb={2}
+        color="orange"
       >
-        {products.length <= 3 && renderBanner("left")}
+        🎁 {promotion.name} - Giảm đến {Math.round(promotion.discount * 100)}%
+      </Typography>
 
-        {showLeft && !isMobile && products.length > 3 && (
-          <IconButton
-            onClick={() => scroll("left")}
-            sx={{
-              position: "absolute",
-              top: "50%",
-              left: 0,
-              transform: "translateY(-50%)",
-              zIndex: 15,
-              bgcolor: "white",
-              boxShadow: 2,
-              "&:hover": { bgcolor: "#ffb700" },
-            }}
-          >
-            <ArrowBackIosNewIcon />
-          </IconButton>
-        )}
-
-        {showRight && !isMobile && products.length > 3 && (
-          <IconButton
-            onClick={() => scroll("right")}
-            sx={{
-              position: "absolute",
-              top: "50%",
-              right: 0,
-              transform: "translateY(-50%)",
-              zIndex: 15,
-              bgcolor: "white",
-              boxShadow: 2,
-              "&:hover": { bgcolor: "#ffb700" },
-            }}
-          >
-            <ArrowForwardIosIcon />
-          </IconButton>
-        )}
-
-        <Box
-          ref={containerRef}
-          sx={{
-            display: "flex",
-            overflowX: products.length > 3 ? "auto" : "hidden",
-            justifyContent: products.length <= 3 ? "center" : "flex-start",
-            scrollBehavior: "smooth",
-            scrollbarWidth: "none",
-            "&::-webkit-scrollbar": { display: "none" },
-            gap: 1,
-            scrollSnapType: "x mandatory",
-            px: 3,
-            flexWrap: products.length <= 3 ? "wrap" : "nowrap",
-          }}
-        >
-          {products?.map((product, idx) => (
-            <Box
-              key={idx}
-              sx={{
-                scrollSnapAlign: "start",
-                flex: "0 0 auto",
-                position: "relative",
-                cursor: "pointer",
-              }}
-              onClick={() =>
-                router.push(`/product/detail?name=${product.slug}`)
-              }
-            >
-              <Tooltip title="Yêu thích">
-                <Box
+      <Slider {...settings}>
+        {products.map((product, index) => (
+          <Box key={index} px={1} position="relative">
+            <Tooltip title="Yêu thích">
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: 8,
+                  right: 8,
+                  zIndex: 5,
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleWishlist(product.id);
+                }}
+              >
+                <IconButton
                   sx={{
-                    position: "absolute",
-                    top: 8,
-                    right: 8,
-                    zIndex: 5,
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleWishlist(product.id!);
+                    bgcolor: "white",
+                    borderRadius: "50%",
+                    boxShadow: 1,
+                    width: 32,
+                    height: 32,
+                    "&:hover": { bgcolor: "#ffe0b2" },
                   }}
                 >
-                  <IconButton
-                    sx={{
-                      bgcolor: "white",
-                      borderRadius: "50%",
-                      boxShadow: 1,
-                      width: 32,
-                      height: 32,
-                      "&:hover": { bgcolor: "#ffe0b2" },
-                    }}
-                  >
-                    {product.isFavorite ? (
-                      <FavoriteIcon
-                        sx={{ color: "#f25c05" }}
-                        fontSize="small"
-                      />
-                    ) : (
-                      <FavoriteBorderIcon
-                        sx={{ color: "#f25c05" }}
-                        fontSize="small"
-                      />
-                    )}
-                  </IconButton>
-                </Box>
-              </Tooltip>
+                  {product.isFavorite ? (
+                    <FavoriteIcon sx={{ color: "#f25c05" }} fontSize="small" />
+                  ) : (
+                    <FavoriteBorderIcon
+                      sx={{ color: "#f25c05" }}
+                      fontSize="small"
+                    />
+                  )}
+                </IconButton>
+              </Box>
+            </Tooltip>
 
-              <ProductCard
-                product={product}
-                isFavorite={product.isFavorite}
-                onToggleFavorite={() => toggleWishlist(product.id!)}
-              />
-            </Box>
-          ))}
-        </Box>
+            <ProductCard
+              product={product}
+              isFavorite={product.isFavorite}
+              onToggleFavorite={() => toggleWishlist(product.id)}
+            />
+          </Box>
+        ))}
+      </Slider>
 
-        {products.length <= 3 && renderBanner("right")}
-      </Box>
-
-      {renderScrollHint()}
-    </>
+      {isMobile && products.length > 2 && (
+        <Typography
+          fontSize={13}
+          color="gray"
+          textAlign="center"
+          mt={1}
+          sx={{ fontStyle: "italic" }}
+        >
+          Vuốt để xem thêm sản phẩm ➔
+        </Typography>
+      )}
+    </Box>
   );
 };
 

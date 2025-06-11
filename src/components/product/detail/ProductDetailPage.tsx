@@ -8,7 +8,7 @@ import { CommitmentCard } from "./CommitmentCard";
 import { SupportBox } from "./SupportBox";
 import { PromotionBox } from "./PromotionBox";
 import { ProductTabs } from "./ProductTabs";
-import { RelatedProducts } from "./RelatedProducts";
+import RelatedProductsSlick from "./RelatedProducts";
 import { ProductReviewList } from "@/components/review/ProductReviewList";
 
 export type Product = {
@@ -101,7 +101,7 @@ export default function ProductDetailPage({
       </Box>
 
       <Box mt={6}>
-        <RelatedProducts category={category} />
+        <RelatedProductsSlick category={category} />
       </Box>
     </Box>
   );

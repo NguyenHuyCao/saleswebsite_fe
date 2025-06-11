@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Box, Typography, Button, Stack } from "@mui/material";
+import { Box, Typography, Button, Grid } from "@mui/material";
 import { useRouter } from "next/navigation";
 import ProductCard, { Product } from "../product/ProductCard";
 
@@ -24,20 +24,51 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
   const [categoryProducts, setCategoryProducts] = useState<
     CategoryWithProducts[]
   >([]);
+  const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
 
   useEffect(() => {
-    // Đồng bộ favorite từ wishListUser nếu cần
-    const updatedCategories = categories.map((cat) => ({
+    const fetchFavoriteProducts = async () => {
+      const token = localStorage.getItem("accessToken");
+      if (!token) return;
+      try {
+        const res = await fetch("http://localhost:8080/api/v1/wish_list", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const json = await res.json();
+        const favIds = json?.data?.result?.map((item: any) => item.id) || [];
+        setFavoriteIds(favIds);
+      } catch (err) {
+        console.error("Lỗi khi lấy sản phẩm yêu thích:", err);
+      }
+    };
+
+    fetchFavoriteProducts();
+  }, []);
+
+  useEffect(() => {
+    const now = new Date();
+    const updated = categories.map((cat) => ({
       ...cat,
-      products: cat.products.map(
-        (item: any): Product => ({
+      products: cat.products.map((item: any): Product => {
+        const createdAt = new Date(item.createdAt);
+        const isNew =
+          (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
+        const status =
+          item.stockQuantity === 0 ? ["Hết hàng"] : isNew ? ["Mới"] : [];
+        return {
           ...item,
-          favorite: item.favorite || item.wishListUser === true,
-        })
-      ),
+          status,
+          sale: item.price !== item.pricePerUnit,
+          inStock: item.active === true,
+          label: item.active ? "Thêm vào giỏ" : "Hết hàng",
+          favorite: favoriteIds.includes(item.id),
+        };
+      }),
     }));
-    setCategoryProducts(updatedCategories);
-  }, [categories]);
+    setCategoryProducts(updated);
+  }, [categories, favoriteIds]);
 
   const toggleWishlist = async (productId: number) => {
     const token = localStorage.getItem("accessToken");
@@ -77,7 +108,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
   const activeCategory = categoryProducts[activeIndex];
 
   return (
-    <Box sx={{ px: 2, py: 4 }}>
+    <Box sx={{ py: 4 }}>
       <Typography variant="h5" fontWeight="bold" mb={2}>
         DỤNG CỤ <span style={{ color: "#ffb700" }}>KHÁC</span>
       </Typography>
@@ -113,67 +144,21 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
         ))}
       </Box>
 
-      <Box
-        display="flex"
-        flexWrap="wrap"
-        gap={1}
-        justifyContent="center"
-        px={5}
-      >
+      <Grid container spacing={2} px={2} justifyContent={"center"}>
         {activeCategory?.products?.map((product, index) => (
-          <Box
+          <Grid
+            size={{ xs: 6, sm: 4, md: 3, lg: 2.4 }}
             key={index}
-            sx={{ width: 230, position: "relative", cursor: "pointer" }}
-            onClick={() => router.push(`/product/detail?name=${product.slug}`)}
+            justifyContent="center"
           >
-            <Stack
-              direction="row"
-              spacing={1}
-              position="absolute"
-              top={8}
-              left={8}
-              zIndex={2}
-            >
-              {product.createdAt &&
-                (new Date().getTime() - new Date(product.createdAt).getTime()) /
-                  (1000 * 60 * 60 * 24) <=
-                  30 && (
-                  <Box
-                    sx={{
-                      bgcolor: "red",
-                      color: "white",
-                      fontSize: 12,
-                      fontWeight: "bold",
-                      px: 1,
-                      borderRadius: 0.5,
-                    }}
-                  >
-                    Mới
-                  </Box>
-                )}
-              {product.totalStock - product.stockQuantity > 10 && (
-                <Box
-                  sx={{
-                    bgcolor: "#ffb700",
-                    color: "white",
-                    fontSize: 12,
-                    fontWeight: "bold",
-                    px: 1,
-                    borderRadius: 0.5,
-                  }}
-                >
-                  Bán chạy
-                </Box>
-              )}
-            </Stack>
             <ProductCard
               product={product}
               isFavorite={product.favorite}
               onToggleFavorite={() => toggleWishlist(product.id)}
             />
-          </Box>
+          </Grid>
         ))}
-      </Box>
+      </Grid>
 
       <Box display="flex" justifyContent="center" mt={3}>
         <Button

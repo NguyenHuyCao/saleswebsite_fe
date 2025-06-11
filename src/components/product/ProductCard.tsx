@@ -153,7 +153,8 @@ const ProductCard = ({
         <Paper
           elevation={2}
           sx={{
-            width: 220,
+            width: "100%",
+            maxWidth: 220,
             height: 350,
             borderRadius: 2,
             overflow: "hidden",
@@ -162,6 +163,7 @@ const ProductCard = ({
             flexDirection: "column",
             justifyContent: "space-between",
             p: 2,
+            mb: 1,
             transition: "transform 0.3s ease",
             flexShrink: 0,
             "&:hover": {
@@ -224,16 +226,15 @@ const ProductCard = ({
             sx={{ backgroundColor: "#fafafa" }}
           >
             <Image
-              src={product.image}
-              alt={product.title}
+              src={product.image || "/images/product/12.jpg"}
+              alt={product.title || "test"}
               width={120}
               height={120}
-              style={{ objectFit: "contain" }}
             />
           </Box>
 
           <Stack direction="row" spacing={1} mt={1}>
-            {product.status.map((s, idx) => (
+            {product.status?.map((s, idx) => (
               <Box
                 key={idx}
                 sx={{
