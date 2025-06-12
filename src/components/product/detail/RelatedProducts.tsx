@@ -38,10 +38,10 @@ interface RelatedProductsProps {
 
 const RelatedProductsSlick: React.FC<RelatedProductsProps> = ({ category }) => {
   const [products, setProducts] = useState<Product[]>([]);
-  const isTabletOrMobile = useMediaQuery("(max-width:1024px)");
   const dispatch = useDispatch<AppDispatch>();
-  const wishlistItems = useSelector((state: AppState) => state.wishlist.result);
+  const isTabletOrMobile = useMediaQuery("(max-width:1024px)");
 
+  const wishlistItems = useSelector((state: AppState) => state.wishlist.result);
   const favoriteIdSet = useMemo(
     () => new Set(wishlistItems.map((item) => item.id)),
     [wishlistItems]
@@ -52,14 +52,13 @@ const RelatedProductsSlick: React.FC<RelatedProductsProps> = ({ category }) => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (category?.products) {
+    if (category?.products?.length) {
       const now = new Date();
+
       const mapped = category.products.map((item): Product => {
         const createdAt = new Date(item.createdAt);
         const isNew =
           (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
-        const status =
-          item.stockQuantity === 0 ? ["Hết hàng"] : isNew ? ["Mới"] : [];
 
         return {
           id: item.id,
@@ -69,7 +68,8 @@ const RelatedProductsSlick: React.FC<RelatedProductsProps> = ({ category }) => {
           image: item.imageAvt
             ? `http://localhost:8080/api/v1/files/${item.imageAvt}`
             : "/images/product/placeholder.jpg",
-          status,
+          status:
+            item.stockQuantity === 0 ? ["Hết hàng"] : isNew ? ["Mới"] : [],
           sale: item.price !== item.pricePerUnit,
           inStock: item.active,
           label: item.active ? "Thêm vào giỏ" : "Hết hàng",
@@ -81,6 +81,7 @@ const RelatedProductsSlick: React.FC<RelatedProductsProps> = ({ category }) => {
           isFavorite: favoriteIdSet.has(item.id),
         };
       });
+
       setProducts(mapped);
     }
   }, [category, favoriteIdSet]);
@@ -92,6 +93,7 @@ const RelatedProductsSlick: React.FC<RelatedProductsProps> = ({ category }) => {
       return;
     }
 
+    // Cập nhật local UI ngay
     setProducts((prev) =>
       prev.map((p) =>
         p.id === productId ? { ...p, isFavorite: !p.isFavorite } : p
@@ -101,55 +103,67 @@ const RelatedProductsSlick: React.FC<RelatedProductsProps> = ({ category }) => {
     try {
       const formData = new FormData();
       formData.append("productId", String(productId));
+
       await fetch("http://localhost:8080/api/v1/wish_list", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
+
       dispatch(fetchWishlist());
     } catch (err) {
       console.error("Lỗi khi cập nhật yêu thích:", err);
     }
   };
 
-  const settings = {
-    infinite: false,
-    speed: 500,
-    slidesToShow: 5,
-    slidesToScroll: 2,
-    arrows: !isTabletOrMobile,
-    responsive: [
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 3,
-          slidesToScroll: 1,
-          arrows: false,
+  const sliderSettings = useMemo(
+    () => ({
+      infinite: false,
+      speed: 500,
+      slidesToShow: 5,
+      slidesToScroll: 2,
+      arrows: !isTabletOrMobile,
+      responsive: [
+        {
+          breakpoint: 1024,
+          settings: {
+            slidesToShow: 3,
+            slidesToScroll: 1,
+            arrows: false,
+          },
         },
-      },
-      {
-        breakpoint: 600,
-        settings: {
-          slidesToShow: 2,
-          slidesToScroll: 1,
-          arrows: false,
+        {
+          breakpoint: 600,
+          settings: {
+            slidesToShow: 2,
+            slidesToScroll: 1,
+            arrows: false,
+          },
         },
-      },
-    ],
-  };
+      ],
+    }),
+    [isTabletOrMobile]
+  );
+
+  if (!products.length) return null;
 
   return (
     <Box sx={{ px: 2, py: 4 }}>
-      <Typography variant="h6" fontWeight={700} mb={2}>
-        SẢN PHẨM{" "}
+      <Typography
+        variant="h6"
+        fontWeight={700}
+        mb={2}
+        sx={{ textTransform: "uppercase" }}
+      >
+        Sản phẩm{" "}
         <Box component="span" color="warning.main">
-          LIÊN QUAN
+          liên quan
         </Box>
       </Typography>
 
-      <Slider {...settings}>
-        {products.map((product, index) => (
-          <Box key={index} px={1}>
+      <Slider {...sliderSettings}>
+        {products.map((product) => (
+          <Box key={product.id} px={1}>
             <ProductCard
               product={product}
               isFavorite={product.isFavorite}

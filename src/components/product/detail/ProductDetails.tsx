@@ -10,6 +10,9 @@ import {
   Paper,
   Divider,
   Grid,
+  Tooltip,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { ShoppingCart, Heart, Minus, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -44,6 +47,9 @@ interface Props {
 
 export const ProductDetails = ({ product, category }: Props) => {
   const dispatch = useDispatch<AppDispatch>();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   const isFavorite = useSelector((state: AppState) =>
     selectIsProductInWishlist(product.id)(state)
   );
@@ -62,12 +68,11 @@ export const ProductDetails = ({ product, category }: Props) => {
   const handleAddToCart = async () => {
     const token = localStorage.getItem("accessToken");
     if (!token) {
-      setSnackbar({
+      return setSnackbar({
         open: true,
         type: "error",
         message: "Bạn cần đăng nhập để thêm vào giỏ hàng.",
       });
-      return;
     }
 
     try {
@@ -77,27 +82,23 @@ export const ProductDetails = ({ product, category }: Props) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          quantity: quantity,
-          productId: product.id,
-        }),
+        body: JSON.stringify({ quantity, productId: product.id }),
       });
 
-      if (!res.ok) throw new Error("Lỗi khi thêm vào giỏ hàng");
+      if (!res.ok) throw new Error();
 
+      mutate(CART_COUNT_KEY, undefined, { revalidate: true });
+      setQuantity(1);
       setSnackbar({
         open: true,
         type: "success",
-        message: "Thêm vào giỏ hàng thành công!",
+        message: "Đã thêm vào giỏ hàng!",
       });
-
-      setQuantity(1);
-      mutate(CART_COUNT_KEY, undefined, { revalidate: true });
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         type: "error",
-        message: "Không thể thêm vào giỏ hàng. Vui lòng thử lại.",
+        message: "Thêm vào giỏ hàng thất bại.",
       });
     }
   };
@@ -105,26 +106,30 @@ export const ProductDetails = ({ product, category }: Props) => {
   const toggleFavorite = async () => {
     const token = localStorage.getItem("accessToken");
     if (!token) {
-      alert("Bạn cần đăng nhập để thêm vào yêu thích.");
-      return;
+      return setSnackbar({
+        open: true,
+        type: "error",
+        message: "Bạn cần đăng nhập để yêu thích sản phẩm.",
+      });
     }
 
     try {
       const formData = new FormData();
       formData.append("productId", String(product.id));
-
       await fetch("http://localhost:8080/api/v1/wish_list", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
       dispatch(fetchWishlist());
       mutate(WISHLIST_COUNT_KEY, undefined, { revalidate: true });
-    } catch (err) {
-      console.error("Lỗi khi cập nhật yêu thích:", err);
+    } catch {
+      setSnackbar({
+        open: true,
+        type: "error",
+        message: "Lỗi cập nhật yêu thích.",
+      });
     }
   };
 
@@ -135,6 +140,12 @@ export const ProductDetails = ({ product, category }: Props) => {
             100
         )
       : 0;
+
+  const handleQuantityChange = (value: number) => {
+    if (!Number.isNaN(value) && value >= 1 && value <= product.stockQuantity) {
+      setQuantity(value);
+    }
+  };
 
   return (
     <Box component={Paper} elevation={1} p={3} borderRadius={3}>
@@ -147,7 +158,7 @@ export const ProductDetails = ({ product, category }: Props) => {
         <Box component="span" color="warning.main" fontWeight={500}>
           {category?.name || "Không rõ"}
         </Box>{" "}
-        | Loại: {product?.type || "--"} | Xuất xứ: {product.origin} | Công suất:{" "}
+        | Loại: {product.type || "--"} | Xuất xứ: {product.origin} | Công suất:{" "}
         {product.power}
       </Typography>
 
@@ -202,7 +213,6 @@ export const ProductDetails = ({ product, category }: Props) => {
       >
         <Box
           sx={{
-            position: "relative",
             height: 12,
             bgcolor: "white",
             borderRadius: 6,
@@ -216,8 +226,8 @@ export const ProductDetails = ({ product, category }: Props) => {
               bgcolor: "#f44336",
               backgroundImage:
                 "repeating-linear-gradient(45deg, #f44336 0, #f44336 10px, #ff9800 10px, #ff9800 20px)",
+              transition: "width 0.4s ease",
               borderRadius: 6,
-              transition: "width 0.4s ease-in-out",
             }}
           />
         </Box>
@@ -227,6 +237,7 @@ export const ProductDetails = ({ product, category }: Props) => {
       </Box>
 
       <Stack direction="row" spacing={2} alignItems="center" mt={3}>
+        {/* Quantity Control */}
         <Stack
           direction="row"
           alignItems="center"
@@ -241,14 +252,18 @@ export const ProductDetails = ({ product, category }: Props) => {
           <IconButton
             size="small"
             sx={{ borderRadius: 0 }}
-            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+            disabled={quantity <= 1}
+            onClick={() => handleQuantityChange(quantity - 1)}
           >
             <Minus size={16} />
           </IconButton>
           <TextField
             size="small"
             value={quantity}
-            onChange={(e) => setQuantity(Number(e.target.value) || 1)}
+            onChange={(e) => {
+              const val = parseInt(e.target.value, 10);
+              handleQuantityChange(Number.isNaN(val) ? 1 : val);
+            }}
             sx={{
               width: 50,
               input: { textAlign: "center", py: 1 },
@@ -258,32 +273,37 @@ export const ProductDetails = ({ product, category }: Props) => {
           <IconButton
             size="small"
             sx={{ borderRadius: 0 }}
-            onClick={() => setQuantity((q) => q + 1)}
+            disabled={quantity >= product.stockQuantity}
+            onClick={() => handleQuantityChange(quantity + 1)}
           >
             <Plus size={16} />
           </IconButton>
         </Stack>
 
-        <Button
-          variant="contained"
-          color="warning"
-          startIcon={<ShoppingCart size={18} />}
-          sx={{ borderRadius: 3, px: 3, py: 1.5, fontWeight: 600 }}
-          onClick={handleAddToCart}
-        >
-          Thêm vào giỏ
-        </Button>
+        <Tooltip title="Thêm vào giỏ hàng">
+          <Button
+            variant="contained"
+            color="warning"
+            startIcon={<ShoppingCart size={18} />}
+            sx={{ borderRadius: 3, px: 3, py: 1.5, fontWeight: 600 }}
+            onClick={handleAddToCart}
+          >
+            Thêm vào giỏ
+          </Button>
+        </Tooltip>
 
-        <IconButton onClick={toggleFavorite}>
-          <Heart fill={isFavorite ? "#f44336" : "none"} color="#f44336" />
-        </IconButton>
+        <Tooltip title={isFavorite ? "Bỏ yêu thích" : "Thêm yêu thích"}>
+          <IconButton onClick={toggleFavorite}>
+            <Heart fill={isFavorite ? "#f44336" : "none"} color="#f44336" />
+          </IconButton>
+        </Tooltip>
       </Stack>
 
       <GlobalSnackbar
         type={snackbar.type}
         message={snackbar.message}
         open={snackbar.open}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
       />
     </Box>
   );

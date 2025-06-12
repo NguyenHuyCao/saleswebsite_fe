@@ -1,36 +1,62 @@
+"use client";
+
 import { Box, Typography, Stack } from "@mui/material";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { motion } from "framer-motion";
 
 export const PromotionBox = () => (
-  <Box
-    sx={{
-      bgcolor: "#fff8e1",
-      p: 2,
-      border: "1px solid #ffecb3",
-      borderRadius: 2,
-      boxShadow: 1,
-    }}
+  <motion.div
+    initial={{ opacity: 0, y: 24 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5 }}
   >
-    <Stack direction="row" spacing={1} alignItems="center" mb={1}>
-      <CardGiftcardIcon color="warning" />
-      <Typography variant="body1" fontWeight={700} color="warning.main">
-        Khuyến mãi đặc biệt !!!
-      </Typography>
-    </Stack>
-    <Stack spacing={1}>
-      <Typography variant="body2">
-        <CheckCircleIcon color="success" fontSize="small" sx={{ mr: 1 }} />
-        Áp dụng Phiếu quà tặng/ Mã giảm giá theo ngành hàng.
-      </Typography>
-      <Typography variant="body2">
-        <CheckCircleIcon color="success" fontSize="small" sx={{ mr: 1 }} />
-        Giảm giá 10% khi mua từ 5 sản phẩm trở lên.
-      </Typography>
-      <Typography variant="body2">
-        <CheckCircleIcon color="success" fontSize="small" sx={{ mr: 1 }} />
-        Tặng 100.000₫ khi mua online tại HCM và một số khu vực khác.
-      </Typography>
-    </Stack>
-  </Box>
+    <Box
+      sx={{
+        bgcolor: "#fff8e1",
+        p: 2,
+        border: "1px solid #ffecb3",
+        borderRadius: 2,
+        boxShadow: 1,
+        transition: "all 0.3s ease",
+        "&:hover": {
+          boxShadow: 3,
+          borderColor: "#ffb700",
+        },
+      }}
+    >
+      <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+        <CardGiftcardIcon color="warning" />
+        <Typography
+          variant="body1"
+          fontWeight={700}
+          color="warning.main"
+          sx={{ textTransform: "uppercase" }}
+        >
+          Khuyến mãi đặc biệt !!!
+        </Typography>
+      </Stack>
+
+      <Stack spacing={1}>
+        {[
+          "Áp dụng Phiếu quà tặng/ Mã giảm giá theo ngành hàng.",
+          "Giảm giá 10% khi mua từ 5 sản phẩm trở lên.",
+          "Tặng 100.000₫ khi mua online tại HCM và một số khu vực khác.",
+        ].map((text, index) => (
+          <Typography
+            key={index}
+            variant="body2"
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            <CheckCircleIcon color="success" fontSize="small" />
+            {text}
+          </Typography>
+        ))}
+      </Stack>
+    </Box>
+  </motion.div>
 );

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -21,10 +21,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import GlobalSnackbar from "../alert/GlobalSnackbar";
 import { mutate } from "swr";
-import { WISHLIST_COUNT_KEY, CART_COUNT_KEY } from "@/constants/apiKeys";
-
-mutate(CART_COUNT_KEY, undefined, { revalidate: true });
-mutate(WISHLIST_COUNT_KEY, undefined, { revalidate: true });
+import { CART_COUNT_KEY, WISHLIST_COUNT_KEY } from "@/constants/apiKeys";
 
 export type Product = {
   id: number;
@@ -56,8 +53,8 @@ const ProductCard = ({
   onToggleFavorite,
 }: Props) => {
   const router = useRouter();
-  const [openDialog, setOpenDialog] = useState(false);
-  const [authAction, setAuthAction] = useState<"favorite" | "cart" | null>(
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [actionType, setActionType] = useState<"favorite" | "cart" | null>(
     null
   );
   const [snackbar, setSnackbar] = useState({
@@ -65,46 +62,40 @@ const ProductCard = ({
     message: "",
     type: "success" as "success" | "error",
   });
-  const [isOnSale, setIsOnSale] = useState(false);
+
   const [discountPercent, setDiscountPercent] = useState<number | null>(null);
 
   useEffect(() => {
-    const fetchSaleProducts = async () => {
+    const checkPromotion = async () => {
       try {
         const res = await fetch(
-          "http://localhost:8080/api/v1/promotions/active-products"
+          `http://localhost:8080/api/v1/promotions/product?productId=${product.id}`
         );
-        const data = await res.json();
-        const ids = data?.data?.map((p: any) => p.id);
-        if (ids.includes(product.id)) {
-          setIsOnSale(true);
-          const promoRes = await fetch(
-            `http://localhost:8080/api/v1/promotions/product?productId=${product.id}`
-          );
-          const promoData = await promoRes.json();
-          if (promoData?.data?.discount) {
-            setDiscountPercent(promoData.data.discount);
-          }
+        const promo = await res.json();
+        if (promo?.data?.discount) {
+          setDiscountPercent(promo.data.discount);
         }
-      } catch (error) {
-        console.error("Lỗi kiểm tra khuyến mãi:", error);
+      } catch (err) {
+        console.error("Lỗi khi kiểm tra khuyến mãi:", err);
       }
     };
-    fetchSaleProducts();
-  }, [product.id]);
 
-  const handleRequireLogin = (action: "favorite" | "cart") => {
-    setAuthAction(action);
-    setOpenDialog(true);
+    if (product.sale) checkPromotion();
+  }, [product]);
+
+  const requireLogin = (type: "favorite" | "cart") => {
+    setActionType(type);
+    setDialogOpen(true);
   };
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation();
     const token = localStorage.getItem("accessToken");
     if (!token) {
-      handleRequireLogin("cart");
+      requireLogin("cart");
       return;
     }
+
     try {
       const res = await fetch("http://localhost:8080/api/v1/carts", {
         method: "POST",
@@ -114,46 +105,39 @@ const ProductCard = ({
         },
         body: JSON.stringify({ productId: product.id, quantity: 1 }),
       });
-      const data = await res.json();
+
+      const result = await res.json();
       if (res.ok) {
         setSnackbar({
           open: true,
-          message: "Đã thêm sản phẩm vào giỏ hàng!",
+          message: "Đã thêm vào giỏ hàng",
           type: "success",
         });
-        mutate(CART_COUNT_KEY, undefined, { revalidate: true }); // Đặt đúng chỗ
+        mutate(CART_COUNT_KEY);
       } else {
-        setSnackbar({
-          open: true,
-          message: data.message || "Thêm vào giỏ hàng thất bại.",
-          type: "error",
-        });
+        throw new Error(result.message || "Lỗi khi thêm sản phẩm");
       }
-    } catch (error) {
+    } catch (err) {
       setSnackbar({
         open: true,
-        message: "Lỗi kết nối đến máy chủ.",
+        message: "Lỗi kết nối hoặc xử lý giỏ hàng",
         type: "error",
       });
-      console.log(error);
     }
   };
 
-  const handleFavoriteToggle = async (e: React.MouseEvent) => {
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
     const token = localStorage.getItem("accessToken");
     if (!token) {
-      handleRequireLogin("favorite");
+      requireLogin("favorite");
       return;
     }
 
-    // Nếu onToggleFavorite là async function
     if (onToggleFavorite) {
-      await onToggleFavorite(product.id); // Chờ cập nhật backend hoàn tất
+      await onToggleFavorite(product.id);
+      mutate(WISHLIST_COUNT_KEY);
     }
-
-    // Sau khi chắc chắn cập nhật xong, mới gọi mutate
-    mutate(WISHLIST_COUNT_KEY, undefined, { revalidate: true });
   };
 
   return (
@@ -166,53 +150,50 @@ const ProductCard = ({
           elevation={2}
           sx={{
             width: "100%",
-            maxWidth: 220,
-            height: 350,
+            maxWidth: 240,
+            minHeight: 360,
             borderRadius: 2,
             overflow: "hidden",
+            p: 2,
             position: "relative",
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
-            p: 2,
-            mb: 1,
-            transition: "transform 0.3s ease",
-            flexShrink: 0,
+            transition: "transform 0.3s",
             "&:hover": { transform: "translateY(-4px)" },
           }}
         >
-          {isOnSale && (
+          {/* Sale Badge */}
+          {product.sale && discountPercent && (
             <Box
               sx={{
+                position: "absolute",
+                top: 8,
+                left: 8,
                 bgcolor: "#f25c05",
                 color: "white",
                 px: 1,
                 py: 0.2,
                 fontSize: 12,
-                fontWeight: "bold",
-                position: "absolute",
-                top: 8,
-                left: 8,
-                zIndex: 2,
+                fontWeight: 600,
+                borderRadius: 1,
               }}
             >
-              Sale{" "}
-              {discountPercent ? `- ${Math.round(discountPercent * 100)}%` : ""}
+              -{Math.round(discountPercent * 100)}%
             </Box>
           )}
 
-          <Tooltip title="Yêu thích">
+          {/* Favorite Button */}
+          <Tooltip title="Thêm vào yêu thích">
             <IconButton
-              onClick={handleFavoriteToggle}
+              onClick={handleToggleFavorite}
               sx={{
                 position: "absolute",
                 top: 8,
                 right: 8,
-                bgcolor: "white",
-                boxShadow: 1,
-                width: 28,
-                height: 28,
-                zIndex: 2,
+                bgcolor: "#fff",
+                width: 30,
+                height: 30,
                 "&:hover": { bgcolor: "#ffe0b2" },
               }}
             >
@@ -227,74 +208,79 @@ const ProductCard = ({
             </IconButton>
           </Tooltip>
 
+          {/* Image */}
           <Box
-            position="relative"
-            height={150}
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            sx={{ backgroundColor: "#fafafa" }}
+            sx={{
+              height: 140,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "#f7f7f7",
+            }}
           >
             <Image
-              src={product.image || "/images/product/12.jpg"}
-              alt={product.title || "test"}
+              src={product.image}
+              alt={product.title}
               width={120}
               height={120}
+              style={{ objectFit: "contain" }}
             />
           </Box>
 
+          {/* Status */}
           <Stack direction="row" spacing={1} mt={1}>
-            {product.status?.map((s, idx) => (
+            {product.status.map((tag, i) => (
               <Box
-                key={idx}
+                key={i}
                 sx={{
-                  bgcolor: s === "Bán chạy" ? "#ffb700" : "#f25c05",
-                  color: "white",
-                  fontSize: 12,
-                  fontWeight: "bold",
+                  fontSize: 11,
+                  fontWeight: 600,
                   px: 1,
-                  borderRadius: 0.5,
+                  borderRadius: 1,
+                  color: "#fff",
+                  bgcolor: tag === "Bán chạy" ? "#ffb700" : "#f25c05",
                 }}
               >
-                {s}
+                {tag}
               </Box>
             ))}
           </Stack>
 
+          {/* Title */}
           <Typography
             fontSize={14}
             fontWeight={600}
             mt={1}
             sx={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
               display: "-webkit-box",
               WebkitLineClamp: 2,
               WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-              minHeight: 40,
+              minHeight: 36,
             }}
           >
             {product.title}
           </Typography>
 
-          <Stack direction="row" spacing={1} alignItems="center" mt={0.5}>
-            <Typography color="#f25c05" fontWeight="bold">
-              {typeof product.price === "number"
-                ? `${product.price.toLocaleString()}₫`
-                : "Đang cập nhật"}
+          {/* Price */}
+          <Stack direction="row" spacing={1} mt={0.5} alignItems="center">
+            <Typography fontWeight={700} color="#f25c05">
+              {product.price.toLocaleString()}₫
             </Typography>
-            <Typography
-              fontSize={13}
-              sx={{ textDecoration: "line-through", color: "gray" }}
-            >
-              {typeof product.originalPrice === "number"
-                ? `${product.originalPrice.toLocaleString()}₫`
-                : ""}
-            </Typography>
+            {product.price < product.originalPrice && (
+              <Typography
+                fontSize={13}
+                sx={{ textDecoration: "line-through", color: "#999" }}
+              >
+                {product.originalPrice.toLocaleString()}₫
+              </Typography>
+            )}
           </Stack>
 
+          {/* Rating */}
           {product.rating !== undefined && (
             <Rating
-              name="product-rating"
               value={product.rating}
               precision={0.5}
               size="small"
@@ -303,48 +289,42 @@ const ProductCard = ({
             />
           )}
 
-          <Box mt="auto">
-            <Button
-              fullWidth
-              variant={product.inStock ? "contained" : "outlined"}
-              disabled={!product.inStock}
-              onClick={handleAddToCart}
-              sx={{
-                mt: 1,
-                bgcolor: product.inStock ? "#ffb700" : "#f0f0f0",
-                color: product.inStock ? "black" : "gray",
-                fontWeight: 600,
-                textTransform: "none",
-                fontSize: 14,
-              }}
-            >
-              {product.label}
-            </Button>
-          </Box>
+          {/* Add to Cart */}
+          <Button
+            fullWidth
+            variant={product.inStock ? "contained" : "outlined"}
+            disabled={!product.inStock}
+            onClick={handleAddToCart}
+            sx={{
+              mt: 1.2,
+              textTransform: "none",
+              bgcolor: product.inStock ? "#ffb700" : "#f0f0f0",
+              color: product.inStock ? "black" : "gray",
+              fontWeight: 600,
+              fontSize: 14,
+              "&:hover": {
+                bgcolor: product.inStock ? "#ffc107" : "#f0f0f0",
+              },
+            }}
+          >
+            {product.label}
+          </Button>
         </Paper>
       </Box>
 
-      <Dialog
-        open={openDialog}
-        onClose={() => setOpenDialog(false)}
-        disableScrollLock={true}
-      >
-        <DialogTitle>Bạn chưa đăng nhập</DialogTitle>
+      {/* Login Required Dialog */}
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
+        <DialogTitle>Yêu cầu đăng nhập</DialogTitle>
         <DialogContent>
-          Vui lòng đăng nhập để{" "}
-          {authAction === "cart" ? "thêm vào giỏ hàng" : "thêm vào yêu thích"}.
+          Bạn cần đăng nhập để{" "}
+          {actionType === "cart" ? "mua hàng" : "thêm yêu thích"}.
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Xem tiếp</Button>
+          <Button onClick={() => setDialogOpen(false)}>Hủy</Button>
           <Button
             variant="contained"
-            onClick={(e) => {
-              e.stopPropagation();
-              setOpenDialog(false);
-              router.push("http://localhost:3000/login?page=login");
-            }}
-            autoFocus
-            sx={{ bgcolor: "#ffb700", color: "black", fontWeight: 600 }}
+            sx={{ bgcolor: "#ffb700", color: "#000" }}
+            onClick={() => router.push("/login?page=login")}
           >
             Đăng nhập
           </Button>

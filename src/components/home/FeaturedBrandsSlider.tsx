@@ -23,7 +23,7 @@ const FeaturedBrandsSlider = ({ brands }: Props) => {
         sx={{
           overflow: "hidden",
           "& .marquee-container": {
-            overflowY: "hidden !important", // Ngăn scroll Y
+            overflowY: "hidden !important",
           },
         }}
       >
@@ -37,14 +37,15 @@ const FeaturedBrandsSlider = ({ brands }: Props) => {
             <Box
               key={index}
               sx={{
-                mx: 4,
-                width: 120,
-                height: 60,
-                position: "relative",
+                mx: { xs: 2, md: 4 },
+                width: { xs: 100, md: 120 },
+                height: { xs: 50, md: 60 },
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                transition: "transform 0.3s ease",
+                borderRadius: 2,
+                position: "relative",
+                transition: "all 0.3s ease",
                 filter: "grayscale(100%)",
                 "&:hover": {
                   transform: "scale(1.1)",
@@ -54,10 +55,13 @@ const FeaturedBrandsSlider = ({ brands }: Props) => {
             >
               <Image
                 src={logo}
-                alt={`brand-${index}`}
+                alt={`Logo thương hiệu ${index + 1}`}
                 fill
-                style={{ objectFit: "contain" }}
-                sizes="(max-width: 600px) 100px, 120px"
+                sizes="(max-width: 768px) 100px, 120px"
+                style={{
+                  objectFit: "contain",
+                  transition: "transform 0.3s ease",
+                }}
               />
             </Box>
           ))}

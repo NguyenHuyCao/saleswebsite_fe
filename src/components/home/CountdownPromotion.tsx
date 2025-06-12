@@ -73,8 +73,20 @@ const CountdownPromotion = ({ deadline }: { deadline: string }) => {
         spacing={1}
         mb={1}
       >
-        <BoltIcon sx={{ color: "#f25c05" }} />
-        <Typography variant="h6" fontWeight="bold" mt={2} color="black">
+        <BoltIcon sx={{ color: "#fff8e1", fontSize: 28 }} />
+        <Typography
+          variant="h5"
+          fontWeight={900}
+          sx={{
+            color: "#fff8e1",
+            textTransform: "uppercase",
+            letterSpacing: 1,
+            fontSize: { xs: 18, md: 22 },
+            background: "linear-gradient(135deg, #ffb700 0%, #d35300 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
+        >
           THỜI GIAN CHỈ CÒN
         </Typography>
       </Stack>

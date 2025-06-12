@@ -6,7 +6,6 @@ import TestimonialsSection from "@/components/about/TestimonialsSection";
 import WhoWeAre from "@/components/about/WhoWeAre";
 import WhyTwoStrokeSection from "@/components/about/WhyTwoStrokeSection";
 import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
-import ScrollPositionManager from "@/components/common/ScrollResetOnLoad";
 import PageViewTracker from "@/components/common/traffic/PageViewTracker";
 import { Container } from "@mui/material";
 

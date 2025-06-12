@@ -1,10 +1,11 @@
 import CategoryBanner from "@/components/product/CategoryBanner";
-import ProductCategoryPage from "@/components/product/ProductCategoryPage";
 import ProductListLayout from "@/components/product/ProductListLayout";
 import PageViewTracker from "@/components/common/traffic/PageViewTracker";
 import { Container } from "@mui/material";
 import { cookies } from "next/headers";
 import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
+import ProductCategoryIntroSection from "@/components/product/ProductCategoryIntroSection";
+import ProductCategorySection from "@/components/product/ProductCategorySection";
 
 export type Product = {
   id: number;
@@ -126,13 +127,18 @@ const ProductsPage = async () => {
   console.log("categories", categories);
 
   return (
-    <Container>
+    <>
       <PageViewTracker />
-      <CategoryBanner />
-      <ProductCategoryPage categories={categories} />
-      <ProductListLayout categories={categories} brands={brands} />
-      <FreezeScrollOnReload />
-    </Container>
+      <Container>
+        <CategoryBanner />
+        <ProductCategoryIntroSection categories={categories} />
+        <div id="category-section">
+          <ProductCategorySection categories={categories} />
+        </div>
+        <ProductListLayout categories={categories} brands={brands} />
+        <FreezeScrollOnReload />
+      </Container>
+    </>
   );
 };
 

@@ -15,9 +15,7 @@ const AppHeader = () => {
       sx={{
         flexGrow: 1,
         bgcolor: "#ffb700",
-        pb: isMobile ? 7 : 0, // để chừa chỗ cho nav dưới
-        // overflowX: "hidden", // tránh tràn ngang
-        // overflowY: "hidden",
+        pb: isMobile ? 0.5 : 0,
       }}
     >
       {/* Thanh trên cùng */}

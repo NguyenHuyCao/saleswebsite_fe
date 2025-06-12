@@ -10,13 +10,14 @@ import {
   CardContent,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 const articles = [
   {
     title:
       "Cách tận dụng tối đa máy rửa áp lực, mẹo và thủ thuật từ các bậc thầy.",
     summary:
-      "Máy rửa áp lực là một công cụ cơ khí sử dụng áp lực cao để làm sạch các bề mặt khác nhau, tránh bề mặt dễ bị hỏng...",
+      "Máy rửa áp lực là một công cụ cơ khí sử dụng áp lực cao để làm sạch các bề mặt khác nhau...",
     date: "23",
     month: "T08",
     image: "/images/articles/may-cua-la-gi-1.jpg",
@@ -51,13 +52,20 @@ const KnowledgeShare = () => {
 
       <Grid container spacing={3}>
         {articles.map((article, index) => (
-          <Grid key={index} size={{ xs: 12, sm: 6, md: 4 }}>
-            <Box onClick={() => router.push("/new")} sx={{ cursor: "pointer" }}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.3 }}
+              onClick={() =>
+                router.push(`/new?article=${encodeURIComponent(article.title)}`)
+              }
+              style={{ cursor: "pointer" }}
+            >
               <Card
                 sx={{
-                  transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                  transition: "box-shadow 0.3s ease",
+                  borderRadius: 2,
                   ":hover": {
-                    transform: "translateY(-5px)",
                     boxShadow: 4,
                   },
                 }}
@@ -70,9 +78,9 @@ const KnowledgeShare = () => {
                     alt={article.title}
                     sx={{
                       objectFit: "cover",
-                      transition: "transform 0.3s ease",
+                      transition: "transform 0.4s ease",
                       ":hover": {
-                        transform: "scale(1.03)",
+                        transform: "scale(1.05)",
                       },
                     }}
                   />
@@ -86,9 +94,9 @@ const KnowledgeShare = () => {
                       px: 1.5,
                       py: 0.5,
                       borderRadius: 1,
-                      textAlign: "center",
                       fontWeight: "bold",
                       fontSize: 14,
+                      textAlign: "center",
                       lineHeight: 1.2,
                     }}
                   >
@@ -101,8 +109,8 @@ const KnowledgeShare = () => {
                   <Typography
                     fontWeight={700}
                     fontSize={16}
+                    mb={1}
                     sx={{
-                      mb: 1,
                       transition: "color 0.3s",
                       ":hover": { color: "#f25c05" },
                     }}
@@ -114,7 +122,7 @@ const KnowledgeShare = () => {
                   </Typography>
                 </CardContent>
               </Card>
-            </Box>
+            </motion.div>
           </Grid>
         ))}
       </Grid>

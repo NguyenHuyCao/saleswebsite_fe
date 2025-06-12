@@ -12,10 +12,12 @@ import {
   Select,
   FormControl,
   InputLabel,
+  Fade,
 } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 interface RegisterTabProps {
   showMessage: (severity: "success" | "error", message: string) => void;
@@ -28,42 +30,46 @@ const provincesData: Record<string, string[]> = {
 };
 
 const RegisterTab: React.FC<RegisterTabProps> = ({ showMessage }) => {
-  const [name, setName] = useState("");
-  const [emailRegister, setEmailRegister] = useState("");
-  const [passwordRegister, setPasswordRegister] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [phone, setPhone] = useState("");
-  const [province, setProvince] = useState("");
-  const [district, setDistrict] = useState("");
-  const [gender, setGender] = useState("");
-  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    phone: "",
+    province: "",
+    district: "",
+    gender: "",
+  });
 
-  const canRegister =
-    name.trim() &&
-    emailRegister.trim() &&
-    passwordRegister.trim() &&
-    confirmPassword.trim() &&
-    phone.trim() &&
-    province.trim() &&
-    district.trim() &&
-    gender.trim();
-
-  const resetForm = () => {
-    setName("");
-    setEmailRegister("");
-    setPasswordRegister("");
-    setConfirmPassword("");
-    setPhone("");
-    setProvince("");
-    setDistrict("");
-    setGender("");
-  };
-
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const router = useRouter();
 
+  const handleChange = (field: keyof typeof form, value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      [field]: value,
+      ...(field === "province" && { district: "" }),
+    }));
+  };
+
+  const resetForm = () => {
+    setForm({
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      phone: "",
+      province: "",
+      district: "",
+      gender: "",
+    });
+  };
+
+  const canRegister = Object.values(form).every((val) => val.trim() !== "");
+
   const handleRegister = async () => {
-    if (passwordRegister !== confirmPassword) {
+    if (form.password !== form.confirmPassword) {
       showMessage("error", "Mật khẩu xác nhận không khớp");
       return;
     }
@@ -73,12 +79,12 @@ const RegisterTab: React.FC<RegisterTabProps> = ({ showMessage }) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username: name.trim(),
-          email: emailRegister.trim(),
-          password: passwordRegister.trim(),
-          phone: phone.trim(),
-          address: `${district}, ${province}`,
-          gender,
+          username: form.name,
+          email: form.email,
+          password: form.password,
+          phone: form.phone,
+          address: `${form.district}, ${form.province}`,
+          gender: form.gender,
         }),
       });
 
@@ -86,163 +92,170 @@ const RegisterTab: React.FC<RegisterTabProps> = ({ showMessage }) => {
       if (res.status === 201) {
         showMessage("success", "Đăng ký thành công!");
         resetForm();
-        router.push("/login?page=login"); // Điều hướng về đăng nhập
+        router.push("/login?page=login");
       } else {
         throw new Error(data.message || "Đăng ký thất bại");
       }
     } catch (err: any) {
-      showMessage("error", err.message);
+      showMessage("error", err.message || "Lỗi không xác định");
     }
   };
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (canRegister) handleRegister();
-      }}
-    >
-      <Stack spacing={2}>
-        <TextField
-          label="Họ tên"
-          fullWidth
-          size="small"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <TextField
-          label="Số điện thoại"
-          fullWidth
-          size="small"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-        />
+    <Fade in timeout={500}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (canRegister) handleRegister();
+        }}
+      >
+        <Stack
+          spacing={2}
+          component={motion.div}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <TextField
+            label="Họ tên"
+            fullWidth
+            size="small"
+            value={form.name}
+            onChange={(e) => handleChange("name", e.target.value)}
+          />
 
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 6 }}>
-            <FormControl fullWidth size="small">
-              <InputLabel id="province-label">Tỉnh/Thành phố</InputLabel>
-              <Select
-                labelId="province-label"
-                label="Tỉnh/Thành phố"
-                value={province}
-                onChange={(e) => {
-                  setProvince(e.target.value);
-                  setDistrict("");
-                }}
-                MenuProps={{
-                  disableScrollLock: true,
-                }}
-              >
-                {Object.keys(provincesData).map((provinceName) => (
-                  <MenuItem key={provinceName} value={provinceName}>
-                    {provinceName}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
+          <TextField
+            label="Số điện thoại"
+            fullWidth
+            size="small"
+            value={form.phone}
+            onChange={(e) => handleChange("phone", e.target.value)}
+          />
 
-          <Grid size={{ xs: 6 }}>
-            <FormControl fullWidth size="small">
-              <InputLabel id="district-label">Xã/Quận</InputLabel>
-              <Select
-                labelId="district-label"
-                label="Xã/Quận"
-                value={district}
-                onChange={(e) => setDistrict(e.target.value)}
-                disabled={!province}
-                MenuProps={{
-                  disableScrollLock: true,
-                }}
-              >
-                {province &&
-                  provincesData[province]?.map((districtName) => (
-                    <MenuItem key={districtName} value={districtName}>
-                      {districtName}
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel id="province-label">Tỉnh/Thành phố</InputLabel>
+                <Select
+                  labelId="province-label"
+                  value={form.province}
+                  label="Tỉnh/Thành phố"
+                  onChange={(e) => handleChange("province", e.target.value)}
+                  MenuProps={{ disableScrollLock: true }}
+                >
+                  {Object.keys(provincesData).map((prov) => (
+                    <MenuItem key={prov} value={prov}>
+                      {prov}
                     </MenuItem>
                   ))}
-              </Select>
-            </FormControl>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel id="district-label">Xã/Quận</InputLabel>
+                <Select
+                  labelId="district-label"
+                  value={form.district}
+                  label="Xã/Quận"
+                  onChange={(e) => handleChange("district", e.target.value)}
+                  disabled={!form.province}
+                  MenuProps={{ disableScrollLock: true }}
+                >
+                  {(provincesData[form.province] || []).map((dist) => (
+                    <MenuItem key={dist} value={dist}>
+                      {dist}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
           </Grid>
-        </Grid>
 
-        <FormControl fullWidth size="small">
-          <InputLabel id="gender-label">Giới tính</InputLabel>
-          <Select
-            labelId="gender-label"
-            label="Giới tính"
-            value={gender}
-            onChange={(e) => setGender(e.target.value)}
-            MenuProps={{
-              disableScrollLock: true,
+          <FormControl fullWidth size="small">
+            <InputLabel id="gender-label">Giới tính</InputLabel>
+            <Select
+              labelId="gender-label"
+              value={form.gender}
+              label="Giới tính"
+              onChange={(e) => handleChange("gender", e.target.value)}
+              MenuProps={{ disableScrollLock: true }}
+            >
+              <MenuItem value="Nam">Nam</MenuItem>
+              <MenuItem value="Nữ">Nữ</MenuItem>
+              <MenuItem value="Khác">Khác</MenuItem>
+            </Select>
+          </FormControl>
+
+          <TextField
+            label="Email"
+            fullWidth
+            size="small"
+            value={form.email}
+            onChange={(e) => handleChange("email", e.target.value)}
+          />
+
+          <TextField
+            label="Mật khẩu"
+            type={showPassword ? "text" : "password"}
+            fullWidth
+            size="small"
+            value={form.password}
+            onChange={(e) => handleChange("password", e.target.value)}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
             }}
+          />
+
+          <TextField
+            label="Xác nhận mật khẩu"
+            type={showConfirm ? "text" : "password"}
+            fullWidth
+            size="small"
+            value={form.confirmPassword}
+            onChange={(e) => handleChange("confirmPassword", e.target.value)}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowConfirm((prev) => !prev)}
+                    edge="end"
+                  >
+                    {showConfirm ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{
+              bgcolor: "#ffb700",
+              color: "#fff",
+              fontWeight: 600,
+              textTransform: "none",
+              "&:hover": { bgcolor: "#f5a000" },
+            }}
+            disabled={!canRegister}
           >
-            <MenuItem value="Nam">Nam</MenuItem>
-            <MenuItem value="Nữ">Nữ</MenuItem>
-            <MenuItem value="Khác">Khác</MenuItem>
-          </Select>
-        </FormControl>
-
-        <TextField
-          label="Email"
-          fullWidth
-          size="small"
-          value={emailRegister}
-          onChange={(e) => setEmailRegister(e.target.value)}
-        />
-        <TextField
-          label="Mật khẩu"
-          type={showRegisterPassword ? "text" : "password"}
-          fullWidth
-          size="small"
-          value={passwordRegister}
-          onChange={(e) => setPasswordRegister(e.target.value)}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  onClick={() => setShowRegisterPassword(!showRegisterPassword)}
-                  edge="end"
-                >
-                  {showRegisterPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
-        <TextField
-          label="Xác nhận mật khẩu"
-          type={showConfirmPassword ? "text" : "password"}
-          fullWidth
-          size="small"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  edge="end"
-                >
-                  {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
-
-        <Button
-          fullWidth
-          type="submit"
-          variant="contained"
-          sx={{ bgcolor: "#ffb700", color: "#fff", fontWeight: 600 }}
-          disabled={!canRegister}
-        >
-          Đăng ký
-        </Button>
-      </Stack>
-    </form>
+            Đăng ký
+          </Button>
+        </Stack>
+      </form>
+    </Fade>
   );
 };
 

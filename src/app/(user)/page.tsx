@@ -9,13 +9,11 @@ import OtherToolsSection from "@/components/home/OtherToolsSection";
 import PromoBanner from "@/components/home/PromoBanner";
 import PromotionBanner from "@/components/home/PromotionBanner";
 import VoucherCardList from "@/components/home/VoucherCardList";
-import { Box, Container } from "@mui/material";
-import Image from "next/image";
 import { cookies } from "next/headers";
 import FlashSaleShowcasePage from "@/components/promotion/FlashSaleShowcasePage";
 import WebsiteTrafficTracker from "@/components/common/traffic/WebsiteTrafficTracker";
-import PageViewTracker from "@/components/common/traffic/PageViewTracker";
-import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
+import BannerFeatureSection from "@/components/home/BannerFeatureSection";
+import { Container } from "@mui/material";
 
 export type Product = {
   id: number;
@@ -259,20 +257,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <PageViewTracker />
-      <Box sx={{ width: "100%" }}>
-        <Container disableGutters maxWidth={false} sx={{ p: 0 }}>
-          <Image
-            src="/images/banner/banner-ab.jpg"
-            alt="banner"
-            layout="responsive"
-            width={1920}
-            height={600}
-            priority
-          />
-        </Container>
-      </Box>
-
+      <BannerFeatureSection />
       <Container>
         <WebsiteTrafficTracker />
         <VoucherCardList />
@@ -288,7 +273,6 @@ export default async function HomePage() {
         <KnowledgeShare />
         <FeaturedBrandsSlider brands={brands} />
       </Container>
-      <FreezeScrollOnReload />
     </>
   );
 }

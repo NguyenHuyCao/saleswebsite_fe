@@ -1,4 +1,3 @@
-import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
 import PageViewTracker from "@/components/common/traffic/PageViewTracker";
 import WarrantyConditions from "@/components/warranty/WarrantyConditions";
 import WarrantyConditionsCards from "@/components/warranty/WarrantyConditionsCards";
@@ -18,7 +17,7 @@ const WarrantyPage = () => {
         <WarrantyConditions />
         <WarrantyRequestForm />
       </Container>
-      <FreezeScrollOnReload />
+      {/* <FreezeScrollOnReload /> */}
     </>
   );
 };

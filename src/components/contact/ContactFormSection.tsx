@@ -10,38 +10,48 @@ import {
   Typography,
   InputAdornment,
   CircularProgress,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
-import { useState } from "react";
-import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
-import PhoneIcon from "@mui/icons-material/Phone";
-import PersonIcon from "@mui/icons-material/Person";
-import SubjectIcon from "@mui/icons-material/Subject";
-import MessageOutlinedIcon from "@mui/icons-material/MessageOutlined";
+import {
+  EmailOutlined,
+  Phone,
+  Person,
+  Subject,
+  MessageOutlined,
+} from "@mui/icons-material";
+import { useState, useCallback, JSX } from "react";
 import GlobalSnackbar from "../alert/GlobalSnackbar";
 
 const topics = ["Báo giá", "Bảo hành", "Kỹ thuật", "Hợp tác đại lý"];
 
+const initialForm = {
+  fullName: "",
+  email: "",
+  phone: "",
+  subject: topics[0],
+  messageContent: "",
+};
+
 const ContactFormSection = () => {
+  const [formData, setFormData] = useState(initialForm);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
-    subject: topics[0],
-    messageContent: "",
-  });
   const [snackbar, setSnackbar] = useState({
     open: false,
     type: "success" as "success" | "error",
     message: "",
   });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const { name, value } = e.target;
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    },
+    []
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,9 +60,7 @@ const ContactFormSection = () => {
     try {
       const res = await fetch("http://localhost:8080/api/v1/contacts", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
@@ -64,13 +72,7 @@ const ContactFormSection = () => {
           type: "success",
           message: "Đã gửi liên hệ thành công!",
         });
-        setFormData({
-          fullName: "",
-          email: "",
-          phone: "",
-          subject: topics[0],
-          messageContent: "",
-        });
+        setFormData(initialForm);
       } else {
         throw new Error(result.message || "Gửi thất bại!");
       }
@@ -78,124 +80,132 @@ const ContactFormSection = () => {
       setSnackbar({
         open: true,
         type: "error",
-        message: error.message,
+        message: error.message || "Đã xảy ra lỗi khi gửi liên hệ.",
       });
     } finally {
       setLoading(false);
     }
   };
 
+  const renderInputAdornment = (icon: JSX.Element) => (
+    <InputAdornment position="start">{icon}</InputAdornment>
+  );
+
+  const fieldStyle = {
+    variant: "outlined" as const,
+    fullWidth: true,
+    onChange: handleChange,
+    InputProps: { sx: { bgcolor: "white" } },
+  };
+
   return (
-    <Box py={8} px={4} bgcolor="#f5f5f5">
+    <Box py={8} px={isMobile ? 2 : 4} bgcolor="#f5f5f5">
       <Paper
-        elevation={4}
-        sx={{ maxWidth: 800, mx: "auto", p: 4, borderRadius: 3 }}
+        elevation={5}
+        sx={{
+          maxWidth: 850,
+          mx: "auto",
+          p: { xs: 3, sm: 5 },
+          borderRadius: 3,
+          bgcolor: "white",
+        }}
       >
-        <Typography variant="h5" fontWeight="bold" mb={4} textAlign="center">
+        <Typography
+          variant="h5"
+          fontWeight="bold"
+          mb={4}
+          textAlign="center"
+          color="primary"
+        >
           Liên hệ với chúng tôi
         </Typography>
+
         <form onSubmit={handleSubmit}>
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
-                fullWidth
+                {...fieldStyle}
                 name="fullName"
-                value={formData.fullName}
-                onChange={handleChange}
                 label="Họ và tên"
+                value={formData.fullName}
                 required
+                autoComplete="name"
                 InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <PersonIcon />
-                    </InputAdornment>
-                  ),
+                  ...fieldStyle.InputProps,
+                  startAdornment: renderInputAdornment(<Person />),
                 }}
               />
             </Grid>
+
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
-                fullWidth
+                {...fieldStyle}
                 name="email"
-                value={formData.email}
-                onChange={handleChange}
                 label="Email"
+                value={formData.email}
                 required
                 type="email"
+                autoComplete="email"
                 InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <EmailOutlinedIcon />
-                    </InputAdornment>
-                  ),
+                  ...fieldStyle.InputProps,
+                  startAdornment: renderInputAdornment(<EmailOutlined />),
                 }}
               />
             </Grid>
+
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
-                fullWidth
+                {...fieldStyle}
                 name="phone"
-                value={formData.phone}
-                onChange={handleChange}
                 label="Số điện thoại"
+                value={formData.phone}
                 required
                 type="tel"
+                autoComplete="tel"
                 InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <PhoneIcon />
-                    </InputAdornment>
-                  ),
+                  ...fieldStyle.InputProps,
+                  startAdornment: renderInputAdornment(<Phone />),
                 }}
               />
             </Grid>
+
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
-                fullWidth
+                {...fieldStyle}
                 select
                 name="subject"
-                value={formData.subject}
-                onChange={handleChange}
                 label="Chủ đề cần tư vấn"
+                value={formData.subject}
                 InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SubjectIcon />
-                    </InputAdornment>
-                  ),
+                  ...fieldStyle.InputProps,
+                  startAdornment: renderInputAdornment(<Subject />),
                 }}
-                SelectProps={{
-                  MenuProps: {
-                    disableScrollLock: true,
-                  },
-                }}
+                SelectProps={{ MenuProps: { disableScrollLock: true } }}
               >
-                {topics.map((topic, index) => (
-                  <MenuItem key={index} value={topic}>
+                {topics.map((topic) => (
+                  <MenuItem key={topic} value={topic}>
                     {topic}
                   </MenuItem>
                 ))}
               </TextField>
             </Grid>
+
             <Grid size={{ xs: 12 }}>
               <TextField
-                fullWidth
+                {...fieldStyle}
                 name="messageContent"
-                value={formData.messageContent}
-                onChange={handleChange}
                 label="Nội dung liên hệ"
+                value={formData.messageContent}
                 required
                 multiline
                 minRows={4}
                 InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <MessageOutlinedIcon />
-                    </InputAdornment>
-                  ),
+                  ...fieldStyle.InputProps,
+                  startAdornment: renderInputAdornment(<MessageOutlined />),
                 }}
               />
             </Grid>
+
             <Grid size={{ xs: 12 }} textAlign="center">
               <Button
                 type="submit"
@@ -203,7 +213,13 @@ const ContactFormSection = () => {
                 color="warning"
                 size="large"
                 disabled={loading}
-                sx={{ px: 5, py: 1.5, fontWeight: "bold" }}
+                sx={{
+                  px: 5,
+                  py: 1.5,
+                  fontWeight: "bold",
+                  fontSize: 16,
+                  textTransform: "none",
+                }}
               >
                 {loading ? (
                   <CircularProgress size={24} color="inherit" />

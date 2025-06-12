@@ -1,12 +1,21 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { Box, Typography, Button, Grid } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Button,
+  Grid,
+  Fade,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 import { useRouter } from "next/navigation";
 import ProductCard, { Product } from "../product/ProductCard";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, AppState } from "@/redux/store";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
+import deepEqual from "fast-deep-equal";
 
 export type CategoryWithProducts = {
   id: number;
@@ -24,6 +33,9 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
 }) => {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   const wishlistItems = useSelector((state: AppState) => state.wishlist.result);
   const favoriteIdSet = useMemo(
     () => new Set(wishlistItems.map((item) => item.id)),
@@ -47,15 +59,12 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
         const createdAt = new Date(item.createdAt);
         const isNew =
           (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
-
         const isInStock = item.inStock === true && item.stockQuantity > 0;
-
-        const status =
-          item.stockQuantity === 0 ? ["Hết hàng"] : isNew ? ["Mới"] : [];
 
         return {
           ...item,
-          status,
+          status:
+            item.stockQuantity === 0 ? ["Hết hàng"] : isNew ? ["Mới"] : [],
           sale: item.price !== item.pricePerUnit,
           inStock: isInStock,
           label: isInStock ? "Thêm vào giỏ" : "Hết hàng",
@@ -64,10 +73,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
       }),
     }));
 
-    const updatedStr = JSON.stringify(updated);
-    const currentStr = JSON.stringify(categoryProducts);
-
-    if (updatedStr !== currentStr) {
+    if (!deepEqual(updated, categoryProducts)) {
       setCategoryProducts(updated);
     }
   }, [categories, favoriteIdSet]);
@@ -93,9 +99,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
       formData.append("productId", String(productId));
       await fetch("http://localhost:8080/api/v1/wish_list", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
       dispatch(fetchWishlist());
@@ -104,14 +108,10 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
     }
   };
 
-  const handleCategoryClick = (index: number) => {
-    setActiveIndex(index);
-  };
-
   const activeCategory = categoryProducts[activeIndex];
 
   return (
-    <Box sx={{ py: 4 }}>
+    <Box sx={{ py: 4, px: isMobile ? 2 : 4 }}>
       <Typography variant="h5" fontWeight="bold" mb={2}>
         DỤNG CỤ <span style={{ color: "#ffb700" }}>KHÁC</span>
       </Typography>
@@ -121,14 +121,13 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
         display="flex"
         flexWrap="wrap"
         gap={1}
-        px={5}
         justifyContent="center"
       >
         {categoryProducts.map((cat, idx) => (
           <Button
             key={cat.id}
             variant={idx === activeIndex ? "contained" : "outlined"}
-            onClick={() => handleCategoryClick(idx)}
+            onClick={() => setActiveIndex(idx)}
             sx={{
               bgcolor: idx === activeIndex ? "#ffb700" : "transparent",
               color: "black",
@@ -147,24 +146,23 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
         ))}
       </Box>
 
-      <Grid container spacing={2} px={2} justifyContent={"center"}>
-        {activeCategory?.products?.map((product, index) => (
-          <Grid
-            key={product.id}
-            xs={6}
-            sm={4}
-            md={3}
-            lg={2.4 as any}
-            justifyContent="center"
-          >
-            <ProductCard
-              product={product}
-              isFavorite={product.favorite}
-              onToggleFavorite={() => toggleWishlist(product.id)}
-            />
-          </Grid>
-        ))}
-      </Grid>
+      <Fade in timeout={500} key={activeCategory?.id}>
+        <Grid container spacing={2} justifyContent={"center"}>
+          {activeCategory?.products?.map((product) => (
+            <Grid
+              key={product.id}
+              size={{ xs: 6, sm: 4, md: 3, lg: 2.4 as any }}
+              justifyContent="center"
+            >
+              <ProductCard
+                product={product}
+                isFavorite={product.favorite}
+                onToggleFavorite={() => toggleWishlist(product.id)}
+              />
+            </Grid>
+          ))}
+        </Grid>
+      </Fade>
 
       <Box display="flex" justifyContent="center" mt={3}>
         <Button

@@ -65,6 +65,18 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
 
     fetchData();
   }, []);
+
+  const navLinks = [
+    { label: "Trang chủ", href: "/" },
+    { label: "Giới thiệu", href: "/about" },
+    { label: "Thương hiệu", href: "/brand" },
+    { label: "Sản phẩm", href: "/product" },
+    { label: "Khuyến mãi", href: "/promotion" },
+    { label: "Tin tức", href: "/new" },
+    { label: "Liên hệ", href: "/contact" },
+    { label: "Hệ thống cửa hàng", href: "/system" },
+  ];
+
   if (isMobile) {
     return (
       <Box
@@ -83,42 +95,36 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
             label="Trang chủ"
             icon={<HomeIcon />}
             onClick={() => router.push("/")}
+            aria-label="Trang chủ"
           />
           <BottomNavigationAction
             label="Sản phẩm"
             icon={<AppsIcon />}
             onClick={() => router.push("/product")}
+            aria-label="Sản phẩm"
           />
           <BottomNavigationAction
             label="Yêu thích"
             icon={<FavoriteIcon />}
             onClick={() => router.push("/wishlist")}
+            aria-label="Yêu thích"
           />
           <BottomNavigationAction
             label="Đơn hàng"
             icon={<CompareIcon />}
             onClick={() => router.push("/order")}
+            aria-label="Đơn hàng"
           />
           <BottomNavigationAction
             label="Giỏ hàng"
             icon={<ShoppingCartIcon />}
             onClick={() => router.push("/cart")}
+            aria-label="Giỏ hàng"
           />
         </BottomNavigation>
       </Box>
     );
   }
-
-  const navLinks = [
-    { label: "Trang chủ", href: "/" },
-    { label: "Giới thiệu", href: "/about" },
-    { label: "Thương hiệu", href: "/brand" },
-    { label: "Sản phẩm", href: "/product" },
-    { label: "Khuyến mãi", href: "/promotion" },
-    { label: "Tin tức", href: "/new" },
-    { label: "Liên hệ", href: "/contact" },
-    { label: "Hệ thống cửa hàng", href: "/system" },
-  ];
 
   return (
     <Container>
@@ -132,6 +138,7 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
           py: 0.5,
         }}
       >
+        {/* DANH MỤC SẢN PHẨM BUTTON + MEGA MENU */}
         <Box
           onMouseEnter={() => setShowMegaMenu(true)}
           onMouseLeave={() => setShowMegaMenu(false)}
@@ -144,34 +151,43 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
               color: "white",
               textTransform: "none",
               fontWeight: "bold",
-              minWidth: "250px",
+              minWidth: 250,
               px: 3,
               py: 1,
               whiteSpace: "nowrap",
               flexShrink: 0,
+              borderRadius: 1,
+              boxShadow: 2,
+              "&:hover": {
+                bgcolor: "#f25c05",
+              },
             }}
           >
             DANH MỤC SẢN PHẨM
           </Button>
 
-          <Fade in={showMegaMenu} timeout={300}>
-            <Box
-              onMouseLeave={() => setShowMegaMenu(false)}
-              sx={{
-                position: "absolute",
-                top: "100%",
-                left: 0,
-                zIndex: 1000,
-              }}
-            >
-              <BrandMegaMenu
-                brands={brandsData}
-                categories={categoriesRawData}
-              />
-            </Box>
-          </Fade>
+          {brandsData.length > 0 && categoriesRawData.length > 0 && (
+            <Fade in={showMegaMenu} timeout={300}>
+              <Box
+                onMouseLeave={() => setShowMegaMenu(false)}
+                sx={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  zIndex: 1000,
+                  mt: 1,
+                }}
+              >
+                <BrandMegaMenu
+                  brands={brandsData}
+                  categories={categoriesRawData}
+                />
+              </Box>
+            </Fade>
+          )}
         </Box>
 
+        {/* LINKS */}
         <Box
           sx={{
             display: "flex",
@@ -189,6 +205,7 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
           {navLinks.map(({ label, href }) => (
             <Box
               key={label}
+              onClick={() => router.push(href)}
               sx={{
                 display: "flex",
                 alignItems: "center",
@@ -198,11 +215,14 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
                 minHeight: "44px",
                 cursor: "pointer",
                 flexShrink: 0,
-                transition: "color 0.2s, background-color 0.2s",
+                transition: "all 0.3s ease",
+                "&:hover .text": {
+                  color: "#f25c05",
+                },
               }}
-              onClick={() => router.push(href)}
             >
               <Typography
+                className="text"
                 sx={{
                   fontSize: "16px",
                   fontWeight: "bold",
@@ -210,11 +230,10 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
                   alignItems: "center",
                   color: pathname === href ? "#f25c05" : "#000",
                   borderBottom:
-                    pathname === href ? "2px solid #f25c05" : "none",
+                    pathname === href
+                      ? "2px solid #f25c05"
+                      : "2px solid transparent",
                   transition: "all 0.2s ease",
-                  "&:hover": {
-                    color: "#f25c05",
-                  },
                 }}
               >
                 {label}

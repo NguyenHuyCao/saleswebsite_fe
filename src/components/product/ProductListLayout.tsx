@@ -9,6 +9,7 @@ import {
   Pagination,
   InputBase,
   useMediaQuery,
+  CircularProgress,
 } from "@mui/material";
 import { useRouter, useSearchParams } from "next/navigation";
 import ProductCard, { Product } from "../product/ProductCard";
@@ -18,7 +19,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, AppState } from "@/redux/store";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
 
-const ITEMS_PER_PAGE = 12;
+const ITEMS_PER_PAGE = 8;
 
 interface Props {
   categories: any[];
@@ -28,12 +29,11 @@ interface Props {
 export default function ProductListLayout({ categories, brands }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const isMobile = useMediaQuery("(max-width:600px)");
   const dispatch = useDispatch<AppDispatch>();
 
   const wishlistItems = useSelector((state: AppState) => state.wishlist.result);
   const favoriteIdSet = useMemo(
-    () => new Set(wishlistItems.map((item) => item.id)),
+    () => new Set(wishlistItems.map((i) => i.id)),
     [wishlistItems]
   );
 
@@ -41,60 +41,50 @@ export default function ProductListLayout({ categories, brands }: Props) {
   const [search, setSearch] = useState("");
   const [sortType, setSortType] = useState("");
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const toSlug = (str: string): string => {
-    return str
+  const toSlug = (str: string) =>
+    str
       .toLowerCase()
       .normalize("NFD")
-      .replace(/[̀-ͯ]/g, "")
+      .replace(/[\u0300-\u036f]/g, "")
       .replace(/đ/g, "d")
       .replace(/[^a-z0-9\s-]/g, "")
       .trim()
       .replace(/\s+/g, "-");
-  };
-
-  useEffect(() => {
-    const s = searchParams.get("search") || "";
-    setSearch(s);
-    fetchProducts();
-    dispatch(fetchWishlist());
-  }, [searchParams.toString(), dispatch]);
 
   const fetchProducts = async () => {
-    const category = searchParams.get("category") || "";
-    const brand = searchParams.get("brand") || "";
-    const price = searchParams.get("price") || "";
-
-    const query = new URLSearchParams();
-    if (category) query.set("category", category);
-    if (brand) query.set("brand", brand);
-    if (price) query.set("price", price);
-
+    setLoading(true);
+    setError(null);
     try {
       const token = localStorage.getItem("accessToken");
-      let res;
-      if (token != null) {
-        res = await fetch(`http://localhost:8080/api/v1/products?${query}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-      } else {
-        res = await fetch(`http://localhost:8080/api/v1/products?${query}`);
-      }
+      const query = new URLSearchParams();
+
+      ["category", "brand", "price"].forEach((key) => {
+        const value = searchParams.get(key);
+        if (value) query.set(key, value);
+      });
+
+      const res = await fetch(
+        `http://localhost:8080/api/v1/products?${query.toString()}`,
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        }
+      );
 
       const data = await res.json();
+      if (!res.ok || !data?.data?.result) {
+        throw new Error("Không thể tải danh sách sản phẩm.");
+      }
+
       const now = new Date();
 
-      const mapped = data?.data?.result?.map((item: any) => {
+      const mapped = data.data.result.map((item: any): Product => {
         const createdAt = new Date(item.createdAt);
         const isNew =
           (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
-        const isBestSeller = item.totalStock - item.stockQuantity > 10;
-
-        const status: string[] = [];
-        if (isNew) status.push("Mới");
-        if (isBestSeller) status.push("Bán chạy");
+        const isHot = item.totalStock - item.stockQuantity > 10;
 
         return {
           id: item.id,
@@ -104,7 +94,7 @@ export default function ProductListLayout({ categories, brands }: Props) {
           image: item.imageAvt
             ? `http://localhost:8080/api/v1/files/${item.imageAvt}`
             : "/images/product/placeholder.jpg",
-          status,
+          status: [...(isNew ? ["Mới"] : []), ...(isHot ? ["Bán chạy"] : [])],
           sale: item.pricePerUnit < item.price,
           inStock: item.active,
           label: item.active ? "Thêm vào giỏ hàng" : "Hết hàng",
@@ -114,12 +104,15 @@ export default function ProductListLayout({ categories, brands }: Props) {
           rating: item.rating,
           slug: item.slug,
           isFavorite: item.wishListUser === true,
-        } as Product;
+        };
       });
 
       setProducts(mapped);
-    } catch (error) {
-      console.error("Lỗi khi tải sản phẩm:", error);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Đã xảy ra lỗi khi tải sản phẩm.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -139,34 +132,35 @@ export default function ProductListLayout({ categories, brands }: Props) {
 
       dispatch(fetchWishlist());
     } catch (err) {
-      console.error("Lỗi cập nhật yêu thích:", err);
+      console.error("Lỗi yêu thích:", err);
     }
   };
 
-  const updateURLParam = (key: string, value: string) => {
-    const params = new URLSearchParams(window.location.search);
-    params.set(key, value);
-    router.push(`/product?${params.toString()}`);
-  };
+  const filteredProducts = useMemo(() => {
+    return products
+      .filter((p) => toSlug(p.title).includes(toSlug(search)))
+      .sort((a, b) => {
+        if (sortType === "newest")
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        if (sortType === "asc") return a.price - b.price;
+        if (sortType === "desc") return b.price - a.price;
+        return 0;
+      });
+  }, [products, search, sortType]);
 
-  const filteredProducts = products
-    .filter((p) => toSlug(p.title).includes(toSlug(search)))
-    .sort((a, b) => {
-      if (sortType === "newest")
-        return (
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-      if (sortType === "asc") return a.price - b.price;
-      if (sortType === "desc") return b.price - a.price;
-      return 0;
-    });
+  const paginated = useMemo(() => {
+    const start = (page - 1) * ITEMS_PER_PAGE;
+    return filteredProducts.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredProducts, page]);
 
-  const startIndex = (page - 1) * ITEMS_PER_PAGE;
-  const paginatedProducts = filteredProducts.slice(
-    startIndex,
-    startIndex + ITEMS_PER_PAGE
-  );
   const pageCount = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+
+  useEffect(() => {
+    dispatch(fetchWishlist());
+    fetchProducts();
+  }, [searchParams.toString()]);
 
   return (
     <Box
@@ -175,6 +169,7 @@ export default function ProductListLayout({ categories, brands }: Props) {
       gap={3}
       px={{ xs: 1, sm: 2 }}
     >
+      {/* Sidebar */}
       <Box
         width={{ xs: "100%", md: 250 }}
         mb={{ xs: 3, md: 0 }}
@@ -182,39 +177,20 @@ export default function ProductListLayout({ categories, brands }: Props) {
         flexDirection="column"
         gap={2}
       >
-        <CategorySidebar
-          categories={categories}
-          onSelectCategory={({ slug }: { slug: string }) =>
-            updateURLParam("category", slug)
-          }
-        />
-        <ProductFilterPanel
-          brands={brands}
-          onSelectBrand={({ slug }: { slug: string }) =>
-            updateURLParam("brand", slug)
-          }
-          onSelectPrice={(range) => updateURLParam("price", range)}
-        />
+        <CategorySidebar categories={categories} />
+        <ProductFilterPanel brands={brands} />
       </Box>
 
+      {/* Product content */}
       <Box flex={1}>
         <Box display="flex" alignItems="center" mb={3} gap={2} flexWrap="wrap">
           <Typography variant="body2" fontWeight={500}>
             Xếp theo:
           </Typography>
-          <Chip
-            label="Hàng mới"
-            variant="outlined"
-            onClick={() => setSortType("newest")}
-          />
-          <Chip
-            label="Giá thấp đến cao"
-            variant="outlined"
-            onClick={() => setSortType("asc")}
-          />
+          <Chip label="Hàng mới" onClick={() => setSortType("newest")} />
+          <Chip label="Giá thấp đến cao" onClick={() => setSortType("asc")} />
           <Chip
             label="Giá cao xuống thấp"
-            variant="outlined"
             onClick={() => setSortType("desc")}
           />
           <InputBase
@@ -227,39 +203,54 @@ export default function ProductListLayout({ categories, brands }: Props) {
               px: 2,
               borderRadius: 1,
               minWidth: 200,
+              "&:focus-within": { borderColor: "#ffb700" },
             }}
           />
         </Box>
 
-        <Grid container spacing={1.5}>
-          {paginatedProducts.map((item) => (
-            <Grid
-              size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
-              key={item.id}
-              display="flex"
-              justifyContent="center"
-            >
-              <Box sx={{ width: { xs: "100%", sm: 220 } }}>
-                <ProductCard
-                  product={item}
-                  isFavorite={favoriteIdSet.has(item.id)}
-                  onToggleFavorite={() => handleToggleFavorite(item.id)}
+        {loading ? (
+          <Box py={8} display="flex" justifyContent="center">
+            <CircularProgress />
+          </Box>
+        ) : error ? (
+          <Box py={8} textAlign="center">
+            <Typography color="error">{error}</Typography>
+          </Box>
+        ) : (
+          <>
+            <Grid container spacing={1.5}>
+              {paginated.map((item) => (
+                <Grid
+                  key={item.id}
+                  size={{ xs: 6, sm: 4, md: 3 }}
+                  display="flex"
+                  justifyContent="center"
+                >
+                  <Box sx={{ width: "100%", maxWidth: 240 }}>
+                    <ProductCard
+                      product={item}
+                      isFavorite={favoriteIdSet.has(item.id)}
+                      onToggleFavorite={() => handleToggleFavorite(item.id)}
+                    />
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+
+            {filteredProducts.length > ITEMS_PER_PAGE && (
+              <Box display="flex" justifyContent="center" mt={5}>
+                <Pagination
+                  count={pageCount}
+                  page={page}
+                  onChange={(_, value) => setPage(value)}
+                  color="primary"
+                  shape="rounded"
+                  siblingCount={0}
+                  boundaryCount={1}
                 />
               </Box>
-            </Grid>
-          ))}
-        </Grid>
-
-        {filteredProducts.length > ITEMS_PER_PAGE && (
-          <Box display="flex" justifyContent="center" mt={5}>
-            <Pagination
-              count={pageCount}
-              page={page}
-              onChange={(_, value) => setPage(value)}
-              color="primary"
-              shape="rounded"
-            />
-          </Box>
+            )}
+          </>
         )}
       </Box>
     </Box>

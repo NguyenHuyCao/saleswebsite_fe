@@ -1,11 +1,19 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import { Box, Typography, Pagination } from "@mui/material";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
+import {
+  Box,
+  Typography,
+  Pagination,
+  Fade,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 import ProductCard, { Product } from "@/components/product/ProductCard";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, AppState } from "@/redux/store";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
+import { motion } from "framer-motion";
 
 const ITEMS_PER_PAGE = 15;
 
@@ -14,6 +22,10 @@ const WishlistPage = () => {
   const wishlistItems = useSelector((state: AppState) => state.wishlist.result);
   const [page, setPage] = useState(1);
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  // Memo hóa danh sách sản phẩm chuyển đổi
   const allItems: Product[] = useMemo(() => {
     const now = new Date();
     return wishlistItems.map((item: any) => {
@@ -47,71 +59,86 @@ const WishlistPage = () => {
     });
   }, [wishlistItems]);
 
-  const [displayedItems, setDisplayedItems] = useState<Product[]>([]);
+  const pageCount = Math.ceil(allItems.length / ITEMS_PER_PAGE);
+
+  const displayedItems = useMemo(() => {
+    const start = (page - 1) * ITEMS_PER_PAGE;
+    return allItems.slice(start, start + ITEMS_PER_PAGE);
+  }, [page, allItems]);
 
   useEffect(() => {
     dispatch(fetchWishlist());
   }, [dispatch]);
 
-  useEffect(() => {
-    const start = (page - 1) * ITEMS_PER_PAGE;
-    const end = start + ITEMS_PER_PAGE;
-    setDisplayedItems(allItems.slice(start, end));
-  }, [page, allItems]);
+  const toggleWishlist = useCallback(
+    async (productId: number) => {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        alert("Bạn cần đăng nhập để xoá khỏi yêu thích.");
+        return;
+      }
 
-  const toggleWishlist = async (productId: number) => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      alert("Bạn cần đăng nhập để xoá khỏi yêu thích.");
-      return;
-    }
-
-    try {
-      const formData = new FormData();
-      formData.append("productId", String(productId));
-      await fetch("http://localhost:8080/api/v1/wish_list", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      // Gọi lại danh sách yêu thích mới từ backend để đảm bảo đồng bộ
-      dispatch(fetchWishlist());
-    } catch (error) {
-      console.error("Lỗi khi xoá sản phẩm yêu thích:", error);
-    }
-  };
-
-  const pageCount = Math.ceil(allItems.length / ITEMS_PER_PAGE);
+      try {
+        const formData = new FormData();
+        formData.append("productId", String(productId));
+        await fetch("http://localhost:8080/api/v1/wish_list", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        });
+        dispatch(fetchWishlist());
+      } catch (error) {
+        console.error("Lỗi khi xoá sản phẩm yêu thích:", error);
+      }
+    },
+    [dispatch]
+  );
 
   return (
-    <Box mt={6} mb={10}>
-      <Typography variant="h5" fontWeight="bold" mb={3} textAlign="center">
-        DANH SÁCH <span style={{ color: "#ffb700" }}>YÊU THÍCH</span>
-      </Typography>
+    <Box mt={6} mb={10} px={{ xs: 2, sm: 3 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <Typography variant="h5" fontWeight="bold" mb={3} textAlign="center">
+          DANH SÁCH <span style={{ color: "#ffb700" }}>YÊU THÍCH</span>
+        </Typography>
+      </motion.div>
 
       {allItems.length === 0 ? (
-        <Typography textAlign="center">
-          Danh sách yêu thích của bạn trống.
-        </Typography>
+        <Fade in timeout={300}>
+          <Typography textAlign="center" color="text.secondary">
+            Danh sách yêu thích của bạn hiện đang trống.
+          </Typography>
+        </Fade>
       ) : (
         <>
           <Box
             display="grid"
-            gridTemplateColumns="repeat(auto-fill, minmax(180px, 1fr))"
+            gridTemplateColumns={{
+              xs: "repeat(2, 1fr)",
+              sm: "repeat(3, 1fr)",
+              md: "repeat(4, 1fr)",
+              lg: "repeat(5, 1fr)",
+            }}
             gap={2}
             rowGap={4}
-            justifyContent="center"
           >
-            {displayedItems.map((product, index) => (
-              <ProductCard
-                key={index}
-                product={product}
-                isFavorite
-                onToggleFavorite={() => toggleWishlist(product.id!)}
-              />
+            {displayedItems.map((product) => (
+              <motion.div
+                key={product.id}
+                whileHover={{ scale: 1.03 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ProductCard
+                  product={product}
+                  isFavorite
+                  onToggleFavorite={() => toggleWishlist(product.id!)}
+                />
+              </motion.div>
             ))}
           </Box>
 

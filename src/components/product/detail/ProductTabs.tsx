@@ -1,7 +1,16 @@
 "use client";
 
-import { Box, Typography, Tabs, Tab, Paper } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Tabs,
+  Tab,
+  Paper,
+  Fade,
+  Divider,
+} from "@mui/material";
 import { useState } from "react";
+import { motion } from "framer-motion";
 
 export type Product = {
   id: number;
@@ -9,30 +18,8 @@ export type Product = {
   imageAvt: string;
   name: string;
   slug: string;
-  image: string;
   price: number;
   pricePerUnit: number;
-  originalPrice: number;
-  sale: boolean;
-  inStock: boolean;
-  label: string;
-  stockQuantity: number;
-  totalStock: number;
-  power: string;
-  fuelType: string;
-  engineType: string;
-  weight: number;
-  dimensions: string;
-  tankCapacity: number;
-  origin: string;
-  warrantyMonths: number;
-  createdAt: string;
-  createdBy?: string;
-  updatedAt?: string | null;
-  updatedBy?: string | null;
-  rating?: number;
-  status: string[];
-  favorite: boolean;
 };
 
 interface Category {
@@ -56,7 +43,7 @@ const tabLabels = [
 export const ProductTabs = ({ product, category }: ProductTabsProps) => {
   const [value, setValue] = useState(0);
   const suggestions =
-    category?.products.filter((p) => p.slug !== product.slug) || [];
+    category?.products.filter((p) => p.slug !== product.slug).slice(0, 4) || [];
 
   return (
     <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>
@@ -65,7 +52,12 @@ export const ProductTabs = ({ product, category }: ProductTabsProps) => {
           <Tabs
             value={value}
             onChange={(_, newValue) => setValue(newValue)}
-            sx={{ mb: 2, borderBottom: 1, borderColor: "divider" }}
+            sx={{
+              mb: 2,
+              borderBottom: 1,
+              borderColor: "divider",
+              ".MuiTabs-indicator": { height: 3, bgcolor: "#ffc107" },
+            }}
           >
             {tabLabels.map((label, index) => (
               <Tab
@@ -75,56 +67,58 @@ export const ProductTabs = ({ product, category }: ProductTabsProps) => {
                   textTransform: "none",
                   fontWeight: 600,
                   color: value === index ? "#000" : "#888",
-                  borderBottom: value === index ? "3px solid #ffc107" : "none",
-                  transition: "all 0.3s",
                   px: 3,
                 }}
               />
             ))}
           </Tabs>
 
-          <Box mt={2}>
-            {value === 0 && (
-              <Typography paragraph>
-                {product.description || "Chưa có mô tả."}
-              </Typography>
-            )}
-            {value === 1 && (
-              <Box>
-                {[1, 2, 3, 4, 5].map((step) => (
-                  <Typography paragraph key={step}>
-                    <strong>Bước {step}:</strong> Lorem ipsum dolor sit amet,
-                    consectetur adipiscing elit.
+          <Fade in timeout={400}>
+            <Box mt={2}>
+              {value === 0 && (
+                <Typography paragraph>
+                  {product.description || "Chưa có mô tả cho sản phẩm này."}
+                </Typography>
+              )}
+              {value === 1 && (
+                <Box>
+                  {[1, 2, 3, 4, 5].map((step) => (
+                    <Typography paragraph key={step}>
+                      <strong>Bước {step}:</strong> Hướng dẫn thực hiện giao
+                      dịch mua sản phẩm theo quy trình tiêu chuẩn.
+                    </Typography>
+                  ))}
+                </Box>
+              )}
+              {value === 2 && (
+                <Box>
+                  <Typography paragraph fontWeight={600}>
+                    1. BẢO HÀNH
                   </Typography>
-                ))}
-              </Box>
-            )}
-            {value === 2 && (
-              <Box>
-                <Typography paragraph>
-                  <b>1. BẢO HÀNH</b>
-                </Typography>
-                <Typography paragraph>
-                  Sản phẩm được bảo hành miễn phí nếu còn thời hạn bảo hành tính
-                  từ ngày giao hàng.
-                </Typography>
-                <Typography paragraph>
-                  <b>1.2 Trường hợp không được bảo hành:</b>
-                </Typography>
-                <Typography paragraph>
-                  - Hết hạn hoặc mất phiếu bảo hành.
-                </Typography>
-                <Typography paragraph>
-                  <b>2. BẢO TRÌ</b>
-                </Typography>
-                <Typography paragraph>
-                  Vệ sinh, sửa chữa nhỏ miễn phí theo chính sách.
-                </Typography>
-              </Box>
-            )}
-          </Box>
+                  <Typography paragraph>
+                    Sản phẩm được bảo hành miễn phí nếu còn trong thời hạn bảo
+                    hành kể từ ngày giao hàng.
+                  </Typography>
+                  <Typography paragraph fontWeight={600}>
+                    1.2 Trường hợp không được bảo hành:
+                  </Typography>
+                  <Typography paragraph>
+                    - Hết hạn hoặc mất phiếu bảo hành.
+                  </Typography>
+                  <Typography paragraph fontWeight={600}>
+                    2. BẢO TRÌ
+                  </Typography>
+                  <Typography paragraph>
+                    Vệ sinh, sửa chữa nhỏ miễn phí theo chính sách riêng của
+                    chúng tôi.
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          </Fade>
         </Box>
 
+        {/* Gợi ý sản phẩm */}
         <Box
           sx={{
             width: 300,
@@ -133,35 +127,65 @@ export const ProductTabs = ({ product, category }: ProductTabsProps) => {
             pl: 3,
           }}
         >
-          <Typography variant="h6" fontWeight={700} color="warning.main" mb={2}>
-            CÓ THỂ{" "}
+          <Typography
+            variant="h6"
+            fontWeight={700}
+            color="warning.main"
+            mb={2}
+            sx={{ textTransform: "uppercase" }}
+          >
+            Có thể{" "}
             <Box component="span" color="primary.main">
-              BẠN THÍCH
+              bạn thích
             </Box>
           </Typography>
-          {suggestions.map((item) => (
-            <Box key={item.id} display="flex" alignItems="center" mb={2}>
+
+          {suggestions.map((item, index) => (
+            <motion.div
+              key={item.id}
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 * index }}
+            >
               <Box
-                component="img"
-                src={item.imageAvt || "/images/product/default.jpg"}
-                alt={item.name}
+                display="flex"
+                alignItems="center"
+                mb={2}
                 sx={{
-                  width: 60,
-                  height: 60,
-                  objectFit: "cover",
-                  borderRadius: 1,
-                  mr: 2,
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    transform: "translateX(4px)",
+                  },
                 }}
-              />
-              <Box>
-                <Typography variant="body2" noWrap>
-                  {item.name}
-                </Typography>
-                <Typography fontWeight={700} color="error.main" variant="body2">
-                  {item.price.toLocaleString()}₫
-                </Typography>
+              >
+                <Box
+                  component="img"
+                  src={item.imageAvt || "/images/product/default.jpg"}
+                  alt={item.name}
+                  sx={{
+                    width: 60,
+                    height: 60,
+                    objectFit: "cover",
+                    borderRadius: 1,
+                    mr: 2,
+                    border: "1px solid #eee",
+                  }}
+                />
+                <Box>
+                  <Typography variant="body2" noWrap fontWeight={500}>
+                    {item.name}
+                  </Typography>
+                  <Typography
+                    fontWeight={700}
+                    color="error.main"
+                    variant="body2"
+                  >
+                    {item.price.toLocaleString()}₫
+                  </Typography>
+                </Box>
               </Box>
-            </Box>
+              {index !== suggestions.length - 1 && <Divider />}
+            </motion.div>
           ))}
         </Box>
       </Box>

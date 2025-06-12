@@ -1,43 +1,52 @@
 "use client";
+
 import { useEffect } from "react";
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
 
 const WebsiteTrafficTracker = () => {
   useEffect(() => {
-    const trackVisitor = async () => {
+    if (typeof window === "undefined") return;
+
+    const track = async () => {
       try {
-        // 1. Lấy visitorId (FingerprintJS)
+        // 1. Load FingerprintJS
         const fp = await FingerprintJS.load();
         const result = await fp.get();
         const visitorId = result.visitorId;
 
-        // 2. Lấy địa chỉ IP
-        const ipRes = await fetch("https://api.ipify.org?format=json");
-        const ipData = await ipRes.json();
-        const ipAddress = ipData.ip;
+        // 2. Lấy IP
+        const ip = await fetch("https://api.ipify.org?format=json")
+          .then((res) => res.json())
+          .then((data) => data.ip)
+          .catch(() => null);
 
-        // 3. Lấy userId từ localStorage (từ key "user")
+        // 3. Lấy userId từ localStorage
         const userRaw = localStorage.getItem("user");
-        const userId = userRaw ? JSON.parse(userRaw).id : null;
+        const userId = userRaw ? JSON.parse(userRaw)?.id : null;
 
-        // 4. Gửi dữ liệu lên backend
+        // 4. Gửi dữ liệu
         await fetch("http://localhost:8080/api/v1/website_traffic", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             requestId: visitorId,
-            userId: userId,
-            ipAddress: ipAddress,
+            ipAddress: ip,
+            userId,
           }),
         });
-      } catch (error) {
-        console.error("Lỗi khi gửi dữ liệu tracking:", error);
+
+        console.debug("Website traffic tracked:", { visitorId, userId, ip });
+      } catch (err) {
+        console.warn("Không thể gửi dữ liệu traffic:", err);
       }
     };
 
-    trackVisitor();
+    // Thực hiện khi trình duyệt rảnh
+    if ("requestIdleCallback" in window) {
+      (window as any).requestIdleCallback(track);
+    } else {
+      setTimeout(track, 300); // fallback
+    }
   }, []);
 
   return null;

@@ -17,8 +17,8 @@ const WishListPage = () => {
   return (
     <>
       <PageViewTracker />
-      <WishlistHeroSection />
       <Container>
+        <WishlistHeroSection />
         <Box mt={4}>
           <WishlistPage />
         </Box>

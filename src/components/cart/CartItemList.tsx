@@ -23,6 +23,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { CART_COUNT_KEY } from "@/constants/apiKeys";
+import { mutate } from "swr";
 
 export type CartItem = {
   productId: number;
@@ -55,9 +58,7 @@ const CartItemList = ({ items: initialItems, onItemsChange }: Props) => {
   }, [initialItems]);
 
   useEffect(() => {
-    if (onItemsChange) {
-      onItemsChange(items);
-    }
+    onItemsChange?.(items);
   }, [items, onItemsChange]);
 
   const handleQuantityChange = async (
@@ -78,16 +79,17 @@ const CartItemList = ({ items: initialItems, onItemsChange }: Props) => {
       });
 
       if (res.ok) {
-        const updated = items.map((item) =>
-          item.productId === productId
-            ? {
-                ...item,
-                quantity: newQuantity,
-                totalPrice: newQuantity * item.unitPrice,
-              }
-            : item
+        setItems((prev) =>
+          prev.map((item) =>
+            item.productId === productId
+              ? {
+                  ...item,
+                  quantity: newQuantity,
+                  totalPrice: newQuantity * item.unitPrice,
+                }
+              : item
+          )
         );
-        setItems(updated);
       }
     } catch (err) {
       console.error("Lỗi khi cập nhật số lượng:", err);
@@ -108,14 +110,17 @@ const CartItemList = ({ items: initialItems, onItemsChange }: Props) => {
       );
 
       if (res.ok) {
-        const filtered = items.filter((item) => item.productId !== productId);
-        setItems(filtered);
+        setItems((prev) => prev.filter((item) => item.productId !== productId));
         setSnackbar({ open: true, message: "Đã xoá sản phẩm khỏi giỏ hàng." });
+
+        mutate(CART_COUNT_KEY, undefined, { revalidate: true });
       }
     } catch (err) {
       console.error("Lỗi khi xoá sản phẩm:", err);
     }
   };
+
+  const MotionBox = motion(Box);
 
   return (
     <Box>
@@ -138,7 +143,13 @@ const CartItemList = ({ items: initialItems, onItemsChange }: Props) => {
           </TableHead>
           <TableBody>
             {items.map((item) => (
-              <TableRow key={item.productId}>
+              <TableRow
+                key={item.productId}
+                component={motion.tr}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
                 <TableCell>
                   <Avatar
                     src={`/images/products/${item.productImage}`}
@@ -209,7 +220,15 @@ const CartItemList = ({ items: initialItems, onItemsChange }: Props) => {
       ) : (
         <Stack spacing={2}>
           {items.map((item) => (
-            <Paper key={item.productId} variant="outlined" sx={{ p: 2 }}>
+            <MotionBox
+              key={item.productId}
+              component={Paper}
+              variant="outlined"
+              sx={{ p: 2 }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
               <Stack direction="row" spacing={2}>
                 <Avatar
                   src={`/images/products/${item.productImage}`}
@@ -265,6 +284,7 @@ const CartItemList = ({ items: initialItems, onItemsChange }: Props) => {
                   {item.unitPrice.toLocaleString("vi-VN")}₫
                 </Typography>
               </Box>
+
               <Box display="flex" justifyContent="space-between" mt={1}>
                 <Typography>Sale:</Typography>
                 <Box textAlign="right">
@@ -276,6 +296,7 @@ const CartItemList = ({ items: initialItems, onItemsChange }: Props) => {
                   )}
                 </Box>
               </Box>
+
               <Box display="flex" justifyContent="space-between" mt={1}>
                 <Typography>Tổng:</Typography>
                 <Typography fontWeight={600}>
@@ -291,7 +312,7 @@ const CartItemList = ({ items: initialItems, onItemsChange }: Props) => {
                   <DeleteIcon />
                 </IconButton>
               </Box>
-            </Paper>
+            </MotionBox>
           ))}
         </Stack>
       )}

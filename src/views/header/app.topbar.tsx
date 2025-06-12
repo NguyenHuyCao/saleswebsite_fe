@@ -11,7 +11,6 @@ import {
   Grow,
   Paper,
   ClickAwayListener,
-  MenuList,
   MenuItem,
   Menu,
 } from "@mui/material";
@@ -34,6 +33,34 @@ const TopBar = () => {
   const [isClient, setIsClient] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [open, setOpen] = useState(false);
+  const [loginCheckTrigger, setLoginCheckTrigger] = useState(0);
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const token = localStorage.getItem("accessToken");
+      setIsLoggedIn(!!token);
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
+  useEffect(() => {
+    const updateLoginState = () => {
+      const token = localStorage.getItem("accessToken");
+      setIsLoggedIn(!!token);
+    };
+
+    // Lắng nghe cả hai sự kiện
+    window.addEventListener("storage", updateLoginState);
+    window.addEventListener("login", updateLoginState);
+
+    // Dọn dẹp
+    return () => {
+      window.removeEventListener("storage", updateLoginState);
+      window.removeEventListener("login", updateLoginState);
+    };
+  }, []);
 
   useEffect(() => {
     setIsClient(true);
@@ -80,6 +107,7 @@ const TopBar = () => {
       localStorage.removeItem("user");
       setIsLoggedIn(false);
       setOpen(false);
+      setLoginCheckTrigger((prev) => prev + 1);
       router.push("/");
     }
   };
@@ -107,9 +135,13 @@ const TopBar = () => {
             <Typography
               sx={{
                 color: "black",
-                fontSize: "14px",
+                fontSize: { xs: "12px", sm: "14px" },
                 fontWeight: 700,
-                textAlign: { xs: "center", sm: "left" },
+                textAlign: "center",
+                maxWidth: "100%",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
               }}
             >
               {greetings[index]}

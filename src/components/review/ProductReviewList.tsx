@@ -19,6 +19,7 @@ import {
   Alert,
   Switch,
   FormControlLabel,
+  Tooltip,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
@@ -42,11 +43,9 @@ interface Props {
 }
 
 export const ProductReviewList = ({ productId }: Props) => {
-  const [allReviews, setAllReviews] = useState<Review[]>([]);
-  const [filteredReviews, setFilteredReviews] = useState<Review[]>([]);
-  const [hiddenReviews, setHiddenReviews] = useState<Review[]>([]);
-  const [page, setPage] = useState(1);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [ratingFilter, setRatingFilter] = useState<number | "all">("all");
+  const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [showUserReviews, setShowUserReviews] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -57,97 +56,59 @@ export const ProductReviewList = ({ productId }: Props) => {
 
   const pageSize = 5;
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    try {
+      const parsed = storedUser ? JSON.parse(storedUser) : null;
+      setUserEmail(parsed?.email || null);
+    } catch {
+      setUserEmail(null);
+    }
+  }, []);
+
   const fetchReviews = async () => {
     try {
       const res = await fetch(
         `http://localhost:8080/api/v1/products/${productId}/reviews?page=1&size=100`
       );
       const data = await res.json();
-
-      const sorted = (data?.data?.result || []).sort(
-        (a: Review, b: Review) =>
+      const list: Review[] = data?.data?.result || [];
+      list.sort(
+        (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
-
-      setAllReviews(sorted);
-      setFilteredReviews(
-        sorted.filter((r: any) =>
-          ratingFilter === "all"
-            ? r.approved
-            : r.approved && r.rating === ratingFilter
-        )
-      );
-      setHiddenReviews(sorted.filter((r: any) => !r.approved));
-    } catch (error) {
-      console.error("Lỗi khi lấy đánh giá:", error);
+      setReviews(list);
+    } catch (e) {
+      console.error("Fetch review error:", e);
     }
   };
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser);
-        setUserEmail(parsed.email);
-      } catch {
-        console.error("Lỗi khi đọc user");
-      }
-    }
     fetchReviews();
   }, [productId]);
-
-  useEffect(() => {
-    const updated = allReviews.filter((r) =>
-      ratingFilter === "all"
-        ? r.approved
-        : r.approved && r.rating === ratingFilter
-    );
-    setFilteredReviews(updated);
-    setHiddenReviews(allReviews.filter((r) => !r.approved));
-    setPage(1);
-  }, [ratingFilter, allReviews]);
-
-  const handleToggleApprove = async (reviewId: number) => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return;
-    try {
-      const res = await fetch(
-        `http://localhost:8080/api/v1/reviews/${reviewId}/approved`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (res.ok) fetchReviews();
-    } catch (err) {
-      console.error("Toggle error", err);
-    }
-  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const files = Array.from(e.target.files);
     if (files.length > 3) {
-      setError("Chỉ được tải lên tối đa 3 ảnh");
-      return;
+      setError("Chỉ được tải tối đa 3 ảnh.");
+    } else {
+      setImages(files);
+      setError(null);
     }
-    setImages(files);
-    setError(null);
   };
 
   const handleSubmit = async () => {
     const token = localStorage.getItem("accessToken");
     if (!token || !rating || !comment.trim()) {
-      setError("Vui lòng nhập đủ thông tin");
+      setError("Vui lòng nhập đầy đủ thông tin và đăng nhập.");
       return;
     }
+
     try {
       const formData = new FormData();
       formData.append("rating", String(rating));
-      formData.append("comment", comment);
+      formData.append("comment", comment.trim());
       images.forEach((img) => formData.append("imageReviews", img));
 
       const res = await fetch(
@@ -158,23 +119,37 @@ export const ProductReviewList = ({ productId }: Props) => {
           body: formData,
         }
       );
-      if (!res.ok) throw new Error("Lỗi khi gửi đánh giá");
-      setRating(0);
+      if (!res.ok) throw new Error();
+      fetchReviews();
       setComment("");
       setImages([]);
-      setError(null);
+      setRating(0);
       setShowForm(false);
-      fetchReviews();
-    } catch (err) {
-      setError("Gửi đánh giá thất bại");
-      console.log(err);
+    } catch {
+      setError("Không thể gửi đánh giá, vui lòng thử lại.");
     }
   };
 
-  const paginatedReviews = filteredReviews.slice(
-    (page - 1) * pageSize,
-    page * pageSize
+  const toggleApproval = async (id: number) => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+    await fetch(`http://localhost:8080/api/v1/reviews/${id}/approved`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    fetchReviews();
+  };
+
+  const filtered = reviews.filter((r) =>
+    ratingFilter === "all"
+      ? r.approved
+      : r.approved && r.rating === ratingFilter
   );
+  const hidden = reviews.filter((r) => !r.approved);
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <Paper elevation={2} sx={{ p: 4, borderRadius: 3 }}>
@@ -187,7 +162,7 @@ export const ProductReviewList = ({ productId }: Props) => {
         gap={2}
       >
         <Typography variant="h6" fontWeight={700}>
-          Đánh giá sản phẩm ({filteredReviews.length})
+          Đánh giá sản phẩm ({filtered.length})
         </Typography>
 
         <Stack
@@ -195,7 +170,6 @@ export const ProductReviewList = ({ productId }: Props) => {
           spacing={2}
           alignItems="center"
           flexWrap="wrap"
-          justifyContent={{ xs: "flex-start", md: "flex-end" }}
           rowGap={1}
         >
           <FormControlLabel
@@ -207,19 +181,15 @@ export const ProductReviewList = ({ productId }: Props) => {
               />
             }
             label="Xem đánh giá của tôi"
-            sx={{ minWidth: 180 }}
           />
-
-          <FormControl sx={{ minWidth: 140 }} size="small">
+          <FormControl size="small" sx={{ minWidth: 140 }}>
             <InputLabel>Lọc theo sao</InputLabel>
             <Select
               label="Lọc theo sao"
               value={ratingFilter}
               onChange={(e) => setRatingFilter(e.target.value)}
               MenuProps={{
-                disablePortal: true,
                 disableScrollLock: true,
-                PaperProps: { sx: { mt: 1, zIndex: 1300 } },
               }}
             >
               <MenuItem value="all">Tất cả</MenuItem>
@@ -233,192 +203,117 @@ export const ProductReviewList = ({ productId }: Props) => {
 
           <Button
             variant="outlined"
-            onClick={() => setShowForm((prev) => !prev)}
+            onClick={() => setShowForm(!showForm)}
             endIcon={
               showForm ? <ChevronUp size={16} /> : <ChevronDown size={16} />
             }
-            sx={{ whiteSpace: "nowrap", height: 40 }}
           >
             Viết đánh giá
           </Button>
         </Stack>
       </Box>
 
+      <Collapse in={showForm}>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Paper sx={{ p: 3, mb: 3, bgcolor: "#f9f9f9" }}>
+            <Stack spacing={2}>
+              {error && <Alert severity="error">{error}</Alert>}
+              <Rating value={rating} onChange={(_, v) => setRating(v)} />
+              <TextField
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                multiline
+                rows={3}
+                placeholder="Nội dung đánh giá"
+              />
+              <Button component="label" variant="outlined">
+                Tải ảnh (tối đa 3)
+                <input
+                  hidden
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageChange}
+                />
+              </Button>
+              <Typography fontSize={13}>
+                {images.length} ảnh được chọn
+              </Typography>
+              <Button variant="contained" onClick={handleSubmit}>
+                Gửi đánh giá
+              </Button>
+            </Stack>
+          </Paper>
+        </motion.div>
+      </Collapse>
+
       {showUserReviews ? (
         <UserReviewList productId={productId} />
+      ) : paginated.length === 0 ? (
+        <Typography color="text.secondary">Chưa có đánh giá nào.</Typography>
       ) : (
-        <>
-          <Collapse in={showForm}>
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Paper elevation={0} sx={{ p: 3, mb: 3, bgcolor: "#f9f9f9" }}>
-                <Stack spacing={2}>
-                  <Typography fontWeight={600}>Gửi đánh giá của bạn</Typography>
-                  {error && <Alert severity="error">{error}</Alert>}
-                  <Rating
-                    value={rating}
-                    onChange={(_, val) => setRating(val)}
-                  />
-                  <TextField
-                    multiline
-                    rows={3}
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    placeholder="Nội dung đánh giá"
-                    fullWidth
-                  />
-                  <Button variant="outlined" component="label">
-                    Tải lên ảnh (tối đa 3)
-                    <input
-                      hidden
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleImageChange}
-                    />
-                  </Button>
-                  <Typography variant="body2" color="text.secondary">
-                    {images.length} ảnh được chọn
+        <Stack spacing={3}>
+          {paginated.map((review) => (
+            <Box key={review.id}>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Avatar>{review.createdBy.charAt(0).toUpperCase()}</Avatar>
+                <Box>
+                  <Typography fontWeight={600}>{review.createdBy}</Typography>
+                  <Rating value={review.rating} readOnly size="small" />
+                  <Typography fontSize={13} color="text.secondary">
+                    {new Date(review.createdAt).toLocaleDateString("vi-VN")}
                   </Typography>
-                  <Button variant="contained" onClick={handleSubmit}>
-                    Gửi đánh giá
-                  </Button>
-                </Stack>
-              </Paper>
-            </motion.div>
-          </Collapse>
-
-          {paginatedReviews.length === 0 ? (
-            <Typography color="text.secondary">
-              Chưa có đánh giá nào.
-            </Typography>
-          ) : (
-            <Stack spacing={3}>
-              {paginatedReviews.map((review) => (
-                <Box key={review.id}>
-                  <Stack direction="row" spacing={2} alignItems="center">
-                    <Avatar>{review.createdBy.charAt(0).toUpperCase()}</Avatar>
-                    <Box>
-                      <Typography fontWeight={600}>
-                        {review.createdBy}
-                      </Typography>
-                      <Rating value={review.rating} readOnly size="small" />
-                      <Typography variant="body2" color="text.secondary">
-                        {new Date(review.createdAt).toLocaleDateString("vi-VN")}
-                      </Typography>
-                    </Box>
-                  </Stack>
-                  <Typography mt={1.5}>{review.comment}</Typography>
-                  <Stack direction="row" spacing={2} mt={1}>
-                    {[review.image1, review.image2, review.image3]
-                      .filter(Boolean)
-                      .map((img, idx) => (
-                        <Box
-                          key={idx}
-                          component="img"
-                          src={`http://localhost:8080/api/v1/files/${img}`}
-                          sx={{
-                            width: 80,
-                            height: 80,
-                            borderRadius: 1,
-                            objectFit: "cover",
-                            border: "1px solid #ccc",
-                          }}
-                        />
-                      ))}
-                  </Stack>
-                  {userEmail === "admin@gmail.com" && (
-                    <Box mt={1}>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        color={review.approved ? "error" : "success"}
-                        onClick={() => handleToggleApprove(review.id)}
-                      >
-                        {review.approved ? "Ẩn đánh giá" : "Hiện đánh giá"}
-                      </Button>
-                    </Box>
-                  )}
-                  <Divider sx={{ mt: 2 }} />
                 </Box>
-              ))}
-            </Stack>
-          )}
-
-          {filteredReviews.length > pageSize && (
-            <Box display="flex" justifyContent="center" mt={4}>
-              <Pagination
-                count={Math.ceil(filteredReviews.length / pageSize)}
-                page={page}
-                onChange={(_, newPage) => setPage(newPage)}
-                color="primary"
-              />
-            </Box>
-          )}
-
-          {userEmail === "admin@gmail.com" && hiddenReviews.length > 0 && (
-            <Box mt={6}>
-              <Typography variant="h6" fontWeight={700} mb={2}>
-                Đánh giá đã ẩn ({hiddenReviews.length})
-              </Typography>
-              <Stack spacing={3}>
-                {hiddenReviews.map((review) => (
-                  <Box key={review.id}>
-                    <Stack direction="row" spacing={2} alignItems="center">
-                      <Avatar>
-                        {review.createdBy.charAt(0).toUpperCase()}
-                      </Avatar>
-                      <Box>
-                        <Typography fontWeight={600}>
-                          {review.createdBy}
-                        </Typography>
-                        <Rating value={review.rating} readOnly size="small" />
-                        <Typography variant="body2" color="text.secondary">
-                          {new Date(review.createdAt).toLocaleDateString(
-                            "vi-VN"
-                          )}
-                        </Typography>
-                      </Box>
-                    </Stack>
-                    <Typography mt={1.5}>{review.comment}</Typography>
-                    <Stack direction="row" spacing={2} mt={1}>
-                      {[review.image1, review.image2, review.image3]
-                        .filter(Boolean)
-                        .map((img, idx) => (
-                          <Box
-                            key={idx}
-                            component="img"
-                            src={`http://localhost:8080/api/v1/files/${img}`}
-                            sx={{
-                              width: 80,
-                              height: 80,
-                              borderRadius: 1,
-                              objectFit: "cover",
-                              border: "1px solid #ccc",
-                            }}
-                          />
-                        ))}
-                    </Stack>
-                    <Box mt={1}>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        color="success"
-                        onClick={() => handleToggleApprove(review.id)}
-                      >
-                        Hiện đánh giá
-                      </Button>
-                    </Box>
-                    <Divider sx={{ mt: 2 }} />
-                  </Box>
-                ))}
               </Stack>
+              <Typography mt={1.5}>{review.comment}</Typography>
+              <Stack direction="row" spacing={1} mt={1}>
+                {[review.image1, review.image2, review.image3]
+                  .filter(Boolean)
+                  .map((img, idx) => (
+                    <Tooltip title="Ảnh minh họa" key={idx}>
+                      <Box
+                        component="img"
+                        src={`http://localhost:8080/api/v1/files/${img}`}
+                        sx={{
+                          width: 80,
+                          height: 80,
+                          borderRadius: 1,
+                          border: "1px solid #ccc",
+                          objectFit: "cover",
+                        }}
+                      />
+                    </Tooltip>
+                  ))}
+              </Stack>
+              {userEmail === "admin@gmail.com" && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="error"
+                  sx={{ mt: 1 }}
+                  onClick={() => toggleApproval(review.id)}
+                >
+                  Ẩn đánh giá
+                </Button>
+              )}
+              <Divider sx={{ mt: 2 }} />
             </Box>
-          )}
-        </>
+          ))}
+        </Stack>
+      )}
+
+      {filtered.length > pageSize && (
+        <Box display="flex" justifyContent="center" mt={4}>
+          <Pagination
+            count={Math.ceil(filtered.length / pageSize)}
+            page={page}
+            onChange={(_, newPage) => setPage(newPage)}
+          />
+        </Box>
       )}
     </Paper>
   );

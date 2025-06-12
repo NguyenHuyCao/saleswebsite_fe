@@ -1,6 +1,13 @@
 "use client";
 
-import { Box, Typography, Paper } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Paper,
+  Fade,
+  useTheme,
+  useMediaQuery,
+} from "@mui/material";
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -28,7 +35,7 @@ interface Brand {
 
 interface Props {
   brands: Brand[];
-  categories: Category[];
+  categories: Category[]; // Unused but kept for future flexibility
 }
 
 const BrandMegaMenu = ({ brands }: Props) => {
@@ -36,17 +43,26 @@ const BrandMegaMenu = ({ brands }: Props) => {
     null
   );
   const router = useRouter();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const getCategoriesForHoveredBrand = () => {
     if (hoveredBrandIndex === null) return [];
-    const brand = brands[hoveredBrandIndex];
-    return brand.category.filter((cat) => cat.products.length > 0);
+    return brands[hoveredBrandIndex].category.filter(
+      (cat) => cat.products.length > 0
+    );
   };
 
-  console.log("brands", brands);
-
   return (
-    <Box display="flex" sx={{ position: "relative" }}>
+    <Box
+      display="flex"
+      onMouseLeave={() => setHoveredBrandIndex(null)}
+      sx={{
+        position: "relative",
+        boxShadow: 3,
+      }}
+    >
+      {/* BRAND LIST */}
       <Box
         sx={{
           bgcolor: "black",
@@ -87,15 +103,16 @@ const BrandMegaMenu = ({ brands }: Props) => {
         ))}
       </Box>
 
-      {hoveredBrandIndex !== null && (
+      {/* CATEGORY & PRODUCT LIST */}
+      <Fade in={hoveredBrandIndex !== null} timeout={200}>
         <Paper
-          elevation={3}
-          onMouseLeave={() => setHoveredBrandIndex(null)}
+          elevation={4}
           sx={{
             position: "absolute",
             left: 250,
             top: 0,
-            minWidth: 905,
+            minWidth: 900,
+            maxWidth: isMobile ? "90vw" : "none",
             bgcolor: "white",
             color: "black",
             p: 3,
@@ -103,20 +120,19 @@ const BrandMegaMenu = ({ brands }: Props) => {
             flexWrap: "wrap",
             gap: 4,
             borderTop: "4px solid #ffb700",
+            zIndex: 10,
           }}
         >
-          {getCategoriesForHoveredBrand().map((cat, catIndex) => (
+          {getCategoriesForHoveredBrand().map((cat) => (
             <Box
-              key={`cat-${cat.id}-${catIndex}`}
+              key={cat.id}
               sx={{
                 minWidth: 220,
                 maxWidth: 260,
                 px: 3,
                 maxHeight: 300,
                 overflowY: "auto",
-                "&::-webkit-scrollbar": {
-                  width: 6,
-                },
+                "&::-webkit-scrollbar": { width: 6 },
                 "&::-webkit-scrollbar-thumb": {
                   backgroundColor: "#e0e0e0",
                   borderRadius: 4,
@@ -137,11 +153,8 @@ const BrandMegaMenu = ({ brands }: Props) => {
                 {cat.name}
               </Typography>
 
-              <Box
-                component="ul"
-                sx={{ listStyle: "none", pl: 1, pr: 0, m: 0 }}
-              >
-                {cat.products.slice(0, 6).map((p, i) => (
+              <Box component="ul" sx={{ listStyle: "none", pl: 1, m: 0 }}>
+                {cat.products.slice(0, 6).map((p) => (
                   <Box
                     key={p.id}
                     component="li"
@@ -176,9 +189,8 @@ const BrandMegaMenu = ({ brands }: Props) => {
                   <Box
                     onClick={() => {
                       const brandSlug = brands[hoveredBrandIndex!].slug;
-                      const categorySlug = cat.slug;
                       router.push(
-                        `/product?brand=${brandSlug}&category=${categorySlug}`
+                        `/product?brand=${brandSlug}&category=${cat.slug}`
                       );
                     }}
                     sx={{
@@ -202,7 +214,7 @@ const BrandMegaMenu = ({ brands }: Props) => {
             </Box>
           ))}
         </Paper>
-      )}
+      </Fade>
     </Box>
   );
 };

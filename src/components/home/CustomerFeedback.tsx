@@ -26,6 +26,7 @@ import EmailOutline from "mdi-material-ui/EmailOutline";
 import AccountOutline from "mdi-material-ui/AccountOutline";
 import MessageOutline from "mdi-material-ui/MessageOutline";
 import GlobalSnackbar from "../alert/GlobalSnackbar";
+import { motion } from "framer-motion";
 
 const reviews = [
   {
@@ -78,10 +79,7 @@ const CustomerReviewsSlider = () => {
       const response = await fetch("http://localhost:8080/api/v1/contacts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          subject: "Tư vấn",
-        }),
+        body: JSON.stringify({ ...form, subject: "Tư vấn" }),
       });
 
       const result = await response.json();
@@ -96,7 +94,7 @@ const CustomerReviewsSlider = () => {
 
       setAlert({ type: "success", message: "Gửi liên hệ thành công!" });
       setForm({ fullName: "", email: "", phone: "", messageContent: "" });
-    } catch (err) {
+    } catch {
       setAlert({ type: "error", message: "Có lỗi xảy ra. Vui lòng thử lại!" });
     } finally {
       setLoading(false);
@@ -104,20 +102,11 @@ const CustomerReviewsSlider = () => {
     }
   };
 
-  const showReview = (idx: number) => {
-    setIndex(idx);
-  };
-
-  const prev = () => {
-    setIndex((prevIndex) => (prevIndex - 1 + reviews.length) % reviews.length);
-  };
-
-  const next = () => {
-    setIndex((prevIndex) => (prevIndex + 1) % reviews.length);
-  };
+  const prev = () => setIndex((i) => (i - 1 + reviews.length) % reviews.length);
+  const next = () => setIndex((i) => (i + 1) % reviews.length);
 
   return (
-    <Box textAlign="center" py={6} className="customer-reviews">
+    <Box py={6}>
       <GlobalSnackbar
         open={!!alert}
         type={alert?.type || "success"}
@@ -126,10 +115,16 @@ const CustomerReviewsSlider = () => {
       />
 
       <Grid container spacing={4} justifyContent="center">
+        {/* REVIEW SLIDER */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Slide direction="left" in mountOnEnter unmountOnExit>
-            <Box sx={{ mt: 6 }}>
-              <Typography variant="h5" fontWeight="bold" mb={3}>
+            <Box mt={6}>
+              <Typography
+                variant="h5"
+                fontWeight="bold"
+                mb={3}
+                textAlign="center"
+              >
                 CẢM NHẬN KHÁCH HÀNG
               </Typography>
 
@@ -139,122 +134,133 @@ const CustomerReviewsSlider = () => {
                 alignItems="center"
                 gap={2}
               >
-                <IconButton onClick={prev}>
+                <IconButton onClick={prev} aria-label="Previous">
                   <ArrowBackIosNewIcon />
                 </IconButton>
 
-                <Box
-                  sx={{
-                    width: 250,
-                    background: "white",
-                    p: 2,
-                    borderRadius: 2,
-                    boxShadow: 3,
-                    transition: "transform 0.3s",
-                  }}
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
                 >
-                  <Avatar
-                    src={reviews[index].image}
-                    alt={reviews[index].name}
-                    sx={{ width: 120, height: 120, mx: "auto", mb: 2 }}
-                  />
-                  <Typography fontSize={14}>
-                    {reviews[index].comment}
-                  </Typography>
-                  <Typography fontSize={14} mt={1} fontWeight={600}>
-                    - {reviews[index].name}
-                  </Typography>
-                </Box>
+                  <Box
+                    sx={{
+                      width: 260,
+                      background: "#fff",
+                      p: 2,
+                      borderRadius: 3,
+                      boxShadow: 3,
+                      transition: "transform 0.4s ease",
+                      "&:hover": { transform: "scale(1.03)" },
+                    }}
+                  >
+                    <Avatar
+                      src={reviews[index].image}
+                      alt={reviews[index].name}
+                      sx={{
+                        width: 100,
+                        height: 100,
+                        mx: "auto",
+                        mb: 1.5,
+                        boxShadow: 2,
+                      }}
+                    />
+                    <Typography fontSize={15}>
+                      {reviews[index].comment}
+                    </Typography>
+                    <Typography fontWeight={600} fontSize={14} mt={1}>
+                      - {reviews[index].name}
+                    </Typography>
+                  </Box>
+                </motion.div>
 
-                <IconButton onClick={next}>
+                <IconButton onClick={next} aria-label="Next">
                   <ArrowForwardIosIcon />
                 </IconButton>
               </Box>
 
               <Stack direction="row" justifyContent="center" spacing={1} mt={2}>
                 {reviews.map((r, i) => (
-                  <Avatar
-                    key={i}
-                    src={r.image}
-                    onClick={() => showReview(i)}
-                    sx={{
-                      width: 60,
-                      height: 60,
-                      borderRadius: "50%",
-                      cursor: "pointer",
-                      transform: index === i ? "scale(1.1)" : "scale(1)",
-                      transition: "transform 0.3s",
-                      boxShadow: index === i ? 3 : 1,
-                    }}
-                  />
+                  <motion.div whileHover={{ scale: 1.2 }} key={i}>
+                    <Avatar
+                      src={r.image}
+                      alt={`Avatar ${r.name}`}
+                      onClick={() => setIndex(i)}
+                      sx={{
+                        width: isMobile ? 40 : 50,
+                        height: isMobile ? 40 : 50,
+                        cursor: "pointer",
+                        transform: index === i ? "scale(1.15)" : "scale(1)",
+                        transition: "all 0.3s",
+                        border:
+                          index === i
+                            ? "2px solid #ffb700"
+                            : "2px solid transparent",
+                        boxShadow: index === i ? 2 : 1,
+                      }}
+                    />
+                  </motion.div>
                 ))}
               </Stack>
             </Box>
           </Slide>
         </Grid>
 
+        {/* CONTACT FORM */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <Fade in timeout={500}>
-            <Card>
+          <Fade in timeout={600}>
+            <Card sx={{ boxShadow: 3 }}>
               <CardHeader
                 title="Liên hệ với chúng tôi"
-                titleTypographyProps={{ variant: "h6" }}
+                titleTypographyProps={{ variant: "h6", fontWeight: 600 }}
               />
               <CardContent>
                 <form onSubmit={handleSubmit}>
                   <Grid container spacing={3}>
-                    <Grid size={{ xs: 12 }}>
-                      <TextField
-                        fullWidth
-                        label="Họ và tên"
-                        value={form.fullName}
-                        onChange={(e) =>
-                          handleChange("fullName", e.target.value)
-                        }
-                        placeholder="Nguyễn Văn A"
-                        InputProps={{
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <AccountOutline />
-                            </InputAdornment>
-                          ),
-                        }}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12 }}>
-                      <TextField
-                        fullWidth
-                        type="email"
-                        label="Email"
-                        value={form.email}
-                        onChange={(e) => handleChange("email", e.target.value)}
-                        placeholder="example@gmail.com"
-                        InputProps={{
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <EmailOutline />
-                            </InputAdornment>
-                          ),
-                        }}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12 }}>
-                      <TextField
-                        fullWidth
-                        type="tel"
-                        label="Số điện thoại"
-                        value={form.phone}
-                        onChange={(e) => handleChange("phone", e.target.value)}
-                        placeholder="0901234567"
-                        InputProps={{
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <Phone />
-                            </InputAdornment>
-                          ),
-                        }}
-                      />
-                    </Grid>
+                    {[
+                      {
+                        label: "Họ và tên",
+                        field: "fullName",
+                        type: "text",
+                        icon: <AccountOutline />,
+                        placeholder: "Nguyễn Văn A",
+                      },
+                      {
+                        label: "Email",
+                        field: "email",
+                        type: "email",
+                        icon: <EmailOutline />,
+                        placeholder: "example@gmail.com",
+                      },
+                      {
+                        label: "Số điện thoại",
+                        field: "phone",
+                        type: "tel",
+                        icon: <Phone />,
+                        placeholder: "0901234567",
+                      },
+                    ].map((item, idx) => (
+                      <Grid size={{ xs: 12 }} key={idx}>
+                        <TextField
+                          fullWidth
+                          label={item.label}
+                          type={item.type}
+                          value={form[item.field as keyof typeof form]}
+                          onChange={(e) =>
+                            handleChange(item.field, e.target.value)
+                          }
+                          placeholder={item.placeholder}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                {item.icon}
+                              </InputAdornment>
+                            ),
+                          }}
+                        />
+                      </Grid>
+                    ))}
                     <Grid size={{ xs: 12 }}>
                       <TextField
                         fullWidth
@@ -278,9 +284,18 @@ const CustomerReviewsSlider = () => {
                     <Grid size={{ xs: 12 }}>
                       <Button
                         type="submit"
+                        fullWidth
                         variant="contained"
                         size="large"
                         disabled={loading}
+                        sx={{
+                          fontWeight: 600,
+                          bgcolor: "#ffb700",
+                          color: "#000",
+                          "&:hover": {
+                            bgcolor: "#ffa000",
+                          },
+                        }}
                       >
                         {loading ? "Đang gửi..." : "Gửi"}
                       </Button>

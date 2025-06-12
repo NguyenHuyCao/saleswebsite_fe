@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   TextField,
   Button,
@@ -8,10 +8,12 @@ import {
   InputAdornment,
   IconButton,
   Typography,
+  Fade,
 } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 interface LoginTabProps {
   showMessage: (severity: "success" | "error", message: string) => void;
@@ -22,9 +24,16 @@ const LoginTab: React.FC<LoginTabProps> = ({ showMessage }) => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-
   const router = useRouter();
+
   const canLogin = email.trim() && password.trim();
+
+  const handleInputChange = useCallback(
+    (field: "email" | "password", value: string) => {
+      field === "email" ? setEmail(value) : setPassword(value);
+    },
+    []
+  );
 
   const handleLogin = async () => {
     setLoading(true);
@@ -41,81 +50,103 @@ const LoginTab: React.FC<LoginTabProps> = ({ showMessage }) => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Đăng nhập thất bại");
 
-      const token = data.data.accessToken;
-      const user = data.data.user;
+      const { accessToken, user } = data.data;
 
-      // Chỉ lưu vào localStorage
-      localStorage.setItem("accessToken", token);
+      localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("user", JSON.stringify(user));
 
       showMessage("success", "Đăng nhập thành công!");
+      window.dispatchEvent(new Event("storage"));
+      window.dispatchEvent(new Event("login"));
       router.push("/");
     } catch (err: any) {
-      const msg = err?.message?.includes("Failed to fetch")
-        ? "Không thể kết nối tới máy chủ"
+      const message = err?.message?.includes("fetch")
+        ? "Không thể kết nối đến máy chủ."
         : err.message || "Lỗi không xác định";
-      showMessage("error", msg);
+      showMessage("error", message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (canLogin && !loading) handleLogin();
-      }}
-    >
-      <Stack spacing={2}>
-        <TextField
-          label="Email"
-          fullWidth
-          size="small"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <TextField
-          label="Mật khẩu"
-          type={showPassword ? "text" : "password"}
-          fullWidth
-          size="small"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  onClick={() => setShowPassword(!showPassword)}
-                  edge="end"
-                >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
-        <Button
-          fullWidth
-          type="submit"
-          variant="contained"
-          sx={{ bgcolor: "#ffb700", color: "#fff", fontWeight: 600 }}
-          disabled={!canLogin || loading}
-        >
-          {loading ? "Đang đăng nhập..." : "Đăng nhập"}
-        </Button>
-      </Stack>
-
-      <Typography
-        mt={2}
-        textAlign="center"
-        fontSize={14}
-        fontWeight={500}
-        sx={{ cursor: "pointer", textDecoration: "underline" }}
+    <Fade in timeout={500}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (canLogin && !loading) handleLogin();
+        }}
       >
-        Quên mật khẩu?
-      </Typography>
-    </form>
+        <Stack
+          spacing={2}
+          component={motion.div}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <TextField
+            label="Email"
+            fullWidth
+            size="small"
+            value={email}
+            onChange={(e) => handleInputChange("email", e.target.value)}
+            autoComplete="username"
+          />
+          <TextField
+            label="Mật khẩu"
+            type={showPassword ? "text" : "password"}
+            fullWidth
+            size="small"
+            value={password}
+            onChange={(e) => handleInputChange("password", e.target.value)}
+            autoComplete="current-password"
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          <Button
+            fullWidth
+            type="submit"
+            variant="contained"
+            sx={{
+              bgcolor: "#ffb700",
+              color: "#fff",
+              fontWeight: 600,
+              textTransform: "none",
+              "&:hover": { bgcolor: "#f5a600" },
+            }}
+            disabled={!canLogin || loading}
+          >
+            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+          </Button>
+
+          <Typography
+            mt={1}
+            textAlign="center"
+            fontSize={14}
+            fontWeight={500}
+            sx={{
+              cursor: "pointer",
+              textDecoration: "underline",
+              color: "#1976d2",
+              "&:hover": { opacity: 0.8 },
+            }}
+          >
+            Quên mật khẩu?
+          </Typography>
+        </Stack>
+      </form>
+    </Fade>
   );
 };
 

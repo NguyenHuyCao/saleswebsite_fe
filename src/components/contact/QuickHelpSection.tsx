@@ -1,17 +1,20 @@
 "use client";
 
-import React from "react";
+import React, { useState, useMemo } from "react";
 import {
+  Box,
+  Typography,
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Box,
-  Typography,
+  TextField,
   useTheme,
   useMediaQuery,
+  InputAdornment,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-// import ChatIcon from "@mui/icons-material/Chat";
+import SearchIcon from "@mui/icons-material/Search";
+import { motion, AnimatePresence } from "framer-motion";
 
 const faqList = [
   {
@@ -44,9 +47,16 @@ const faqList = [
 const QuickHelpSection = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [keyword, setKeyword] = useState("");
+
+  const filteredFaqs = useMemo(() => {
+    const q = keyword.trim().toLowerCase();
+    return faqList.filter((item) => item.question.toLowerCase().includes(q));
+  }, [keyword]);
 
   return (
-    <Box px={4} py={6} bgcolor="#fff">
+    <Box px={{ xs: 2, md: 4 }} py={6} bgcolor="#fff">
       <Typography
         variant="h5"
         fontWeight="bold"
@@ -57,35 +67,64 @@ const QuickHelpSection = () => {
         HỖ TRỢ NHANH
       </Typography>
 
-      <Box maxWidth={800} mx="auto">
-        {faqList.map((item, index) => (
-          <Accordion key={index} sx={{ mb: 1 }}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography fontWeight={600}>{item.question}</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Typography>{item.answer}</Typography>
-            </AccordionDetails>
-          </Accordion>
-        ))}
+      <Box maxWidth={600} mx="auto" mb={4}>
+        <TextField
+          fullWidth
+          size="small"
+          placeholder="Tìm kiếm câu hỏi..."
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
       </Box>
 
-      {/* Nút Chat Messenger/Zalo */}
-      {/* <Fab
-        color="primary"
-        sx={{
-          position: "fixed",
-          bottom: 20,
-          right: 20,
-          zIndex: 999,
-          backgroundColor: "#0084FF",
-          "&:hover": { backgroundColor: "#005fb8" },
-        }}
-        onClick={() => window.open("https://zalo.me/0367164126", "_blank")}
-        aria-label="Zalo Chat"
-      >
-        <ChatIcon />
-      </Fab> */}
+      <Box maxWidth={800} mx="auto">
+        <AnimatePresence initial={false}>
+          {filteredFaqs.length > 0 ? (
+            filteredFaqs.map((item, index) => (
+              <motion.div
+                key={item.question}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Accordion
+                  expanded={expandedIndex === index}
+                  onChange={() =>
+                    setExpandedIndex(expandedIndex === index ? null : index)
+                  }
+                  sx={{ mb: 1, borderRadius: 2 }}
+                >
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Typography fontWeight={600}>{item.question}</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.25 }}
+                    >
+                      <Typography>{item.answer}</Typography>
+                    </motion.div>
+                  </AccordionDetails>
+                </Accordion>
+              </motion.div>
+            ))
+          ) : (
+            <Typography color="text.secondary" textAlign="center">
+              Không tìm thấy câu hỏi phù hợp.
+            </Typography>
+          )}
+        </AnimatePresence>
+      </Box>
     </Box>
   );
 };

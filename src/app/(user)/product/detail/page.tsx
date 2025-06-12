@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import PageViewTracker from "@/components/common/traffic/PageViewTracker";
 import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
+import ScrollPositionManager from "@/components/common/ScrollResetOnLoad";
 
 export default async function DetailProduct({ searchParams }: any) {
   const slug = searchParams?.name;
@@ -41,7 +42,8 @@ export default async function DetailProduct({ searchParams }: any) {
     <Container>
       <PageViewTracker />
       <ProductDetailPage product={product} category={category} />
-      <FreezeScrollOnReload />
+
+      <ScrollPositionManager />
     </Container>
   );
 }

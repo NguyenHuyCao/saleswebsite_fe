@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Box,
   Typography,
@@ -19,7 +17,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ORDERS_COUNT_KEY, CART_COUNT_KEY } from "@/constants/apiKeys";
+import { CART_COUNT_KEY, ORDERS_COUNT_KEY } from "@/constants/apiKeys";
 import { mutate } from "swr";
 
 export type CartItem = {
@@ -33,12 +31,6 @@ export type CartItem = {
   discount?: number;
   maxDiscount?: number;
 };
-
-interface OrderResponse {
-  orderId: number;
-  status: string;
-  paymentUrl?: string;
-}
 
 type Props = {
   items: CartItem[];
@@ -64,56 +56,29 @@ const CartSummary = ({ items, onApplyVoucher }: Props) => {
   const [orderNote, setOrderNote] = useState("");
   const [voucherCode, setVoucherCode] = useState("");
   const [loading, setLoading] = useState(false);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarType, setSnackbarType] = useState<"success" | "error">(
-    "success"
-  );
-  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    type: "success" as "success" | "error",
+    message: "",
+  });
 
   const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
   const shippingFee = shippingType === "express" ? 30000 : 0;
   const total = subtotal + shippingFee;
 
   useEffect(() => {
-    const fetchUserInfo = async () => {
-      const token = localStorage.getItem("accessToken");
-      const userString = localStorage.getItem("user");
-      if (!token || !userString) return;
+    const token = localStorage.getItem("accessToken");
+    const user = localStorage.getItem("user");
 
-      try {
-        const user = JSON.parse(userString);
-        const res = await fetch(
-          `http://localhost:8080/api/v1/users/${user.id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const data = await res.json();
-        if (res.ok && data?.data?.address) {
-          setUserAddress(data.data.address);
-        }
-      } catch (error) {
-        console.error("Lỗi lấy thông tin người dùng:", error);
-      }
-    };
-
-    fetchUserInfo();
+    if (token && user) {
+      const { id } = JSON.parse(user);
+      fetch(`http://localhost:8080/api/v1/users/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => res.json())
+        .then((data) => setUserAddress(data?.data?.address || ""));
+    }
   }, []);
-
-  const handleOpenModal = () => setModalOpen(true);
-  const handleCloseModal = () => {
-    setModalOpen(false);
-    setSelectedProvince("");
-    setSelectedCommune("");
-    setDetailAddress("");
-  };
-
-  const handleReplaceAddress = () => {
-    if (!selectedProvince || !selectedCommune || !detailAddress) return;
-    const newAddress = `${detailAddress}, ${selectedCommune}, ${selectedProvince}`;
-    setUserAddress(newAddress);
-    handleCloseModal();
-  };
 
   const handleApplyVoucher = () => {
     if (voucherCode.trim()) onApplyVoucher(voucherCode.trim());
@@ -122,48 +87,44 @@ const CartSummary = ({ items, onApplyVoucher }: Props) => {
   const handlePlaceOrder = async () => {
     const token = localStorage.getItem("accessToken");
     if (!token || !userAddress) {
-      setSnackbarType("error");
-      setSnackbarMessage("Vui lòng nhập địa chỉ giao hàng.");
-      setSnackbarOpen(true);
-      return;
+      return setSnackbar({
+        open: true,
+        type: "error",
+        message: "Vui lòng nhập địa chỉ giao hàng.",
+      });
     }
 
     setLoading(true);
 
-    const promotionCodeByProductId: Record<number, string> = {};
-    if (voucherCode) {
-      for (const item of items) {
-        promotionCodeByProductId[item.productId] = voucherCode;
-      }
-    }
-
-    const payload = {
-      shippingAddress: userAddress,
-      paymentMethod,
-      shippingNote: orderNote,
-      shippingAmount: shippingFee,
-      promotionCodeByProductId,
-    };
-
     try {
+      const promotionMap = voucherCode
+        ? Object.fromEntries(items.map((i) => [i.productId, voucherCode]))
+        : {};
+
       const res = await fetch("http://localhost:8080/api/v1/orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          shippingAddress: userAddress,
+          paymentMethod,
+          shippingNote: orderNote,
+          shippingAmount: shippingFee,
+          promotionCodeByProductId: promotionMap,
+        }),
       });
 
-      const data: { data: OrderResponse; message?: string } = await res.json();
-
-      if (res.ok && data.data?.orderId) {
-        setSnackbarType("success");
-        setSnackbarMessage("Đặt hàng thành công!");
-        setSnackbarOpen(true);
-
-        mutate(ORDERS_COUNT_KEY, undefined, { revalidate: true });
-        mutate(CART_COUNT_KEY, undefined, { revalidate: true });
+      const data = await res.json();
+      if (res.ok && data?.data?.orderId) {
+        mutate(ORDERS_COUNT_KEY);
+        mutate(CART_COUNT_KEY);
+        setSnackbar({
+          open: true,
+          type: "success",
+          message: "Đặt hàng thành công!",
+        });
 
         setTimeout(() => {
           if (data.data.paymentUrl) {
@@ -175,13 +136,55 @@ const CartSummary = ({ items, onApplyVoucher }: Props) => {
       } else {
         throw new Error(data?.message || "Đặt hàng thất bại");
       }
-    } catch (error: any) {
-      console.error("Lỗi khi đặt hàng:", error);
-      setSnackbarType("error");
-      setSnackbarMessage(error.message || "Lỗi không xác định");
-      setSnackbarOpen(true);
+    } catch (err: any) {
+      setSnackbar({
+        open: true,
+        type: "error",
+        message: err.message || "Lỗi không xác định",
+      });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleReplaceAddress = () => {
+    if (!selectedProvince || !selectedCommune || !detailAddress) return;
+    const full = `${detailAddress}, ${selectedCommune}, ${selectedProvince}`;
+    setUserAddress(full);
+    setModalOpen(false);
+    setDetailAddress("");
+    setSelectedCommune("");
+    setSelectedProvince("");
+  };
+
+  const handleClearCart = async () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+
+    try {
+      const res = await fetch("http://localhost:8080/api/v1/carts/user", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        mutate(CART_COUNT_KEY);
+        setSnackbar({
+          open: true,
+          type: "success",
+          message: "Đã xoá toàn bộ giỏ hàng.",
+        });
+        setTimeout(() => router.push("/"), 1500);
+      } else {
+        throw new Error(data?.message || "Xoá giỏ hàng thất bại.");
+      }
+    } catch (err: any) {
+      setSnackbar({
+        open: true,
+        type: "error",
+        message: err.message || "Đã xảy ra lỗi.",
+      });
     }
   };
 
@@ -190,7 +193,6 @@ const CartSummary = ({ items, onApplyVoucher }: Props) => {
       <Typography variant="h6" fontWeight={700} gutterBottom>
         Tổng kết đơn hàng
       </Typography>
-
       <Divider sx={{ mb: 2 }} />
 
       <Box display="flex" justifyContent="space-between" mb={1}>
@@ -209,12 +211,12 @@ const CartSummary = ({ items, onApplyVoucher }: Props) => {
           <FormControlLabel
             value="standard"
             control={<Radio />}
-            label="Giao hàng tiêu chuẩn (miễn phí)"
+            label="Tiêu chuẩn (Miễn phí)"
           />
           <FormControlLabel
             value="express"
             control={<Radio />}
-            label="Giao hàng nhanh (30.000₫)"
+            label="Giao nhanh (30.000₫)"
           />
         </RadioGroup>
       </Box>
@@ -224,7 +226,7 @@ const CartSummary = ({ items, onApplyVoucher }: Props) => {
         <Typography variant="body2" color="text.secondary">
           {userAddress || "Chưa có địa chỉ"}
         </Typography>
-        <Button size="small" sx={{ mt: 1 }} onClick={handleOpenModal}>
+        <Button size="small" sx={{ mt: 1 }} onClick={() => setModalOpen(true)}>
           Thay đổi
         </Button>
       </Box>
@@ -248,18 +250,16 @@ const CartSummary = ({ items, onApplyVoucher }: Props) => {
         </RadioGroup>
       </Box>
 
-      <Box mb={2}>
-        <Typography mb={1}>Ghi chú đơn hàng (nếu có):</Typography>
-        <TextField
-          fullWidth
-          placeholder="Ví dụ: Giao vào buổi chiều, gọi trước khi đến..."
-          multiline
-          rows={3}
-          size="small"
-          value={orderNote}
-          onChange={(e) => setOrderNote(e.target.value)}
-        />
-      </Box>
+      <TextField
+        multiline
+        rows={3}
+        fullWidth
+        value={orderNote}
+        onChange={(e) => setOrderNote(e.target.value)}
+        placeholder="Ghi chú đơn hàng (nếu có)..."
+        size="small"
+        sx={{ mb: 2 }}
+      />
 
       <Stack direction="row" spacing={1} mb={2}>
         <TextField
@@ -267,13 +267,9 @@ const CartSummary = ({ items, onApplyVoucher }: Props) => {
           size="small"
           value={voucherCode}
           onChange={(e) => setVoucherCode(e.target.value)}
-          sx={{ flexGrow: 1 }}
+          sx={{ flex: 1 }}
         />
-        <Button
-          variant="contained"
-          onClick={handleApplyVoucher}
-          sx={{ whiteSpace: "nowrap", flexShrink: 0 }}
-        >
+        <Button variant="contained" onClick={handleApplyVoucher}>
           Áp dụng
         </Button>
       </Stack>
@@ -288,55 +284,9 @@ const CartSummary = ({ items, onApplyVoucher }: Props) => {
       </Box>
 
       <Stack spacing={1}>
-        <Button
-          variant="outlined"
-          color="error"
-          onClick={async () => {
-            const token = localStorage.getItem("accessToken");
-            if (!token) {
-              setSnackbarType("error");
-              setSnackbarMessage("Bạn cần đăng nhập để xoá giỏ hàng.");
-              setSnackbarOpen(true);
-              return;
-            }
-
-            try {
-              const res = await fetch(
-                "http://localhost:8080/api/v1/carts/user",
-                {
-                  method: "DELETE",
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                  },
-                }
-              );
-
-              const data = await res.json();
-
-              if (res.ok) {
-                setSnackbarType("success");
-                setSnackbarMessage("Đã xoá toàn bộ giỏ hàng.");
-                setSnackbarOpen(true);
-
-                mutate(CART_COUNT_KEY, undefined, { revalidate: true });
-
-                setTimeout(() => {
-                  router.push("/");
-                }, 1500);
-              } else {
-                throw new Error(data?.message || "Xoá giỏ hàng thất bại.");
-              }
-            } catch (error: any) {
-              console.error("Lỗi khi xoá giỏ hàng:", error);
-              setSnackbarType("error");
-              setSnackbarMessage(error.message || "Đã xảy ra lỗi.");
-              setSnackbarOpen(true);
-            }
-          }}
-        >
+        <Button variant="outlined" color="error" onClick={handleClearCart}>
           Xoá tất cả
         </Button>
-
         <Button
           variant="contained"
           color="primary"
@@ -347,7 +297,7 @@ const CartSummary = ({ items, onApplyVoucher }: Props) => {
         </Button>
       </Stack>
 
-      <Modal open={modalOpen} onClose={handleCloseModal}>
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
         <Box
           sx={{
             position: "absolute",
@@ -357,58 +307,45 @@ const CartSummary = ({ items, onApplyVoucher }: Props) => {
             bgcolor: "background.paper",
             boxShadow: 24,
             p: 4,
-            width: 400,
+            width: { xs: "90%", sm: 400 },
             borderRadius: 2,
           }}
         >
           <Typography variant="h6" mb={2}>
-            Cập nhật địa chỉ giao hàng
+            Cập nhật địa chỉ
           </Typography>
-
           <TextField
             select
-            label="Tỉnh"
             fullWidth
+            label="Tỉnh"
             value={selectedProvince}
             onChange={(e) => {
               setSelectedProvince(e.target.value);
               setSelectedCommune("");
             }}
             sx={{ mb: 2 }}
-            SelectProps={{
-              MenuProps: {
-                disableScrollLock: true,
-              },
-            }}
           >
-            {provinces.map((province) => (
-              <MenuItem key={province} value={province}>
-                {province}
+            {provinces.map((p) => (
+              <MenuItem key={p} value={p}>
+                {p}
               </MenuItem>
             ))}
           </TextField>
-
           <TextField
             select
-            label="Xã/Quận"
             fullWidth
+            label="Xã/Quận"
             value={selectedCommune}
             onChange={(e) => setSelectedCommune(e.target.value)}
             disabled={!selectedProvince}
             sx={{ mb: 2 }}
-            SelectProps={{
-              MenuProps: {
-                disableScrollLock: true,
-              },
-            }}
           >
-            {(communesMap[selectedProvince] || []).map((commune) => (
-              <MenuItem key={commune} value={commune}>
-                {commune}
+            {(communesMap[selectedProvince] || []).map((c) => (
+              <MenuItem key={c} value={c}>
+                {c}
               </MenuItem>
             ))}
           </TextField>
-
           <TextField
             label="Địa chỉ chi tiết"
             fullWidth
@@ -416,9 +353,8 @@ const CartSummary = ({ items, onApplyVoucher }: Props) => {
             onChange={(e) => setDetailAddress(e.target.value)}
             sx={{ mb: 2 }}
           />
-
-          <Stack direction="row" spacing={2} justifyContent="flex-end">
-            <Button onClick={handleCloseModal}>Huỷ</Button>
+          <Stack direction="row" justifyContent="flex-end" spacing={1}>
+            <Button onClick={() => setModalOpen(false)}>Huỷ</Button>
             <Button variant="contained" onClick={handleReplaceAddress}>
               Thay thế
             </Button>
@@ -427,17 +363,17 @@ const CartSummary = ({ items, onApplyVoucher }: Props) => {
       </Modal>
 
       <Snackbar
-        open={snackbarOpen}
-        onClose={() => setSnackbarOpen(false)}
+        open={snackbar.open}
+        autoHideDuration={snackbar.type === "error" ? 6000 : 4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        autoHideDuration={snackbarType === "error" ? 6000 : 4000}
       >
         <Alert
-          severity={snackbarType}
-          onClose={() => setSnackbarOpen(false)}
+          severity={snackbar.type}
           sx={{ width: "100%" }}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
         >
-          {snackbarMessage}
+          {snackbar.message}
         </Alert>
       </Snackbar>
     </Paper>

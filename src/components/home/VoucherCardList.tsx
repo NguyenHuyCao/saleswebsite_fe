@@ -9,9 +9,11 @@ import {
   Paper,
   useMediaQuery,
   useTheme,
+  Fade,
 } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import Slider from "react-slick";
+import { motion } from "framer-motion";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
@@ -26,27 +28,27 @@ interface Promotion {
   applicableProductIds: number[];
 }
 
-const Item = (props: { children: React.ReactNode }) => (
+const Item = ({ children }: { children: React.ReactNode }) => (
   <Paper
+    elevation={4}
     sx={{
       backgroundColor: "#fff8e1",
-      p: 1.5,
-      color: "#000",
-      borderRadius: 2,
-      display: "flex",
-      overflow: "hidden",
+      p: 2,
+      borderRadius: 3,
       height: "100%",
-      boxShadow: 1,
+      display: "flex",
+      alignItems: "stretch",
+      overflow: "hidden",
+      boxShadow: "0 6px 14px rgba(0,0,0,0.1)",
     }}
   >
-    {props.children}
+    {children}
   </Paper>
 );
 
 export default function VoucherCardSlider() {
   const [vouchers, setVouchers] = useState<Promotion[]>([]);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -57,7 +59,7 @@ export default function VoucherCardSlider() {
           "http://localhost:8080/api/v1/promotions/requires-products"
         );
         const data = await res.json();
-        setVouchers(data.data);
+        setVouchers(data.data || []);
       } catch (error) {
         console.error("Lỗi khi gọi API:", error);
       }
@@ -68,7 +70,7 @@ export default function VoucherCardSlider() {
   const handleCopy = (code: string, index: number) => {
     navigator.clipboard.writeText(code);
     setCopiedIndex(index);
-    setTimeout(() => setCopiedIndex(null), 2000); // Reset sau 2s
+    setTimeout(() => setCopiedIndex(null), 2000);
   };
 
   const settings = {
@@ -89,74 +91,110 @@ export default function VoucherCardSlider() {
   };
 
   return (
-    <Box sx={{ py: 2 }}>
+    <Box sx={{ py: 3 }}>
       <Slider {...settings}>
         {vouchers.map((voucher, index) => (
           <Box key={index} px={1}>
-            <Item>
-              <Box
-                sx={{
-                  bgcolor: "#ffb700",
-                  width: 70,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: 700,
-                  fontSize: 14,
-                  flexShrink: 0,
-                  px: 1,
-                }}
-              >
-                {voucher.code}
-              </Box>
-              <Divider
-                orientation="vertical"
-                flexItem
-                sx={{ borderRight: "2px dashed #f25c05", mx: 1 }}
-              />
-              <Box
-                flexGrow={1}
-                display="flex"
-                flexDirection="column"
-                justifyContent="space-between"
-              >
-                <Box>
-                  <Typography fontSize={13} fontWeight={600} color="#000">
-                    Giảm {(voucher.discount * 100).toFixed(0)}% - Tối đa{" "}
-                    {voucher.maxDiscount.toLocaleString()}₫
-                  </Typography>
-                  <Box display="flex" alignItems="center" gap={0.5} mt={0.5}>
-                    <InfoOutlinedIcon sx={{ fontSize: 13, color: "#f25c05" }} />
-                    <Typography fontSize={12} color="#f25c05" fontWeight={500}>
-                      Điều kiện
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: index * 0.1 }}
+              viewport={{ once: true }}
+            >
+              <Item>
+                <Box
+                  sx={{
+                    bgcolor: "#ffb700",
+                    width: 70,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontWeight: 700,
+                    fontSize: 14,
+                    borderRadius: 2,
+                    px: 1,
+                    flexShrink: 0,
+                  }}
+                >
+                  {voucher.code}
+                </Box>
+
+                <Divider
+                  orientation="vertical"
+                  flexItem
+                  sx={{ borderRight: "2px dashed #f25c05", mx: 1.5 }}
+                />
+
+                <Box
+                  flexGrow={1}
+                  display="flex"
+                  flexDirection="column"
+                  justifyContent="space-between"
+                >
+                  <Box>
+                    <Typography
+                      fontSize={13.5}
+                      fontWeight={600}
+                      color="#d35400"
+                    >
+                      🎁 Giảm {(voucher.discount * 100).toFixed(0)}% – Tối đa{" "}
+                      {voucher.maxDiscount.toLocaleString()}₫
+                    </Typography>
+                    <Box display="flex" alignItems="center" gap={0.5} mt={0.5}>
+                      <InfoOutlinedIcon
+                        sx={{ fontSize: 14, color: "#d35400" }}
+                      />
+                      <Typography
+                        fontSize={12.5}
+                        fontWeight={500}
+                        color="#d35400"
+                      >
+                        Áp dụng sản phẩm cụ thể
+                      </Typography>
+                    </Box>
+                    <Typography fontSize={12} color="#666" mt={0.5}>
+                      HSD:{" "}
+                      {new Date(voucher.endDate).toLocaleDateString("vi-VN")}
                     </Typography>
                   </Box>
-                  <Typography fontSize={12} color="#555" mt={0.5}>
-                    HSD: {voucher.endDate}
-                  </Typography>
-                </Box>
-                <Box mt={1} textAlign="right">
-                  <Button
-                    variant="contained"
-                    size="small"
-                    onClick={() => handleCopy(voucher.code, index)}
-                    sx={{
-                      bgcolor: "#d35400",
-                      color: "#fff",
-                      fontSize: 11,
-                      px: 1.5,
-                      py: 0.3,
-                      textTransform: "none",
-                      "&:hover": {
-                        bgcolor: "#e67e22",
-                      },
-                    }}
+
+                  <Box
+                    mt={1.5}
+                    display="flex"
+                    justifyContent={isMobile ? "center" : "flex-end"}
                   >
-                    {copiedIndex === index ? "Đã sao chép" : "Sao chép"}
-                  </Button>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={() => handleCopy(voucher.code, index)}
+                      sx={{
+                        bgcolor: "#d35400",
+                        color: "#fff",
+                        fontSize: 11.5,
+                        px: 2,
+                        py: 0.5,
+                        borderRadius: 999,
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.12)",
+                        textTransform: "none",
+                        transition: "all 0.2s ease",
+                        "&:hover": {
+                          bgcolor: "#e67e22",
+                        },
+                      }}
+                    >
+                      <Fade
+                        in={copiedIndex === index}
+                        timeout={300}
+                        unmountOnExit
+                      >
+                        <Box component="span">🎉 Đã sao chép</Box>
+                      </Fade>
+                      {copiedIndex !== index && <span>Sao chép mã</span>}
+                    </Button>
+                  </Box>
                 </Box>
-              </Box>
-            </Item>
+              </Item>
+            </motion.div>
           </Box>
         ))}
       </Slider>

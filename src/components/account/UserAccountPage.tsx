@@ -17,7 +17,7 @@ import {
   Alert,
 } from "@mui/material";
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const genders = ["Nam", "Nữ", "Khác"];
 
@@ -30,8 +30,17 @@ export default function AccountPage() {
     gender: "Nam",
   });
 
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success" as "success" | "error",
+  });
+
+  const formRef = useRef<HTMLDivElement>(null);
+
+  const scrollToTop = () => {
+    formRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
@@ -44,21 +53,26 @@ export default function AccountPage() {
         const res = await fetch(
           `http://localhost:8080/api/v1/users/${user.id}`,
           {
-            method: "GET",
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
-
         const data = await res.json();
         if (res.ok && data.data) {
           setFormData(data.data);
         } else {
-          console.error(data.message || "Không lấy được thông tin người dùng");
+          throw new Error(
+            data.message || "Không lấy được thông tin người dùng"
+          );
         }
-      } catch (err) {
-        console.error("Lỗi lấy thông tin người dùng:", err);
+      } catch (err: any) {
+        setSnackbar({
+          open: true,
+          message: err.message,
+          severity: "error",
+        });
+        scrollToTop();
       }
     };
 
@@ -90,47 +104,53 @@ export default function AccountPage() {
 
       const data = await res.json();
       if (res.ok) {
-        setSnackbarMessage("Cập nhật thông tin thành công!");
-        // Cập nhật localStorage
+        setSnackbar({
+          open: true,
+          message: "Cập nhật thông tin thành công!",
+          severity: "success",
+        });
         localStorage.setItem("user", JSON.stringify({ ...user, ...formData }));
       } else {
-        setSnackbarMessage(data.message || "Cập nhật thất bại!");
+        throw new Error(data.message || "Cập nhật thất bại!");
       }
-    } catch (err) {
-      console.error("Lỗi cập nhật:", err);
-      setSnackbarMessage("Lỗi kết nối tới máy chủ!");
+    } catch (err: any) {
+      setSnackbar({
+        open: true,
+        message: err.message || "Lỗi kết nối máy chủ!",
+        severity: "error",
+      });
     } finally {
-      setSnackbarOpen(true);
+      scrollToTop();
     }
   };
 
   return (
-    <Box px={{ xs: 2, sm: 4 }} py={4}>
+    <Box ref={formRef} px={{ xs: 2, sm: 4 }} py={4}>
       <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={3000}
-        onClose={() => setSnackbarOpen(false)}
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <Alert
-          onClose={() => setSnackbarOpen(false)}
-          severity="success"
+          severity={snackbar.severity}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
           sx={{ width: "100%" }}
         >
-          {snackbarMessage}
+          {snackbar.message}
         </Alert>
       </Snackbar>
 
-      <Fade in timeout={500}>
+      <Fade in timeout={600}>
         <Paper
           component={motion.div}
-          elevation={4}
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.6 }}
+          elevation={4}
           sx={{ maxWidth: 600, mx: "auto", p: 4, borderRadius: 3 }}
         >
-          <Typography variant="h5" fontWeight="bold" mb={3} textAlign="center">
+          <Typography variant="h5" fontWeight={700} textAlign="center" mb={3}>
             Cập nhật thông tin tài khoản
           </Typography>
 
@@ -190,12 +210,12 @@ export default function AccountPage() {
                     value={formData.gender}
                     onChange={handleChange}
                   >
-                    {genders.map((option) => (
+                    {genders.map((gender) => (
                       <FormControlLabel
-                        key={option}
-                        value={option}
+                        key={gender}
+                        value={gender}
                         control={<Radio />}
-                        label={option}
+                        label={gender}
                       />
                     ))}
                   </RadioGroup>
@@ -205,9 +225,18 @@ export default function AccountPage() {
               <Grid size={{ xs: 12 }}>
                 <Button
                   fullWidth
-                  variant="contained"
-                  sx={{ bgcolor: "#ffb700", color: "black", fontWeight: 600 }}
                   type="submit"
+                  variant="contained"
+                  sx={{
+                    bgcolor: "#ffb700",
+                    color: "#000",
+                    fontWeight: 600,
+                    textTransform: "none",
+                    transition: "0.3s",
+                    "&:hover": {
+                      bgcolor: "#e09e00",
+                    },
+                  }}
                 >
                   Cập nhật
                 </Button>
