@@ -5,7 +5,9 @@ import SupportCommitmentsSection from "@/components/about/SupportCommitmentsSect
 import TestimonialsSection from "@/components/about/TestimonialsSection";
 import WhoWeAre from "@/components/about/WhoWeAre";
 import WhyTwoStrokeSection from "@/components/about/WhyTwoStrokeSection";
-import PageViewTracker from "@/components/traffic/PageViewTracker";
+import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
+import ScrollPositionManager from "@/components/common/ScrollResetOnLoad";
+import PageViewTracker from "@/components/common/traffic/PageViewTracker";
 import { Container } from "@mui/material";
 
 const AboutUsPage = () => {
@@ -21,6 +23,7 @@ const AboutUsPage = () => {
         <SupportCommitmentsSection />
         <FinalCallToActionSection />
       </Container>
+      <FreezeScrollOnReload />
     </>
   );
 };

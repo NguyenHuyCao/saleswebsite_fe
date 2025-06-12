@@ -1,6 +1,7 @@
 "use client";
 
-import PageViewTracker from "@/components/traffic/PageViewTracker";
+import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
+import PageViewTracker from "@/components/common/traffic/PageViewTracker";
 import WishlistHeroSection from "@/components/wishlist/WishlistHeroSection";
 import WishlistPage from "@/components/wishlist/WishlistPage";
 import { Box, Container } from "@mui/material";
@@ -22,6 +23,7 @@ const WishListPage = () => {
           <WishlistPage />
         </Box>
       </Container>
+      <FreezeScrollOnReload />
     </>
   );
 };

@@ -221,16 +221,17 @@ const MainToolbar = () => {
                       {label}
                     </Typography>
                     <Typography fontSize="12px">
-                      <span
+                      <Box
+                        component="span"
                         className="hover-count"
-                        style={{
-                          color: isActive ? "#f25c05" : "#ffb700",
+                        sx={{
                           fontWeight: "bold",
+                          color: isActive ? "#f25c05" : "#ffb700",
                           transition: "color 0.2s ease",
                         }}
                       >
                         {count ?? 0}
-                      </span>{" "}
+                      </Box>{" "}
                       {label === "Đơn hàng" ? "Đơn hàng" : "Sản phẩm"}
                     </Typography>
                   </Box>

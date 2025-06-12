@@ -1,7 +1,8 @@
 import OrderHistoryHeroSection from "@/components/order/OrderHistoryHeroSection";
 import OrderListSection from "@/components/order/OrderListSection";
-import PageViewTracker from "@/components/traffic/PageViewTracker";
+import PageViewTracker from "@/components/common/traffic/PageViewTracker";
 import { Container } from "@mui/material";
+import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
 
 const OrdersPage = () => {
   return (
@@ -11,6 +12,7 @@ const OrdersPage = () => {
         <OrderHistoryHeroSection />
         <OrderListSection />
       </Container>
+      <FreezeScrollOnReload />
     </>
   );
 };

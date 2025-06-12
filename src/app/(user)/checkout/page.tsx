@@ -2,7 +2,8 @@ import ConfirmButton from "@/components/checkout/ConfirmButton";
 import OrderSummary from "@/components/checkout/OrderSummary";
 import PaymentMethod from "@/components/checkout/PaymentMethod";
 import ShippingForm from "@/components/checkout/ShippingForm";
-import PageViewTracker from "@/components/traffic/PageViewTracker";
+import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
+import PageViewTracker from "@/components/common/traffic/PageViewTracker";
 import { Container, Grid } from "@mui/material";
 
 const CheckoutPage = () => {
@@ -23,6 +24,7 @@ const CheckoutPage = () => {
           <ConfirmButton />
         </Grid>
       </Grid>
+      <FreezeScrollOnReload />
     </Container>
   );
 };

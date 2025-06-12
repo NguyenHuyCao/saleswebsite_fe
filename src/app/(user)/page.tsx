@@ -13,8 +13,9 @@ import { Box, Container } from "@mui/material";
 import Image from "next/image";
 import { cookies } from "next/headers";
 import FlashSaleShowcasePage from "@/components/promotion/FlashSaleShowcasePage";
-import WebsiteTrafficTracker from "@/components/traffic/WebsiteTrafficTracker";
-import PageViewTracker from "@/components/traffic/PageViewTracker";
+import WebsiteTrafficTracker from "@/components/common/traffic/WebsiteTrafficTracker";
+import PageViewTracker from "@/components/common/traffic/PageViewTracker";
+import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
 
 export type Product = {
   id: number;
@@ -287,6 +288,7 @@ export default async function HomePage() {
         <KnowledgeShare />
         <FeaturedBrandsSlider brands={brands} />
       </Container>
+      <FreezeScrollOnReload />
     </>
   );
 }

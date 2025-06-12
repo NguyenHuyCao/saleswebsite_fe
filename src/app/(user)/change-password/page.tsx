@@ -1,5 +1,6 @@
 import ChangePasswordForm from "@/components/change_password/ChangePasswordForm";
-import PageViewTracker from "@/components/traffic/PageViewTracker";
+import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
+import PageViewTracker from "@/components/common/traffic/PageViewTracker";
 
 export default function ChangePasswordPage() {
   let userId: number | null = null;
@@ -16,6 +17,7 @@ export default function ChangePasswordPage() {
     <>
       <PageViewTracker />
       <ChangePasswordForm userId={userId} token={token} />
+      <FreezeScrollOnReload />
     </>
   );
 }

@@ -3,7 +3,8 @@ import ProductDetailPage from "@/components/product/detail/ProductDetailPage";
 import { Container } from "@mui/material";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
-import PageViewTracker from "@/components/traffic/PageViewTracker";
+import PageViewTracker from "@/components/common/traffic/PageViewTracker";
+import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
 
 export default async function DetailProduct({ searchParams }: any) {
   const slug = searchParams?.name;
@@ -40,6 +41,7 @@ export default async function DetailProduct({ searchParams }: any) {
     <Container>
       <PageViewTracker />
       <ProductDetailPage product={product} category={category} />
+      <FreezeScrollOnReload />
     </Container>
   );
 }

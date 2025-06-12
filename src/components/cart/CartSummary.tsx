@@ -263,13 +263,17 @@ const CartSummary = ({ items, onApplyVoucher }: Props) => {
 
       <Stack direction="row" spacing={1} mb={2}>
         <TextField
-          fullWidth
           placeholder="Nhập mã giảm giá"
           size="small"
           value={voucherCode}
           onChange={(e) => setVoucherCode(e.target.value)}
+          sx={{ flexGrow: 1 }}
         />
-        <Button variant="contained" onClick={handleApplyVoucher}>
+        <Button
+          variant="contained"
+          onClick={handleApplyVoucher}
+          sx={{ whiteSpace: "nowrap", flexShrink: 0 }}
+        >
           Áp dụng
         </Button>
       </Stack>

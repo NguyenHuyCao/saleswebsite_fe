@@ -45,6 +45,8 @@ const Item = (props: { children: React.ReactNode }) => (
 
 export default function VoucherCardSlider() {
   const [vouchers, setVouchers] = useState<Promotion[]>([]);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -62,6 +64,12 @@ export default function VoucherCardSlider() {
     };
     fetchPromotions();
   }, []);
+
+  const handleCopy = (code: string, index: number) => {
+    navigator.clipboard.writeText(code);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 2000); // Reset sau 2s
+  };
 
   const settings = {
     dots: false,
@@ -131,6 +139,7 @@ export default function VoucherCardSlider() {
                   <Button
                     variant="contained"
                     size="small"
+                    onClick={() => handleCopy(voucher.code, index)}
                     sx={{
                       bgcolor: "#d35400",
                       color: "#fff",
@@ -143,7 +152,7 @@ export default function VoucherCardSlider() {
                       },
                     }}
                   >
-                    Sao chép
+                    {copiedIndex === index ? "Đã sao chép" : "Sao chép"}
                   </Button>
                 </Box>
               </Box>

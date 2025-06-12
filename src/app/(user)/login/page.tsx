@@ -1,4 +1,4 @@
-import PageViewTracker from "@/components/traffic/PageViewTracker";
+import PageViewTracker from "@/components/common/traffic/PageViewTracker";
 import LoginForm from "@/views/login/app.login";
 import { Container } from "@mui/material";
 

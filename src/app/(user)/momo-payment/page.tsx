@@ -1,6 +1,6 @@
 "use client";
 
-import PageViewTracker from "@/components/traffic/PageViewTracker";
+import PageViewTracker from "@/components/common/traffic/PageViewTracker";
 import { Box, Typography, Paper, Divider, Stack } from "@mui/material";
 import Image from "next/image";
 

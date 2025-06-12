@@ -14,12 +14,14 @@ interface Product {
 interface Category {
   id: number;
   name: string;
+  slug: string;
   products: Product[];
 }
 
 interface Brand {
   id: number;
   name: string;
+  slug: string;
   logo: string;
   category: Category[];
 }
@@ -40,6 +42,8 @@ const BrandMegaMenu = ({ brands }: Props) => {
     const brand = brands[hoveredBrandIndex];
     return brand.category.filter((cat) => cat.products.length > 0);
   };
+
+  console.log("brands", brands);
 
   return (
     <Box display="flex" sx={{ position: "relative" }}>
@@ -91,7 +95,7 @@ const BrandMegaMenu = ({ brands }: Props) => {
             position: "absolute",
             left: 250,
             top: 0,
-            minWidth: 800,
+            minWidth: 905,
             bgcolor: "white",
             color: "black",
             p: 3,
@@ -101,25 +105,100 @@ const BrandMegaMenu = ({ brands }: Props) => {
             borderTop: "4px solid #ffb700",
           }}
         >
-          {getCategoriesForHoveredBrand().map((cat) => (
-            <Box key={cat.id} minWidth={200} maxWidth={250}>
-              <Typography fontWeight="bold" mb={1} fontSize={14}>
+          {getCategoriesForHoveredBrand().map((cat, catIndex) => (
+            <Box
+              key={`cat-${cat.id}-${catIndex}`}
+              sx={{
+                minWidth: 220,
+                maxWidth: 260,
+                px: 3,
+                maxHeight: 300,
+                overflowY: "auto",
+                "&::-webkit-scrollbar": {
+                  width: 6,
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: "#e0e0e0",
+                  borderRadius: 4,
+                },
+              }}
+            >
+              <Typography
+                fontWeight="bold"
+                fontSize={13}
+                color="#d35400"
+                sx={{
+                  textTransform: "uppercase",
+                  borderBottom: "2px solid #ffb700",
+                  pb: 0.5,
+                  mb: 1.2,
+                }}
+              >
                 {cat.name}
               </Typography>
-              {cat.products.map((p, i) => (
-                <Typography
-                  key={i}
-                  fontSize={13}
-                  onClick={() => router.push(`/product/detail?name=${p.slug}`)}
-                  sx={{
-                    mb: 0.5,
-                    cursor: "pointer",
-                    "&:hover": { textDecoration: "underline" },
-                  }}
-                >
-                  {p.name}
-                </Typography>
-              ))}
+
+              <Box
+                component="ul"
+                sx={{ listStyle: "none", pl: 1, pr: 0, m: 0 }}
+              >
+                {cat.products.slice(0, 6).map((p, i) => (
+                  <Box
+                    key={p.id}
+                    component="li"
+                    onClick={() =>
+                      router.push(`/product/detail?name=${p.slug}`)
+                    }
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      mb: 0.6,
+                      fontSize: 13.5,
+                      color: "#333",
+                      cursor: "pointer",
+                      borderRadius: 1,
+                      px: 1,
+                      py: 0.5,
+                      transition: "all 0.2s ease",
+                      "&:hover": {
+                        backgroundColor: "#fff4e5",
+                        color: "#f25c05",
+                      },
+                    }}
+                  >
+                    <Box component="span" sx={{ mr: 1.2, color: "#f25c05" }}>
+                      ▶
+                    </Box>
+                    {p.name}
+                  </Box>
+                ))}
+
+                {cat.products.length > 6 && (
+                  <Box
+                    onClick={() => {
+                      const brandSlug = brands[hoveredBrandIndex!].slug;
+                      const categorySlug = cat.slug;
+                      router.push(
+                        `/product?brand=${brandSlug}&category=${categorySlug}`
+                      );
+                    }}
+                    sx={{
+                      mt: 1,
+                      fontSize: 13,
+                      color: "#1976d2",
+                      cursor: "pointer",
+                      px: 1,
+                      py: 0.5,
+                      borderRadius: 1,
+                      "&:hover": {
+                        textDecoration: "underline",
+                        backgroundColor: "#e3f2fd",
+                      },
+                    }}
+                  >
+                    Xem tất cả {cat.products.length} sản phẩm
+                  </Box>
+                )}
+              </Box>
             </Box>
           ))}
         </Paper>

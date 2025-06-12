@@ -15,7 +15,8 @@ import CartHeroSection from "@/components/cart/CartHeroSection";
 import CartItemList from "@/components/cart/CartItemList";
 import CartSummary from "@/components/cart/CartSummary";
 import ContactCTA from "@/components/cart/NewsletterBanner";
-import PageViewTracker from "@/components/traffic/PageViewTracker";
+import PageViewTracker from "@/components/common/traffic/PageViewTracker";
+import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
 
 export type CartItem = {
   productId: number;
@@ -195,6 +196,7 @@ const CartPage = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+      <FreezeScrollOnReload />
     </Container>
   );
 };

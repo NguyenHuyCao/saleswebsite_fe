@@ -47,14 +47,18 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
         const createdAt = new Date(item.createdAt);
         const isNew =
           (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
+
+        const isInStock = item.inStock === true && item.stockQuantity > 0;
+
         const status =
           item.stockQuantity === 0 ? ["Hết hàng"] : isNew ? ["Mới"] : [];
+
         return {
           ...item,
           status,
           sale: item.price !== item.pricePerUnit,
-          inStock: item.active === true,
-          label: item.active ? "Thêm vào giỏ" : "Hết hàng",
+          inStock: isInStock,
+          label: isInStock ? "Thêm vào giỏ" : "Hết hàng",
           favorite: favoriteIdSet.has(item.id),
         };
       }),
@@ -146,8 +150,11 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
       <Grid container spacing={2} px={2} justifyContent={"center"}>
         {activeCategory?.products?.map((product, index) => (
           <Grid
-            key={index}
-            size={{ xs: 6, sm: 4, md: 3, lg: 2.4 as any }}
+            key={product.id}
+            xs={6}
+            sm={4}
+            md={3}
+            lg={2.4 as any}
             justifyContent="center"
           >
             <ProductCard
