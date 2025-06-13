@@ -53,3 +53,18 @@ code[class*="language-"] {
   max-height: calc(100vh - 32px);
   overflow-y: auto;
 }
+/* 
+@keyframes explosionBurst {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.1;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+} */

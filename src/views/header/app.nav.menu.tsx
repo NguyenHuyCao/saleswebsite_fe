@@ -175,7 +175,6 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
                   top: "100%",
                   left: 0,
                   zIndex: 1000,
-                  mt: 1,
                 }}
               >
                 <BrandMegaMenu

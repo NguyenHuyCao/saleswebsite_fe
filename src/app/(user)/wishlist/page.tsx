@@ -1,6 +1,6 @@
 "use client";
 
-import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
+// import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
 import PageViewTracker from "@/components/common/traffic/PageViewTracker";
 import WishlistHeroSection from "@/components/wishlist/WishlistHeroSection";
 import WishlistPage from "@/components/wishlist/WishlistPage";
@@ -23,7 +23,7 @@ const WishListPage = () => {
           <WishlistPage />
         </Box>
       </Container>
-      <FreezeScrollOnReload />
+      {/* <FreezeScrollOnReload /> */}
     </>
   );
 };

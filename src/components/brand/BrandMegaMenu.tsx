@@ -35,7 +35,7 @@ interface Brand {
 
 interface Props {
   brands: Brand[];
-  categories: Category[]; // Unused but kept for future flexibility
+  categories: Category[];
 }
 
 const BrandMegaMenu = ({ brands }: Props) => {
@@ -52,6 +52,8 @@ const BrandMegaMenu = ({ brands }: Props) => {
       (cat) => cat.products.length > 0
     );
   };
+
+  console.log("brands", brands);
 
   return (
     <Box
@@ -79,7 +81,7 @@ const BrandMegaMenu = ({ brands }: Props) => {
               alignItems: "center",
               justifyContent: "space-between",
               px: 2,
-              py: 1.5,
+              py: 1.3,
               cursor: "pointer",
               bgcolor: hoveredBrandIndex === index ? "#f97316" : "transparent",
               transition: "all 0.3s ease",
@@ -91,10 +93,10 @@ const BrandMegaMenu = ({ brands }: Props) => {
           >
             <Box display="flex" alignItems="center" gap={1}>
               <Image
-                src={`/uploads/${brand.logo}`}
+                src={`${brand.logo}`}
                 alt={brand.name}
-                width={20}
-                height={20}
+                width={35}
+                height={35}
               />
               <Typography fontSize={14}>{brand.name}</Typography>
             </Box>

@@ -18,6 +18,12 @@ import LocalPhoneOutlinedIcon from "@mui/icons-material/LocalPhoneOutlined";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  CART_COUNT_KEY,
+  WISHLIST_COUNT_KEY,
+  ORDERS_COUNT_KEY,
+} from "@/constants/apiKeys";
+import { mutate } from "swr";
 
 const greetings = [
   "Chào mừng bạn đã đến với cửa hàng Cường Hoa",
@@ -107,6 +113,10 @@ const TopBar = () => {
       localStorage.removeItem("user");
       setIsLoggedIn(false);
       setOpen(false);
+
+      mutate(CART_COUNT_KEY);
+      mutate(WISHLIST_COUNT_KEY);
+      mutate(ORDERS_COUNT_KEY);
       setLoginCheckTrigger((prev) => prev + 1);
       router.push("/");
     }

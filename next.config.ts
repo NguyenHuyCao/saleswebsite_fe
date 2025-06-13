@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
-    domains: ["res.cloudinary.com"], // Cho phép load ảnh từ Cloudinary
+    domains: ["res.cloudinary.com", "img.icons8.com"], // Cho phép load ảnh từ Cloudinary
     remotePatterns: [
       {
         protocol: "https",

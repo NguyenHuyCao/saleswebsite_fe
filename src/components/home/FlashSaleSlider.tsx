@@ -1,6 +1,8 @@
+// FlashSaleSlider.tsx
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React from "react";
+import useSWR from "swr";
 import {
   Box,
   Typography,
@@ -12,12 +14,10 @@ import {
 import Slider from "react-slick";
 import ProductCard, { Product } from "../product/ProductCard";
 import CountdownPromotion from "./CountdownPromotion";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, AppState } from "@/redux/store";
-import { fetchWishlist } from "@/redux/slices/wishlistSlice";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
 import { motion } from "framer-motion";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { fetchWishlist } from "@/redux/slices/wishlistSlice";
 
 export type Promotion = {
   id: number;
@@ -30,6 +30,43 @@ export type Promotion = {
   requiresCode: boolean;
 };
 
+const fetcher = async (url: string): Promise<Product[]> => {
+  const token = localStorage.getItem("accessToken");
+  const res = await fetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  const data = await res.json();
+  const now = new Date();
+
+  return (data?.data || []).map((item: any): Product => {
+    const createdAt = new Date(item.createdAt);
+    const isNew =
+      (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
+    const isHot = item.totalStock - item.stockQuantity > 10;
+    const status = [];
+    if (isNew) status.push("Mới");
+    if (isHot) status.push("Bán chạy");
+
+    return {
+      id: item.id,
+      title: item.name,
+      price: item.pricePerUnit,
+      originalPrice: item.price,
+      image: item.imageAvt,
+      status,
+      sale: item.pricePerUnit < item.price,
+      inStock: item.stockQuantity > 0,
+      label: item.stockQuantity > 0 ? "Thêm vào giỏ" : "Hết hàng",
+      rating: item.rating || 0,
+      slug: item.slug,
+      totalStock: item.totalStock,
+      stockQuantity: item.stockQuantity,
+      createdAt: item.createdAt,
+      isFavorite: item.wishListUser === true,
+    };
+  });
+};
+
 type FlashSaleSliderProps = {
   promotion: Promotion;
   allPromotions?: Promotion[];
@@ -39,87 +76,19 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
   promotion,
   allPromotions = [],
 }) => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const dispatch = useDispatch<AppDispatch>();
-  const wishlistItems = useSelector((state: AppState) => state.wishlist.result);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTabletOrLarger = useMediaQuery(theme.breakpoints.up("sm"));
+  const dispatch = useDispatch<AppDispatch>();
 
-  const favoriteIdSet = useMemo(
-    () => new Set(wishlistItems.map((item) => item.id)),
-    [wishlistItems]
+  const { data: products = [], mutate } = useSWR(
+    `http://localhost:8080/api/v1/promotions/${promotion.id}`,
+    fetcher
   );
 
-  useEffect(() => {
+  React.useEffect(() => {
     dispatch(fetchWishlist());
   }, [dispatch]);
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const token = localStorage.getItem("accessToken");
-        const res = await fetch(
-          `http://localhost:8080/api/v1/promotions/${promotion.id}`,
-          {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-          }
-        );
-        const data = await res.json();
-        const now = new Date();
-        const mapped = (data?.data || []).map((item: any): Product => {
-          const createdAt = new Date(item.createdAt);
-          const isNew =
-            (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
-          const isHot = item.totalStock - item.stockQuantity > 10;
-          const status = [];
-          if (isNew) status.push("Mới");
-          if (isHot) status.push("Bán chạy");
-
-          return {
-            id: item.id,
-            title: item.name,
-            price: item.pricePerUnit,
-            originalPrice: item.price,
-            image: item.imageAvt,
-            status,
-            sale: item.pricePerUnit < item.price,
-            inStock: item.stockQuantity > 0,
-            label: item.stockQuantity > 0 ? "Thêm vào giỏ" : "Hết hàng",
-            rating: item.rating || 0,
-            slug: item.slug,
-            totalStock: item.totalStock,
-            stockQuantity: item.stockQuantity,
-            createdAt: item.createdAt,
-            isFavorite: favoriteIdSet.has(item.id),
-          };
-        });
-        setProducts(mapped);
-      } catch (err) {
-        console.error("Lỗi khi tải sản phẩm:", err);
-      }
-    };
-
-    fetchProducts();
-  }, [promotion.id]);
-
-  const toggleWishlist = async (productId: number) => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return alert("Bạn cần đăng nhập để thao tác yêu thích.");
-
-    try {
-      const formData = new FormData();
-      formData.append("productId", String(productId));
-      await fetch("http://localhost:8080/api/v1/wish_list", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-      dispatch(fetchWishlist());
-    } catch (err) {
-      console.error("Lỗi khi cập nhật yêu thích:", err);
-    }
-  };
 
   const settings = {
     infinite: false,
@@ -241,7 +210,7 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
             },
           }}
         >
-          🏱 {promotion.name} - GIẢM ĐẾN {Math.round(promotion.discount * 100)}%
+          🍱 {promotion.name} - GIẢM ĐẾN {Math.round(promotion.discount * 100)}%
         </Paper>
       </Box>
 
@@ -249,7 +218,7 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
         <Slider {...settings} className="flash-sale-slider">
           {products.length <= 3 && renderBanner("left")}
           {products.map((product, index) => (
-            <Box key={index} px={1}>
+            <Box key={product.id} px={1}>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -258,8 +227,7 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
               >
                 <ProductCard
                   product={product}
-                  isFavorite={product.isFavorite}
-                  onToggleFavorite={() => toggleWishlist(product.id)}
+                  mutateKey={`http://localhost:8080/api/v1/promotions/${promotion.id}`}
                 />
               </motion.div>
             </Box>

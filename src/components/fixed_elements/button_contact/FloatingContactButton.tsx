@@ -2,57 +2,81 @@
 
 import Image from "next/image";
 import { Box, Zoom, Tooltip, useMediaQuery, useTheme } from "@mui/material";
+import { useMemo } from "react";
 
 const FloatingContactButtons = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+
+  const size = isMobile ? 42 : isTablet ? 48 : 56;
+
+  const buttons = useMemo(
+    () => [
+      {
+        href: "https://www.facebook.com/messages/e2ee/t/9200105130025225",
+        title: "Chat Facebook",
+        src: "/images/icons/messenger.png",
+        alt: "Messenger",
+        animation: false,
+      },
+      {
+        href: "https://zalo.me/0367164126",
+        title: "Chat Zalo",
+        src: "/images/icons/zalo.png",
+        alt: "Zalo",
+        animation: false,
+      },
+      {
+        href: "tel:0367164126",
+        title: "Gọi điện thoại",
+        src: "/images/icons/phone-call.png",
+        alt: "Gọi ngay",
+        animation: true,
+      },
+    ],
+    []
+  );
 
   return (
-    <Zoom in={true}>
+    <Zoom in>
       <Box
         sx={{
           position: "fixed",
-          bottom: isMobile ? 80 : 40,
+          bottom: isMobile ? 76 : 40,
           left: isMobile ? 12 : 32,
           display: "flex",
           flexDirection: "column",
-          gap: isMobile ? 1.5 : 2,
+          gap: isMobile ? 1.2 : 2,
           zIndex: 9999,
         }}
       >
-        {[
-          {
-            href: "https://www.facebook.com/trai.xomdum/",
-            title: "Chat Facebook",
-            src: "/images/icons/messenger.png",
-            alt: "Messenger",
-          },
-          {
-            href: "https://zalo.me/0367164126",
-            title: "Chat Zalo",
-            src: "/images/icons/zalo.png",
-            alt: "Zalo",
-          },
-          {
-            href: "tel:0367164126",
-            title: "Gọi điện thoại",
-            src: "/images/icons/phone-call.png",
-            alt: "Gọi ngay",
-          },
-        ].map((item, index) => (
+        {buttons.map((item, index) => (
           <Tooltip title={item.title} placement="right" key={index}>
-            <a href={item.href} target="_blank" rel="noopener noreferrer">
+            <a
+              href={item.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={item.alt}
+            >
               <Box
                 sx={{
                   position: "relative",
-                  width: isMobile ? 42 : 50,
-                  height: isMobile ? 42 : 50,
+                  width: size,
+                  height: size,
                   borderRadius: "50%",
+                  overflow: "hidden",
                   cursor: "pointer",
-                  animation: isMobile ? "none" : "bellShake 1.5s infinite",
-                  transition: "transform 0.3s ease",
+                  animation: `fadeInUp 0.6s ease ${index * 0.2}s both, ${
+                    item.animation
+                      ? "bellShake 1.4s infinite ease-in-out"
+                      : "none"
+                  }`,
+                  transition: "transform 0.3s ease, box-shadow 0.3s ease",
                   "&:hover": {
-                    transform: "scale(1.1)",
+                    transform: "scale(1.12)",
+                    boxShadow: "0 6px 14px rgba(0, 0, 0, 0.2)",
+                    animation: "none",
                   },
                   "&::before": {
                     content: '""',
@@ -60,8 +84,8 @@ const FloatingContactButtons = () => {
                     width: "100%",
                     height: "100%",
                     borderRadius: "50%",
-                    backgroundColor: "rgba(38, 132, 255, 0.3)",
-                    animation: isMobile ? "none" : "pulseRing 2s infinite",
+                    backgroundColor: "rgba(38, 132, 255, 0.15)",
+                    animation: "pulseRing 2.5s infinite ease-out",
                     zIndex: 0,
                   },
                 }}
@@ -69,11 +93,15 @@ const FloatingContactButtons = () => {
                 <Image
                   src={item.src}
                   alt={item.alt}
-                  width={isMobile ? 42 : 50}
-                  height={isMobile ? 42 : 50}
+                  fill
+                  sizes={`${size}px`}
                   style={{
+                    objectFit: "contain",
+                    backgroundColor: "#fff",
                     borderRadius: "50%",
-                    position: "relative",
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
                     zIndex: 1,
                   }}
                 />
@@ -86,7 +114,7 @@ const FloatingContactButtons = () => {
           @keyframes pulseRing {
             0% {
               transform: scale(1);
-              opacity: 1;
+              opacity: 0.4;
             }
             70% {
               transform: scale(1.6);
@@ -99,26 +127,35 @@ const FloatingContactButtons = () => {
           }
 
           @keyframes bellShake {
-            0% {
+            0%,
+            100% {
               transform: rotate(0deg);
             }
             15% {
-              transform: rotate(25deg);
+              transform: rotate(10deg);
             }
             30% {
-              transform: rotate(-20deg);
+              transform: rotate(-8deg);
             }
             45% {
-              transform: rotate(15deg);
+              transform: rotate(6deg);
             }
             60% {
-              transform: rotate(-10deg);
+              transform: rotate(-4deg);
             }
             75% {
-              transform: rotate(5deg);
+              transform: rotate(2deg);
+            }
+          }
+
+          @keyframes fadeInUp {
+            0% {
+              opacity: 0;
+              transform: translateY(20px);
             }
             100% {
-              transform: rotate(0deg);
+              opacity: 1;
+              transform: translateY(0);
             }
           }
         `}</style>

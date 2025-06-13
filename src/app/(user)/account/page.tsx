@@ -1,5 +1,5 @@
 import UserAccountPage from "@/components/account/UserAccountPage";
-import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
+// import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
 import PageViewTracker from "@/components/common/traffic/PageViewTracker";
 import { Container } from "@mui/material";
 
@@ -8,7 +8,7 @@ const AccountPage = () => {
     <Container>
       <PageViewTracker />
       <UserAccountPage />
-      <FreezeScrollOnReload />
+      {/* <FreezeScrollOnReload /> */}
     </Container>
   );
 };

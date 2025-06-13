@@ -16,6 +16,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, AppState } from "@/redux/store";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
 import deepEqual from "fast-deep-equal";
+import { motion } from "framer-motion"; // Import framer-motion
 
 export type CategoryWithProducts = {
   id: number;
@@ -122,6 +123,11 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
         flexWrap="wrap"
         gap={1}
         justifyContent="center"
+        // Applying motion.div for category button fade-in animation
+        component={motion.div}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1 }}
       >
         {categoryProducts.map((cat, idx) => (
           <Button
@@ -149,16 +155,19 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
       <Fade in timeout={500} key={activeCategory?.id}>
         <Grid container spacing={2} justifyContent={"center"}>
           {activeCategory?.products?.map((product) => (
-            <Grid
-              key={product.id}
-              size={{ xs: 6, sm: 4, md: 3, lg: 2.4 as any }}
-              justifyContent="center"
-            >
-              <ProductCard
-                product={product}
-                isFavorite={product.favorite}
-                onToggleFavorite={() => toggleWishlist(product.id)}
-              />
+            // Adding motion.div for fade-in effect for each product
+            <Grid key={product.id} size={{ xs: 6, sm: 4, md: 3, lg: 2.4 }}>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <ProductCard
+                  product={product}
+                  isFavorite={product.favorite}
+                  onToggleFavorite={() => toggleWishlist(product.id)}
+                />
+              </motion.div>
             </Grid>
           ))}
         </Grid>

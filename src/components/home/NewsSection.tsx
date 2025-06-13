@@ -53,93 +53,99 @@ const NewsSection = () => {
   };
 
   return (
-    <Box px={3} py={5}>
-      <Typography variant="h5" fontWeight={700} mb={3}>
-        TIN TỨC <span style={{ color: "#ffb700" }}>MỚI NHẤT</span>
-      </Typography>
+    <motion.div
+      initial={{ opacity: 0 }} // Start with opacity 0
+      animate={{ opacity: 1 }} // Fade in to opacity 1
+      transition={{ duration: 1 }} // Transition duration of 1 second
+    >
+      <Box px={3} py={5}>
+        <Typography variant="h5" fontWeight={700} mb={3}>
+          TIN TỨC <span style={{ color: "#ffb700" }}>MỚI NHẤT</span>
+        </Typography>
 
-      <Grid container spacing={3}>
-        {/* Tin nổi bật */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            transition={{ duration: 0.4 }}
-            onClick={() => handleClick(0)}
-            style={{ cursor: "pointer" }}
-          >
-            <Card
-              sx={{
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-                borderRadius: 2,
-                overflow: "hidden",
-                boxShadow: 3,
-              }}
+        <Grid container spacing={3}>
+          {/* Tin nổi bật */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.4 }}
+              onClick={() => handleClick(0)}
+              style={{ cursor: "pointer" }}
             >
-              <CardMedia
-                component="img"
-                height="260"
-                image={news[0].image}
-                alt={news[0].title}
-                sx={{ objectFit: "cover" }}
-              />
-              <CardContent>
-                <Typography fontWeight={700} fontSize={16} mb={1}>
-                  {news[0].title}
-                </Typography>
-                <Typography fontSize={13} color="#f25c05" mb={1}>
-                  Ngày đăng: {news[0].date}
-                </Typography>
-                <Typography fontSize={14} color="text.secondary">
-                  {news[0].excerpt}
-                </Typography>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </Grid>
+              <Card
+                sx={{
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  borderRadius: 2,
+                  overflow: "hidden",
+                  boxShadow: 3,
+                }}
+              >
+                <CardMedia
+                  component="img"
+                  height="260"
+                  image={news[0].image}
+                  alt={news[0].title}
+                  sx={{ objectFit: "cover" }}
+                />
+                <CardContent>
+                  <Typography fontWeight={700} fontSize={16} mb={1}>
+                    {news[0].title}
+                  </Typography>
+                  <Typography fontSize={13} color="#f25c05" mb={1}>
+                    Ngày đăng: {news[0].date}
+                  </Typography>
+                  <Typography fontSize={14} color="text.secondary">
+                    {news[0].excerpt}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </Grid>
 
-        {/* Các tin còn lại */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Grid container spacing={2}>
-            {news.slice(1).map((item, idx) => (
-              <Grid size={{ xs: 12 }} key={idx}>
-                <motion.div
-                  whileHover={{ x: 6 }}
-                  transition={{ duration: 0.3 }}
-                  onClick={() => handleClick(idx + 1)}
-                  style={{ cursor: "pointer", display: "flex", gap: 16 }}
-                >
-                  <Box
-                    component="img"
-                    src={item.image}
-                    alt={item.title}
-                    sx={{
-                      width: 120,
-                      height: 80,
-                      objectFit: "cover",
-                      borderRadius: 2,
-                      flexShrink: 0,
-                    }}
-                  />
-                  <Box>
-                    <Typography fontWeight={600} fontSize={14} mb={0.5}>
-                      {item.title}
-                    </Typography>
-                    <Typography fontSize={13} color="#f25c05" mb={0.5}>
-                      Ngày đăng: {item.date}
-                    </Typography>
-                    <Typography fontSize={13} color="text.secondary">
-                      {item.excerpt}
-                    </Typography>
-                  </Box>
-                </motion.div>
-              </Grid>
-            ))}
+          {/* Các tin còn lại */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Grid container spacing={2}>
+              {news.slice(1).map((item, idx) => (
+                <Grid size={{ xs: 12 }} key={idx}>
+                  <motion.div
+                    whileHover={{ x: 6 }}
+                    transition={{ duration: 0.3 }}
+                    onClick={() => handleClick(idx + 1)}
+                    style={{ cursor: "pointer", display: "flex", gap: 16 }}
+                  >
+                    <Box
+                      component="img"
+                      src={item.image}
+                      alt={item.title}
+                      sx={{
+                        width: 120,
+                        height: 80,
+                        objectFit: "cover",
+                        borderRadius: 2,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <Box>
+                      <Typography fontWeight={600} fontSize={14} mb={0.5}>
+                        {item.title}
+                      </Typography>
+                      <Typography fontSize={13} color="#f25c05" mb={0.5}>
+                        Ngày đăng: {item.date}
+                      </Typography>
+                      <Typography fontSize={13} color="text.secondary">
+                        {item.excerpt}
+                      </Typography>
+                    </Box>
+                  </motion.div>
+                </Grid>
+              ))}
+            </Grid>
           </Grid>
         </Grid>
-      </Grid>
-    </Box>
+      </Box>
+    </motion.div>
   );
 };
 

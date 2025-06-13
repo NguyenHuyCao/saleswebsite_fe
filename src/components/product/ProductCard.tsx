@@ -22,6 +22,9 @@ import { useRouter } from "next/navigation";
 import GlobalSnackbar from "../alert/GlobalSnackbar";
 import { mutate } from "swr";
 import { CART_COUNT_KEY, WISHLIST_COUNT_KEY } from "@/constants/apiKeys";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchWishlist } from "@/redux/slices/wishlistSlice";
+import type { AppDispatch, AppState } from "@/redux/store";
 
 export type Product = {
   id: number;
@@ -38,21 +41,22 @@ export type Product = {
   createdAt: string;
   rating?: number;
   slug: string;
-  isFavorite?: boolean;
+  isFavorite: boolean;
 };
 
 type Props = {
   product: Product;
-  isFavorite?: boolean;
-  onToggleFavorite?: (productId: number) => void;
+  mutateKey?: string;
 };
 
-const ProductCard = ({
-  product,
-  isFavorite = false,
-  onToggleFavorite,
-}: Props) => {
+const ProductCard = ({ product, mutateKey }: Props) => {
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const wishlistIds = useSelector(
+    (state: AppState) => new Set(state.wishlist.result.map((item) => item.id))
+  );
+  const isFavorite = wishlistIds.has(product.id);
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [actionType, setActionType] = useState<"favorite" | "cart" | null>(
     null
@@ -71,9 +75,7 @@ const ProductCard = ({
           `http://localhost:8080/api/v1/promotions/product?productId=${product.id}`
         );
         const promo = await res.json();
-        if (promo?.data?.discount) {
-          setDiscountPercent(promo.data.discount);
-        }
+        if (promo?.data?.discount) setDiscountPercent(promo.data.discount);
       } catch (err) {
         console.error("Lỗi khi kiểm tra khuyến mãi:", err);
       }
@@ -111,7 +113,7 @@ const ProductCard = ({
       } else {
         throw new Error(result.message || "Lỗi khi thêm sản phẩm");
       }
-    } catch (err) {
+    } catch {
       setSnackbar({
         open: true,
         message: "Lỗi kết nối hoặc xử lý giỏ hàng",
@@ -124,9 +126,26 @@ const ProductCard = ({
     e.stopPropagation();
     const token = localStorage.getItem("accessToken");
     if (!token) return requireLogin("favorite");
-    if (onToggleFavorite) {
-      await onToggleFavorite(product.id);
+
+    try {
+      const formData = new FormData();
+      formData.append("productId", String(product.id));
+      const res = await fetch("http://localhost:8080/api/v1/wish_list", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Cập nhật yêu thích thất bại");
+
+      dispatch(fetchWishlist());
       mutate(WISHLIST_COUNT_KEY);
+      if (mutateKey) mutate(mutateKey);
+    } catch {
+      setSnackbar({
+        open: true,
+        message: "Lỗi khi cập nhật yêu thích",
+        type: "error",
+      });
     }
   };
 
@@ -137,10 +156,7 @@ const ProductCard = ({
         sx={{
           cursor: "pointer",
           transition: "transform 0.3s ease, box-shadow 0.3s ease",
-          "&:hover": {
-            transform: "translateY(-3px)",
-            boxShadow: 3,
-          },
+          "&:hover": { transform: "translateY(-3px)", boxShadow: 3 },
         }}
       >
         <Paper
@@ -221,7 +237,6 @@ const ProductCard = ({
               fill
               sizes="(max-width: 600px) 100vw, 240px"
               style={{ objectFit: "cover", transition: "transform 0.3s ease" }}
-              onLoadingComplete={(img) => (img.style.opacity = "1")}
             />
           </Box>
 
@@ -296,9 +311,7 @@ const ProductCard = ({
               fontWeight: 600,
               fontSize: 14,
               transition: "all 0.3s ease",
-              "&:hover": {
-                bgcolor: product.inStock ? "#ffc107" : "#f0f0f0",
-              },
+              "&:hover": { bgcolor: product.inStock ? "#ffc107" : "#f0f0f0" },
             }}
           >
             {product.label}

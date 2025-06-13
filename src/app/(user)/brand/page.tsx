@@ -3,7 +3,7 @@ import BrandHeroSection from "@/components/brand/BrandHeroSection";
 import BrandListSection from "@/components/brand/BrandListSection";
 import BrandPageFinalSections from "@/components/brand/BrandPageFinalSections";
 import WhyChooseUs from "@/components/brand/WhyChooseUs ";
-import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
+// import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
 import PageViewTracker from "@/components/common/traffic/PageViewTracker";
 import { Container } from "@mui/material";
 
@@ -29,7 +29,7 @@ const BrandPage = async () => {
         <BrandAccordionSection brands={brands} />
         <BrandPageFinalSections />
       </Container>
-      <FreezeScrollOnReload />
+      {/* <FreezeScrollOnReload /> */}
     </>
   );
 };

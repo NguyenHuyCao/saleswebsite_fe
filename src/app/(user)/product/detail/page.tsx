@@ -4,7 +4,7 @@ import { Container } from "@mui/material";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import PageViewTracker from "@/components/common/traffic/PageViewTracker";
-import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
+// import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
 import ScrollPositionManager from "@/components/common/ScrollResetOnLoad";
 
 export default async function DetailProduct({ searchParams }: any) {

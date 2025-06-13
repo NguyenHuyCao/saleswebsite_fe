@@ -3,7 +3,7 @@ import ProductListLayout from "@/components/product/ProductListLayout";
 import PageViewTracker from "@/components/common/traffic/PageViewTracker";
 import { Container } from "@mui/material";
 import { cookies } from "next/headers";
-import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
+// import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
 import ProductCategoryIntroSection from "@/components/product/ProductCategoryIntroSection";
 import ProductCategorySection from "@/components/product/ProductCategorySection";
 
@@ -135,7 +135,7 @@ const ProductsPage = async () => {
           <ProductCategorySection categories={categories} />
         </div>
         <ProductListLayout categories={categories} brands={brands} />
-        <FreezeScrollOnReload />
+        {/* <FreezeScrollOnReload /> */}
       </Container>
     </>
   );

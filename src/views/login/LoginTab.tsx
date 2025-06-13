@@ -14,6 +14,12 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import {
+  CART_COUNT_KEY,
+  WISHLIST_COUNT_KEY,
+  ORDERS_COUNT_KEY,
+} from "@/constants/apiKeys";
+import { mutate } from "swr";
 
 interface LoginTabProps {
   showMessage: (severity: "success" | "error", message: string) => void;
@@ -58,6 +64,10 @@ const LoginTab: React.FC<LoginTabProps> = ({ showMessage }) => {
       showMessage("success", "Đăng nhập thành công!");
       window.dispatchEvent(new Event("storage"));
       window.dispatchEvent(new Event("login"));
+
+      mutate(CART_COUNT_KEY);
+      mutate(WISHLIST_COUNT_KEY);
+      mutate(ORDERS_COUNT_KEY);
       router.push("/");
     } catch (err: any) {
       const message = err?.message?.includes("fetch")
