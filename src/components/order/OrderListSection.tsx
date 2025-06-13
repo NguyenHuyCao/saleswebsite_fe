@@ -219,11 +219,7 @@ const OrderListSection = () => {
                     alignItems="center"
                   >
                     <Image
-                      src={
-                        item.productImage
-                          ? `http://localhost:8080/api/v1/files/${item.productImage}`
-                          : "/images/product/placeholder.jpg"
-                      }
+                      src={item.productImage}
                       alt={item.productName}
                       width={60}
                       height={60}

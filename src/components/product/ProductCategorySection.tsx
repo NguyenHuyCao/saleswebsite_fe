@@ -68,6 +68,8 @@ export default function ProductCategorySection({ categories }: Props) {
     if (slug) router.push(`/product?category=${slug}`);
   };
 
+  console.log("categories", categories);
+
   return (
     <Box
       sx={{
@@ -133,15 +135,11 @@ export default function ProductCategorySection({ categories }: Props) {
             >
               <Box
                 component="img"
-                src={
-                  cat.image
-                    ? `http://localhost:8080/api/v1/files/${cat.image}`
-                    : "/images/product/placeholder.jpg"
-                }
+                src={cat.image}
                 alt={`Danh mục ${cat.name}`}
                 onError={(e: any) => {
                   e.target.onerror = null;
-                  e.target.src = "/images/product/placeholder.jpg";
+                  e.target.src = `${cat.image}`;
                 }}
                 sx={{
                   width: 60,
@@ -181,7 +179,6 @@ export default function ProductCategorySection({ categories }: Props) {
           </Fade>
         ))}
       </Box>
-
       {isMdUp && showRight && (
         <IconButton
           onClick={() => scroll("right")}

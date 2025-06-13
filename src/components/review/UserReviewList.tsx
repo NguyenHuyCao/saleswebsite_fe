@@ -143,7 +143,7 @@ export const UserReviewList = ({ productId }: Props) => {
                     <Box
                       key={idx}
                       component="img"
-                      src={`http://localhost:8080/api/v1/files/${img}`}
+                      src={`${img}`}
                       sx={{
                         width: 80,
                         height: 80,

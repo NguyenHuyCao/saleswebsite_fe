@@ -90,9 +90,7 @@ export async function getNewProducts(): Promise<Product[]> {
       title: item.name,
       price: item.pricePerUnit,
       originalPrice: item.price,
-      image: item.imageAvt
-        ? `http://localhost:8080/api/v1/files/${item.imageAvt}`
-        : "/images/product/placeholder.jpg",
+      image: item.imageAvt,
       status: item.stockQuantity === 0 ? ["Hết hàng"] : isNew ? ["Mới"] : [],
       sale: item.price !== item.pricePerUnit,
       inStock: item.active === true,
@@ -112,11 +110,7 @@ export async function getBrands(): Promise<string[]> {
   const raw = await res.json();
   const result = raw?.data?.result || [];
 
-  return result.map((brand: any) =>
-    brand.logo
-      ? `http://localhost:8080/api/v1/files/${brand.logo}`
-      : "/images/product/placeholder.jpg"
-  );
+  return result.map((brand: any) => brand.logo);
 }
 
 export async function getCategories(): Promise<Category[]> {
@@ -130,9 +124,7 @@ export async function getCategories(): Promise<Category[]> {
 
   const mappedCategories: Category[] = categoriesFromApi.map((item: any) => ({
     title: item.name,
-    image: item.image
-      ? `http://localhost:8080/api/v1/files/${item.image}`
-      : "/images/product/placeholder.jpg",
+    image: item.image,
     slug: item.slug,
   }));
 
@@ -211,9 +203,7 @@ export async function getCategoriesWithProducts(): Promise<
           id: item.id,
           title: item.name,
           slug: item.slug,
-          image: item.imageAvt
-            ? `http://localhost:8080/api/v1/files/${item.imageAvt}`
-            : "/images/product/placeholder.jpg",
+          image: item.imageAvt,
           price: item.pricePerUnit,
           pricePerUnit: item.pricePerUnit,
           originalPrice: item.price,

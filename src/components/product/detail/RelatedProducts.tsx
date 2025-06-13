@@ -65,9 +65,7 @@ const RelatedProductsSlick: React.FC<RelatedProductsProps> = ({ category }) => {
           title: item.name,
           price: item.pricePerUnit,
           originalPrice: item.price,
-          image: item.imageAvt
-            ? `http://localhost:8080/api/v1/files/${item.imageAvt}`
-            : "/images/product/placeholder.jpg",
+          image: item.imageAvt,
           status:
             item.stockQuantity === 0 ? ["Hết hàng"] : isNew ? ["Mới"] : [],
           sale: item.price !== item.pricePerUnit,

@@ -11,16 +11,26 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
-    domains: ["localhost"],
+    domains: ["res.cloudinary.com"], // Cho phép load ảnh từ Cloudinary
     remotePatterns: [
       {
-        protocol: "http",
-        hostname: "localhost",
-        port: "8000",
-        pathname: "/images/**",
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/**", // Cho phép tất cả ảnh trong Cloudinary
       },
     ],
   },
+  // images: {
+  //   domains: ["localhost"],
+  //   remotePatterns: [
+  //     {
+  //       protocol: "http",
+  //       hostname: "localhost",
+  //       port: "8000",
+  //       pathname: "/images/**",
+  //     },
+  //   ],
+  // },
 };
 
 export default nextConfig;

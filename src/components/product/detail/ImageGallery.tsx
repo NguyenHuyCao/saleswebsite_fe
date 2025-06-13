@@ -7,10 +7,12 @@ import {
   DialogContent,
   useTheme,
   useMediaQuery,
+  IconButton,
 } from "@mui/material";
 import Image from "next/image";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import CloseIcon from "@mui/icons-material/Close";
 
 interface Props {
   product: {
@@ -38,7 +40,7 @@ export const ImageGallery = ({ product }: Props) => {
   const [selectedImg, setSelectedImg] = useState<string | null>(null);
 
   const handleOpen = (src: string) => {
-    setSelectedImg(src);
+    setSelectedImg(src.startsWith("http") ? src : `${baseUrl}${src}`);
     setOpen(true);
   };
 
@@ -46,12 +48,12 @@ export const ImageGallery = ({ product }: Props) => {
     <Box>
       {/* Ảnh chính */}
       <motion.div
-        whileHover={{ scale: 1.02 }}
-        transition={{ duration: 0.2 }}
-        onClick={() => handleOpen(`${baseUrl}${product.imageAvt}`)}
+        whileHover={{ scale: 1.01 }}
+        transition={{ duration: 0.25 }}
+        onClick={() => handleOpen(product.imageAvt)}
         style={{
           width: "100%",
-          height: isMobile ? 240 : 300,
+          aspectRatio: "1 / 1",
           borderRadius: 12,
           overflow: "hidden",
           cursor: "zoom-in",
@@ -60,10 +62,11 @@ export const ImageGallery = ({ product }: Props) => {
         }}
       >
         <Image
-          src={`${baseUrl}${product.imageAvt}`}
+          src={product.imageAvt}
           alt={product.name}
           fill
-          style={{ objectFit: "contain" }}
+          style={{ objectFit: "cover", transition: "opacity 0.3s" }}
+          sizes="(max-width: 600px) 100vw, 400px"
         />
       </motion.div>
 
@@ -81,26 +84,28 @@ export const ImageGallery = ({ product }: Props) => {
         {images.map((src, i) => (
           <motion.div
             key={i}
+            whileHover={{ scale: 1.05 }}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
           >
             <Box
-              onClick={() => handleOpen(`${baseUrl}${src}`)}
+              onClick={() => handleOpen(src)}
               sx={{
                 flex: "0 0 auto",
                 width: 70,
                 height: 70,
-                borderRadius: 1,
+                borderRadius: 2,
                 border: "1px solid #ddd",
                 overflow: "hidden",
                 cursor: "pointer",
-                "&:hover": { borderColor: "warning.main" },
+                bgcolor: "#fff",
+                "&:hover": { borderColor: "#f25c05" },
                 position: "relative",
               }}
             >
               <Image
-                src={`${baseUrl}${src}`}
+                src={src.startsWith("http") ? src : `${baseUrl}${src}`}
                 alt={`Ảnh chi tiết ${i + 1}`}
                 fill
                 style={{ objectFit: "cover" }}
@@ -118,7 +123,7 @@ export const ImageGallery = ({ product }: Props) => {
         disableScrollLock={true}
         PaperProps={{
           sx: {
-            backgroundColor: "transparent",
+            backgroundColor: "rgba(0,0,0,0.8)",
             boxShadow: "none",
             display: "flex",
             justifyContent: "center",
@@ -126,14 +131,27 @@ export const ImageGallery = ({ product }: Props) => {
           },
         }}
       >
-        <DialogContent sx={{ p: 0 }}>
+        <DialogContent sx={{ p: 0, position: "relative" }}>
+          <IconButton
+            onClick={() => setOpen(false)}
+            sx={{
+              position: "absolute",
+              top: 8,
+              right: 8,
+              zIndex: 10,
+              color: "#fff",
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+
           <AnimatePresence>
             {selectedImg && (
               <motion.div
                 key={selectedImg}
-                initial={{ opacity: 0, scale: 0.8 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
+                exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.3 }}
               >
                 <Box

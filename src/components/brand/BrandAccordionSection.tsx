@@ -62,11 +62,7 @@ const BrandAccordionSection = ({ brands }: Props) => {
                   }}
                 >
                   <Image
-                    src={
-                      brand.logo
-                        ? `http://localhost:8080/api/v1/files/${brand.logo}`
-                        : "/images/brand-placeholder.png"
-                    }
+                    src={brand.logo}
                     alt={brand.name}
                     fill
                     style={{ objectFit: "contain" }}

@@ -69,6 +69,7 @@ export async function getCategoriesWithProducts(): Promise<
     id: category.id,
     name: category.name,
     slug: category.slug,
+    image: category.image,
     products: (category.products || [])
       .slice(0, 4)
       .map((item: any): Product => {
@@ -79,9 +80,7 @@ export async function getCategoriesWithProducts(): Promise<
           id: item.id,
           title: item.name,
           slug: item.slug,
-          image: item.imageAvt
-            ? `http://localhost:8080/api/v1/files/${item.imageAvt}`
-            : "/images/product/placeholder.jpg",
+          image: item.imageAvt,
           price: item.pricePerUnit,
           pricePerUnit: item.pricePerUnit,
           originalPrice: item.price,

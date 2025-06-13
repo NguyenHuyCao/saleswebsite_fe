@@ -81,9 +81,7 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
             title: item.name,
             price: item.pricePerUnit,
             originalPrice: item.price,
-            image: item.imageAvt
-              ? `http://localhost:8080/api/v1/files/${item.imageAvt}`
-              : "/images/product/placeholder.jpg",
+            image: item.imageAvt,
             status,
             sale: item.pricePerUnit < item.price,
             inStock: item.stockQuantity > 0,

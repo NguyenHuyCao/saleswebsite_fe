@@ -9,7 +9,6 @@ import {
   useTheme,
   Stack,
   Fade,
-  Slide,
 } from "@mui/material";
 import Image from "next/image";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";

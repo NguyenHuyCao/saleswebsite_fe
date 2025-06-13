@@ -93,17 +93,29 @@ const BrandListSection = ({ brands }: Props) => {
                   },
                 }}
               >
-                <Box mb={2} position="relative" zIndex={1}>
+                <Box
+                  mb={2}
+                  position="relative"
+                  zIndex={1}
+                  sx={{
+                    width: 100,
+                    aspectRatio: "1 / 1",
+                    mx: "auto",
+                    borderRadius: 2,
+                    overflow: "hidden",
+                    bgcolor: "#fff",
+                  }}
+                >
                   <Image
-                    src={`http://localhost:8080/api/v1/files/${brand.logo}`}
+                    src={`${brand.logo}`}
                     alt={brand.name}
-                    width={100}
-                    height={60}
+                    fill
                     className="logo"
                     style={{
                       transition: "transform 0.3s ease",
-                      objectFit: "contain",
+                      objectFit: "cover",
                     }}
+                    sizes="100px"
                   />
                 </Box>
 

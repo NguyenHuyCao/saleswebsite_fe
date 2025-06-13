@@ -62,7 +62,6 @@ const ProductCard = ({
     message: "",
     type: "success" as "success" | "error",
   });
-
   const [discountPercent, setDiscountPercent] = useState<number | null>(null);
 
   useEffect(() => {
@@ -79,7 +78,6 @@ const ProductCard = ({
         console.error("Lỗi khi kiểm tra khuyến mãi:", err);
       }
     };
-
     if (product.sale) checkPromotion();
   }, [product]);
 
@@ -91,10 +89,7 @@ const ProductCard = ({
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation();
     const token = localStorage.getItem("accessToken");
-    if (!token) {
-      requireLogin("cart");
-      return;
-    }
+    if (!token) return requireLogin("cart");
 
     try {
       const res = await fetch("http://localhost:8080/api/v1/carts", {
@@ -105,7 +100,6 @@ const ProductCard = ({
         },
         body: JSON.stringify({ productId: product.id, quantity: 1 }),
       });
-
       const result = await res.json();
       if (res.ok) {
         setSnackbar({
@@ -129,11 +123,7 @@ const ProductCard = ({
   const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
     const token = localStorage.getItem("accessToken");
-    if (!token) {
-      requireLogin("favorite");
-      return;
-    }
-
+    if (!token) return requireLogin("favorite");
     if (onToggleFavorite) {
       await onToggleFavorite(product.id);
       mutate(WISHLIST_COUNT_KEY);
@@ -144,14 +134,21 @@ const ProductCard = ({
     <>
       <Box
         onClick={() => router.push(`/product/detail?name=${product.slug}`)}
-        sx={{ cursor: "pointer" }}
+        sx={{
+          cursor: "pointer",
+          transition: "transform 0.3s ease, box-shadow 0.3s ease",
+          "&:hover": {
+            transform: "translateY(-3px)",
+            boxShadow: 3,
+          },
+        }}
       >
         <Paper
           elevation={2}
           sx={{
             width: "100%",
             maxWidth: 240,
-            minHeight: 360,
+            minHeight: 420,
             borderRadius: 2,
             overflow: "hidden",
             p: 2,
@@ -159,31 +156,9 @@ const ProductCard = ({
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
-            transition: "transform 0.3s",
-            "&:hover": { transform: "translateY(-4px)" },
+            bgcolor: "#fff",
           }}
         >
-          {/* Sale Badge */}
-          {product.sale && discountPercent && (
-            <Box
-              sx={{
-                position: "absolute",
-                top: 8,
-                left: 8,
-                bgcolor: "#f25c05",
-                color: "white",
-                px: 1,
-                py: 0.2,
-                fontSize: 12,
-                fontWeight: 600,
-                borderRadius: 1,
-              }}
-            >
-              -{Math.round(discountPercent * 100)}%
-            </Box>
-          )}
-
-          {/* Favorite Button */}
           <Tooltip title="Thêm vào yêu thích">
             <IconButton
               onClick={handleToggleFavorite}
@@ -194,6 +169,7 @@ const ProductCard = ({
                 bgcolor: "#fff",
                 width: 30,
                 height: 30,
+                zIndex: 3,
                 "&:hover": { bgcolor: "#ffe0b2" },
               }}
             >
@@ -208,27 +184,48 @@ const ProductCard = ({
             </IconButton>
           </Tooltip>
 
-          {/* Image */}
           <Box
             sx={{
-              height: 140,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              backgroundColor: "#f7f7f7",
+              position: "relative",
+              width: "100%",
+              aspectRatio: "1 / 1",
+              mb: 1.5,
+              borderRadius: 2,
+              overflow: "hidden",
+              bgcolor: "#f7f7f7",
+              transition: "all 0.3s ease",
             }}
           >
+            {product.sale && discountPercent && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: 8,
+                  left: 8,
+                  zIndex: 2,
+                  bgcolor: "#f25c05",
+                  color: "white",
+                  px: 1,
+                  py: 0.2,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  borderRadius: 1,
+                }}
+              >
+                -{Math.round(discountPercent * 100)}%
+              </Box>
+            )}
             <Image
               src={product.image}
               alt={product.title}
-              width={120}
-              height={120}
-              style={{ objectFit: "contain" }}
+              fill
+              sizes="(max-width: 600px) 100vw, 240px"
+              style={{ objectFit: "cover", transition: "transform 0.3s ease" }}
+              onLoadingComplete={(img) => (img.style.opacity = "1")}
             />
           </Box>
 
-          {/* Status */}
-          <Stack direction="row" spacing={1} mt={1}>
+          <Stack direction="row" spacing={1} mt={0.5}>
             {product.status.map((tag, i) => (
               <Box
                 key={i}
@@ -246,7 +243,6 @@ const ProductCard = ({
             ))}
           </Stack>
 
-          {/* Title */}
           <Typography
             fontSize={14}
             fontWeight={600}
@@ -263,7 +259,6 @@ const ProductCard = ({
             {product.title}
           </Typography>
 
-          {/* Price */}
           <Stack direction="row" spacing={1} mt={0.5} alignItems="center">
             <Typography fontWeight={700} color="#f25c05">
               {product.price.toLocaleString()}₫
@@ -278,7 +273,6 @@ const ProductCard = ({
             )}
           </Stack>
 
-          {/* Rating */}
           {product.rating !== undefined && (
             <Rating
               value={product.rating}
@@ -289,7 +283,6 @@ const ProductCard = ({
             />
           )}
 
-          {/* Add to Cart */}
           <Button
             fullWidth
             variant={product.inStock ? "contained" : "outlined"}
@@ -302,6 +295,7 @@ const ProductCard = ({
               color: product.inStock ? "black" : "gray",
               fontWeight: 600,
               fontSize: 14,
+              transition: "all 0.3s ease",
               "&:hover": {
                 bgcolor: product.inStock ? "#ffc107" : "#f0f0f0",
               },
@@ -312,7 +306,6 @@ const ProductCard = ({
         </Paper>
       </Box>
 
-      {/* Login Required Dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
         <DialogTitle>Yêu cầu đăng nhập</DialogTitle>
         <DialogContent>

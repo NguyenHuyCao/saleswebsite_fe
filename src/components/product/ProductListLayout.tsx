@@ -91,9 +91,7 @@ export default function ProductListLayout({ categories, brands }: Props) {
           title: item.name,
           price: item.pricePerUnit,
           originalPrice: item.price,
-          image: item.imageAvt
-            ? `http://localhost:8080/api/v1/files/${item.imageAvt}`
-            : "/images/product/placeholder.jpg",
+          image: item.imageAvt,
           status: [...(isNew ? ["Mới"] : []), ...(isHot ? ["Bán chạy"] : [])],
           sale: item.pricePerUnit < item.price,
           inStock: item.active,
