@@ -1,86 +1,146 @@
 "use client";
+
 import { ReactNode } from "react";
-
-// ** Next Import
 import Link from "next/link";
-
-// ** MUI Components
-import Button from "@mui/material/Button";
-import { styled } from "@mui/material/styles";
-import Typography from "@mui/material/Typography";
-import Box, { BoxProps } from "@mui/material/Box";
-
-// ** Layout Import
+import {
+  Box,
+  Typography,
+  Button,
+  useTheme,
+  useMediaQuery,
+  styled,
+} from "@mui/material";
+import { motion } from "framer-motion";
 import BlankLayout from "src/@core/layouts/BlankLayout";
-
-// ** Demo Imports
 import FooterIllustrations from "@/views/misc/FooterIllustrations";
 
-// ** Styled Components
-const BoxWrapper = styled(Box)<BoxProps>(({ theme }) => ({
-  [theme.breakpoints.down("md")]: {
-    width: "90vw",
+// Box gói nội dung chính – KHÔNG còn khung trắng
+const BoxWrapper = styled(Box)(({ theme }) => ({
+  width: "100%",
+  maxWidth: 600,
+  margin: "0 auto",
+  textAlign: "center",
+  padding: theme.spacing(3),
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(2),
   },
 }));
 
-const Img = styled("img")(({ theme }) => ({
-  marginBottom: theme.spacing(10),
-  [theme.breakpoints.down("lg")]: {
-    height: 450,
-    marginTop: theme.spacing(10),
-  },
-  [theme.breakpoints.down("md")]: {
-    height: 400,
-  },
-  [theme.breakpoints.up("lg")]: {
-    marginTop: theme.spacing(13),
+// Ảnh minh họa
+const Img = styled(motion.img)(({ theme }) => ({
+  width: "100%",
+  maxHeight: 450,
+  objectFit: "contain",
+  margin: `${theme.spacing(6)} auto`,
+  [theme.breakpoints.down("sm")]: {
+    maxHeight: 320,
   },
 }));
 
+// Hình cây trang trí
 const TreeIllustration = styled("img")(({ theme }) => ({
+  position: "absolute",
   left: 0,
   bottom: "5rem",
-  position: "absolute",
-  [theme.breakpoints.down("lg")]: {
+  width: 200,
+  [theme.breakpoints.down("md")]: {
+    width: 150,
     bottom: 0,
+  },
+  [theme.breakpoints.down("sm")]: {
+    width: 120,
   },
 }));
 
 const Error500 = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   return (
-    <Box className="content-center">
-      <Box
-        sx={{
-          p: 5,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          textAlign: "center",
-        }}
+    <Box
+      className="content-center"
+      sx={{
+        minHeight: "100vh",
+        overflow: "hidden",
+        position: "relative",
+        px: 2,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        bgcolor: "#FFF8E1",
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
       >
         <BoxWrapper>
-          <Typography variant="h1">500</Typography>
+          {/* <Typography
+            variant={isMobile ? "h3" : "h1"}
+            color="error"
+            fontWeight="bold"
+          >
+            500
+          </Typography> */}
+
           <Typography
             variant="h5"
-            sx={{ mb: 1, fontSize: "1.5rem !important" }}
+            sx={{
+              mt: 1,
+              fontSize: { xs: "1.2rem", sm: "1.5rem" },
+              color: "#000",
+            }}
           >
-            Internal server error 👨🏻‍💻
+            Lỗi máy chủ nội bộ
           </Typography>
-          <Typography variant="body2">Oops, something went wrong!</Typography>
+
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Xin lỗi, hệ thống đang gặp sự cố. Vui lòng thử lại sau hoặc quay về
+            trang chủ.
+          </Typography>
+
+          <Img
+            src="/images/pages/moto.png"
+            alt="Hình minh họa lỗi máy chủ"
+            loading="lazy"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          />
+
+          <Link href="/" style={{ textDecoration: "none" }}>
+            <Button
+              variant="contained"
+              size="large"
+              sx={{
+                mt: 2,
+                px: 6,
+                py: 1.5,
+                bgcolor: "#FFB700",
+                color: "#000",
+                fontWeight: "bold",
+                "&:hover": {
+                  bgcolor: "#D35300",
+                  color: "#fff",
+                },
+              }}
+            >
+              Quay về trang chủ
+            </Button>
+          </Link>
         </BoxWrapper>
-        <Img
-          height="487"
-          alt="error-illustration"
-          src="/images/pages/500.png"
-        />
-        <Link href="/" style={{ textDecoration: "none" }}>
-          <Button variant="contained" sx={{ px: 5.5 }}>
-            Back to Home
-          </Button>
-        </Link>
-      </Box>
+      </motion.div>
+
       <FooterIllustrations
-        image={<TreeIllustration alt="tree" src="/images/pages/tree-3.png" />}
+        image={
+          <TreeIllustration
+            alt="Hình trang trí"
+            src="/images/pages/tree-3.png"
+            loading="lazy"
+          />
+        }
       />
     </Box>
   );
