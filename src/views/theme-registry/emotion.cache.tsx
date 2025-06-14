@@ -1,4 +1,5 @@
 "use client";
+
 import * as React from "react";
 import createCache from "@emotion/cache";
 import { useServerInsertedHTML } from "next/navigation";
@@ -9,9 +10,7 @@ import type {
 } from "@emotion/cache";
 
 export type NextAppDirEmotionCacheProviderProps = {
-  /** This is the options passed to createCache() from 'import createCache from "@emotion/cache"' */
   options: Omit<OptionsOfCreateCache, "insertionPoint">;
-  /** By default <CacheProvider /> from 'import { CacheProvider } from "@emotion/react"' */
   CacheProvider?: (props: {
     value: EmotionCache;
     children: React.ReactNode;
@@ -19,7 +18,6 @@ export type NextAppDirEmotionCacheProviderProps = {
   children: React.ReactNode;
 };
 
-// Adapted from https://github.com/garronej/tss-react/blob/main/src/next/appDir.tsx
 export default function NextAppDirEmotionCacheProvider(
   props: NextAppDirEmotionCacheProviderProps
 ) {
@@ -28,8 +26,10 @@ export default function NextAppDirEmotionCacheProvider(
   const [registry] = React.useState(() => {
     const cache = createCache(options);
     cache.compat = true;
+
     const prevInsert = cache.insert;
     let inserted: { name: string; isGlobal: boolean }[] = [];
+
     cache.insert = (...args) => {
       const [selector, serialized] = args;
       if (cache.inserted[serialized.name] === undefined) {
@@ -40,11 +40,13 @@ export default function NextAppDirEmotionCacheProvider(
       }
       return prevInsert(...args);
     };
+
     const flush = () => {
       const prevInserted = inserted;
       inserted = [];
       return prevInserted;
     };
+
     return { cache, flush };
   });
 
@@ -53,6 +55,7 @@ export default function NextAppDirEmotionCacheProvider(
     if (inserted.length === 0) {
       return null;
     }
+
     let styles = "";
     let dataEmotionAttribute = registry.cache.key;
 
@@ -63,7 +66,6 @@ export default function NextAppDirEmotionCacheProvider(
 
     inserted.forEach(({ name, isGlobal }) => {
       const style = registry.cache.inserted[name];
-
       if (typeof style !== "boolean") {
         if (isGlobal) {
           globals.push({ name, style });
@@ -75,23 +77,23 @@ export default function NextAppDirEmotionCacheProvider(
     });
 
     return (
-      <React.Fragment>
+      <>
         {globals.map(({ name, style }) => (
           <style
             key={name}
             data-emotion={`${registry.cache.key}-global ${name}`}
             // eslint-disable-next-line react/no-danger
-            dangerouslySetInnerHTML={{ __html: style || "" }}
+            dangerouslySetInnerHTML={{ __html: style as string }} // ✅ Ép kiểu tại đây
           />
         ))}
         {styles && (
           <style
             data-emotion={dataEmotionAttribute}
             // eslint-disable-next-line react/no-danger
-            dangerouslySetInnerHTML={{ __html: styles || "" }}
+            dangerouslySetInnerHTML={{ __html: styles }}
           />
         )}
-      </React.Fragment>
+      </>
     );
   });
 
