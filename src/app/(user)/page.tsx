@@ -63,7 +63,7 @@ export async function getNewProducts(): Promise<Product[]> {
   let res;
   if (token != null) {
     res = await fetch(
-      "http://localhost:8080/api/v1/products?sort=createdAt,desc",
+      `${process.env.BACKEND_URL}/api/v1/products?sort=createdAt,desc`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -74,7 +74,7 @@ export async function getNewProducts(): Promise<Product[]> {
     );
   } else {
     res = await fetch(
-      "http://localhost:8080/api/v1/products?sort=createdAt,desc"
+      `${process.env.BACKEND_URL}/api/v1/products?sort=createdAt,desc`
     );
   }
 
@@ -102,7 +102,7 @@ export async function getNewProducts(): Promise<Product[]> {
 }
 
 export async function getBrands(): Promise<string[]> {
-  const res = await fetch("http://localhost:8080/api/v1/brands", {
+  const res = await fetch(`${process.env.BACKEND_URL}/api/v1/brands`, {
     headers: { "Content-Type": "application/json" },
     cache: "no-store",
   });
@@ -114,7 +114,7 @@ export async function getBrands(): Promise<string[]> {
 }
 
 export async function getCategories(): Promise<Category[]> {
-  const res = await fetch("http://localhost:8080/api/v1/categories", {
+  const res = await fetch(`${process.env.BACKEND_URL}/api/v1/categories`, {
     headers: { "Content-Type": "application/json" },
     cache: "no-store",
   });
@@ -148,7 +148,7 @@ export async function getPromotions(): Promise<Promotion[]> {
   let res;
 
   if (token != null) {
-    res = await fetch("http://localhost:8080/api/v1/promotions", {
+    res = await fetch(`${process.env.BACKEND_URL}/api/v1/promotions`, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -156,7 +156,7 @@ export async function getPromotions(): Promise<Promotion[]> {
       cache: "no-store",
     });
   } else {
-    res = await fetch("http://localhost:8080/api/v1/promotions", {
+    res = await fetch(`${process.env.BACKEND_URL}/api/v1/promotions`, {
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
     });
@@ -173,7 +173,7 @@ export async function getCategoriesWithProducts(): Promise<
   const token = cookieStore.get("accessToken")?.value;
   let res;
   if (token != null) {
-    res = await fetch("http://localhost:8080/api/v1/categories", {
+    res = await fetch(`${process.env.BACKEND_URL}/api/v1/categories`, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -181,7 +181,7 @@ export async function getCategoriesWithProducts(): Promise<
       cache: "no-store",
     });
   } else {
-    res = await fetch("http://localhost:8080/api/v1/categories");
+    res = await fetch(`${process.env.BACKEND_URL}/api/v1/categories`);
   }
 
   console.log("token", token);

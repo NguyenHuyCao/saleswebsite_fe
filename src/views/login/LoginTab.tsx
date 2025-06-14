@@ -44,14 +44,17 @@ const LoginTab: React.FC<LoginTabProps> = ({ showMessage }) => {
   const handleLogin = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8080/api/v1/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: email.trim(),
-          password: password.trim(),
-        }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: email.trim(),
+            password: password.trim(),
+          }),
+        }
+      );
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Đăng nhập thất bại");

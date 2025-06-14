@@ -82,7 +82,7 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
   const dispatch = useDispatch<AppDispatch>();
 
   const { data: products = [], mutate } = useSWR(
-    `http://localhost:8080/api/v1/promotions/${promotion.id}`,
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/promotions/${promotion.id}`,
     fetcher
   );
 
@@ -227,7 +227,7 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
               >
                 <ProductCard
                   product={product}
-                  mutateKey={`http://localhost:8080/api/v1/promotions/${promotion.id}`}
+                  mutateKey={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/promotions/${promotion.id}`}
                 />
               </motion.div>
             </Box>

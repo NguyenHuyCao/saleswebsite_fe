@@ -31,8 +31,8 @@ export type CartItem = {
   maxDiscount: number;
 };
 
-const ITEMS_API = "http://localhost:8080/api/v1/carts";
-const VOUCHER_API = "http://localhost:8080/api/v1/promotions/validate";
+const ITEMS_API = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/carts`;
+const VOUCHER_API = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/promotions/validate`;
 
 const CartPage = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);

@@ -25,15 +25,18 @@ const WebsiteTrafficTracker = () => {
         const userId = userRaw ? JSON.parse(userRaw)?.id : null;
 
         // 4. Gửi dữ liệu
-        await fetch("http://localhost:8080/api/v1/website_traffic", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            requestId: visitorId,
-            ipAddress: ip,
-            userId,
-          }),
-        });
+        await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/website_traffic`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              requestId: visitorId,
+              ipAddress: ip,
+              userId,
+            }),
+          }
+        );
 
         console.debug("Website traffic tracked:", { visitorId, userId, ip });
       } catch (err) {

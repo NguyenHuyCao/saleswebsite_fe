@@ -76,11 +76,14 @@ const CustomerReviewsSlider = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8080/api/v1/contacts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, subject: "Tư vấn" }),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/contacts`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...form, subject: "Tư vấn" }),
+        }
+      );
 
       const result = await response.json();
 

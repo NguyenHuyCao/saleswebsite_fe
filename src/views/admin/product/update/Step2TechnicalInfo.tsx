@@ -32,7 +32,7 @@ const Step2TechnicalInfo = ({ formData, onChange, onNext, onBack }: Props) => {
 
     try {
       const res = await fetch(
-        `http://localhost:8080/api/v1/products/step2/${name}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products/step2/${name}`,
         {
           method: "PUT",
           headers: {

@@ -77,9 +77,9 @@ const WarrantyManagementPage = () => {
     try {
       const token = localStorage.getItem("accessToken");
       const res = await fetch(
-        `http://localhost:8080/api/v1/warranty_claims/admin?page=${
-          page + 1
-        }&size=${rowsPerPage}`,
+        `${
+          process.env.NEXT_PUBLIC_BACKEND_URL
+        }/api/v1/warranty_claims/admin?page=${page + 1}&size=${rowsPerPage}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -146,7 +146,7 @@ const WarrantyManagementPage = () => {
       formData.append("resolutionNote", note);
 
       const res = await fetch(
-        `http://localhost:8080/api/v1/warranty_claim/${selectedClaim.id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/warranty_claim/${selectedClaim.id}`,
         {
           method: "PUT",
           headers: {
@@ -212,7 +212,7 @@ const WarrantyManagementPage = () => {
                       <TableCell>{claim.status}</TableCell>
                       <TableCell>
                         <Image
-                          src={`http://localhost:8080/api/v1/public/images/${claim.imageUrl}`}
+                          src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/public/images/${claim.imageUrl}`}
                           alt="Ảnh lỗi"
                           width={60}
                           height={60}

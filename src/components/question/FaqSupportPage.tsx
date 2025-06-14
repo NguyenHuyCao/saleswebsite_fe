@@ -124,11 +124,14 @@ const FaqSupportPage = () => {
     setLoading(true);
     try {
       const payload = { ...form, subject: "Giải đáp thắc mắc" };
-      const res = await fetch("http://localhost:8080/api/v1/contacts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/contacts`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
 
       const data = await res.json();
       if (data.status === 201) {

@@ -17,7 +17,7 @@ const PageViewTracker = () => {
 
         // Gửi khi idle để tránh blocking main thread
         window.requestIdleCallback?.(() => {
-          fetch("http://localhost:8080/api/v1/page_view", {
+          fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/page_view`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ pageUrl }),

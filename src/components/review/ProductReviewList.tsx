@@ -69,7 +69,7 @@ export const ProductReviewList = ({ productId }: Props) => {
   const fetchReviews = async () => {
     try {
       const res = await fetch(
-        `http://localhost:8080/api/v1/products/${productId}/reviews?page=1&size=100`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products/${productId}/reviews?page=1&size=100`
       );
       const data = await res.json();
       const list: Review[] = data?.data?.result || [];
@@ -112,7 +112,7 @@ export const ProductReviewList = ({ productId }: Props) => {
       images.forEach((img) => formData.append("imageReviews", img));
 
       const res = await fetch(
-        `http://localhost:8080/api/v1/reviews/${productId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reviews/${productId}`,
         {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
@@ -133,13 +133,16 @@ export const ProductReviewList = ({ productId }: Props) => {
   const toggleApproval = async (id: number) => {
     const token = localStorage.getItem("accessToken");
     if (!token) return;
-    await fetch(`http://localhost:8080/api/v1/reviews/${id}/approved`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
+    await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reviews/${id}/approved`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
     fetchReviews();
   };
 

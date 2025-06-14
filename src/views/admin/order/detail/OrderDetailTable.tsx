@@ -111,7 +111,7 @@ const OrderDetailTable = () => {
     const fetchOrder = async () => {
       try {
         const res = await fetch(
-          `http://localhost:8080/api/v1/orders/${orderId}`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders/${orderId}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -137,7 +137,7 @@ const OrderDetailTable = () => {
     if (newStatus === "PAID" && order && paymentStatus !== "PAID") {
       try {
         const res = await fetch(
-          `http://localhost:8080/api/v1/payments/${order.orderId}/cod-paid`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/payments/${order.orderId}/cod-paid`,
           {
             method: "PUT",
             headers: {
@@ -166,7 +166,7 @@ const OrderDetailTable = () => {
     if (!order) return;
     try {
       const res = await fetch(
-        `http://localhost:8080/api/v1/orders/${order.orderId}/status`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders/${order.orderId}/status`,
         {
           method: "PUT",
           headers: {
@@ -188,18 +188,21 @@ const OrderDetailTable = () => {
   const handleRefundConfirm = async () => {
     if (!order || !refundDetailId) return;
     try {
-      const res = await fetch("http://localhost:8080/api/v1/refund_order", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-        body: JSON.stringify({
-          orderId: order.orderId,
-          orderDetailId: refundDetailId,
-          refundAmount: Number(refundAmount),
-        }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/refund_order`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+          body: JSON.stringify({
+            orderId: order.orderId,
+            orderDetailId: refundDetailId,
+            refundAmount: Number(refundAmount),
+          }),
+        }
+      );
       const data = await res.json();
       if (!res.ok || data.status !== 200)
         throw new Error(data.message || "Hoàn tiền thất bại");

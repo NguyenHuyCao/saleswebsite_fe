@@ -78,7 +78,7 @@ const WarrantyRequestForm = () => {
       try {
         const token = localStorage.getItem("accessToken");
         const res = await fetch(
-          `http://localhost:8080/api/v1/orders/${formData.orderCode}`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders/${formData.orderCode}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -146,11 +146,14 @@ const WarrantyRequestForm = () => {
       const file = fileInputRef.current?.files?.[0];
       if (file) formDataToSend.append("imageUrl", file);
 
-      const res = await fetch("http://localhost:8080/api/v1/warranty_claim", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formDataToSend,
-      });
+      const res = await fetch(
+        "${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/warranty_claim",
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formDataToSend,
+        }
+      );
 
       const result = await res.json();
 

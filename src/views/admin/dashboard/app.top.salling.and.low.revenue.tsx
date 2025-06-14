@@ -87,7 +87,7 @@ const TopSellingAndLowRevenue = () => {
 
     const fetchTop = async () => {
       const res = await fetch(
-        "http://localhost:8080/api/v1/dashboard/overview/top-selling",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/top-selling`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -98,7 +98,7 @@ const TopSellingAndLowRevenue = () => {
 
     const fetchLow = async () => {
       const res = await fetch(
-        "http://localhost:8080/api/v1/dashboard/overview/low-revenue-products",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/low-revenue-products`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

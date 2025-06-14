@@ -46,7 +46,7 @@ const WeeklyOverview = () => {
       try {
         const token = localStorage.getItem("accessToken");
         const res = await fetch(
-          "http://localhost:8080/api/v1/dashboard/overview/weekly-revenue",
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/weekly-revenue`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

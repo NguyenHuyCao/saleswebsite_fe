@@ -22,7 +22,6 @@ import {
 import { useEffect, useState } from "react";
 import StarIcon from "@mui/icons-material/Star";
 import DotsVertical from "mdi-material-ui/DotsVertical";
-import Image from "next/image";
 
 const formatDate = (date: string) =>
   new Date(date).toLocaleString("vi-VN", {
@@ -72,7 +71,7 @@ const UserRatingPage = () => {
     const fetchData = async () => {
       const token = localStorage.getItem("accessToken");
       const res = await fetch(
-        "http://localhost:8080/api/v1/dashboard/overview/review-stats",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/review-stats`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

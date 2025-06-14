@@ -58,11 +58,14 @@ const ContactFormSection = () => {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8080/api/v1/contacts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/contacts`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        }
+      );
 
       const result = await res.json();
 

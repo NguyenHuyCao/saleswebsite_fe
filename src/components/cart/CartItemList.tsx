@@ -69,14 +69,17 @@ const CartItemList = ({ items: initialItems, onItemsChange }: Props) => {
     if (!token || newQuantity < 1) return;
 
     try {
-      const res = await fetch("http://localhost:8080/api/v1/carts", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ productId, quantity: newQuantity }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/carts`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ productId, quantity: newQuantity }),
+        }
+      );
 
       if (res.ok) {
         setItems((prev) =>
@@ -102,7 +105,7 @@ const CartItemList = ({ items: initialItems, onItemsChange }: Props) => {
 
     try {
       const res = await fetch(
-        `http://localhost:8080/api/v1/carts?productId=${productId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/carts?productId=${productId}`,
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },

@@ -50,7 +50,7 @@ export async function getCategoriesWithProducts(): Promise<
   const token = cookieStore.get("accessToken")?.value;
   let res;
   if (token != null) {
-    res = await fetch("http://localhost:8080/api/v1/categories", {
+    res = await fetch(`${process.env.BACKEND_URL}/api/v1/categories`, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -58,7 +58,7 @@ export async function getCategoriesWithProducts(): Promise<
       cache: "no-store",
     });
   } else {
-    res = await fetch("http://localhost:8080/api/v1/categories");
+    res = await fetch(`${process.env.BACKEND_URL}/api/v1/categories`);
   }
 
   const raw = await res.json();
@@ -111,7 +111,7 @@ export async function getCategoriesWithProducts(): Promise<
 }
 
 export async function getBrands(): Promise<Brand[]> {
-  const res = await fetch("http://localhost:8080/api/v1/brands", {
+  const res = await fetch(`${process.env.BACKEND_URL}/api/v1/brands`, {
     headers: { "Content-Type": "application/json" },
     cache: "no-store",
   });

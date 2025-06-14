@@ -1,6 +1,6 @@
 export const fetcherWithToken = async (url: string) => {
   const token = localStorage.getItem("accessToken");
-  const res = await fetch(`http://localhost:8080${url}`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}${url}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

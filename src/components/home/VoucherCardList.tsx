@@ -56,7 +56,7 @@ export default function VoucherCardSlider() {
     const fetchPromotions = async () => {
       try {
         const res = await fetch(
-          "http://localhost:8080/api/v1/promotions/requires-products"
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/promotions/requires-products`
         );
         const data = await res.json();
         setVouchers(data.data || []);

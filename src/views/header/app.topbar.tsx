@@ -98,13 +98,16 @@ const TopBar = () => {
 
     try {
       if (token) {
-        await fetch("http://localhost:8080/api/v1/auth/logout", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/logout`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
       }
     } catch (error) {
       console.error("Logout failed:", error);

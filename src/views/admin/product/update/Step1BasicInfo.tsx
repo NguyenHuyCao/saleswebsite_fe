@@ -54,12 +54,12 @@ const Step1BasicInfo = ({ formData, onChange, onNext }: Props) => {
     const fetchData = async () => {
       try {
         const [catRes, brandRes] = await Promise.all([
-          fetch("http://localhost:8080/api/v1/categories", {
+          fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
             },
           }),
-          fetch("http://localhost:8080/api/v1/brands", {
+          fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/brands`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
             },
@@ -88,7 +88,7 @@ const Step1BasicInfo = ({ formData, onChange, onNext }: Props) => {
 
     try {
       const res = await fetch(
-        `http://localhost:8080/api/v1/products/step1/${formData.id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products/step1/${formData.id}`,
         {
           method: "PUT",
           headers: {

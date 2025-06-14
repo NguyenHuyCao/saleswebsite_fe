@@ -87,16 +87,16 @@ const DashboardPage = () => {
       const [profitData, refundData, visitorData, salesData] =
         await Promise.all([
           fetchFrom(
-            "http://localhost:8080/api/v1/dashboard/overview/profit-summary"
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/profit-summary`
           ),
           fetchFrom(
-            "http://localhost:8080/api/v1/dashboard/overview/total-refund"
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/total-refund`
           ),
           fetchFrom(
-            "http://localhost:8080/api/v1/dashboard/overview/visitor-statistics"
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/visitor-statistics`
           ),
           fetchFrom(
-            "http://localhost:8080/api/v1/dashboard/overview/sales-statistics"
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/sales-statistics`
           ),
         ]);
       if (profitData.status === 200) setProfit(profitData.data);

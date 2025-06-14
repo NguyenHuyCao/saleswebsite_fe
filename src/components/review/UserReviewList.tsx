@@ -45,7 +45,7 @@ export const UserReviewList = ({ productId }: Props) => {
     if (!token) return;
     try {
       const res = await fetch(
-        `http://localhost:8080/api/v1/reviews/user/${productId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reviews/user/${productId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -95,7 +95,7 @@ export const UserReviewList = ({ productId }: Props) => {
       updatedImages.forEach((img) => formData.append("imageReviews", img));
 
       const res = await fetch(
-        `http://localhost:8080/api/v1/reviews/${selectedReview.id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reviews/${selectedReview.id}`,
         {
           method: "PUT",
           headers: { Authorization: `Bearer ${token}` },

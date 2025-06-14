@@ -65,11 +65,14 @@ const PromotionFormPage = () => {
   const fetchBrands = async () => {
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await fetch("http://localhost:8080/api/v1/brands", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/brands`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       const json = await res.json();
       setBrands(json.data.result || []);
     } catch (err) {
@@ -81,7 +84,7 @@ const PromotionFormPage = () => {
     if (action === "edit" && promotionId) {
       try {
         const res = await fetch(
-          `http://localhost:8080/api/v1/promotions/id?promotionId=${promotionId}`
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/promotions/id?promotionId=${promotionId}`
         );
         const json = await res.json();
         const promo = json.data;
@@ -111,7 +114,7 @@ const PromotionFormPage = () => {
       try {
         const token = localStorage.getItem("accessToken");
         const res = await fetch(
-          `http://localhost:8080/api/v1/promotions/${promotionId}`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/promotions/${promotionId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const json = await res.json();
@@ -135,8 +138,8 @@ const PromotionFormPage = () => {
 
       const url =
         action === "edit"
-          ? `http://localhost:8080/api/v1/promotions/${promotionId}`
-          : "http://localhost:8080/api/v1/promotions";
+          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/promotions/${promotionId}`
+          : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/promotions`;
 
       const method = action === "edit" ? "PUT" : "POST";
 

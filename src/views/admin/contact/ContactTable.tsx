@@ -40,7 +40,7 @@ const ContactTablePage = () => {
     try {
       const token = localStorage.getItem("accessToken");
       const res = await fetch(
-        `http://localhost:8080/api/v1/contacts?page=1&size=1000`, // fetch toàn bộ trước, lọc sau
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/contacts?page=1&size=1000`, // fetch toàn bộ trước, lọc sau
         {
           headers: {
             Authorization: `Bearer ${token}`,

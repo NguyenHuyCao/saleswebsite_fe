@@ -72,7 +72,7 @@ const ProductCard = ({ product, mutateKey }: Props) => {
     const checkPromotion = async () => {
       try {
         const res = await fetch(
-          `http://localhost:8080/api/v1/promotions/product?productId=${product.id}`
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/promotions/product?productId=${product.id}`
         );
         const promo = await res.json();
         if (promo?.data?.discount) setDiscountPercent(promo.data.discount);
@@ -94,14 +94,17 @@ const ProductCard = ({ product, mutateKey }: Props) => {
     if (!token) return requireLogin("cart");
 
     try {
-      const res = await fetch("http://localhost:8080/api/v1/carts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ productId: product.id, quantity: 1 }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/carts`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ productId: product.id, quantity: 1 }),
+        }
+      );
       const result = await res.json();
       if (res.ok) {
         setSnackbar({
@@ -130,11 +133,14 @@ const ProductCard = ({ product, mutateKey }: Props) => {
     try {
       const formData = new FormData();
       formData.append("productId", String(product.id));
-      const res = await fetch("http://localhost:8080/api/v1/wish_list", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/wish_list`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        }
+      );
       if (!res.ok) throw new Error("Cập nhật yêu thích thất bại");
 
       dispatch(fetchWishlist());

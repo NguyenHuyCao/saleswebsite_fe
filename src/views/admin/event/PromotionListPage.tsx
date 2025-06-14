@@ -57,17 +57,20 @@ const PromotionListPage = () => {
 
   const fetchPromotions = async () => {
     try {
-      const res = await fetch("http://localhost:8080/api/v1/promotions", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/promotions`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
       const data = await res.json();
       setPromotions(data.data);
 
       for (const promo of data.data) {
         const resProd = await fetch(
-          `http://localhost:8080/api/v1/promotions/${promo.id}`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/promotions/${promo.id}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
@@ -92,7 +95,7 @@ const PromotionListPage = () => {
   ) => {
     try {
       const res = await fetch(
-        `http://localhost:8080/api/v1/promotions/delete-product/${promotionId}?productId=${productId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/promotions/delete-product/${promotionId}?productId=${productId}`,
         {
           method: "DELETE",
           headers: {

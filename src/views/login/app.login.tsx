@@ -52,7 +52,7 @@ const LoginForm = () => {
         ? localStorage.getItem("accessToken")
         : null;
     if (token) {
-      fetch("http://localhost:8080/api/v1/auth/logout", {
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/logout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

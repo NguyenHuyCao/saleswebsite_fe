@@ -51,7 +51,7 @@ export default function AccountPage() {
     const fetchUserData = async () => {
       try {
         const res = await fetch(
-          `http://localhost:8080/api/v1/users/${user.id}`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users/${user.id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -93,14 +93,17 @@ export default function AccountPage() {
     if (!user?.id || !token) return;
 
     try {
-      const res = await fetch(`http://localhost:8080/api/v1/users/${user.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users/${user.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(formData),
+        }
+      );
 
       const data = await res.json();
       if (res.ok) {

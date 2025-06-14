@@ -8,7 +8,7 @@ import PageViewTracker from "@/components/common/traffic/PageViewTracker";
 import { Container } from "@mui/material";
 
 export async function getBrands(): Promise<Brand[]> {
-  const res = await fetch("http://localhost:8080/api/v1/brands", {
+  const res = await fetch(`${process.env.BACKEND_URL}/api/v1/brands`, {
     headers: { "Content-Type": "application/json" },
     cache: "no-store",
   });

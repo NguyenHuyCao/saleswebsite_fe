@@ -50,8 +50,8 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
     const fetchData = async () => {
       try {
         const [catRes, brandRes] = await Promise.all([
-          fetch("http://localhost:8080/api/v1/categories"),
-          fetch("http://localhost:8080/api/v1/brands"),
+          fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories`),
+          fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/brands`),
         ]);
         const catData = await catRes.json();
         const brandData = await brandRes.json();

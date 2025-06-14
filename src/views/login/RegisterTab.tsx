@@ -75,18 +75,21 @@ const RegisterTab: React.FC<RegisterTabProps> = ({ showMessage }) => {
     }
 
     try {
-      const res = await fetch("http://localhost:8080/api/v1/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: form.name,
-          email: form.email,
-          password: form.password,
-          phone: form.phone,
-          address: `${form.district}, ${form.province}`,
-          gender: form.gender,
-        }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: form.name,
+            email: form.email,
+            password: form.password,
+            phone: form.phone,
+            address: `${form.district}, ${form.province}`,
+            gender: form.gender,
+          }),
+        }
+      );
 
       const data = await res.json();
       if (res.status === 201) {

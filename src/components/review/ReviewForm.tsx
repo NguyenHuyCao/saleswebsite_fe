@@ -51,7 +51,7 @@ export const ReviewForm = ({ productId, onSuccess }: ReviewFormProps) => {
       images.forEach((img) => formData.append("imageReviews", img));
 
       const res = await fetch(
-        `http://localhost:8080/api/v1/reviews/${productId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reviews/${productId}`,
         {
           method: "POST",
           headers: {

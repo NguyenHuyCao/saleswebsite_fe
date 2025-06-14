@@ -24,7 +24,7 @@ const DashboardDefault = () => {
     const fetchInsights = async () => {
       const token = localStorage.getItem("accessToken");
       const res = await fetch(
-        "http://localhost:8080/api/v1/dashboard/advanced/financial-insights",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/advanced/financial-insights`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

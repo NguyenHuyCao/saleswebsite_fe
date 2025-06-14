@@ -76,14 +76,17 @@ export const ProductDetails = ({ product, category }: Props) => {
     }
 
     try {
-      const res = await fetch("http://localhost:8080/api/v1/carts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ quantity, productId: product.id }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/carts`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ quantity, productId: product.id }),
+        }
+      );
 
       if (!res.ok) throw new Error();
 
@@ -116,7 +119,7 @@ export const ProductDetails = ({ product, category }: Props) => {
     try {
       const formData = new FormData();
       formData.append("productId", String(product.id));
-      await fetch("http://localhost:8080/api/v1/wish_list", {
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/wish_list`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -174,7 +177,7 @@ export const ProductDetails = ({ product, category }: Props) => {
       </Typography>
 
       <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid item xs={12} sm={6}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <Typography variant="body2">
             <b>Loại nhiên liệu:</b> {product.fuelType}
           </Typography>
@@ -185,7 +188,7 @@ export const ProductDetails = ({ product, category }: Props) => {
             <b>Dung tích bình:</b> {product.tankCapacity}L
           </Typography>
         </Grid>
-        <Grid item xs={12} sm={6}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <Typography variant="body2">
             <b>Kích thước:</b> {product.dimensions}
           </Typography>

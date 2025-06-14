@@ -37,9 +37,12 @@ const OrderListSection = () => {
       if (!token) return;
       setLoading(true);
       try {
-        const res = await fetch("http://localhost:8080/api/v1/history_orders", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/history_orders`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         const json = await res.json();
         setOrders(json.data || []);
       } catch (err) {

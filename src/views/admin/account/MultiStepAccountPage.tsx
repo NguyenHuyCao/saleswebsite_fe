@@ -52,7 +52,7 @@ const MultiStepAccountPage = () => {
 
   useEffect(() => {
     if (userId) {
-      fetch(`http://localhost:8080/api/v1/users/${userId}`, {
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users/${userId}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

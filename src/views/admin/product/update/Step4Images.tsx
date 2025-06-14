@@ -83,7 +83,7 @@ const Step4Images = ({ formData, onChange, onBack }: Step4Props) => {
 
     try {
       const res = await fetch(
-        `http://localhost:8080/api/v1/products/step4/${slug}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products/step4/${slug}`,
         {
           method: "PUT",
           headers: {

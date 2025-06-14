@@ -28,7 +28,7 @@ export const ImageGallery = ({ product }: Props) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const baseUrl = "http://localhost:8080/api/v1/files/";
+  const baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/files/`;
   const images = [
     product.imageAvt,
     product.imageDetail1,

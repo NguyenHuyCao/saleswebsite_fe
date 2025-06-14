@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Box,
   Typography,
@@ -72,7 +74,7 @@ const CartSummary = ({ items, onApplyVoucher }: Props) => {
 
     if (token && user) {
       const { id } = JSON.parse(user);
-      fetch(`http://localhost:8080/api/v1/users/${id}`, {
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => res.json())
@@ -101,20 +103,23 @@ const CartSummary = ({ items, onApplyVoucher }: Props) => {
         ? Object.fromEntries(items.map((i) => [i.productId, voucherCode]))
         : {};
 
-      const res = await fetch("http://localhost:8080/api/v1/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          shippingAddress: userAddress,
-          paymentMethod,
-          shippingNote: orderNote,
-          shippingAmount: shippingFee,
-          promotionCodeByProductId: promotionMap,
-        }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            shippingAddress: userAddress,
+            paymentMethod,
+            shippingNote: orderNote,
+            shippingAmount: shippingFee,
+            promotionCodeByProductId: promotionMap,
+          }),
+        }
+      );
 
       const data = await res.json();
       if (res.ok && data?.data?.orderId) {
@@ -162,10 +167,13 @@ const CartSummary = ({ items, onApplyVoucher }: Props) => {
     if (!token) return;
 
     try {
-      const res = await fetch("http://localhost:8080/api/v1/carts/user", {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/carts/user`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       const data = await res.json();
 
       if (res.ok) {

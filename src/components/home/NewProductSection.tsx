@@ -27,7 +27,7 @@ const NewProductSectionSlick: React.FC = () => {
     try {
       const token = localStorage.getItem("accessToken");
       const res = await fetch(
-        "http://localhost:8080/api/v1/products?sort=createdAt,desc",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products?sort=createdAt,desc`,
         {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         }
@@ -84,7 +84,7 @@ const NewProductSectionSlick: React.FC = () => {
     try {
       const formData = new FormData();
       formData.append("productId", String(productId));
-      await fetch("http://localhost:8080/api/v1/wish_list", {
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/wish_list`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

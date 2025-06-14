@@ -67,7 +67,9 @@ export default function ProductListLayout({ categories, brands }: Props) {
       });
 
       const res = await fetch(
-        `http://localhost:8080/api/v1/products?${query.toString()}`,
+        `${
+          process.env.NEXT_PUBLIC_BACKEND_URL
+        }/api/v1/products?${query.toString()}`,
         {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         }
@@ -122,7 +124,7 @@ export default function ProductListLayout({ categories, brands }: Props) {
       const formData = new FormData();
       formData.append("productId", String(productId));
 
-      await fetch("http://localhost:8080/api/v1/wish_list", {
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/wish_list`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,

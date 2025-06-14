@@ -24,7 +24,7 @@ export default async function DetailProduct({ searchParams }: any) {
       };
 
   const productRes = await fetch(
-    `http://localhost:8080/api/v1/products/${slug}`,
+    `${process.env.BACKEND_URL}/api/v1/products/${slug}`,
     { headers, cache: "no-store" }
   );
   const productData = await productRes.json();
@@ -32,7 +32,7 @@ export default async function DetailProduct({ searchParams }: any) {
   if (!product) return notFound();
 
   const categoryRes = await fetch(
-    `http://localhost:8080/api/v1/categories/${product.categoryId}`,
+    `${process.env.BACKEND_URL}/api/v1/categories/${product.categoryId}`,
     { headers, cache: "no-store" }
   );
   const categoryData = await categoryRes.json();

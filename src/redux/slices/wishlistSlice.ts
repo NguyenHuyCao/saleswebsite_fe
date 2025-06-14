@@ -60,11 +60,14 @@ export const fetchWishlist = createAsyncThunk(
       const token = localStorage.getItem("accessToken");
       if (!token) throw new Error("Không có token");
 
-      const res = await fetch("http://localhost:8080/api/v1/wish_list", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/wish_list`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!res.ok) throw new Error("Lỗi khi gọi API danh sách yêu thích");
 
