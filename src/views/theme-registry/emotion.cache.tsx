@@ -60,19 +60,19 @@ export default function NextAppDirEmotionCacheProvider(
     const globals: React.ReactElement[] = [];
 
     for (const { name, isGlobal } of inserted) {
-      const style = registry.cache.inserted[name];
-      if (typeof style === "string") {
+      const rawStyle = registry.cache.inserted[name];
+      if (typeof rawStyle === "string") {
         if (isGlobal) {
+          const safeStyle = rawStyle; // now definitely string
           globals.push(
             <style
               key={name}
               data-emotion={`${registry.cache.key}-global ${name}`}
-              // eslint-disable-next-line react/no-danger
-              dangerouslySetInnerHTML={{ __html: style as string }}
+              dangerouslySetInnerHTML={{ __html: safeStyle }}
             />
           );
         } else {
-          styles += style;
+          styles += rawStyle;
           dataEmotionAttribute += ` ${name}`;
         }
       }
@@ -84,7 +84,6 @@ export default function NextAppDirEmotionCacheProvider(
         {styles && (
           <style
             data-emotion={dataEmotionAttribute}
-            // eslint-disable-next-line react/no-danger
             dangerouslySetInnerHTML={{ __html: styles }}
           />
         )}

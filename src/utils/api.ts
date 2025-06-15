@@ -37,10 +37,7 @@ export const sendRequest = async <T>(props: IRequest) => {
       data: json.data ?? null,
     } as T;
   } catch (error: any) {
-<<<<<<< HEAD
     console.error("Fetch error:", error);
-=======
->>>>>>> prod
     return {
       status: 500,
       message: "Lỗi kết nối đến máy chủ",
