@@ -48,7 +48,7 @@ const WarrantyConditions = () => {
 
       <Grid container spacing={4} justifyContent="center">
         {warrantyItems.map((item, index) => (
-          <Grid key={index} item xs={12} md={4}>
+          <Grid key={index} size={{ xs: 12, md: 4 }}>
             <motion.div
               custom={index}
               initial="hidden"

@@ -1,7 +1,9 @@
-import BrandTablePage from "@/views/admin/brand/BrandsTable";
+"use client";
+
+import BrandTable from "@/views/admin/brand/BrandsTable";
 
 const BrandsPage = () => {
-  return <BrandTablePage />;
+  return <BrandTable />;
 };
 
 export default BrandsPage;

@@ -35,6 +35,7 @@ interface Promotion {
 }
 
 interface OrderItem {
+  productDetailId: number;
   productName: string;
   quantity: number;
   unitPrice: number;

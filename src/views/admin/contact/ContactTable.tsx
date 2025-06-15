@@ -27,7 +27,7 @@ interface Contact {
   createdBy: string;
 }
 
-const ContactTablePage = () => {
+const ContactTable = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
   const [page, setPage] = useState(0);
@@ -153,4 +153,4 @@ const ContactTablePage = () => {
   );
 };
 
-export default ContactTablePage;
+export default ContactTable;

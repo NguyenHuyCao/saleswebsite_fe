@@ -18,28 +18,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import BrandMegaMenu from "@/components/brand/BrandMegaMenu";
 
-interface Product {
-  name: string;
-  active: boolean;
-  brand?: { id: number };
-}
-
-interface Category {
-  id: number;
-  name: string;
-  products: Product[];
-}
-
-interface Brand {
-  id: number;
-  name: string;
-  logo: string;
-}
-
 const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
   const [showMegaMenu, setShowMegaMenu] = useState(false);
   const [categoriesRawData, setCategoriesRawData] = useState<Category[]>([]);
-  const [brandsData, setBrandsData] = useState<Brand[]>([]);
+  const [brandsData, setBrandsData] = useState<BrandWithCategories[]>([]);
   const router = useRouter();
   const pathname = usePathname();
 

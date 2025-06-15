@@ -149,7 +149,7 @@ const UserCombinedForm = ({ onNext, userData }: Props) => {
         open={snackbar.open}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         message={snackbar.message}
-        severity={snackbar.severity}
+        type={snackbar.severity}
       />
     </Box>
   );

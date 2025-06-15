@@ -1,4 +1,3 @@
-// FlashSaleSlider.tsx
 "use client";
 
 import React from "react";
@@ -12,7 +11,7 @@ import {
   useTheme,
 } from "@mui/material";
 import Slider from "react-slick";
-import ProductCard, { Product } from "../product/ProductCard";
+import ProductCard from "../product/ProductCard";
 import CountdownPromotion from "./CountdownPromotion";
 import { motion } from "framer-motion";
 import { useDispatch } from "react-redux";
@@ -49,20 +48,36 @@ const fetcher = async (url: string): Promise<Product[]> => {
 
     return {
       id: item.id,
-      title: item.name,
+      name: item.name,
+      slug: item.slug,
+      imageAvt: item.imageAvt,
+      imageDetail1: item.imageDetail1,
+      imageDetail2: item.imageDetail2,
+      imageDetail3: item.imageDetail3,
+      description: item.description,
       price: item.pricePerUnit,
+      pricePerUnit: item.pricePerUnit,
       originalPrice: item.price,
-      image: item.imageAvt,
-      status,
       sale: item.pricePerUnit < item.price,
       inStock: item.stockQuantity > 0,
       label: item.stockQuantity > 0 ? "Thêm vào giỏ" : "Hết hàng",
-      rating: item.rating || 0,
-      slug: item.slug,
-      totalStock: item.totalStock,
       stockQuantity: item.stockQuantity,
+      totalStock: item.totalStock,
+      power: item.power || "N/A",
+      fuelType: item.fuelType || "N/A",
+      engineType: item.engineType || "N/A",
+      weight: item.weight || 0,
+      dimensions: item.dimensions || "",
+      tankCapacity: item.tankCapacity || 0,
+      origin: item.origin || "Không rõ",
+      warrantyMonths: item.warrantyMonths || 0,
       createdAt: item.createdAt,
-      isFavorite: item.wishListUser === true,
+      createdBy: item.createdBy || "",
+      updatedAt: item.updatedAt || null,
+      updatedBy: item.updatedBy || null,
+      rating: item.rating || 0,
+      status,
+      favorite: item.wishListUser === true,
     };
   });
 };
@@ -120,11 +135,7 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
           display="flex"
           alignItems="center"
           justifyContent="center"
-          sx={{
-            ml: pos === "left" ? 1.7 : 0,
-            mr: pos === "right" ? 1.7 : 0,
-            mt: 5,
-          }}
+          sx={{ mt: 5 }}
         >
           <Paper
             elevation={3}

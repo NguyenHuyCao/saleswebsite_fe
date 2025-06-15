@@ -1,26 +1,25 @@
 "use client";
-import { useState, SyntheticEvent, Fragment, ReactNode } from "react";
 
-// ** MUI Imports
-import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
-import Button from "@mui/material/Button";
-import IconButton from "@mui/material/IconButton";
-import { styled, Theme } from "@mui/material/styles";
-import useMediaQuery from "@mui/material/useMediaQuery";
-import MuiMenu, { MenuProps } from "@mui/material/Menu";
-import MuiAvatar, { AvatarProps } from "@mui/material/Avatar";
-import MuiMenuItem, { MenuItemProps } from "@mui/material/MenuItem";
-import Typography, { TypographyProps } from "@mui/material/Typography";
-
-// ** Icons Imports
+import { useState, SyntheticEvent, ReactNode, Fragment } from "react";
+import {
+  Box,
+  Chip,
+  Button,
+  IconButton,
+  useMediaQuery,
+  Menu as MuiMenu,
+  MenuItem as MuiMenuItem,
+  Avatar as MuiAvatar,
+  Typography,
+  styled,
+  Theme,
+} from "@mui/material";
+import PerfectScrollbar from "react-perfect-scrollbar";
 import BellOutline from "mdi-material-ui/BellOutline";
+import Image from "next/image";
 
-// ** Third Party Components
-import PerfectScrollbarComponent from "react-perfect-scrollbar";
-
-// ** Styled Menu component
-const Menu = styled(MuiMenu)<MenuProps>(({ theme }) => ({
+// Styled components
+const Menu = styled(MuiMenu)(({ theme }) => ({
   "& .MuiMenu-paper": {
     width: 380,
     overflow: "hidden",
@@ -34,34 +33,19 @@ const Menu = styled(MuiMenu)<MenuProps>(({ theme }) => ({
   },
 }));
 
-// ** Styled MenuItem component
-const MenuItem = styled(MuiMenuItem)<MenuItemProps>(({ theme }) => ({
+const MenuItem = styled(MuiMenuItem)(({ theme }) => ({
   paddingTop: theme.spacing(3),
   paddingBottom: theme.spacing(3),
   borderBottom: `1px solid ${theme.palette.divider}`,
 }));
 
-const styles = {
-  maxHeight: 349,
-  "& .MuiMenuItem-root:last-of-type": {
-    border: 0,
-  },
-};
-
-// ** Styled PerfectScrollbar component
-const PerfectScrollbar = styled(PerfectScrollbarComponent)({
-  ...styles,
-});
-
-// ** Styled Avatar component
-const Avatar = styled(MuiAvatar)<AvatarProps>({
+const Avatar = styled(MuiAvatar)({
   width: "2.375rem",
   height: "2.375rem",
   fontSize: "1.125rem",
 });
 
-// ** Styled component for the title in MenuItems
-const MenuItemTitle = styled(Typography)<TypographyProps>(({ theme }) => ({
+const MenuItemTitle = styled(Typography)(({ theme }) => ({
   fontWeight: 600,
   flex: "1 1 100%",
   overflow: "hidden",
@@ -71,47 +55,96 @@ const MenuItemTitle = styled(Typography)<TypographyProps>(({ theme }) => ({
   marginBottom: theme.spacing(0.75),
 }));
 
-// ** Styled component for the subtitle in MenuItems
-const MenuItemSubtitle = styled(Typography)<TypographyProps>({
+const MenuItemSubtitle = styled(Typography)({
   flex: "1 1 100%",
   overflow: "hidden",
   whiteSpace: "nowrap",
   textOverflow: "ellipsis",
 });
 
-const NotificationDropdown = () => {
-  // ** States
-  const [anchorEl, setAnchorEl] = useState<(EventTarget & Element) | null>(
-    null
+const ScrollWrapper = ({
+  children,
+  hidden,
+}: {
+  children: ReactNode;
+  hidden: boolean;
+}) => {
+  const styles = {
+    maxHeight: 349,
+    "& .MuiMenuItem-root:last-of-type": { border: 0 },
+  };
+
+  return hidden ? (
+    <Box sx={{ ...styles, overflowY: "auto", overflowX: "hidden" }}>
+      {children}
+    </Box>
+  ) : (
+    <PerfectScrollbar
+      options={{ wheelPropagation: false, suppressScrollX: true }}
+    >
+      <Box sx={styles}>{children}</Box>
+    </PerfectScrollbar>
   );
+};
 
-  // ** Hook
+// Sample mock notifications (can replace with API data later)
+const notifications = [
+  {
+    id: 1,
+    avatar: "/images/avatars/4.png",
+    title: "Congratulation Flora! 🎉",
+    subtitle: "Won the monthly best seller badge",
+    time: "Today",
+  },
+  {
+    id: 2,
+    avatarText: "VU",
+    title: "New user registered.",
+    subtitle: "5 hours ago",
+    time: "Yesterday",
+    bgColor: "primary.main",
+  },
+  {
+    id: 3,
+    avatar: "/images/avatars/5.png",
+    title: "New message received 👋🏻",
+    subtitle: "You have 10 unread messages",
+    time: "11 Aug",
+  },
+  {
+    id: 4,
+    image: "/images/misc/paypal.png",
+    title: "Paypal",
+    subtitle: "Received Payment",
+    time: "25 May",
+  },
+  {
+    id: 5,
+    avatar: "/images/avatars/3.png",
+    title: "Revised Order 📦",
+    subtitle: "New order revised from john",
+    time: "19 Mar",
+  },
+  {
+    id: 6,
+    image: "/images/misc/chart.png",
+    title: "Finance report has been generated",
+    subtitle: "25 hrs ago",
+    time: "27 Dec",
+  },
+];
+
+const NotificationDropdown = () => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const hidden = useMediaQuery((theme: Theme) => theme.breakpoints.down("lg"));
+  const open = Boolean(anchorEl);
 
-  const handleDropdownOpen = (event: SyntheticEvent) => {
-    setAnchorEl(event.currentTarget);
+  const handleOpen = (event: SyntheticEvent) => {
+    setAnchorEl(event.currentTarget as HTMLElement);
   };
 
-  const handleDropdownClose = () => {
+  const handleClose = () => {
     setAnchorEl(null);
-  };
-
-  const ScrollWrapper = ({ children }: { children: ReactNode }) => {
-    if (hidden) {
-      return (
-        <Box sx={{ ...styles, overflowY: "auto", overflowX: "hidden" }}>
-          {children}
-        </Box>
-      );
-    } else {
-      return (
-        <PerfectScrollbar
-          options={{ wheelPropagation: false, suppressScrollX: true }}
-        >
-          {children}
-        </PerfectScrollbar>
-      );
-    }
   };
 
   return (
@@ -119,16 +152,18 @@ const NotificationDropdown = () => {
       <IconButton
         color="inherit"
         aria-haspopup="true"
-        onClick={handleDropdownOpen}
+        onClick={handleOpen}
         aria-controls="customized-menu"
+        aria-expanded={open ? "true" : undefined}
+        aria-label="Open notifications"
       >
         <BellOutline />
       </IconButton>
       <Menu
         anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleDropdownClose}
-        disableScrollLock={true}
+        open={open}
+        onClose={handleClose}
+        disableScrollLock
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
       >
@@ -155,150 +190,54 @@ const NotificationDropdown = () => {
             />
           </Box>
         </MenuItem>
-        <ScrollWrapper>
-          <MenuItem onClick={handleDropdownClose}>
-            <Box sx={{ width: "100%", display: "flex", alignItems: "center" }}>
-              <Avatar alt="Flora" src="/images/avatars/4.png" />
+
+        <ScrollWrapper hidden={hidden}>
+          {notifications.map((noti) => (
+            <MenuItem key={noti.id} onClick={handleClose}>
               <Box
-                sx={{
-                  mx: 4,
-                  flex: "1 1",
-                  display: "flex",
-                  overflow: "hidden",
-                  flexDirection: "column",
-                }}
+                sx={{ width: "100%", display: "flex", alignItems: "center" }}
               >
-                <MenuItemTitle>Congratulation Flora! 🎉</MenuItemTitle>
-                <MenuItemSubtitle variant="body2">
-                  Won the monthly best seller badge
-                </MenuItemSubtitle>
+                {noti.image ? (
+                  <Image
+                    src={noti.image}
+                    width={38}
+                    height={38}
+                    alt={noti.title}
+                  />
+                ) : noti.avatar ? (
+                  <Avatar alt={noti.title} src={noti.avatar} />
+                ) : (
+                  <Avatar
+                    sx={{
+                      backgroundColor: noti.bgColor || "grey.500",
+                      color: "common.white",
+                    }}
+                  >
+                    {noti.avatarText}
+                  </Avatar>
+                )}
+                <Box
+                  sx={{
+                    mx: 4,
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    overflow: "hidden",
+                  }}
+                >
+                  <MenuItemTitle>{noti.title}</MenuItemTitle>
+                  <MenuItemSubtitle variant="body2">
+                    {noti.subtitle}
+                  </MenuItemSubtitle>
+                </Box>
+                <Typography variant="caption" sx={{ color: "text.disabled" }}>
+                  {noti.time}
+                </Typography>
               </Box>
-              <Typography variant="caption" sx={{ color: "text.disabled" }}>
-                Today
-              </Typography>
-            </Box>
-          </MenuItem>
-          <MenuItem onClick={handleDropdownClose}>
-            <Box sx={{ width: "100%", display: "flex", alignItems: "center" }}>
-              <Avatar
-                sx={{ color: "common.white", backgroundColor: "primary.main" }}
-              >
-                VU
-              </Avatar>
-              <Box
-                sx={{
-                  mx: 4,
-                  flex: "1 1",
-                  display: "flex",
-                  overflow: "hidden",
-                  flexDirection: "column",
-                }}
-              >
-                <MenuItemTitle>New user registered.</MenuItemTitle>
-                <MenuItemSubtitle variant="body2">5 hours ago</MenuItemSubtitle>
-              </Box>
-              <Typography variant="caption" sx={{ color: "text.disabled" }}>
-                Yesterday
-              </Typography>
-            </Box>
-          </MenuItem>
-          <MenuItem onClick={handleDropdownClose}>
-            <Box sx={{ width: "100%", display: "flex", alignItems: "center" }}>
-              <Avatar alt="message" src="/images/avatars/5.png" />
-              <Box
-                sx={{
-                  mx: 4,
-                  flex: "1 1",
-                  display: "flex",
-                  overflow: "hidden",
-                  flexDirection: "column",
-                }}
-              >
-                <MenuItemTitle>New message received 👋🏻</MenuItemTitle>
-                <MenuItemSubtitle variant="body2">
-                  You have 10 unread messages
-                </MenuItemSubtitle>
-              </Box>
-              <Typography variant="caption" sx={{ color: "text.disabled" }}>
-                11 Aug
-              </Typography>
-            </Box>
-          </MenuItem>
-          <MenuItem onClick={handleDropdownClose}>
-            <Box sx={{ width: "100%", display: "flex", alignItems: "center" }}>
-              <img
-                width={38}
-                height={38}
-                alt="paypal"
-                src="/images/misc/paypal.png"
-              />
-              <Box
-                sx={{
-                  mx: 4,
-                  flex: "1 1",
-                  display: "flex",
-                  overflow: "hidden",
-                  flexDirection: "column",
-                }}
-              >
-                <MenuItemTitle>Paypal</MenuItemTitle>
-                <MenuItemSubtitle variant="body2">
-                  Received Payment
-                </MenuItemSubtitle>
-              </Box>
-              <Typography variant="caption" sx={{ color: "text.disabled" }}>
-                25 May
-              </Typography>
-            </Box>
-          </MenuItem>
-          <MenuItem onClick={handleDropdownClose}>
-            <Box sx={{ width: "100%", display: "flex", alignItems: "center" }}>
-              <Avatar alt="order" src="/images/avatars/3.png" />
-              <Box
-                sx={{
-                  mx: 4,
-                  flex: "1 1",
-                  display: "flex",
-                  overflow: "hidden",
-                  flexDirection: "column",
-                }}
-              >
-                <MenuItemTitle>Revised Order 📦</MenuItemTitle>
-                <MenuItemSubtitle variant="body2">
-                  New order revised from john
-                </MenuItemSubtitle>
-              </Box>
-              <Typography variant="caption" sx={{ color: "text.disabled" }}>
-                19 Mar
-              </Typography>
-            </Box>
-          </MenuItem>
-          <MenuItem onClick={handleDropdownClose}>
-            <Box sx={{ width: "100%", display: "flex", alignItems: "center" }}>
-              <img
-                width={38}
-                height={38}
-                alt="chart"
-                src="/images/misc/chart.png"
-              />
-              <Box
-                sx={{
-                  mx: 4,
-                  flex: "1 1",
-                  display: "flex",
-                  overflow: "hidden",
-                  flexDirection: "column",
-                }}
-              >
-                <MenuItemTitle>Finance report has been generated</MenuItemTitle>
-                <MenuItemSubtitle variant="body2">25 hrs ago</MenuItemSubtitle>
-              </Box>
-              <Typography variant="caption" sx={{ color: "text.disabled" }}>
-                27 Dec
-              </Typography>
-            </Box>
-          </MenuItem>
+            </MenuItem>
+          ))}
         </ScrollWrapper>
+
         <MenuItem
           disableRipple
           sx={{
@@ -307,7 +246,7 @@ const NotificationDropdown = () => {
             borderTop: (theme) => `1px solid ${theme.palette.divider}`,
           }}
         >
-          <Button fullWidth variant="contained" onClick={handleDropdownClose}>
+          <Button fullWidth variant="contained" onClick={handleClose}>
             Read All Notifications
           </Button>
         </MenuItem>

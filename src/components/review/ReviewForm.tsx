@@ -1,22 +1,23 @@
 "use client";
 
-import React, { useState } from "react";
 import {
-  Rating,
-  TextField,
-  Button,
-  Stack,
-  Typography,
   Alert,
+  Button,
+  Paper,
+  Rating,
+  Stack,
+  TextField,
+  Typography,
   Box,
 } from "@mui/material";
+import { useState } from "react";
 
-interface ReviewFormProps {
+interface Props {
   productId: number;
   onSuccess: () => void;
 }
 
-export const ReviewForm = ({ productId, onSuccess }: ReviewFormProps) => {
+const ReviewForm = ({ productId, onSuccess }: Props) => {
   const [rating, setRating] = useState<number | null>(0);
   const [comment, setComment] = useState("");
   const [images, setImages] = useState<File[]>([]);
@@ -24,132 +25,93 @@ export const ReviewForm = ({ productId, onSuccess }: ReviewFormProps) => {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
-    const selectedFiles = Array.from(e.target.files);
-    if (selectedFiles.length + images.length > 3) {
-      setError("Chỉ được tải lên tối đa 3 ảnh.");
-      return;
+    const files = Array.from(e.target.files);
+    if (files.length > 3) {
+      setError("Chỉ được tải tối đa 3 ảnh.");
+    } else {
+      setImages(files);
+      setError(null);
     }
-    setImages((prev) => [...prev, ...selectedFiles]);
-    setError(null);
-  };
-
-  const handleRemoveImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
     const token = localStorage.getItem("accessToken");
     if (!token || !rating || !comment.trim()) {
-      setError("Vui lòng điền đầy đủ thông tin và đăng nhập.");
+      setError("Vui lòng nhập đầy đủ thông tin và đăng nhập.");
       return;
     }
 
     try {
       const formData = new FormData();
       formData.append("rating", String(rating));
-      formData.append("comment", comment);
+      formData.append("comment", comment.trim());
       images.forEach((img) => formData.append("imageReviews", img));
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reviews/${productId}`,
         {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
           body: formData,
         }
       );
+      if (!res.ok) throw new Error();
 
-      if (!res.ok) throw new Error("Lỗi khi gửi đánh giá");
-
-      // Reset form sau khi gửi
-      setRating(0);
       setComment("");
       setImages([]);
+      setRating(0);
       setError(null);
       onSuccess();
-    } catch (err) {
-      setError("Không thể gửi đánh giá. Vui lòng thử lại.");
-      console.log(err);
+    } catch {
+      setError("Không thể gửi đánh giá, vui lòng thử lại.");
     }
   };
 
   return (
-    <Stack spacing={2}>
-      <Typography fontWeight={600}>Gửi đánh giá của bạn</Typography>
-      {error && <Alert severity="error">{error}</Alert>}
-
-      <Rating
-        value={rating}
-        onChange={(_, newValue) => setRating(newValue)}
-        size="large"
-      />
-
-      <TextField
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        multiline
-        rows={3}
-        placeholder="Nội dung đánh giá"
-        fullWidth
-      />
-
-      <Box>
-        <input
-          id="image-upload"
-          type="file"
-          accept="image/*"
-          multiple
-          style={{ display: "none" }}
-          onChange={handleImageChange}
+    <Paper sx={{ p: 3, mb: 3, bgcolor: "#f9f9f9" }}>
+      <Stack spacing={2}>
+        {error && <Alert severity="error">{error}</Alert>}
+        <Rating value={rating} onChange={(_, v) => setRating(v)} />
+        <TextField
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          multiline
+          rows={3}
+          placeholder="Nội dung đánh giá"
         />
-        <label htmlFor="image-upload">
-          <Button variant="outlined" component="span">
-            Chọn tối đa 3 ảnh minh hoạ
-          </Button>
-        </label>
-      </Box>
-
-      {images.length > 0 && (
-        <Stack direction="row" spacing={2}>
-          {images.map((file, index) => (
-            <Box key={index} position="relative">
-              <Box
-                component="img"
-                src={URL.createObjectURL(file)}
-                alt={`preview-${index}`}
-                sx={{
-                  width: 80,
-                  height: 80,
-                  objectFit: "cover",
-                  borderRadius: 1,
-                  border: "1px solid #ccc",
-                }}
-              />
-              <Button
-                size="small"
-                onClick={() => handleRemoveImage(index)}
-                sx={{
-                  position: "absolute",
-                  top: -8,
-                  right: -8,
-                  minWidth: "unset",
-                  padding: "2px",
-                  fontSize: "0.75rem",
-                }}
-                color="error"
-              >
-                ✕
-              </Button>
-            </Box>
+        <Button component="label" variant="outlined">
+          Tải ảnh (tối đa 3)
+          <input
+            hidden
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleImageChange}
+          />
+        </Button>
+        <Typography fontSize={13}>{images.length} ảnh được chọn</Typography>
+        <Box display="flex" gap={1}>
+          {images.map((file, idx) => (
+            <Box
+              key={idx}
+              component="img"
+              src={URL.createObjectURL(file)}
+              sx={{
+                width: 60,
+                height: 60,
+                objectFit: "cover",
+                borderRadius: 1,
+                border: "1px solid #ccc",
+              }}
+            />
           ))}
-        </Stack>
-      )}
-
-      <Button variant="contained" color="primary" onClick={handleSubmit}>
-        Gửi đánh giá
-      </Button>
-    </Stack>
+        </Box>
+        <Button variant="contained" onClick={handleSubmit}>
+          Gửi đánh giá
+        </Button>
+      </Stack>
+    </Paper>
   );
 };
+
+export default ReviewForm;

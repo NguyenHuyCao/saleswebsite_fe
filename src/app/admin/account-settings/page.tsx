@@ -1,5 +1,14 @@
-import MultiStepAccountPage from "@/views/admin/account/MultiStepAccountPage";
+"use client";
 
-export default function AccountPage() {
-  return <MultiStepAccountPage />;
-}
+import dynamic from "next/dynamic";
+
+const ClientOnlyAccountPage = dynamic(
+  () => import("@/views/admin/account/ClientOnlyAccountPage"),
+  { ssr: false }
+);
+
+const AccountPage = () => {
+  return <ClientOnlyAccountPage />;
+};
+
+export default AccountPage;

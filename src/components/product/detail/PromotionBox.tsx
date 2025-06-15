@@ -5,7 +5,14 @@ import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { motion } from "framer-motion";
 
-export const PromotionBox = () => (
+// Danh sách ưu đãi
+const promotions = [
+  "Áp dụng Phiếu quà tặng/ Mã giảm giá theo ngành hàng.",
+  "Giảm giá 10% khi mua từ 5 sản phẩm trở lên.",
+  "Tặng 100.000₫ khi mua online tại HCM và một số khu vực khác.",
+];
+
+const PromotionBox = () => (
   <motion.div
     initial={{ opacity: 0, y: 24 }}
     animate={{ opacity: 1, y: 0 }}
@@ -38,11 +45,7 @@ export const PromotionBox = () => (
       </Stack>
 
       <Stack spacing={1}>
-        {[
-          "Áp dụng Phiếu quà tặng/ Mã giảm giá theo ngành hàng.",
-          "Giảm giá 10% khi mua từ 5 sản phẩm trở lên.",
-          "Tặng 100.000₫ khi mua online tại HCM và một số khu vực khác.",
-        ].map((text, index) => (
+        {promotions.map((text, index) => (
           <Typography
             key={index}
             variant="body2"
@@ -60,3 +63,5 @@ export const PromotionBox = () => (
     </Box>
   </motion.div>
 );
+
+export default PromotionBox;

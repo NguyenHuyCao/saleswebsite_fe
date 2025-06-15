@@ -9,241 +9,33 @@ import OtherToolsSection from "@/components/home/OtherToolsSection";
 import PromoBanner from "@/components/home/PromoBanner";
 import PromotionBanner from "@/components/home/PromotionBanner";
 import VoucherCardList from "@/components/home/VoucherCardList";
-import { cookies } from "next/headers";
 import FlashSaleShowcasePage from "@/components/promotion/FlashSaleShowcasePage";
 import WebsiteTrafficTracker from "@/components/common/traffic/WebsiteTrafficTracker";
 import BannerFeatureSection from "@/components/home/BannerFeatureSection";
 import { Container } from "@mui/material";
 
-export type Product = {
-  id: number;
-  title: string;
-  slug: string;
-  image: string;
-  price: number;
-  pricePerUnit: number;
-  originalPrice: number;
-  sale: boolean;
-  inStock: boolean;
-  label: string;
-  stockQuantity: number;
-  totalStock: number;
-  power: string;
-  fuelType: string;
-  engineType: string;
-  weight: number;
-  dimensions: string;
-  tankCapacity: number;
-  origin: string;
-  warrantyMonths: number;
-  createdAt: string;
-  createdBy?: string;
-  updatedAt?: string | null;
-  updatedBy?: string | null;
-  rating?: number;
-  status: string[];
-  favorite: boolean;
-};
-export type CategoryWithProducts = {
-  id: number;
-  name: string;
-  slug: string;
-  products: Product[];
-};
+import {
+  getBrands,
+  getCategories,
+  getCategoriesWithProducts,
+} from "@/lib/api/home-page";
 
-export type Category = {
-  title: string;
-  image: string;
-};
-
-export async function getNewProducts(): Promise<Product[]> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("accessToken")?.value;
-
-  let res;
-  if (token != null) {
-    res = await fetch(
-      `${process.env.BACKEND_URL}/api/v1/products?sort=createdAt,desc`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        cache: "no-store",
-      }
-    );
-  } else {
-    res = await fetch(
-      `${process.env.BACKEND_URL}/api/v1/products?sort=createdAt,desc`
-    );
-  }
-
-  const rawData = await res.json();
-  const productsFromApi = rawData?.data?.result || [];
-  const now = new Date();
-
-  return productsFromApi.map((item: any): Product => {
-    const createdAt = new Date(item.createdAt);
-    const isNew =
-      (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
-    return {
-      title: item.name,
-      price: item.pricePerUnit,
-      originalPrice: item.price,
-      image: item.imageAvt,
-      status: item.stockQuantity === 0 ? ["Hết hàng"] : isNew ? ["Mới"] : [],
-      sale: item.price !== item.pricePerUnit,
-      inStock: item.active === true,
-      label: item.active ? "Thêm vào giỏ" : "Hết hàng",
-      rating: item.rating || 0,
-      favorite: item.wishListUser || false,
-    };
-  });
-}
-
-export async function getBrands(): Promise<string[]> {
-  const res = await fetch(`${process.env.BACKEND_URL}/api/v1/brands`, {
-    headers: { "Content-Type": "application/json" },
-    cache: "no-store",
-  });
-
-  const raw = await res.json();
-  const result = raw?.data?.result || [];
-
-  return result.map((brand: any) => brand.logo);
-}
-
-export async function getCategories(): Promise<Category[]> {
-  const res = await fetch(`${process.env.BACKEND_URL}/api/v1/categories`, {
-    headers: { "Content-Type": "application/json" },
-    cache: "no-store",
-  });
-
-  const rawData = await res.json();
-  const categoriesFromApi = rawData?.data?.result || [];
-
-  const mappedCategories: Category[] = categoriesFromApi.map((item: any) => ({
-    title: item.name,
-    image: item.image,
-    slug: item.slug,
-  }));
-
-  return mappedCategories;
-}
-
-export type Promotion = {
-  id: number;
-  name: string;
-  code: string | null;
-  discount: number;
-  maxDiscount: number;
-  startDate: string;
-  endDate: string;
-  requiresCode: boolean;
-};
-
-export async function getPromotions(): Promise<Promotion[]> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("accessToken")?.value;
-  let res;
-
-  if (token != null) {
-    res = await fetch(`${process.env.BACKEND_URL}/api/v1/promotions`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      cache: "no-store",
-    });
-  } else {
-    res = await fetch(`${process.env.BACKEND_URL}/api/v1/promotions`, {
-      headers: { "Content-Type": "application/json" },
-      cache: "no-store",
-    });
-  }
-
-  const rawData = await res.json();
-  return rawData?.data || [];
-}
-
-export async function getCategoriesWithProducts(): Promise<
-  CategoryWithProducts[]
-> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("accessToken")?.value;
-  let res;
-  if (token != null) {
-    res = await fetch(`${process.env.BACKEND_URL}/api/v1/categories`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      cache: "no-store",
-    });
-  } else {
-    res = await fetch(`${process.env.BACKEND_URL}/api/v1/categories`);
-  }
-
-  console.log("token", token);
-  const raw = await res.json();
-  const data = raw?.data?.result || [];
-  const now = new Date();
-
-  return data.map((category: any) => ({
-    id: category.id,
-    name: category.name,
-    slug: category.slug,
-    products: (category.products || [])
-      .slice(0, 5)
-      .map((item: any): Product => {
-        const createdAt = new Date(item.createdAt);
-        const isNew =
-          (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
-        return {
-          id: item.id,
-          title: item.name,
-          slug: item.slug,
-          image: item.imageAvt,
-          price: item.pricePerUnit,
-          pricePerUnit: item.pricePerUnit,
-          originalPrice: item.price,
-          sale: item.price !== item.pricePerUnit,
-          inStock: item.active === true,
-          label: item.active ? "Thêm vào giỏ" : "Hết hàng",
-          stockQuantity: item.stockQuantity,
-          totalStock: item.totalStock,
-          power: item.power,
-          fuelType: item.fuelType,
-          engineType: item.engineType,
-          weight: item.weight,
-          dimensions: item.dimensions,
-          tankCapacity: item.tankCapacity,
-          origin: item.origin,
-          warrantyMonths: item.warrantyMonths,
-          createdAt: item.createdAt,
-          createdBy: item.createdBy,
-          updatedAt: item.updatedAt,
-          updatedBy: item.updatedBy,
-          rating: item.rating || 0,
-          status:
-            item.stockQuantity === 0 ? ["Hết hàng"] : isNew ? ["Mới"] : [],
-          favorite: item.wishListUser,
-        };
-      }),
-  }));
-}
+// Đảm bảo global.d.ts đã có:
+// export type CategoryWithProducts = {
+//   id: number;
+//   name: string;
+//   slug: string;
+//   products: Product[];
+// };
 
 export default async function HomePage() {
-  const [newProducts, categories, categoriesWithProducts, brands, promotions] =
-    await Promise.all([
-      getNewProducts(),
-      getCategories(),
-      getCategoriesWithProducts(),
-      getBrands(),
-      getPromotions(),
-    ]);
+  const [categories, categoriesWithProducts, brands] = await Promise.all([
+    getCategories(),
+    getCategoriesWithProducts(),
+    getBrands(),
+  ]);
 
-  const flashPromotions = promotions.filter((promo) => !promo.requiresCode);
+  // const flashPromotions = promotions.filter((promo) => !promo.requiresCode);
 
   return (
     <>

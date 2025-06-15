@@ -9,6 +9,7 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 
 interface SubCategory {
   title: string;
@@ -40,14 +41,23 @@ const CategoryMegaMenu = ({ data }: Props) => {
   const theme = useTheme();
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
 
+  // Optional: throttle hover delay for better UX
+  const handleMouseEnter = (index: number) => {
+    setHoveredIndex(index);
+  };
+
+  const handleMouseLeave = () => {
+    setTimeout(() => setHoveredIndex(null), 120);
+  };
+
   return (
     <Box display="flex" position="relative" zIndex={100}>
-      {/* Left column - Main categories */}
+      {/* Left: Main Categories */}
       <Box sx={{ bgcolor: "#000", color: "#fff", width: 250 }}>
         {data.map((category, index) => (
           <Box
             key={index}
-            onMouseEnter={() => setHoveredIndex(index)}
+            onMouseEnter={() => handleMouseEnter(index)}
             sx={{
               display: "flex",
               alignItems: "center",
@@ -64,7 +74,7 @@ const CategoryMegaMenu = ({ data }: Props) => {
             }}
           >
             <Box display="flex" alignItems="center" gap={1}>
-              <img
+              <Image
                 src={category.icon}
                 alt={category.label}
                 width={20}
@@ -77,7 +87,7 @@ const CategoryMegaMenu = ({ data }: Props) => {
         ))}
       </Box>
 
-      {/* Right column - Submenu */}
+      {/* Right: Submenu */}
       <AnimatePresence>
         {hoveredIndex !== null && (
           <motion.div
@@ -86,7 +96,7 @@ const CategoryMegaMenu = ({ data }: Props) => {
             animate={{ opacity: 1, scale: 1, x: 0 }}
             exit={{ opacity: 0, scale: 0.95, x: 10 }}
             transition={{ duration: 0.2 }}
-            onMouseLeave={() => setTimeout(() => setHoveredIndex(null), 100)}
+            onMouseLeave={handleMouseLeave}
             style={{
               position: "absolute",
               left: 250,
@@ -150,22 +160,18 @@ const CategoryMegaMenu = ({ data }: Props) => {
               </Box>
             ))}
 
-            {/* Optional banner */}
+            {/* Optional Banner */}
             {data[hoveredIndex].banner && (
               <Box sx={{ maxWidth: 260, flexShrink: 0 }}>
-                <Box
-                  sx={{
-                    overflow: "hidden",
-                    borderRadius: 2,
-                    mb: 1.5,
-                  }}
-                >
-                  <img
+                <Box sx={{ overflow: "hidden", borderRadius: 2, mb: 1.5 }}>
+                  <Image
                     src={data[hoveredIndex].banner.image}
                     alt="promo"
+                    width={260}
+                    height={160}
                     style={{
                       width: "100%",
-                      display: "block",
+                      height: "auto",
                       borderRadius: 8,
                       transition: "transform 0.3s ease",
                     }}

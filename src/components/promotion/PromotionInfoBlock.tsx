@@ -3,7 +3,6 @@
 import {
   Box,
   Typography,
-  Stack,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -13,13 +12,6 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { motion } from "framer-motion";
 import GuaranteeSection from "./GuaranteeSection";
-
-const guarantees = [
-  "Giao hàng siêu tốc 2–4h tại TP.HCM",
-  "Bảo hành chính hãng 12 tháng",
-  "Tư vấn kỹ thuật miễn phí",
-  "Tặng kèm phụ kiện bảo dưỡng",
-];
 
 const faqs = [
   {

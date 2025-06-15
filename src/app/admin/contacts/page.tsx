@@ -1,7 +1,5 @@
-import ContactTable from "@/views/admin/contact/ContactTable";
+import ClientOnlyContactPage from "@/views/admin/contact/ClientOnlyContactPage";
 
-const ContactsPage = () => {
-  return <ContactTable />;
-};
-
-export default ContactsPage;
+export default function ContactsPage() {
+  return <ClientOnlyContactPage />;
+}

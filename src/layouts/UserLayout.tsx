@@ -1,76 +1,50 @@
 "use client";
-import { ReactNode } from "react";
 
-// ** MUI Imports
-import Box from "@mui/material/Box";
+import { ReactNode } from "react";
+import { Box, Container, useMediaQuery } from "@mui/material";
 import { Theme } from "@mui/material/styles";
-import useMediaQuery from "@mui/material/useMediaQuery";
 
 // ** Layout Imports
-// !Do not remove this Layout import
 import VerticalLayout from "src/@core/layouts/VerticalLayout";
 
 // ** Navigation Imports
 import VerticalNavItems from "src/navigation/vertical";
 
-// ** Component Import
+// ** Component Imports
 import VerticalAppBarContent from "./components/vertical/AppBarContent";
 
 // ** Hook Import
 import { useSettings } from "src/@core/hooks/useSettings";
-import { Container } from "@mui/material";
 
 interface Props {
   children: ReactNode;
 }
 
 const UserLayout = ({ children }: Props) => {
-  // ** Hooks
+  // ** Settings Hook
   const { settings, saveSettings } = useSettings();
 
-  /**
-   *  The below variable will hide the current layout menu at given screen size.
-   *  The menu will be accessible from the Hamburger icon only (Vertical Overlay Menu).
-   *  You can change the screen size from which you want to hide the current layout menu.
-   *  Please refer useMediaQuery() hook: https://mui.com/components/use-media-query/,
-   *  to know more about what values can be passed to this hook.
-   *  ! Do not change this value unless you know what you are doing. It can break the template.
-   */
+  // ** Responsive: hide nav on smaller screens
   const hidden = useMediaQuery((theme: Theme) => theme.breakpoints.down("lg"));
 
-  const UpgradeToProImg = () => {
-    return (
-      <Box sx={{ mx: "auto" }}>
-        {/* <a
-          target="_blank"
-          rel="noreferrer"
-          href="https://themeselection.com/products/materio-mui-react-nextjs-admin-template/"
-        >
-          <img
-            width={230}
-            alt="upgrade to premium"
-            src={`/images/misc/upgrade-banner-${settings.mode}.png`}
-          />
-        </a> */}
-      </Box>
-    );
-  };
+  // ** Optional promotion/image placeholder (currently unused)
+  const UpgradeToProImg = () => (
+    <Box sx={{ mx: "auto" }}>{/* Optional content like upgrade banner */}</Box>
+  );
 
   return (
     <VerticalLayout
       hidden={hidden}
       settings={settings}
       saveSettings={saveSettings}
-      verticalNavItems={VerticalNavItems()} // Navigation Items
+      verticalNavItems={VerticalNavItems()}
       afterVerticalNavMenuContent={UpgradeToProImg}
-      verticalAppBarContent={(
-        props // AppBar Content
-      ) => (
+      verticalAppBarContent={({ toggleNavVisibility }) => (
         <VerticalAppBarContent
           hidden={hidden}
           settings={settings}
           saveSettings={saveSettings}
-          toggleNavVisibility={props.toggleNavVisibility}
+          toggleNavVisibility={toggleNavVisibility}
         />
       )}
     >

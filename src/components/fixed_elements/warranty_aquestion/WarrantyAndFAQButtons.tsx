@@ -13,6 +13,18 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
 
+// Định nghĩa kiểu chuẩn cho mỗi button
+type ButtonItem = {
+  title: string;
+  src?: string;
+  color: string;
+  hover: string;
+  route?: string;
+  icon?: React.ReactNode;
+  onClick?: () => void;
+  showOnlyOnScroll?: boolean;
+};
+
 const WarrantyAndFAQButtons = () => {
   const router = useRouter();
   const [visible, setVisible] = useState(false);
@@ -33,8 +45,8 @@ const WarrantyAndFAQButtons = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const buttons = useMemo(() => {
-    const baseButtons = [
+  const buttons: ButtonItem[] = useMemo(() => {
+    const baseButtons: ButtonItem[] = [
       {
         title: "Câu hỏi thường gặp",
         src: "https://img.icons8.com/ios-filled/50/ffffff/help--v1.png",
@@ -128,7 +140,7 @@ const WarrantyAndFAQButtons = () => {
                     btn.icon
                   ) : (
                     <Image
-                      src={btn.src}
+                      src={btn.src!}
                       alt={btn.title}
                       width={iconSize}
                       height={iconSize}

@@ -11,12 +11,11 @@ import {
   styled,
 } from "@mui/material";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import BlankLayout from "src/@core/layouts/BlankLayout";
 
-// Ảnh minh họa đã xoá nền
-const imagePath = "/images/pages/unauthozied.png";
+// ========== Styled Components ==========
 
-// Wrapper full màn hình, không scroll
 const Wrapper = styled(Box)(({ theme }) => ({
   height: "100vh",
   backgroundColor: "#FFF8E1",
@@ -27,7 +26,6 @@ const Wrapper = styled(Box)(({ theme }) => ({
   overflow: "hidden",
 }));
 
-// KHÔNG còn khung trắng
 const BoxWrapper = styled(Box)(({ theme }) => ({
   width: "100%",
   maxWidth: 600,
@@ -38,16 +36,16 @@ const BoxWrapper = styled(Box)(({ theme }) => ({
   },
 }));
 
-const Img = styled(motion.img)(({ theme }) => ({
+const MotionImageWrapper = styled(motion.div)(({ theme }) => ({
   width: "100%",
-  height: "auto",
   maxHeight: 280,
-  objectFit: "contain",
   margin: theme.spacing(4, 0),
   [theme.breakpoints.down("sm")]: {
     maxHeight: 220,
   },
 }));
+
+// ========== Main Component ==========
 
 const Unauthorized = () => {
   const theme = useTheme();
@@ -86,17 +84,23 @@ const Unauthorized = () => {
             tục.
           </Typography>
 
-          <Img
-            src={imagePath}
-            alt="Minh họa không được phép truy cập"
-            loading="lazy"
+          <MotionImageWrapper
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-          />
+          >
+            <Image
+              src="/images/pages/unauthozied.png"
+              alt="Minh họa không được phép truy cập"
+              width={500}
+              height={280}
+              style={{ width: "100%", height: "auto", objectFit: "contain" }}
+              priority={false}
+            />
+          </MotionImageWrapper>
 
           <Box display="flex" gap={2} justifyContent="center" flexWrap="wrap">
-            <Link href="/" style={{ textDecoration: "none" }}>
+            <Link href="/" passHref legacyBehavior>
               <Button
                 variant="contained"
                 sx={{
@@ -115,7 +119,7 @@ const Unauthorized = () => {
               </Button>
             </Link>
 
-            <Link href="/login" style={{ textDecoration: "none" }}>
+            <Link href="/login" passHref legacyBehavior>
               <Button
                 variant="outlined"
                 sx={{

@@ -1,10 +1,8 @@
-// /product/detail/page.tsx
 import ProductDetailPage from "@/components/product/detail/ProductDetailPage";
 import { Container } from "@mui/material";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import PageViewTracker from "@/components/common/traffic/PageViewTracker";
-// import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
 import ScrollPositionManager from "@/components/common/ScrollResetOnLoad";
 
 export default async function DetailProduct({ searchParams }: any) {
@@ -14,14 +12,10 @@ export default async function DetailProduct({ searchParams }: any) {
   const cookieStore = await cookies();
   const token = cookieStore.get("accessToken")?.value;
 
-  const headers = token
-    ? {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      }
-    : {
-        "Content-Type": "application/json",
-      };
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
 
   const productRes = await fetch(
     `${process.env.BACKEND_URL}/api/v1/products/${slug}`,
@@ -42,7 +36,6 @@ export default async function DetailProduct({ searchParams }: any) {
     <Container>
       <PageViewTracker />
       <ProductDetailPage product={product} category={category} />
-
       <ScrollPositionManager />
     </Container>
   );

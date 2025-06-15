@@ -68,14 +68,10 @@ const MainCard = forwardRef<HTMLDivElement, MainCardProps>(
           borderRadius: 1,
           borderColor: theme.palette.grey[800],
           boxShadow:
-            boxShadow && !border
-              ? shadow || theme?.customShadows?.z1
-              : "inherit",
+            boxShadow && !border ? shadow || theme.shadows[1] : "inherit",
           ":hover": {
             boxShadow:
-              boxShadow && !border
-                ? shadow || theme?.customShadows?.z1
-                : "inherit",
+              boxShadow && !border ? shadow || theme.shadows[1] : "inherit",
           },
           ...(modal && {
             top: "50%",
@@ -109,11 +105,10 @@ const MainCard = forwardRef<HTMLDivElement, MainCardProps>(
         ) : (
           children
         )}
-
-        {/* Optional: Code highlighter section in the future */}
       </Card>
     );
   }
 );
 
+MainCard.displayName = "MainCard";
 export default MainCard;

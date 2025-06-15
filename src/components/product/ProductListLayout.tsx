@@ -8,15 +8,14 @@ import {
   Grid,
   Pagination,
   InputBase,
-  useMediaQuery,
   CircularProgress,
 } from "@mui/material";
-import { useRouter, useSearchParams } from "next/navigation";
-import ProductCard, { Product } from "../product/ProductCard";
+import { useSearchParams } from "next/navigation";
+import ProductCard from "../product/ProductCard";
 import CategorySidebar from "./CategorySidebar";
 import ProductFilterPanel from "./ProductFilterPanel";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, AppState } from "@/redux/store";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
 
 const ITEMS_PER_PAGE = 8;
@@ -27,15 +26,8 @@ interface Props {
 }
 
 export default function ProductListLayout({ categories, brands }: Props) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useDispatch<AppDispatch>();
-
-  const wishlistItems = useSelector((state: AppState) => state.wishlist.result);
-  const favoriteIdSet = useMemo(
-    () => new Set(wishlistItems.map((i) => i.id)),
-    [wishlistItems]
-  );
 
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
@@ -86,24 +78,40 @@ export default function ProductListLayout({ categories, brands }: Props) {
         const createdAt = new Date(item.createdAt);
         const isNew =
           (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
-        const isHot = item.totalStock - item.stockQuantity > 10;
 
         return {
           id: item.id,
-          title: item.name,
-          price: item.pricePerUnit,
-          originalPrice: item.price,
-          image: item.imageAvt,
-          status: [...(isNew ? ["Mới"] : []), ...(isHot ? ["Bán chạy"] : [])],
-          sale: item.pricePerUnit < item.price,
-          inStock: item.active,
-          label: item.active ? "Thêm vào giỏ hàng" : "Hết hàng",
-          totalStock: item.totalStock,
-          stockQuantity: item.stockQuantity,
-          createdAt: item.createdAt,
-          rating: item.rating,
+          name: item.name,
           slug: item.slug,
-          isFavorite: item.wishListUser === true,
+          imageAvt: item.imageAvt,
+          imageDetail1: item.imageDetail1 || "",
+          imageDetail2: item.imageDetail2 || "",
+          imageDetail3: item.imageDetail3 || "",
+          price: item.price,
+          pricePerUnit: item.pricePerUnit,
+          originalPrice: item.price,
+          sale: item.price !== item.pricePerUnit,
+          inStock: item.active === true,
+          label: item.active ? "Thêm vào giỏ hàng" : "Hết hàng",
+          description: item.description || "",
+          stockQuantity: item.stockQuantity,
+          totalStock: item.totalStock,
+          power: item.power || "N/A",
+          fuelType: item.fuelType || "N/A",
+          engineType: item.engineType || "N/A",
+          weight: item.weight || 0,
+          dimensions: item.dimensions || "",
+          tankCapacity: item.tankCapacity || 0,
+          origin: item.origin || "Không rõ",
+          warrantyMonths: item.warrantyMonths || 0,
+          createdAt: item.createdAt,
+          createdBy: item.createdBy || "",
+          updatedAt: item.updatedAt || null,
+          updatedBy: item.updatedBy || "",
+          rating: item.rating || 0,
+          status:
+            item.stockQuantity === 0 ? ["Hết hàng"] : isNew ? ["Mới"] : [],
+          favorite: item.wishListUser === true,
         };
       });
 
@@ -116,29 +124,9 @@ export default function ProductListLayout({ categories, brands }: Props) {
     }
   };
 
-  const handleToggleFavorite = async (productId: number) => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return;
-
-    try {
-      const formData = new FormData();
-      formData.append("productId", String(productId));
-
-      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/wish_list`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-
-      dispatch(fetchWishlist());
-    } catch (err) {
-      console.error("Lỗi yêu thích:", err);
-    }
-  };
-
   const filteredProducts = useMemo(() => {
     return products
-      .filter((p) => toSlug(p.title).includes(toSlug(search)))
+      .filter((p) => toSlug(p.name).includes(toSlug(search)))
       .sort((a, b) => {
         if (sortType === "newest")
           return (
@@ -227,11 +215,7 @@ export default function ProductListLayout({ categories, brands }: Props) {
                   justifyContent="center"
                 >
                   <Box sx={{ width: "100%", maxWidth: 240 }}>
-                    <ProductCard
-                      product={item}
-                      isFavorite={favoriteIdSet.has(item.id)}
-                      onToggleFavorite={() => handleToggleFavorite(item.id)}
-                    />
+                    <ProductCard product={item} />
                   </Box>
                 </Grid>
               ))}

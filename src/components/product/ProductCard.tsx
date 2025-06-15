@@ -26,24 +26,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
 import type { AppDispatch, AppState } from "@/redux/store";
 
-export type Product = {
-  id: number;
-  title: string;
-  price: number;
-  originalPrice: number;
-  image: string;
-  status: string[];
-  sale: boolean;
-  inStock: boolean;
-  label: string;
-  totalStock: number;
-  stockQuantity: number;
-  createdAt: string;
-  rating?: number;
-  slug: string;
-  isFavorite: boolean;
-};
-
 type Props = {
   product: Product;
   mutateKey?: string;
@@ -238,8 +220,8 @@ const ProductCard = ({ product, mutateKey }: Props) => {
               </Box>
             )}
             <Image
-              src={product.image}
-              alt={product.title}
+              src={product.imageAvt}
+              alt={product.name}
               fill
               sizes="(max-width: 600px) 100vw, 240px"
               style={{ objectFit: "cover", transition: "transform 0.3s ease" }}
@@ -277,7 +259,7 @@ const ProductCard = ({ product, mutateKey }: Props) => {
               minHeight: 36,
             }}
           >
-            {product.title}
+            {product.name}
           </Typography>
 
           <Stack direction="row" spacing={1} mt={0.5} alignItems="center">

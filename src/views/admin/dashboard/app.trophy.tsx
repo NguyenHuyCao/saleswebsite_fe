@@ -19,6 +19,7 @@ import { styled, useTheme } from "@mui/material/styles";
 import CloseIcon from "@mui/icons-material/Close";
 import { useEffect, useState } from "react";
 import ReactApexChart from "@/wrapper/ApexChart";
+import { ApexOptions } from "apexcharts";
 
 // Styled
 const TriangleImg = styled("img")({
@@ -56,6 +57,25 @@ const Trophy = () => {
   const [chartMode, setChartMode] = useState<"revenue" | "quantity">("revenue");
   const isFullScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
+  const chartOptions: ApexOptions = {
+    chart: {
+      type: "bar", // ✅ đây là 'bar', phù hợp với type
+      toolbar: { show: false },
+    },
+    plotOptions: {
+      bar: { horizontal: false, columnWidth: "45%", borderRadius: 6 },
+    },
+    dataLabels: { enabled: false },
+    xaxis: {
+      categories: ["Tháng trước", "Tháng này"],
+    },
+    tooltip: {
+      y: {
+        formatter: (val: number) => val.toLocaleString("vi-VN"),
+      },
+    },
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -79,25 +99,6 @@ const Trophy = () => {
 
     fetchData();
   }, []);
-
-  const chartOptions = {
-    chart: {
-      type: "bar",
-      toolbar: { show: false },
-    },
-    plotOptions: {
-      bar: { horizontal: false, columnWidth: "45%", borderRadius: 6 },
-    },
-    dataLabels: { enabled: false },
-    xaxis: {
-      categories: ["Tháng trước", "Tháng này"],
-    },
-    tooltip: {
-      y: {
-        formatter: (val: number) => val.toLocaleString("vi-VN"),
-      },
-    },
-  };
 
   const chartSeries =
     product && chartMode === "revenue"

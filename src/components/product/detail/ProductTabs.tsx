@@ -9,25 +9,8 @@ import {
   Fade,
   Divider,
 } from "@mui/material";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-
-export type Product = {
-  id: number;
-  description: string;
-  imageAvt: string;
-  name: string;
-  slug: string;
-  price: number;
-  pricePerUnit: number;
-};
-
-interface Category {
-  id: number;
-  name: string;
-  slug: string;
-  products: Product[];
-}
 
 interface ProductTabsProps {
   product: Product;
@@ -40,14 +23,119 @@ const tabLabels = [
   "Chính sách bảo hành và bảo trì",
 ];
 
-export const ProductTabs = ({ product, category }: ProductTabsProps) => {
+const ProductTabs = ({ product, category }: ProductTabsProps) => {
   const [value, setValue] = useState(0);
-  const suggestions =
-    category?.products.filter((p) => p.slug !== product.slug).slice(0, 4) || [];
+
+  const suggestions = useMemo(
+    () =>
+      category?.products.filter((p) => p.slug !== product.slug).slice(0, 4) ||
+      [],
+    [category, product.slug]
+  );
+
+  const renderTabContent = (value: number) => {
+    switch (value) {
+      case 0:
+        return (
+          <Typography paragraph>
+            {product.description || "Chưa có mô tả cho sản phẩm này."}
+          </Typography>
+        );
+      case 1:
+        return (
+          <Box>
+            {Array.from({ length: 5 }, (_, i) => (
+              <Typography paragraph key={i}>
+                <strong>Bước {i + 1}:</strong> Hướng dẫn thực hiện giao dịch mua
+                sản phẩm theo quy trình tiêu chuẩn.
+              </Typography>
+            ))}
+          </Box>
+        );
+      case 2:
+        return (
+          <Box>
+            <Typography paragraph fontWeight={600}>
+              1. BẢO HÀNH
+            </Typography>
+            <Typography paragraph>
+              Sản phẩm được bảo hành miễn phí nếu còn trong thời hạn bảo hành kể
+              từ ngày giao hàng.
+            </Typography>
+            <Typography paragraph fontWeight={600}>
+              1.2 Trường hợp không được bảo hành:
+            </Typography>
+            <Typography paragraph>
+              - Hết hạn hoặc mất phiếu bảo hành.
+            </Typography>
+            <Typography paragraph fontWeight={600}>
+              2. BẢO TRÌ
+            </Typography>
+            <Typography paragraph>
+              Vệ sinh, sửa chữa nhỏ miễn phí theo chính sách riêng của chúng
+              tôi.
+            </Typography>
+          </Box>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const SuggestedProductItem = ({
+    item,
+    index,
+  }: {
+    item: Product;
+    index: number;
+  }) => (
+    <motion.div
+      key={item.id}
+      initial={{ opacity: 0, x: 10 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.1 * index }}
+    >
+      <Box
+        display="flex"
+        alignItems="center"
+        mb={2}
+        sx={{
+          transition: "all 0.3s ease",
+          "&:hover": {
+            transform: "translateX(4px)",
+          },
+        }}
+      >
+        <Box
+          component="img"
+          src={item.imageAvt || "/images/product/default.jpg"}
+          alt={item.name}
+          sx={{
+            width: 60,
+            height: 60,
+            objectFit: "cover",
+            borderRadius: 1,
+            mr: 2,
+            border: "1px solid #eee",
+          }}
+        />
+        <Box>
+          <Typography variant="body2" noWrap fontWeight={500}>
+            {item.name}
+          </Typography>
+          <Typography fontWeight={700} color="error.main" variant="body2">
+            {item.price.toLocaleString()}₫
+          </Typography>
+        </Box>
+      </Box>
+      {index !== suggestions.length - 1 && <Divider />}
+    </motion.div>
+  );
 
   return (
     <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>
       <Box display="flex" flexDirection={{ xs: "column", md: "row" }} gap={4}>
+        {/* Left: Tabs and content */}
         <Box flex={1}>
           <Tabs
             value={value}
@@ -74,51 +162,11 @@ export const ProductTabs = ({ product, category }: ProductTabsProps) => {
           </Tabs>
 
           <Fade in timeout={400}>
-            <Box mt={2}>
-              {value === 0 && (
-                <Typography paragraph>
-                  {product.description || "Chưa có mô tả cho sản phẩm này."}
-                </Typography>
-              )}
-              {value === 1 && (
-                <Box>
-                  {[1, 2, 3, 4, 5].map((step) => (
-                    <Typography paragraph key={step}>
-                      <strong>Bước {step}:</strong> Hướng dẫn thực hiện giao
-                      dịch mua sản phẩm theo quy trình tiêu chuẩn.
-                    </Typography>
-                  ))}
-                </Box>
-              )}
-              {value === 2 && (
-                <Box>
-                  <Typography paragraph fontWeight={600}>
-                    1. BẢO HÀNH
-                  </Typography>
-                  <Typography paragraph>
-                    Sản phẩm được bảo hành miễn phí nếu còn trong thời hạn bảo
-                    hành kể từ ngày giao hàng.
-                  </Typography>
-                  <Typography paragraph fontWeight={600}>
-                    1.2 Trường hợp không được bảo hành:
-                  </Typography>
-                  <Typography paragraph>
-                    - Hết hạn hoặc mất phiếu bảo hành.
-                  </Typography>
-                  <Typography paragraph fontWeight={600}>
-                    2. BẢO TRÌ
-                  </Typography>
-                  <Typography paragraph>
-                    Vệ sinh, sửa chữa nhỏ miễn phí theo chính sách riêng của
-                    chúng tôi.
-                  </Typography>
-                </Box>
-              )}
-            </Box>
+            <Box mt={2}>{renderTabContent(value)}</Box>
           </Fade>
         </Box>
 
-        {/* Gợi ý sản phẩm */}
+        {/* Right: Suggestions */}
         <Box
           sx={{
             width: 300,
@@ -141,54 +189,12 @@ export const ProductTabs = ({ product, category }: ProductTabsProps) => {
           </Typography>
 
           {suggestions.map((item, index) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 * index }}
-            >
-              <Box
-                display="flex"
-                alignItems="center"
-                mb={2}
-                sx={{
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    transform: "translateX(4px)",
-                  },
-                }}
-              >
-                <Box
-                  component="img"
-                  src={item.imageAvt || "/images/product/default.jpg"}
-                  alt={item.name}
-                  sx={{
-                    width: 60,
-                    height: 60,
-                    objectFit: "cover",
-                    borderRadius: 1,
-                    mr: 2,
-                    border: "1px solid #eee",
-                  }}
-                />
-                <Box>
-                  <Typography variant="body2" noWrap fontWeight={500}>
-                    {item.name}
-                  </Typography>
-                  <Typography
-                    fontWeight={700}
-                    color="error.main"
-                    variant="body2"
-                  >
-                    {item.price.toLocaleString()}₫
-                  </Typography>
-                </Box>
-              </Box>
-              {index !== suggestions.length - 1 && <Divider />}
-            </motion.div>
+            <SuggestedProductItem key={item.id} item={item} index={index} />
           ))}
         </Box>
       </Box>
     </Paper>
   );
 };
+
+export default ProductTabs;

@@ -11,10 +11,12 @@ import {
   styled,
 } from "@mui/material";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import BlankLayout from "src/@core/layouts/BlankLayout";
 import FooterIllustrations from "@/views/misc/FooterIllustrations";
 
-// Box gói nội dung chính – KHÔNG còn khung trắng
+// ==================== Styled Components ==================== //
+
 const BoxWrapper = styled(Box)(({ theme }) => ({
   width: "100%",
   maxWidth: 600,
@@ -26,18 +28,15 @@ const BoxWrapper = styled(Box)(({ theme }) => ({
   },
 }));
 
-// Ảnh minh họa
-const Img = styled(motion.img)(({ theme }) => ({
+const MotionImage = styled(motion.div)(({ theme }) => ({
   width: "100%",
   maxHeight: 450,
-  objectFit: "contain",
   margin: `${theme.spacing(6)} auto`,
   [theme.breakpoints.down("sm")]: {
     maxHeight: 320,
   },
 }));
 
-// Hình cây trang trí
 const TreeIllustration = styled("img")(({ theme }) => ({
   position: "absolute",
   left: 0,
@@ -51,6 +50,8 @@ const TreeIllustration = styled("img")(({ theme }) => ({
     width: 120,
   },
 }));
+
+// ==================== Main Component ==================== //
 
 const Error500 = () => {
   const theme = useTheme();
@@ -77,14 +78,6 @@ const Error500 = () => {
         transition={{ duration: 0.5 }}
       >
         <BoxWrapper>
-          {/* <Typography
-            variant={isMobile ? "h3" : "h1"}
-            color="error"
-            fontWeight="bold"
-          >
-            500
-          </Typography> */}
-
           <Typography
             variant="h5"
             sx={{
@@ -101,35 +94,42 @@ const Error500 = () => {
             trang chủ.
           </Typography>
 
-          <Img
-            src="/images/pages/moto.png"
-            alt="Hình minh họa lỗi máy chủ"
-            loading="lazy"
+          <MotionImage
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-          />
+          >
+            <Image
+              src="/images/pages/moto.png"
+              alt="Hình minh họa lỗi máy chủ"
+              width={500}
+              height={300}
+              style={{ width: "100%", height: "auto", objectFit: "contain" }}
+              priority={false}
+            />
+          </MotionImage>
 
-          <Link href="/" style={{ textDecoration: "none" }}>
-            <Button
-              variant="contained"
-              size="large"
-              sx={{
-                mt: 2,
-                px: 6,
-                py: 1.5,
-                bgcolor: "#FFB700",
-                color: "#000",
-                fontWeight: "bold",
-                "&:hover": {
-                  bgcolor: "#D35300",
-                  color: "#fff",
-                },
-              }}
-            >
-              Quay về trang chủ
-            </Button>
-          </Link>
+          <Button
+            component={Link}
+            href="/"
+            variant="contained"
+            size="large"
+            sx={{
+              mt: 2,
+              px: 6,
+              py: 1.5,
+              bgcolor: "#FFB700",
+              color: "#000",
+              fontWeight: "bold",
+              textTransform: "none",
+              "&:hover": {
+                bgcolor: "#D35300",
+                color: "#fff",
+              },
+            }}
+          >
+            Quay về trang chủ
+          </Button>
         </BoxWrapper>
       </motion.div>
 
@@ -146,6 +146,7 @@ const Error500 = () => {
   );
 };
 
+// Nếu bạn dùng hệ thống layout ngoài app router
 Error500.getLayout = (page: ReactNode) => <BlankLayout>{page}</BlankLayout>;
 
 export default Error500;

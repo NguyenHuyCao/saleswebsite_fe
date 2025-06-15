@@ -64,7 +64,7 @@ const ReportChart = () => {
               textAnchor: "start",
               transform: "translate(-30, 0)",
             },
-            tickFormat: (val: number) => `${val}M`,
+            valueFormatter: (val: number) => `${val}M`,
           },
         ]}
         series={[
@@ -87,7 +87,14 @@ const ReportChart = () => {
             showMark: true,
           },
         ]}
-        slotProps={{ legend: { hidden: false } }}
+        slotProps={{
+          legend: {
+            position: {
+              vertical: "bottom",
+              horizontal: "center",
+            },
+          },
+        }}
         height={320}
         margin={{ top: 20, bottom: 40, left: 50, right: 20 }}
         sx={{

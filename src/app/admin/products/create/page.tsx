@@ -1,7 +1,7 @@
-import AddProductPage from "@/views/admin/product/create/AddProductPage";
+import ClientOnlyAddProductPage from "@/views/admin/product/create/ClientOnlyAddProductPage";
 
 const CreateProductPage = () => {
-  return <AddProductPage />;
+  return <ClientOnlyAddProductPage />;
 };
 
 export default CreateProductPage;

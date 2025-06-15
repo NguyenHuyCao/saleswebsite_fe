@@ -27,18 +27,6 @@ import { motion } from "framer-motion";
 import { CART_COUNT_KEY } from "@/constants/apiKeys";
 import { mutate } from "swr";
 
-export type CartItem = {
-  productId: number;
-  productName: string;
-  productDescription: string;
-  productImage: string;
-  unitPrice: number;
-  quantity: number;
-  totalPrice: number;
-  discount: number;
-  maxDiscount?: number;
-};
-
 type Props = {
   items: CartItem[];
   onItemsChange?: (items: CartItem[]) => void;
@@ -46,6 +34,8 @@ type Props = {
 
 const CartItemList = ({ items: initialItems, onItemsChange }: Props) => {
   const theme = useTheme();
+  const MotionPaper = motion(Paper);
+
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [items, setItems] = useState<CartItem[]>(initialItems);
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string }>({
@@ -122,8 +112,6 @@ const CartItemList = ({ items: initialItems, onItemsChange }: Props) => {
       console.error("Lỗi khi xoá sản phẩm:", err);
     }
   };
-
-  const MotionBox = motion(Box);
 
   return (
     <Box>
@@ -223,9 +211,8 @@ const CartItemList = ({ items: initialItems, onItemsChange }: Props) => {
       ) : (
         <Stack spacing={2}>
           {items.map((item) => (
-            <MotionBox
+            <MotionPaper
               key={item.productId}
-              component={Paper}
               variant="outlined"
               sx={{ p: 2 }}
               initial={{ opacity: 0, y: 12 }}
@@ -315,7 +302,7 @@ const CartItemList = ({ items: initialItems, onItemsChange }: Props) => {
                   <DeleteIcon />
                 </IconButton>
               </Box>
-            </MotionBox>
+            </MotionPaper>
           ))}
         </Stack>
       )}

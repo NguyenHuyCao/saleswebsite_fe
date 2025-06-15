@@ -1,7 +1,10 @@
+import { Suspense } from "react";
 import ProductDetailPage from "@/views/admin/product/detail/ProductDetailPage";
 
-const ViewProductPage = () => {
-  return <ProductDetailPage />;
-};
-
-export default ViewProductPage;
+export default function ViewProductPage() {
+  return (
+    <Suspense fallback={<p>Đang tải dữ liệu...</p>}>
+      <ProductDetailPage />
+    </Suspense>
+  );
+}

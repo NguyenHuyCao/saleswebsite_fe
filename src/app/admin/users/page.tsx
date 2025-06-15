@@ -1,17 +1,18 @@
 "use client";
-import MultiStepAccountPage from "@/views/admin/account/MultiStepAccountPage";
-import UserTablePage from "@/views/admin/user/UserTablePage";
-import { useSearchParams } from "next/navigation";
 
-const UsersPage = () => {
-  const searchParams = useSearchParams();
+import dynamic from "next/dynamic";
+import { Suspense } from "react";
 
-  const page = searchParams.get("userId");
+// Lazy load client component
+const ClientOnlyUsersPage = dynamic(
+  () => import("@/views/admin/user/ClientOnlyUsersPage"),
+  { ssr: false }
+);
 
-  if (!page) {
-    return <UserTablePage />;
-  }
-  return <MultiStepAccountPage />;
-};
-
-export default UsersPage;
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ClientOnlyUsersPage />
+    </Suspense>
+  );
+}

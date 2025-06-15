@@ -12,7 +12,6 @@ import Step1BasicInfo from "./Step1BasicInfo";
 import Step2TechnicalInfo from "./Step2TechnicalInfo";
 import Step3PricingInventory from "./Step3PricingInventory";
 import Step4Images from "./Step4Images";
-import { number } from "framer-motion";
 
 const steps = [
   "Thông tin cơ bản",
@@ -31,7 +30,7 @@ const UpdateProduct = () => {
   const [slug, setSlug] = useState("");
 
   const [formData, setFormData] = useState({
-    id: number,
+    id: 0,
     name: "",
     description: "",
     origin: "",

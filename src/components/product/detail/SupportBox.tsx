@@ -4,7 +4,7 @@ import { Box, Typography, Stack } from "@mui/material";
 import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import { motion } from "framer-motion";
 
-export const SupportBox = () => (
+const SupportBox = () => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -43,3 +43,5 @@ export const SupportBox = () => (
     </Box>
   </motion.div>
 );
+
+export default SupportBox;

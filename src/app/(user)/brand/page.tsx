@@ -5,16 +5,8 @@ import BrandPageFinalSections from "@/components/brand/BrandPageFinalSections";
 import WhyChooseUs from "@/components/brand/WhyChooseUs ";
 // import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
 import PageViewTracker from "@/components/common/traffic/PageViewTracker";
+import { getBrands } from "@/lib/api/brand";
 import { Container } from "@mui/material";
-
-export async function getBrands(): Promise<Brand[]> {
-  const res = await fetch(`${process.env.BACKEND_URL}/api/v1/brands`, {
-    headers: { "Content-Type": "application/json" },
-    cache: "no-store",
-  });
-  const raw = await res.json();
-  return raw.data?.result || [];
-}
 
 const BrandPage = async () => {
   const brands = await getBrands();

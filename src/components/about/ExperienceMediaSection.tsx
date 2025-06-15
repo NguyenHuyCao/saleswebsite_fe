@@ -3,7 +3,8 @@
 import { Box, Typography, Grid } from "@mui/material";
 import { useState } from "react";
 import Lightbox from "yet-another-react-lightbox";
-import "yet-another-react-lightbox/styles.css";
+import Zoom from "yet-another-react-lightbox/plugins/zoom";
+import "yet-another-react-lightbox/styles.css"; // ✅ giữ dòng này
 import Image from "next/image";
 
 const images = [
@@ -100,7 +101,7 @@ const ExperienceMediaSection = () => {
         close={() => setOpen(false)}
         index={currentIndex}
         slides={images.map((src) => ({ src }))}
-        animation={{ zoom: 0.6 }}
+        plugins={[Zoom]}
         styles={{ container: { backgroundColor: "rgba(0,0,0,0.9)" } }}
       />
     </Box>

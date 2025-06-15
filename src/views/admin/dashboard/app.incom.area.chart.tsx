@@ -175,7 +175,6 @@ const IncomeAreaChart = () => {
             stroke: series.color,
             strokeWidth: 2,
           }))}
-        slotProps={{ legend: { hidden: true } }}
         sx={{
           [`& .${areaElementClasses.series}-PageViews`]: {
             fill: "url(#gradient1)",

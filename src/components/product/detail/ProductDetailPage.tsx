@@ -9,53 +9,14 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { motion } from "framer-motion";
-import { ImageGallery } from "./ImageGallery";
-import { ProductDetails } from "./ProductDetails";
-import { CommitmentCard } from "./CommitmentCard";
-import { SupportBox } from "./SupportBox";
-import { PromotionBox } from "./PromotionBox";
-import { ProductTabs } from "./ProductTabs";
+import ImageGallery from "./ImageGallery";
+import ProductDetails from "./ProductDetails";
+import CommitmentCard from "./CommitmentCard";
+import SupportBox from "./SupportBox";
+import PromotionBox from "./PromotionBox";
+import ProductTabs from "./ProductTabs";
 import RelatedProductsSlick from "./RelatedProducts";
-import { ProductReviewList } from "@/components/review/ProductReviewList";
-
-export type Product = {
-  id: number;
-  name: string;
-  imageAvt: string;
-  description: string;
-  slug: string;
-  image: string;
-  price: number;
-  pricePerUnit: number;
-  originalPrice: number;
-  sale: boolean;
-  inStock: boolean;
-  label: string;
-  stockQuantity: number;
-  totalStock: number;
-  power: string;
-  fuelType: string;
-  engineType: string;
-  weight: number;
-  dimensions: string;
-  tankCapacity: number;
-  origin: string;
-  warrantyMonths: number;
-  createdAt: string;
-  createdBy?: string;
-  updatedAt?: string | null;
-  updatedBy?: string | null;
-  rating?: number;
-  status: string[];
-  wishListUser: boolean;
-};
-
-interface Category {
-  id: number;
-  name: string;
-  slug: string;
-  products: Product[];
-}
+import ProductReviewList from "@/components/review/ProductReviewList";
 
 interface ProductDetailPageProps {
   product: Product;
@@ -79,6 +40,14 @@ export default function ProductDetailPage({
     );
   }
 
+  const imageProduct = {
+    imageAvt: product.imageAvt,
+    imageDetail1: product.imageDetail1,
+    imageDetail2: product.imageDetail2,
+    imageDetail3: product.imageDetail3,
+    name: product.name,
+  };
+
   return (
     <>
       <Box sx={{ maxWidth: 1400, mx: "auto", py: 4, px: { xs: 1, sm: 2 } }}>
@@ -87,7 +56,7 @@ export default function ProductDetailPage({
           <Grid size={{ xs: 12, md: 8 }}>
             <Grid container spacing={4}>
               <Grid size={{ xs: 12, md: 5 }}>
-                <ImageGallery product={product} />
+                <ImageGallery product={imageProduct} />
               </Grid>
               <Grid size={{ xs: 12, md: 7 }}>
                 <motion.div

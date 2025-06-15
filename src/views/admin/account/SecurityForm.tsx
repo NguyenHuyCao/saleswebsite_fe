@@ -19,7 +19,6 @@ import AlertSnackbar from "@/model/notify/AlertSnackbar";
 
 const SecurityForm = ({
   onBack,
-  email,
 }: {
   onBack: () => void;
   email: string;
@@ -114,7 +113,7 @@ const SecurityForm = ({
 
       <Grid container spacing={4}>
         {["currentPassword", "newPassword", "confirmNewPassword"].map((key) => (
-          <Grid item xs={12} md={6} key={key}>
+          <Grid size={{ xs: 12, md: 6 }} key={key}>
             <InputLabel htmlFor={key}>
               {key === "currentPassword"
                 ? "Mật khẩu hiện tại"
@@ -182,7 +181,7 @@ const SecurityForm = ({
         open={snackbar.open}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         message={snackbar.message}
-        severity={snackbar.severity}
+        type={snackbar.severity}
       />
     </Box>
   );

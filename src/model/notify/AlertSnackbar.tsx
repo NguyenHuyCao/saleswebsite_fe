@@ -1,22 +1,24 @@
 "use client";
 
-import { Snackbar, Alert as MuiAlert } from "@mui/material";
-import { SyntheticEvent } from "react";
+import { Snackbar, Alert as MuiAlert, AlertColor } from "@mui/material";
+import React, { SyntheticEvent, forwardRef } from "react";
 
-const Alert = MuiAlert as React.ElementType;
+// Định nghĩa Alert chuẩn để dùng trong Snackbar
+const Alert = forwardRef<HTMLDivElement, any>(function Alert(props, ref) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
 interface AlertSnackbarProps {
   open: boolean;
   message: string;
-  type?: "success" | "error";
+  type?: AlertColor;
   onClose: (event?: SyntheticEvent | Event, reason?: string) => void;
-  severity?: "success" | "error";
 }
 
 const AlertSnackbar = ({
   open,
   message,
-  type,
+  type = "success",
   onClose,
 }: AlertSnackbarProps) => {
   return (

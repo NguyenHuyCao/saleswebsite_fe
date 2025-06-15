@@ -1,7 +1,11 @@
-import MultiOrderPage from "@/views/admin/order/MultiOrderPage";
+"use client";
+import dynamic from "next/dynamic";
 
-const OrdersPage = () => {
-  return <MultiOrderPage />;
-};
+const ClientOrdersPage = dynamic(
+  () => import("@/views/admin/order/ClientOrdersPage"),
+  { ssr: false }
+);
 
-export default OrdersPage;
+export default function OrdersPage() {
+  return <ClientOrdersPage />;
+}

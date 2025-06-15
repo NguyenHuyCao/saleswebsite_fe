@@ -43,86 +43,88 @@ const BrandAccordionSection = ({ brands }: Props) => {
             <Typography fontWeight="bold">{brand.name}</Typography>
           </AccordionSummary>
 
-          <AccordionDetails
-            component={motion.div}
+          {/* ✅ Bọc motion.div bên ngoài AccordionDetails */}
+          <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <Grid container spacing={3} alignItems="center">
-              <Grid size={{ xs: 12, md: 4 }}>
-                <Box
-                  sx={{
-                    position: "relative",
-                    width: "100%",
-                    height: 200,
-                    borderRadius: 2,
-                    overflow: "hidden",
-                    boxShadow: 2,
-                  }}
-                >
-                  <Image
-                    src={brand.logo}
-                    alt={brand.name}
-                    fill
-                    style={{ objectFit: "contain" }}
-                  />
-                </Box>
-              </Grid>
+            <AccordionDetails>
+              <Grid container spacing={3} alignItems="center">
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <Box
+                    sx={{
+                      position: "relative",
+                      width: "100%",
+                      height: 200,
+                      borderRadius: 2,
+                      overflow: "hidden",
+                      boxShadow: 2,
+                    }}
+                  >
+                    <Image
+                      src={brand.logo}
+                      alt={brand.name}
+                      fill
+                      style={{ objectFit: "contain" }}
+                    />
+                  </Box>
+                </Grid>
 
-              <Grid size={{ xs: 12, md: 8 }}>
-                <Typography fontSize={16} mb={1}>
-                  <strong>Năm thành lập:</strong>{" "}
-                  {brand.year > 0 ? brand.year : "Chưa rõ"}
-                </Typography>
-                <Typography fontSize={16} mb={1}>
-                  <strong>Quốc gia:</strong> {brand.originCountry}
-                </Typography>
-                <Typography fontSize={16} mb={2}>
-                  <strong>Website:</strong>{" "}
-                  {brand.website ? (
-                    <Link
-                      href={brand.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      sx={{ color: "#1976d2", textDecoration: "underline" }}
-                    >
-                      {brand.website}
-                    </Link>
-                  ) : (
-                    "Chưa cập nhật"
-                  )}
-                </Typography>
-
-                <Typography
-                  fontSize={15}
-                  fontStyle="italic"
-                  color="text.secondary"
-                >
-                  “
-                  {brand.description
-                    ? brand.description
-                    : "Thương hiệu này chưa có mô tả cụ thể."}
-                  ”
-                </Typography>
-
-                <Box mt={2} display="flex" alignItems="center" gap={1}>
-                  <Avatar sx={{ width: 32, height: 32 }}>
-                    {brand.name.charAt(0)}
-                  </Avatar>
-                  <Typography fontSize={14} fontWeight={500}>
-                    {brand.name} Official
+                <Grid size={{ xs: 12, md: 8 }}>
+                  <Typography fontSize={16} mb={1}>
+                    <strong>Năm thành lập:</strong>{" "}
+                    {brand.year > 0 ? brand.year : "Chưa rõ"}
                   </Typography>
-                  <Rating
-                    value={4 + (i % 2) * 0.5}
-                    precision={0.5}
-                    readOnly
-                    size="small"
-                  />
-                </Box>
+                  <Typography fontSize={16} mb={1}>
+                    <strong>Quốc gia:</strong> {brand.originCountry}
+                  </Typography>
+                  <Typography fontSize={16} mb={2}>
+                    <strong>Website:</strong>{" "}
+                    {brand.website ? (
+                      <Link
+                        href={brand.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{ color: "#1976d2", textDecoration: "underline" }}
+                      >
+                        {brand.website}
+                      </Link>
+                    ) : (
+                      "Chưa cập nhật"
+                    )}
+                  </Typography>
+
+                  <Typography
+                    fontSize={15}
+                    fontStyle="italic"
+                    color="text.secondary"
+                  >
+                    “
+                    {brand.description
+                      ? brand.description
+                      : "Thương hiệu này chưa có mô tả cụ thể."}
+                    ”
+                  </Typography>
+
+                  <Box mt={2} display="flex" alignItems="center" gap={1}>
+                    <Avatar sx={{ width: 32, height: 32 }}>
+                      {brand.name.charAt(0)}
+                    </Avatar>
+                    <Typography fontSize={14} fontWeight={500}>
+                      {brand.name} Official
+                    </Typography>
+                    <Rating
+                      value={4 + (i % 2) * 0.5}
+                      precision={0.5}
+                      readOnly
+                      size="small"
+                    />
+                  </Box>
+                </Grid>
               </Grid>
-            </Grid>
-          </AccordionDetails>
+            </AccordionDetails>
+          </motion.div>
         </Accordion>
       ))}
     </Box>

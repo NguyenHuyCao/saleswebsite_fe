@@ -1,3 +1,5 @@
+"use client";
+
 import CategoryTable from "@/views/admin/catogory/CategoryTable";
 
 const CatoryPage = () => {

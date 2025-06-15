@@ -1,7 +1,7 @@
-import OrderDetailTable from "@/views/admin/order/detail/OrderDetailTable";
+import OrderDetailPageClient from "@/views/admin/order/detail/OrderDetailPageClient";
 
 const OrderDetailPage = () => {
-  return <OrderDetailTable />;
+  return <OrderDetailPageClient />;
 };
 
 export default OrderDetailPage;

@@ -11,8 +11,11 @@ import {
   styled,
 } from "@mui/material";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import BlankLayout from "src/@core/layouts/BlankLayout";
 import FooterIllustrations from "@/views/misc/FooterIllustrations";
+
+// ===== Styled Components =====
 
 const BoxWrapper = styled(Box)(({ theme }) => ({
   width: "100%",
@@ -25,12 +28,10 @@ const BoxWrapper = styled(Box)(({ theme }) => ({
   },
 }));
 
-const Img = styled(motion.img)(({ theme }) => ({
+const MotionImageWrapper = styled(motion.div)(({ theme }) => ({
   width: "100%",
-  height: "auto",
-  maxHeight: 280,
-  objectFit: "contain",
   margin: theme.spacing(2, 0),
+  maxHeight: 280,
   [theme.breakpoints.down("sm")]: {
     maxHeight: 200,
   },
@@ -49,6 +50,8 @@ const TreeIllustration = styled("img")(({ theme }) => ({
     width: 120,
   },
 }));
+
+// ===== Component =====
 
 const Error404 = () => {
   const theme = useTheme();
@@ -99,16 +102,21 @@ const Error404 = () => {
             chuyển.
           </Typography>
 
-          <Img
-            src="/images/pages/fixmachine.png"
-            alt="Hình minh họa lỗi 404"
-            loading="lazy"
+          <MotionImageWrapper
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-          />
+          >
+            <Image
+              src="/images/pages/fixmachine.png"
+              alt="Hình minh họa lỗi 404"
+              width={500}
+              height={300}
+              style={{ width: "100%", height: "auto", objectFit: "contain" }}
+            />
+          </MotionImageWrapper>
 
-          <Link href="/" style={{ textDecoration: "none" }}>
+          <Link href="/" passHref legacyBehavior>
             <Button
               variant="contained"
               sx={{
@@ -130,7 +138,6 @@ const Error404 = () => {
         </BoxWrapper>
       </motion.div>
 
-      {/* Footer illustration optional */}
       <FooterIllustrations
         image={
           <TreeIllustration

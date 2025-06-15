@@ -14,12 +14,6 @@ import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
-export type Category = {
-  title: string;
-  image: string;
-  slug: string;
-};
-
 interface CategoryCarouselProps {
   categories: Category[];
 }
@@ -54,7 +48,6 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ categories }) => {
     el.addEventListener("scroll", handleScroll);
     resizeObserver.observe(el);
 
-    // Initial check
     checkScroll();
 
     return () => {
@@ -89,7 +82,6 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ categories }) => {
         Danh mục sản phẩm
       </Typography>
 
-      {/* Left arrow */}
       {showLeft && (
         <IconButton
           onClick={() => scroll("left")}
@@ -110,7 +102,6 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ categories }) => {
         </IconButton>
       )}
 
-      {/* Carousel */}
       <Box sx={{ display: "flex", justifyContent: "center" }}>
         <Box
           ref={scrollRef}
@@ -161,7 +152,7 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ categories }) => {
                 >
                   <Image
                     src={item.image}
-                    alt={item.title}
+                    alt={item.name}
                     fill
                     style={{
                       objectFit: "cover",
@@ -175,7 +166,7 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ categories }) => {
                   fontWeight={600}
                   color="#000"
                 >
-                  {item.title}
+                  {item.name}
                 </Typography>
               </Box>
             </motion.div>
@@ -183,7 +174,6 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ categories }) => {
         </Box>
       </Box>
 
-      {/* Right arrow */}
       {showRight && (
         <IconButton
           onClick={() => scroll("right")}

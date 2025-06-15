@@ -31,7 +31,7 @@ interface Props {
   productId: number;
 }
 
-export const UserReviewList = ({ productId }: Props) => {
+const UserReviewList = ({ productId }: Props) => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [openEdit, setOpenEdit] = useState(false);
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
@@ -66,23 +66,24 @@ export const UserReviewList = ({ productId }: Props) => {
     setUpdatedRating(review.rating);
     setUpdatedComment(review.comment);
     setUpdatedImages([]);
+    setError(null);
     setOpenEdit(true);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    const files = Array.from(e.target.files);
+    const files = e.target.files ? Array.from(e.target.files) : [];
     if (files.length > 3) {
       setError("Chỉ được tải lên tối đa 3 ảnh");
-      return;
+    } else {
+      setUpdatedImages(files);
+      setError(null);
     }
-    setUpdatedImages(files);
-    setError(null);
   };
 
   const handleUpdate = async () => {
     const token = localStorage.getItem("accessToken");
     if (!token || !selectedReview) return;
+
     if (!updatedComment.trim() || !updatedRating) {
       setError("Vui lòng nhập đủ thông tin");
       return;
@@ -109,7 +110,7 @@ export const UserReviewList = ({ productId }: Props) => {
       fetchUserReviews();
     } catch (err) {
       setError("Không thể cập nhật đánh giá.");
-      console.log(err);
+      console.error(err);
     }
   };
 
@@ -118,6 +119,7 @@ export const UserReviewList = ({ productId }: Props) => {
       <Typography variant="h6" fontWeight={700} mb={2}>
         Đánh giá của bạn
       </Typography>
+
       {reviews.length === 0 ? (
         <Typography color="text.secondary">
           Bạn chưa có đánh giá nào cho sản phẩm này.
@@ -127,7 +129,9 @@ export const UserReviewList = ({ productId }: Props) => {
           {reviews.map((review) => (
             <Box key={review.id}>
               <Stack direction="row" spacing={2} alignItems="center">
-                <Avatar>A</Avatar>
+                <Avatar>
+                  {review?.createdAt?.charAt(0).toUpperCase() || "A"}
+                </Avatar>
                 <Box>
                   <Rating value={review.rating} readOnly size="small" />
                   <Typography variant="body2" color="text.secondary">
@@ -143,7 +147,8 @@ export const UserReviewList = ({ productId }: Props) => {
                     <Box
                       key={idx}
                       component="img"
-                      src={`${img}`}
+                      src={img || undefined}
+                      alt={`Hình ảnh ${idx + 1}`}
                       sx={{
                         width: 80,
                         height: 80,
@@ -204,6 +209,23 @@ export const UserReviewList = ({ productId }: Props) => {
             <Typography variant="body2" color="text.secondary">
               {updatedImages.length} ảnh được chọn
             </Typography>
+            <Box display="flex" gap={1}>
+              {updatedImages.map((file, idx) => (
+                <Box
+                  key={idx}
+                  component="img"
+                  src={URL.createObjectURL(file)}
+                  alt={`Ảnh cập nhật ${idx + 1}`}
+                  sx={{
+                    width: 60,
+                    height: 60,
+                    objectFit: "cover",
+                    borderRadius: 1,
+                    border: "1px solid #ccc",
+                  }}
+                />
+              ))}
+            </Box>
           </Stack>
         </DialogContent>
         <DialogActions>
@@ -216,3 +238,5 @@ export const UserReviewList = ({ productId }: Props) => {
     </Box>
   );
 };
+
+export default UserReviewList;

@@ -1,30 +1,27 @@
+// 📁 components/review/ProductReviewList.tsx
 "use client";
 
 import {
   Box,
   Typography,
-  Avatar,
-  Rating,
   Paper,
-  Divider,
   Stack,
-  Pagination,
-  Button,
-  TextField,
   Collapse,
+  Button,
+  FormControl,
+  FormControlLabel,
+  InputLabel,
   MenuItem,
   Select,
-  FormControl,
-  InputLabel,
-  Alert,
   Switch,
-  FormControlLabel,
-  Tooltip,
+  Pagination,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { UserReviewList } from "./UserReviewList";
+import { motion } from "framer-motion";
+import UserReviewList from "./UserReviewList";
+import ReviewForm from "./ReviewForm";
+import ReviewCard from "./ReviewCard";
 
 interface Review {
   id: number;
@@ -42,18 +39,13 @@ interface Props {
   productId: number;
 }
 
-export const ProductReviewList = ({ productId }: Props) => {
+const ProductReviewList = ({ productId }: Props) => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [ratingFilter, setRatingFilter] = useState<number | "all">("all");
   const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [showUserReviews, setShowUserReviews] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [rating, setRating] = useState<number | null>(0);
-  const [comment, setComment] = useState("");
-  const [images, setImages] = useState<File[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
   const pageSize = 5;
 
   useEffect(() => {
@@ -87,49 +79,6 @@ export const ProductReviewList = ({ productId }: Props) => {
     fetchReviews();
   }, [productId]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    const files = Array.from(e.target.files);
-    if (files.length > 3) {
-      setError("Chỉ được tải tối đa 3 ảnh.");
-    } else {
-      setImages(files);
-      setError(null);
-    }
-  };
-
-  const handleSubmit = async () => {
-    const token = localStorage.getItem("accessToken");
-    if (!token || !rating || !comment.trim()) {
-      setError("Vui lòng nhập đầy đủ thông tin và đăng nhập.");
-      return;
-    }
-
-    try {
-      const formData = new FormData();
-      formData.append("rating", String(rating));
-      formData.append("comment", comment.trim());
-      images.forEach((img) => formData.append("imageReviews", img));
-
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reviews/${productId}`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData,
-        }
-      );
-      if (!res.ok) throw new Error();
-      fetchReviews();
-      setComment("");
-      setImages([]);
-      setRating(0);
-      setShowForm(false);
-    } catch {
-      setError("Không thể gửi đánh giá, vui lòng thử lại.");
-    }
-  };
-
   const toggleApproval = async (id: number) => {
     const token = localStorage.getItem("accessToken");
     if (!token) return;
@@ -151,7 +100,6 @@ export const ProductReviewList = ({ productId }: Props) => {
       ? r.approved
       : r.approved && r.rating === ratingFilter
   );
-  const hidden = reviews.filter((r) => !r.approved);
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   return (
@@ -191,9 +139,7 @@ export const ProductReviewList = ({ productId }: Props) => {
               label="Lọc theo sao"
               value={ratingFilter}
               onChange={(e) => setRatingFilter(e.target.value)}
-              MenuProps={{
-                disableScrollLock: true,
-              }}
+              MenuProps={{ disableScrollLock: true }}
             >
               <MenuItem value="all">Tất cả</MenuItem>
               {[5, 4, 3, 2, 1].map((val) => (
@@ -222,35 +168,7 @@ export const ProductReviewList = ({ productId }: Props) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <Paper sx={{ p: 3, mb: 3, bgcolor: "#f9f9f9" }}>
-            <Stack spacing={2}>
-              {error && <Alert severity="error">{error}</Alert>}
-              <Rating value={rating} onChange={(_, v) => setRating(v)} />
-              <TextField
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                multiline
-                rows={3}
-                placeholder="Nội dung đánh giá"
-              />
-              <Button component="label" variant="outlined">
-                Tải ảnh (tối đa 3)
-                <input
-                  hidden
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageChange}
-                />
-              </Button>
-              <Typography fontSize={13}>
-                {images.length} ảnh được chọn
-              </Typography>
-              <Button variant="contained" onClick={handleSubmit}>
-                Gửi đánh giá
-              </Button>
-            </Stack>
-          </Paper>
+          <ReviewForm productId={productId} onSuccess={fetchReviews} />
         </motion.div>
       </Collapse>
 
@@ -261,50 +179,12 @@ export const ProductReviewList = ({ productId }: Props) => {
       ) : (
         <Stack spacing={3}>
           {paginated.map((review) => (
-            <Box key={review.id}>
-              <Stack direction="row" spacing={2} alignItems="center">
-                <Avatar>{review.createdBy.charAt(0).toUpperCase()}</Avatar>
-                <Box>
-                  <Typography fontWeight={600}>{review.createdBy}</Typography>
-                  <Rating value={review.rating} readOnly size="small" />
-                  <Typography fontSize={13} color="text.secondary">
-                    {new Date(review.createdAt).toLocaleDateString("vi-VN")}
-                  </Typography>
-                </Box>
-              </Stack>
-              <Typography mt={1.5}>{review.comment}</Typography>
-              <Stack direction="row" spacing={1} mt={1}>
-                {[review.image1, review.image2, review.image3]
-                  .filter(Boolean)
-                  .map((img, idx) => (
-                    <Tooltip title="Ảnh minh họa" key={idx}>
-                      <Box
-                        component="img"
-                        src={`${img}`}
-                        sx={{
-                          width: 80,
-                          height: 80,
-                          borderRadius: 1,
-                          border: "1px solid #ccc",
-                          objectFit: "cover",
-                        }}
-                      />
-                    </Tooltip>
-                  ))}
-              </Stack>
-              {userEmail === "admin@gmail.com" && (
-                <Button
-                  size="small"
-                  variant="outlined"
-                  color="error"
-                  sx={{ mt: 1 }}
-                  onClick={() => toggleApproval(review.id)}
-                >
-                  Ẩn đánh giá
-                </Button>
-              )}
-              <Divider sx={{ mt: 2 }} />
-            </Box>
+            <ReviewCard
+              key={review.id}
+              review={review}
+              userEmail={userEmail}
+              onToggleApproval={toggleApproval}
+            />
           ))}
         </Stack>
       )}
@@ -321,3 +201,5 @@ export const ProductReviewList = ({ productId }: Props) => {
     </Paper>
   );
 };
+
+export default ProductReviewList;

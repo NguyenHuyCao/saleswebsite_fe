@@ -37,7 +37,7 @@ interface BrandData {
   updatedAt: string | null;
 }
 
-const BrandTablePage = () => {
+const BrandTable = () => {
   const [brands, setBrands] = useState<BrandData[]>([]);
   const [filteredBrands, setFilteredBrands] = useState<BrandData[]>([]);
   const [page, setPage] = useState(0);
@@ -333,4 +333,4 @@ const BrandTablePage = () => {
   );
 };
 
-export default BrandTablePage;
+export default BrandTable;

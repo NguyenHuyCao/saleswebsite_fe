@@ -46,14 +46,14 @@ export default function SalesChart({ filter, data }: SalesChartProps) {
   const costData = data.map((item) => Math.round(item.cost / 1000));
   const profitTotal = data.reduce((sum, item) => sum + item.profit, 0);
 
-  const valueFormatter = (value: number) => `${value}K ₫`;
+  const valueFormatter = (value: number | null) =>
+    typeof value === "number" ? `${value}K ₫` : "";
 
   const series = [];
 
   if (showIncome) {
     series.push({
       data: revenueData,
-      label: "Doanh thu",
       color: theme.palette.warning.main,
       valueFormatter,
     });
@@ -62,7 +62,6 @@ export default function SalesChart({ filter, data }: SalesChartProps) {
   if (showCostOfSales) {
     series.push({
       data: costData,
-      label: "Giá vốn",
       color: theme.palette.primary.main,
       valueFormatter,
     });
@@ -129,9 +128,10 @@ export default function SalesChart({ filter, data }: SalesChartProps) {
         ]}
         series={series.map((s) => ({ ...s, type: "bar" }))}
         margin={{ top: 30, left: 40, right: 10 }}
-        slotProps={{ legend: { hidden: true }, bar: { rx: 5, ry: 5 } }}
+        slotProps={{
+          bar: { rx: 5, ry: 5 },
+        }}
         axisHighlight={{ x: "none" }}
-        tooltip={{ trigger: "item" }}
         sx={{
           "& .MuiBarElement-root:hover": { opacity: 0.6 },
           "& .MuiChartsAxis-directionX .MuiChartsAxis-tick, & .MuiChartsAxis-root line":

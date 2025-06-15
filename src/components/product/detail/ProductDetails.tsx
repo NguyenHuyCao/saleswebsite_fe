@@ -25,27 +25,11 @@ import { mutate } from "swr";
 import { CART_COUNT_KEY, WISHLIST_COUNT_KEY } from "@/constants/apiKeys";
 
 interface Props {
-  product: {
-    id: number;
-    name: string;
-    price: number;
-    stockQuantity: number;
-    totalStock: number;
-    origin: string;
-    power: string;
-    fuelType: string;
-    engineType: string;
-    tankCapacity: number;
-    dimensions: string;
-    weight: number;
-    warrantyMonths: number;
-    wishListUser: boolean;
-    type: string;
-  };
+  product: Product;
   category: { name: string } | null;
 }
 
-export const ProductDetails = ({ product, category }: Props) => {
+const ProductDetails = ({ product, category }: Props) => {
   const dispatch = useDispatch<AppDispatch>();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -161,8 +145,8 @@ export const ProductDetails = ({ product, category }: Props) => {
         <Box component="span" color="warning.main" fontWeight={500}>
           {category?.name || "Không rõ"}
         </Box>{" "}
-        | Loại: {product.type || "--"} | Xuất xứ: {product.origin} | Công suất:{" "}
-        {product.power}
+        | Loại: {product.fuelType || "--"} | Xuất xứ: {product.origin} | Công
+        suất: {product.power}
       </Typography>
 
       <Divider sx={{ my: 2 }} />
@@ -311,3 +295,5 @@ export const ProductDetails = ({ product, category }: Props) => {
     </Box>
   );
 };
+
+export default ProductDetails;

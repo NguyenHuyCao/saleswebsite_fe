@@ -24,11 +24,14 @@ interface Props {
   };
 }
 
-export const ImageGallery = ({ product }: Props) => {
+const ImageGallery = ({ product }: Props) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
   const baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/files/`;
+
+  const getFullSrc = (src: string) =>
+    src.startsWith("http") ? src : `${baseUrl}${src}`;
+
   const images = [
     product.imageAvt,
     product.imageDetail1,
@@ -40,13 +43,13 @@ export const ImageGallery = ({ product }: Props) => {
   const [selectedImg, setSelectedImg] = useState<string | null>(null);
 
   const handleOpen = (src: string) => {
-    setSelectedImg(src.startsWith("http") ? src : `${baseUrl}${src}`);
+    setSelectedImg(getFullSrc(src));
     setOpen(true);
   };
 
   return (
     <Box>
-      {/* Ảnh chính */}
+      {/* Main Image */}
       <motion.div
         whileHover={{ scale: 1.01 }}
         transition={{ duration: 0.25 }}
@@ -62,7 +65,7 @@ export const ImageGallery = ({ product }: Props) => {
         }}
       >
         <Image
-          src={product.imageAvt}
+          src={getFullSrc(product.imageAvt)}
           alt={product.name}
           fill
           style={{ objectFit: "cover", transition: "opacity 0.3s" }}
@@ -70,7 +73,7 @@ export const ImageGallery = ({ product }: Props) => {
         />
       </motion.div>
 
-      {/* Danh sách ảnh nhỏ */}
+      {/* Thumbnail Images */}
       <Stack
         direction="row"
         spacing={1}
@@ -93,8 +96,8 @@ export const ImageGallery = ({ product }: Props) => {
               onClick={() => handleOpen(src)}
               sx={{
                 flex: "0 0 auto",
-                width: 70,
-                height: 70,
+                width: { xs: 60, sm: 70 },
+                height: { xs: 60, sm: 70 },
                 borderRadius: 2,
                 border: "1px solid #ddd",
                 overflow: "hidden",
@@ -105,7 +108,7 @@ export const ImageGallery = ({ product }: Props) => {
               }}
             >
               <Image
-                src={src.startsWith("http") ? src : `${baseUrl}${src}`}
+                src={getFullSrc(src)}
                 alt={`Ảnh chi tiết ${i + 1}`}
                 fill
                 style={{ objectFit: "cover" }}
@@ -115,12 +118,12 @@ export const ImageGallery = ({ product }: Props) => {
         ))}
       </Stack>
 
-      {/* Lightbox Dialog với animation */}
+      {/* Dialog Lightbox */}
       <Dialog
         open={open}
         onClose={() => setOpen(false)}
         maxWidth="lg"
-        disableScrollLock={true}
+        disableScrollLock
         PaperProps={{
           sx: {
             backgroundColor: "rgba(0,0,0,0.8)",
@@ -176,3 +179,5 @@ export const ImageGallery = ({ product }: Props) => {
     </Box>
   );
 };
+
+export default ImageGallery;

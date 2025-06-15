@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -11,19 +11,12 @@ import {
   useTheme,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
-import ProductCard, { Product } from "../product/ProductCard";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, AppState } from "@/redux/store";
+import ProductCard from "../product/ProductCard";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
 import deepEqual from "fast-deep-equal";
-import { motion } from "framer-motion"; // Import framer-motion
-
-export type CategoryWithProducts = {
-  id: number;
-  name: string;
-  slug: string;
-  products: Product[];
-};
+import { motion } from "framer-motion";
 
 interface OtherToolsSectionProps {
   categories: CategoryWithProducts[];
@@ -36,12 +29,6 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
   const dispatch = useDispatch<AppDispatch>();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
-  const wishlistItems = useSelector((state: AppState) => state.wishlist.result);
-  const favoriteIdSet = useMemo(
-    () => new Set(wishlistItems.map((item) => item.id)),
-    [wishlistItems]
-  );
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [categoryProducts, setCategoryProducts] = useState<
@@ -56,7 +43,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
     const now = new Date();
     const updated = categories.map((cat) => ({
       ...cat,
-      products: cat.products.map((item: any): Product => {
+      products: cat.products.map((item) => {
         const createdAt = new Date(item.createdAt);
         const isNew =
           (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
@@ -69,7 +56,6 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
           sale: item.price !== item.pricePerUnit,
           inStock: isInStock,
           label: isInStock ? "Thêm vào giỏ" : "Hết hàng",
-          favorite: favoriteIdSet.has(item.id),
         };
       }),
     }));
@@ -77,37 +63,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
     if (!deepEqual(updated, categoryProducts)) {
       setCategoryProducts(updated);
     }
-  }, [categories, favoriteIdSet]);
-
-  const toggleWishlist = async (productId: number) => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      alert("Bạn cần đăng nhập để thêm vào yêu thích.");
-      return;
-    }
-
-    setCategoryProducts((prev) =>
-      prev.map((cat) => ({
-        ...cat,
-        products: cat.products.map((p) =>
-          p.id === productId ? { ...p, favorite: !p.favorite } : p
-        ),
-      }))
-    );
-
-    try {
-      const formData = new FormData();
-      formData.append("productId", String(productId));
-      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/wish_list`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-      dispatch(fetchWishlist());
-    } catch (err) {
-      console.error("Lỗi khi cập nhật yêu thích:", err);
-    }
-  };
+  }, [categories]);
 
   const activeCategory = categoryProducts[activeIndex];
 
@@ -123,7 +79,6 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
         flexWrap="wrap"
         gap={1}
         justifyContent="center"
-        // Applying motion.div for category button fade-in animation
         component={motion.div}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -155,7 +110,6 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
       <Fade in timeout={500} key={activeCategory?.id}>
         <Grid container spacing={2} justifyContent={"center"}>
           {activeCategory?.products?.map((product) => (
-            // Adding motion.div for fade-in effect for each product
             <Grid key={product.id} size={{ xs: 6, sm: 4, md: 3, lg: 2.4 }}>
               <motion.div
                 initial={{ opacity: 0 }}
@@ -164,8 +118,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
               >
                 <ProductCard
                   product={product}
-                  isFavorite={product.favorite}
-                  onToggleFavorite={() => toggleWishlist(product.id)}
+                  mutateKey={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories/${activeCategory?.slug}`}
                 />
               </motion.div>
             </Grid>

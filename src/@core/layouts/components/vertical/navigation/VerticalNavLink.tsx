@@ -1,11 +1,10 @@
 "use client";
 
 // ** React Imports
-import { ElementType, ReactNode } from "react";
+import { ElementType } from "react";
 
 // ** Next Imports
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 // ** MUI Imports
 import Chip from "@mui/material/Chip";
@@ -17,34 +16,21 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemButton, {
   ListItemButtonProps,
 } from "@mui/material/ListItemButton";
-import { usePathname } from "next/navigation";
 
-// ** Configs Import
+// ** Configs
 import themeConfig from "src/configs/themeConfig";
 
 // ** Types
 import { NavLink } from "src/@core/layouts/types";
 import { Settings } from "src/@core/context/settingsContext";
 
-// ** Custom Components Imports
+// ** Custom Components
 import UserIcon from "src/layouts/components/UserIcon";
-
-// ** Utils
-import { handleURLQueries } from "src/@core/layouts/utils";
-
-interface Props {
-  item: NavLink;
-  settings: Settings;
-  navVisible?: boolean;
-  toggleNavVisibility: () => void;
-}
+import NextLinkComposed from "../../NextLinkComposed";
 
 // ** Styled Components
 const MenuNavLink = styled(ListItemButton)<
-  ListItemButtonProps & {
-    component?: ElementType;
-    target?: "_blank" | undefined;
-  }
+  ListItemButtonProps & { to?: string; target?: string; rel?: string }
 >(({ theme }) => ({
   width: "100%",
   borderTopRightRadius: 100,
@@ -61,33 +47,40 @@ const MenuNavLink = styled(ListItemButton)<
   },
 }));
 
-const MenuItemTextMetaWrapper = styled(Box)<BoxProps>({
+const MenuItemTextMetaWrapper = styled(Box)<BoxProps>(() => ({
   width: "100%",
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
   transition: "opacity .25s ease-in-out",
   ...(themeConfig.menuTextTruncate && { overflow: "hidden" }),
-});
+}));
+
+interface Props {
+  item: NavLink;
+  settings: Settings;
+  navVisible?: boolean;
+  toggleNavVisibility: () => void;
+}
+
 const VerticalNavLink = ({ item, navVisible, toggleNavVisibility }: Props) => {
   const router = useRouter();
   const pathname = usePathname();
-
-  const IconTag: ReactNode = item.icon;
+  const IconTag = item.icon as ElementType;
   const isActive = pathname === item.path;
 
   return (
     <ListItem
       disablePadding
       className="nav-link"
-      disabled={item.disabled || false}
       sx={{ mt: 1.5, px: "0 !important" }}
     >
       <MenuNavLink
-        component={Link}
-        href={item.path || "/"}
+        component={NextLinkComposed}
+        to={item.path || "/"}
         className={isActive ? "active" : ""}
         target={item.openInNewTab ? "_blank" : undefined}
+        rel={item.openInNewTab ? "noopener noreferrer" : undefined}
         onClick={(e) => {
           if (!item.path) {
             e.preventDefault();
@@ -98,7 +91,7 @@ const VerticalNavLink = ({ item, navVisible, toggleNavVisibility }: Props) => {
         sx={{
           pl: 5.5,
           ...(item.disabled
-            ? { pointerEvents: "none" }
+            ? { pointerEvents: "none", opacity: 0.5 }
             : { cursor: "pointer" }),
         }}
       >

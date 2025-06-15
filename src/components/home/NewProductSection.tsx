@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Box, Typography, useMediaQuery, useTheme, Fade } from "@mui/material";
 import Slider from "react-slick";
-import ProductCard, { Product } from "../product/ProductCard";
+import ProductCard from "../product/ProductCard";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
@@ -45,10 +45,15 @@ const NewProductSectionSlick: React.FC = () => {
 
           return {
             id: item.id,
-            title: item.name,
+            name: item.name,
             price: item.pricePerUnit,
+            pricePerUnit: item.pricePerUnit,
             originalPrice: item.price,
-            image: item.imageAvt,
+            imageAvt: item.imageAvt,
+            imageDetail1: item.imageDetail1,
+            imageDetail2: item.imageDetail2,
+            imageDetail3: item.imageDetail3,
+            description: item.description,
             status,
             sale: item.price !== item.pricePerUnit,
             inStock: item.active === true,
@@ -58,42 +63,24 @@ const NewProductSectionSlick: React.FC = () => {
             stockQuantity: item.stockQuantity,
             totalStock: item.totalStock,
             slug: item.slug,
-            isFavorite: item.wishListUser === true,
+            power: item.power || "N/A",
+            fuelType: item.fuelType || "N/A",
+            engineType: item.engineType || "N/A",
+            weight: item.weight || 0,
+            dimensions: item.dimensions || "",
+            tankCapacity: item.tankCapacity || 0,
+            origin: item.origin || "Không rõ",
+            warrantyMonths: item.warrantyMonths || 0,
+            createdBy: item.createdBy || "",
+            updatedAt: item.updatedAt || null,
+            updatedBy: item.updatedBy || null,
+            favorite: item.wishListUser === true,
           };
         }) || [];
 
       setProducts(mapped);
     } catch (err) {
       console.error("Lỗi khi lấy sản phẩm mới:", err);
-    }
-  };
-
-  const toggleWishlist = async (productId: number) => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      alert("Bạn cần đăng nhập để thêm vào yêu thích.");
-      return;
-    }
-
-    setProducts((prev) =>
-      prev.map((p) =>
-        p.id === productId ? { ...p, isFavorite: !p.isFavorite } : p
-      )
-    );
-
-    try {
-      const formData = new FormData();
-      formData.append("productId", String(productId));
-      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/wish_list`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-      dispatch(fetchWishlist());
-    } catch (err) {
-      console.error("Lỗi khi cập nhật yêu thích:", err);
     }
   };
 
@@ -143,8 +130,7 @@ const NewProductSectionSlick: React.FC = () => {
                 >
                   <ProductCard
                     product={product}
-                    isFavorite={product.isFavorite}
-                    onToggleFavorite={() => toggleWishlist(product.id)}
+                    mutateKey={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products?sort=createdAt,desc`}
                   />
                 </motion.div>
               </Box>

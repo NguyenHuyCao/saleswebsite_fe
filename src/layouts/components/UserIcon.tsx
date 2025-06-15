@@ -1,29 +1,16 @@
-// ** React Imports
-import { ReactNode } from 'react'
+// ==================== React & MUI Imports ====================
+import { ElementType } from "react";
+import { SvgIconProps } from "@mui/material";
 
-// ** MUI Imports
-import { SvgIconProps } from '@mui/material'
-
+// ==================== Props Interface ====================
 interface UserIconProps {
-  iconProps?: SvgIconProps
-  icon: string | ReactNode
+  iconProps?: SvgIconProps;
+  icon: ElementType; // Component, e.g., HomeOutlineIcon
 }
 
-const UserIcon = (props: UserIconProps) => {
-  // ** Props
-  const { icon, iconProps } = props
+// ==================== UserIcon Component ====================
+const UserIcon = ({ icon: IconTag, iconProps }: UserIconProps) => {
+  return <IconTag {...iconProps} />;
+};
 
-  const IconTag = icon
-
-  let styles
-
-  /* styles = {
-    color: 'red',
-    fontSize: '2rem'
-  } */
-
-  // @ts-ignore
-  return <IconTag {...iconProps} style={{ ...styles }} />
-}
-
-export default UserIcon
+export default UserIcon;
