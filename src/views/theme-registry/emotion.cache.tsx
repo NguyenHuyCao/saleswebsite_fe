@@ -1,12 +1,7 @@
 "use client";
 
-// ** React Imports
 import * as React from "react";
-
-// ** Next Imports
 import { useServerInsertedHTML } from "next/navigation";
-
-// ** Emotion Imports
 import createCache from "@emotion/cache";
 import { CacheProvider as DefaultCacheProvider } from "@emotion/react";
 import type {
@@ -57,48 +52,43 @@ export default function NextAppDirEmotionCacheProvider(
 
   useServerInsertedHTML(() => {
     const inserted = registry.flush();
-    if (inserted.length === 0) {
-      return null;
-    }
+    if (inserted.length === 0) return null;
 
     let styles = "";
     let dataEmotionAttribute = registry.cache.key;
 
-    const globals: {
-      name: string;
-      style: string;
-    }[] = [];
+    const globals: Array<JSX.Element> = [];
 
-    inserted.forEach(({ name, isGlobal }) => {
+    for (const { name, isGlobal } of inserted) {
       const style = registry.cache.inserted[name];
+
       if (typeof style === "string") {
         if (isGlobal) {
-          globals.push({ name, style });
+          globals.push(
+            <style
+              key={name}
+              data-emotion={`${registry.cache.key}-global ${name}`}
+              // eslint-disable-next-line react/no-danger
+              dangerouslySetInnerHTML={{ __html: style }}
+            />
+          );
         } else {
           styles += style;
           dataEmotionAttribute += ` ${name}`;
         }
       }
-    });
+    }
 
     return (
       <>
-        {globals.map(({ name, style }) => (
-          <style
-            key={name}
-            data-emotion={`${registry.cache.key}-global ${name}`}
-            // eslint-disable-next-line react/no-danger
-            dangerouslySetInnerHTML={{ __html: style }}
-          />
-        ))}
-
-        {styles ? (
+        {globals}
+        {styles !== "" && (
           <style
             data-emotion={dataEmotionAttribute}
             // eslint-disable-next-line react/no-danger
             dangerouslySetInnerHTML={{ __html: styles }}
           />
-        ) : null}
+        )}
       </>
     );
   });
