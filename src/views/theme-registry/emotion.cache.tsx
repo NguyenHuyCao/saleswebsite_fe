@@ -18,11 +18,13 @@ export type NextAppDirEmotionCacheProviderProps = {
   children: React.ReactNode;
 };
 
-export default function NextAppDirEmotionCacheProvider(
-  props: NextAppDirEmotionCacheProviderProps
-) {
-  const { options, CacheProvider = DefaultCacheProvider, children } = props;
-
+export default function NextAppDirEmotionCacheProvider({
+  options,
+  CacheProvider = ({ value, children }) => (
+    <DefaultCacheProvider value={value}>{children}</DefaultCacheProvider>
+  ),
+  children,
+}: NextAppDirEmotionCacheProviderProps) {
   const [registry] = React.useState(() => {
     const cache = createCache(options);
     cache.compat = true;
@@ -63,12 +65,12 @@ export default function NextAppDirEmotionCacheProvider(
       const rawStyle = registry.cache.inserted[name];
       if (typeof rawStyle === "string") {
         if (isGlobal) {
-          const safeStyle = rawStyle; // now definitely string
+          const safeStyle = rawStyle;
           globals.push(
             <style
               key={name}
               data-emotion={`${registry.cache.key}-global ${name}`}
-              dangerouslySetInnerHTML={{ __html: safeStyle }}
+              children={safeStyle}
             />
           );
         } else {
@@ -82,10 +84,7 @@ export default function NextAppDirEmotionCacheProvider(
       <>
         {globals}
         {styles && (
-          <style
-            data-emotion={dataEmotionAttribute}
-            dangerouslySetInnerHTML={{ __html: styles }}
-          />
+          <style data-emotion={dataEmotionAttribute} children={styles} />
         )}
       </>
     );
