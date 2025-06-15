@@ -1,0 +1,70 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  /* width: 100%; */
+  width: 100vw;
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+
+#__next {
+  width: 100%;
+  /* ✅ Đổi thành min-height thay vì height */
+  min-height: 100vh;
+}
+
+code {
+  font-family: "Inter", sans-serif, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
+    "Droid Sans", "Helvetica Neue";
+  padding: 0.1rem 0.4rem;
+  font-size: 90%;
+  color: #d400ff;
+  border-radius: 0.1335rem;
+}
+code:not([class*="language-"]):before,
+code:not([class*="language-"]):after {
+  content: "`";
+}
+code[class*="language-"] {
+  padding: 0;
+}
+
+#__next {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.slick-prev:before,
+.slick-next:before {
+  color: #f25c05 !important; /* Màu cam chủ đạo của bạn */
+  font-size: 24px;
+  opacity: 1 !important; /* Đảm bảo nó hiển thị rõ */
+}
+
+.slick-prev:hover:before,
+.slick-next:hover:before {
+  color: #ff9800;
+}
+
+.MuiMenu-paper {
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+/* 
+@keyframes explosionBurst {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.1;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+} */

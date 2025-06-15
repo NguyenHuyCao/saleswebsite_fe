@@ -1,23 +1,23 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   reactStrictMode: true,
-  // output: "standalone",
-  swcMinify: true,
+  devIndicators: false,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   modularizeImports: {
     "@mui/icons-material": {
       transform: "@mui/icons-material/{{member}}",
     },
   },
   images: {
-    domains: ["localhost"],
+    domains: ["res.cloudinary.com", "img.icons8.com"],
     remotePatterns: [
       {
-        protocol: "http",
-        hostname: "localhost",
-        port: "8000",
-        pathname: "/images/**",
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/**",
       },
     ],
   },

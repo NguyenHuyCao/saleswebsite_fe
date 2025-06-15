@@ -1,0 +1,263 @@
+"use client";
+
+import React, { useMemo, useState } from "react";
+import {
+  Box,
+  Typography,
+  Grid,
+  Paper,
+  TextField,
+  InputAdornment,
+  ListItemButton,
+  ListItemText,
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+
+const newsPosts = [
+  {
+    title: "Khám phá các công cụ để tăng năng suất của bạn vào năm 2023",
+    date: "23/08/2023",
+    image: "/images/news/images (1).jpeg",
+    slug: "cong-cu-nang-suat-2023",
+  },
+  {
+    title: "TOP 5 máy mài pin nhỏ, hãy xem ngay!",
+    date: "23/08/2023",
+    image: "/images/news/images (2).jpeg",
+    slug: "top-5-may-mai-pin-nho",
+  },
+  {
+    title: "Đã thử nghiệm gói dụng cụ điện mới năm 2023! Kiểm tra kết quả",
+    date: "23/08/2023",
+    image: "/images/news/cat-gx35-500x667-1.jpg",
+    slug: "thu-nghiem-goi-dung-cu-dien-2023",
+  },
+  {
+    title: "Chuyên gia thấu hiểu 5 lời khuyên quan trọng trước khi mua dụng cụ",
+    date: "23/08/2023",
+    image: "/images/news/images.jpeg",
+    slug: "5-loi-khuyen-truoc-khi-mua-dung-cu",
+  },
+  {
+    title: "Xem bộ sưu tập phụ kiện công cụ mới – khuyến mãi hấp dẫn",
+    date: "23/08/2023",
+    image: "/images/news/z2818887202266_c1eb1e8b1e19c647d4fb8dc49f910cac.jpg",
+    slug: "phu-kien-cong-cu-khuyen-mai",
+  },
+];
+
+const categories = [
+  { name: "Trang chủ", path: "/" },
+  { name: "Giới thiệu", path: "/about" },
+  { name: "Thương hiệu", path: "/brand" },
+  { name: "Sản phẩm", path: "/product" },
+  { name: "Sản phẩm khuyến mãi", path: "/promotion" },
+  { name: "Tin tức", path: "/new" },
+  { name: "Liên hệ", path: "/contact" },
+  { name: "Hệ thống cửa hàng", path: "/system" },
+  { name: "Câu hỏi thường gặp", path: "/question" },
+  { name: "Chế độ bảo hành", path: "/warranty" },
+];
+
+// Animation Variants
+const containerVariants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+};
+
+const cardVariants = {
+  hover: { translateY: -5, boxShadow: "0px 8px 15px rgba(0,0,0,0.1)" },
+};
+
+const listVariants = {
+  initial: { opacity: 0, x: -20 },
+  animate: { opacity: 1, x: 0 },
+  hover: {
+    x: 4,
+    backgroundColor: "#fff8e1",
+    boxShadow: "0px 4px 10px rgba(0,0,0,0.08)",
+  },
+};
+
+const NewsPage = () => {
+  const router = useRouter();
+  const [keyword, setKeyword] = useState("");
+
+  const filteredPosts = useMemo(() => {
+    const q = keyword.trim().toLowerCase();
+    return newsPosts.filter((i) => i.title.toLowerCase().includes(q));
+  }, [keyword]);
+
+  return (
+    <motion.div variants={containerVariants} initial="hidden" animate="visible">
+      <Box px={{ xs: 2, md: 3 }} py={6}>
+        <Typography variant="h4" fontWeight="bold" mb={4}>
+          Tin tức
+        </Typography>
+
+        <TextField
+          fullWidth
+          size="small"
+          placeholder="Tìm kiếm bài viết..."
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+          sx={{ maxWidth: 500, mb: 4 }}
+        />
+
+        <Grid container spacing={4}>
+          {/* Main content */}
+          <Grid size={{ xs: 12, md: 8 }}>
+            <Grid container spacing={2}>
+              {filteredPosts.map((post, idx) => (
+                <Grid size={{ xs: 12, sm: 6 }} key={idx}>
+                  <motion.div
+                    variants={cardVariants}
+                    initial="rest"
+                    whileHover="hover"
+                    style={{ borderRadius: 8 }}
+                  >
+                    <Paper
+                      onClick={() => router.push(`/news/${post.slug}`)}
+                      sx={{
+                        p: 2,
+                        borderRadius: 2,
+                        cursor: "pointer",
+                      }}
+                      elevation={3}
+                    >
+                      <Box mb={1}>
+                        <Image
+                          src={post.image}
+                          alt={post.title}
+                          width={400}
+                          height={180}
+                          style={{
+                            width: "100%",
+                            height: 180,
+                            objectFit: "cover",
+                            borderRadius: 8,
+                          }}
+                        />
+                      </Box>
+                      <Typography fontWeight={600} fontSize={16} gutterBottom>
+                        {post.title}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {post.date}
+                      </Typography>
+                    </Paper>
+                  </motion.div>
+                </Grid>
+              ))}
+              {filteredPosts.length === 0 && (
+                <Typography pl={2}>Không tìm thấy bài viết phù hợp.</Typography>
+              )}
+            </Grid>
+          </Grid>
+
+          {/* Sidebar */}
+          <Grid size={{ xs: 12, md: 4 }}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.6 }}
+            >
+              <Paper elevation={3} sx={{ p: 2, mb: 4 }}>
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  color="warning.main"
+                  gutterBottom
+                >
+                  Danh mục tin tức
+                </Typography>
+                {categories.map((cat, idx) => (
+                  <ListItemButton
+                    key={idx}
+                    onClick={() => router.push(cat.path)}
+                    component={motion.div}
+                    whileHover={{ backgroundColor: "#ffe0b2", x: 4 }}
+                    sx={{ borderRadius: 1, px: 1 }}
+                  >
+                    <ListItemText primary={cat.name} />
+                  </ListItemButton>
+                ))}
+              </Paper>
+
+              <Paper elevation={3} sx={{ p: 2 }}>
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  color="warning.main"
+                  mb={2}
+                >
+                  Tin mới nhất
+                </Typography>
+
+                {newsPosts.slice(0, 5).map((item, idx) => (
+                  <motion.div
+                    key={idx}
+                    variants={listVariants}
+                    initial="initial"
+                    animate="animate"
+                    whileHover="hover"
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Box
+                      display="flex"
+                      gap={1.5}
+                      mb={2}
+                      sx={{ cursor: "pointer", p: 1, borderRadius: 2 }}
+                      onClick={() => router.push(`/news/${item.slug}`)}
+                    >
+                      <Image
+                        src={item.image}
+                        alt={item.title}
+                        width={60}
+                        height={60}
+                        style={{
+                          borderRadius: 6,
+                          objectFit: "cover",
+                          flexShrink: 0,
+                        }}
+                      />
+                      <Box>
+                        <Typography
+                          variant="body2"
+                          fontWeight={600}
+                          sx={{
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                          }}
+                        >
+                          {item.title}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {item.date}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </motion.div>
+                ))}
+              </Paper>
+            </motion.div>
+          </Grid>
+        </Grid>
+      </Box>
+    </motion.div>
+  );
+};
+
+export default NewsPage;
