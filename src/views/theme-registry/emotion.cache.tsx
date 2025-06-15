@@ -1,8 +1,13 @@
 "use client";
 
+// ** React Imports
 import * as React from "react";
-import createCache from "@emotion/cache";
+
+// ** Next Imports
 import { useServerInsertedHTML } from "next/navigation";
+
+// ** Emotion Imports
+import createCache from "@emotion/cache";
 import { CacheProvider as DefaultCacheProvider } from "@emotion/react";
 import type {
   EmotionCache,
@@ -61,12 +66,12 @@ export default function NextAppDirEmotionCacheProvider(
 
     const globals: {
       name: string;
-      style: string | undefined;
+      style: string;
     }[] = [];
 
     inserted.forEach(({ name, isGlobal }) => {
       const style = registry.cache.inserted[name];
-      if (typeof style !== "boolean") {
+      if (typeof style === "string") {
         if (isGlobal) {
           globals.push({ name, style });
         } else {
@@ -83,17 +88,17 @@ export default function NextAppDirEmotionCacheProvider(
             key={name}
             data-emotion={`${registry.cache.key}-global ${name}`}
             // eslint-disable-next-line react/no-danger
-            dangerouslySetInnerHTML={{ __html: style ?? "" }}
+            dangerouslySetInnerHTML={{ __html: style }}
           />
         ))}
 
-        {styles && (
+        {styles ? (
           <style
             data-emotion={dataEmotionAttribute}
             // eslint-disable-next-line react/no-danger
             dangerouslySetInnerHTML={{ __html: styles }}
           />
-        )}
+        ) : null}
       </>
     );
   });
