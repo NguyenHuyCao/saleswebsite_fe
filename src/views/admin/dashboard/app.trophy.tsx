@@ -48,6 +48,10 @@ interface BestSellingProduct {
   lastMonthQuantity: number;
 }
 
+// Helper
+const formatCurrency = (value?: number | null): string =>
+  value != null ? value.toLocaleString("vi-VN") + "₫" : "0₫";
+
 const Trophy = () => {
   const theme = useTheme();
   const imageSrc =
@@ -59,7 +63,7 @@ const Trophy = () => {
 
   const chartOptions: ApexOptions = {
     chart: {
-      type: "bar", // ✅ đây là 'bar', phù hợp với type
+      type: "bar",
       toolbar: { show: false },
     },
     plotOptions: {
@@ -89,8 +93,10 @@ const Trophy = () => {
           }
         );
         const json = await res.json();
-        if (json.status === 200) {
+        if (json.status === 200 && json.data) {
           setProduct(json.data);
+        } else {
+          console.warn("Dữ liệu không hợp lệ:", json);
         }
       } catch (err) {
         console.error("Lỗi khi fetch sản phẩm bán chạy:", err);
@@ -105,14 +111,14 @@ const Trophy = () => {
       ? [
           {
             name: "Doanh thu (₫)",
-            data: [product.lastMonthRevenue, product.revenue],
+            data: [product.lastMonthRevenue ?? 0, product.revenue ?? 0],
           },
         ]
       : product
       ? [
           {
             name: "Số lượng bán",
-            data: [product.lastMonthQuantity, product.quantitySold],
+            data: [product.lastMonthQuantity ?? 0, product.quantitySold ?? 0],
           },
         ]
       : [];
@@ -128,7 +134,7 @@ const Trophy = () => {
               : "Đang tải..."}
           </Typography>
           <Typography variant="h5" sx={{ my: 4, color: "primary.main" }}>
-            {product ? product.revenue.toLocaleString("vi-VN") + "₫" : "0₫"}
+            {formatCurrency(product?.revenue)}
           </Typography>
           <Button
             size="small"
@@ -185,13 +191,15 @@ const Trophy = () => {
                 <Box>
                   <Typography variant="subtitle2">Tổng doanh thu</Typography>
                   <Typography variant="h6" color="primary">
-                    {product.revenue.toLocaleString("vi-VN")}₫
+                    {formatCurrency(product?.revenue)}
                   </Typography>
                 </Box>
 
                 <Box>
                   <Typography variant="subtitle2">Số lượng bán</Typography>
-                  <Typography variant="h6">{product.quantitySold}</Typography>
+                  <Typography variant="h6">
+                    {product.quantitySold ?? 0}
+                  </Typography>
                 </Box>
 
                 <Box>

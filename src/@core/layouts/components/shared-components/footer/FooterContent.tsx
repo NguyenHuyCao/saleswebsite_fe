@@ -39,13 +39,13 @@ const FooterContent = () => {
           <Link target="_blank" href="/about">
             Giới thiệu
           </Link>
-          <Link target="_blank" href="/chinh-sach">
+          <Link target="_blank" href="/warranty">
             Chính sách bảo hành
           </Link>
-          <Link target="_blank" href="/huong-dan-mua-hang">
+          <Link target="_blank" href="/question">
             Hướng dẫn mua hàng
           </Link>
-          <Link target="_blank" href="/lien-he">
+          <Link target="_blank" href="/contact">
             Liên hệ
           </Link>
         </Box>

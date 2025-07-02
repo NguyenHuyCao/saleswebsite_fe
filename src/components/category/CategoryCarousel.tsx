@@ -152,7 +152,7 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ categories }) => {
                 >
                   <Image
                     src={item.image}
-                    alt={item.name}
+                    alt={item.name ?? "Category Image"}
                     fill
                     style={{
                       objectFit: "cover",

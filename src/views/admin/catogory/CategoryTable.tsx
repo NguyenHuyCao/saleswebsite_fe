@@ -55,29 +55,27 @@ const CategoryTablePage = () => {
   const [editingCategory, setEditingCategory] = useState<CategoryData | null>(
     null
   );
-
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarType, setSnackbarType] = useState<"success" | "error">(
     "success"
   );
-
   const [loading, setLoading] = useState(false);
+
+  const keyword = useSelector((state: AppState) =>
+    state.search.keyword.trim().toLowerCase()
+  );
 
   const handleChangePage = (_: unknown, newPage: number) => {
     setLoading(true);
     setTimeout(() => {
       setPage(newPage);
       setLoading(false);
-    }, 100); // delay nhỏ để tạo cảm giác chuyển mượt
+    }, 100);
   };
 
   const handleCloseSnackbar = () => setOpenSnackbar(false);
-
-  const keyword = useSelector((state: AppState) =>
-    state.search.keyword.trim().toLowerCase()
-  );
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -89,8 +87,9 @@ const CategoryTablePage = () => {
         }
       );
       const data = await res.json();
-      if (!data.data || !Array.isArray(data.data.result))
+      if (!data.data || !Array.isArray(data.data.result)) {
         throw new Error("Invalid API response format");
+      }
       setCategories(data.data.result);
     } catch (error) {
       console.error("Lỗi fetch categories:", error);
@@ -110,9 +109,8 @@ const CategoryTablePage = () => {
       const dateMatch = createdDate.includes(keyword);
       return nameMatch || dateMatch;
     });
-
     setFilteredCategories(filtered);
-    if (keyword) setPage(0); // chỉ reset khi người dùng đang tìm kiếm
+    if (keyword) setPage(0);
   }, [categories, keyword]);
 
   const handleChangeRowsPerPage = (e: ChangeEvent<HTMLInputElement>) => {
@@ -176,7 +174,6 @@ const CategoryTablePage = () => {
           body: formData,
         }
       );
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Lỗi không xác định");
 
@@ -236,9 +233,9 @@ const CategoryTablePage = () => {
                         <TableCell>
                           <Image
                             src={
-                              category.image
-                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/images/${category.image}`
-                                : "/no-image.png"
+                              category.image?.startsWith("http")
+                                ? category.image
+                                : `${process.env.NEXT_PUBLIC_BACKEND_URL}/images/${category.image}`
                             }
                             alt={category.name}
                             width={80}
@@ -373,9 +370,9 @@ const CategoryTablePage = () => {
           }
           initialName={editingCategory.name}
           initialImageUrl={
-            editingCategory.image
-              ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/images/${editingCategory.image}`
-              : undefined
+            editingCategory.image?.startsWith("http")
+              ? editingCategory.image
+              : `${process.env.NEXT_PUBLIC_BACKEND_URL}/images/${editingCategory.image}`
           }
         />
       )}

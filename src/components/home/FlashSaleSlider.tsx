@@ -105,6 +105,9 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
     dispatch(fetchWishlist());
   }, [dispatch]);
 
+  const isExpired = new Date() > new Date(promotion.endDate);
+  if (isExpired) return null;
+
   const settings = {
     infinite: false,
     speed: 500,
