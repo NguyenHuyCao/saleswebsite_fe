@@ -52,8 +52,14 @@ const TotalEarning = () => {
             },
           }
         );
+
+        if (!res.ok) {
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+
         const json = await res.json();
-        if (json.status === 200) {
+
+        if (json.status === 200 && json.data) {
           const data = json.data;
           setBrandSales(
             data.brandSales.map((item: any) => ({
@@ -66,11 +72,14 @@ const TotalEarning = () => {
           setThisYearTotal(data.thisYearTotal);
           setLastYearTotal(data.lastYearTotal);
           setGrowthRate(data.growthRate);
+        } else {
+          console.error("Invalid response structure:", json);
         }
       } catch (error) {
         console.error("Fetch brand report error:", error);
       }
     };
+
     fetchData();
   }, []);
 

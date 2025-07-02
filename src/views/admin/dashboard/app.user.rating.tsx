@@ -69,24 +69,39 @@ const UserRatingPage = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem("accessToken");
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/review-stats`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
+      try {
+        const token = localStorage.getItem("accessToken");
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/review-stats`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+
+        const json = await res.json();
+
+        if (json.status === 200 && json.data) {
+          const data = json.data[timeRange] as number[][];
+          const ratingMap = [0, 0, 0, 0, 0];
+          data.forEach(([_, rating, count]) => {
+            if (rating >= 1 && rating <= 5) ratingMap[5 - rating] += count;
+          });
+          setRatings(ratingMap);
+          setReviewDetails(json.data.reviewDetails || []);
+        } else {
+          console.error("Invalid response:", json);
+          setRatings([0, 0, 0, 0, 0]);
+          setReviewDetails([]);
         }
-      );
-      const json = await res.json();
-      if (json.status === 200) {
-        const data = json.data[timeRange] as number[][];
-        const ratingMap = [0, 0, 0, 0, 0];
-        data.forEach(([_, rating, count]) => {
-          if (rating >= 1 && rating <= 5) ratingMap[5 - rating] += count;
-        });
-        setRatings(ratingMap);
-        setReviewDetails(json.data.reviewDetails);
+      } catch (error) {
+        console.error("Failed to fetch review stats:", error);
+        setRatings([0, 0, 0, 0, 0]);
+        setReviewDetails([]);
       }
     };
+
     fetchData();
   }, [timeRange]);
 
@@ -107,7 +122,7 @@ const UserRatingPage = () => {
               <DotsVertical />
             </IconButton>
             <Menu
-              disableScrollLock={true}
+              disableScrollLock
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
               onClose={() => setAnchorEl(null)}
@@ -191,11 +206,10 @@ const UserRatingPage = () => {
         </Button>
       </CardContent>
 
-      {/* Modal hiển thị đánh giá chi tiết */}
       <Modal
         open={openModal}
         onClose={() => setOpenModal(false)}
-        disableScrollLock={true}
+        disableScrollLock
       >
         <Fade in={openModal}>
           <Box
@@ -209,11 +223,7 @@ const UserRatingPage = () => {
               p: 4,
               maxHeight: "90vh",
               overflowY: "auto",
-
-              // 🎨 Scrollbar custom styles
-              "&::-webkit-scrollbar": {
-                width: "8px",
-              },
+              "&::-webkit-scrollbar": { width: "8px" },
               "&::-webkit-scrollbar-track": {
                 backgroundColor: "#f1f1f1",
                 borderRadius: "8px",
@@ -225,42 +235,48 @@ const UserRatingPage = () => {
               "&::-webkit-scrollbar-thumb:hover": {
                 backgroundColor: "#9333ea",
               },
-              scrollbarWidth: "thin", // Firefox
+              scrollbarWidth: "thin",
               scrollbarColor: "#a855f7 #f1f1f1",
             }}
           >
             <Typography variant="h6" mb={3}>
               Chi tiết đánh giá
             </Typography>
-            <Stack spacing={3}>
-              {reviewDetails.map((review, i) => (
-                <Stack
-                  key={i}
-                  direction="row"
-                  spacing={2}
-                  alignItems="flex-start"
-                >
-                  <Avatar
-                    src={`/images/products/${review.productImage}`}
-                    variant="rounded"
-                  />
-                  <Box>
-                    <Typography fontWeight={600}>
-                      {review.productName}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {formatDate(review.createdAt)} - {review.username}
-                    </Typography>
-                    <Typography variant="body2" color="warning.main">
-                      {Array(review.rating).fill("⭐").join("")}
-                    </Typography>
-                    <Typography variant="body2" mt={0.5}>
-                      {review.comment}
-                    </Typography>
-                  </Box>
-                </Stack>
-              ))}
-            </Stack>
+            {reviewDetails.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">
+                Không có đánh giá nào trong khoảng thời gian này.
+              </Typography>
+            ) : (
+              <Stack spacing={3}>
+                {reviewDetails.map((review, i) => (
+                  <Stack
+                    key={i}
+                    direction="row"
+                    spacing={2}
+                    alignItems="flex-start"
+                  >
+                    <Avatar
+                      src={`/images/products/${review.productImage}`}
+                      variant="rounded"
+                    />
+                    <Box>
+                      <Typography fontWeight={600}>
+                        {review.productName}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {formatDate(review.createdAt)} - {review.username}
+                      </Typography>
+                      <Typography variant="body2" color="warning.main">
+                        {Array(review.rating).fill("⭐").join("")}
+                      </Typography>
+                      <Typography variant="body2" mt={0.5}>
+                        {review.comment}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                ))}
+              </Stack>
+            )}
             <Stack alignItems="flex-end" mt={4}>
               <Button onClick={() => setOpenModal(false)}>Đóng</Button>
             </Stack>

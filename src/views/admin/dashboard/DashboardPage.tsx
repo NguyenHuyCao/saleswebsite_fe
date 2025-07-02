@@ -77,31 +77,36 @@ const DashboardPage = () => {
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     const fetchData = async () => {
-      const fetchFrom = async (url: string) => {
-        const res = await fetch(url, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        return res.json();
-      };
-      const [profitData, refundData, visitorData, salesData] =
-        await Promise.all([
-          fetchFrom(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/profit-summary`
-          ),
-          fetchFrom(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/total-refund`
-          ),
-          fetchFrom(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/visitor-statistics`
-          ),
-          fetchFrom(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/sales-statistics`
-          ),
-        ]);
-      if (profitData.status === 200) setProfit(profitData.data);
-      if (refundData.status === 200) setRefund(refundData.data);
-      if (visitorData.status === 200) setVisitor(visitorData.data);
-      if (salesData.status === 200) setSales(salesData.data);
+      try {
+        const fetchFrom = async (url: string) => {
+          const res = await fetch(url, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          return res.json();
+        };
+        const [profitData, refundData, visitorData, salesData] =
+          await Promise.all([
+            fetchFrom(
+              `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/profit-summary`
+            ),
+            fetchFrom(
+              `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/total-refund`
+            ),
+            fetchFrom(
+              `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/visitor-statistics`
+            ),
+            fetchFrom(
+              `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/sales-statistics`
+            ),
+          ]);
+
+        if (profitData.status === 200) setProfit(profitData.data);
+        if (refundData.status === 200) setRefund(refundData.data);
+        if (visitorData.status === 200) setVisitor(visitorData.data);
+        if (salesData.status === 200) setSales(salesData.data);
+      } catch (error) {
+        console.error("Fetch dashboard data error:", error);
+      }
     };
     fetchData();
   }, []);
@@ -115,7 +120,6 @@ const DashboardPage = () => {
         <Grid size={{ xs: 12, md: 8 }}>
           <StatisticsCard />
         </Grid>
-
         <Grid size={{ xs: 12, md: 4 }}>
           <WeeklyOverview />
         </Grid>
@@ -209,7 +213,6 @@ const DashboardPage = () => {
             </Grid>
           </Grid>
         </Grid>
-
         <Grid size={{ xs: 12, md: 4 }}>
           <Box ref={sectionRefs["Sản phẩm bán chạy"]}>
             <SalesByCategories />
@@ -218,7 +221,6 @@ const DashboardPage = () => {
         <Grid size={{ xs: 12, md: 8 }}>
           <TopSellingAndLowRevenue />
         </Grid>
-
         <Grid size={{ xs: 12, md: 4 }}>
           <Box ref={sectionRefs["Đánh giá người dùng"]}>
             <UserRatingPage />
@@ -229,7 +231,6 @@ const DashboardPage = () => {
             <IncomeAreaChart />
           </Box>
         </Grid>
-
         <Grid size={{ xs: 12, md: 4 }}>
           <Box ref={sectionRefs["Báo cáo"]}>
             <ReportAreaChart />
@@ -240,7 +241,6 @@ const DashboardPage = () => {
             <OrderTable />
           </Box>
         </Grid>
-
         <Grid size={{ xs: 12, md: 4 }}>
           <Box ref={sectionRefs["Lịch sử giao dịch"]}>
             <TransactionHistoryCard />
@@ -249,7 +249,6 @@ const DashboardPage = () => {
         <Grid size={{ xs: 12, md: 8 }}>
           <SaleReportCard />
         </Grid>
-
         <Grid size={{ xs: 12 }}>
           <DashboardTable />
         </Grid>
