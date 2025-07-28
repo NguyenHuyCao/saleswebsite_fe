@@ -222,7 +222,7 @@ const OrderListSection = () => {
                     alignItems="center"
                   >
                     <Image
-                      src={item.productImage}
+                      src={item.imageUrl}
                       alt={item.productName}
                       width={60}
                       height={60}

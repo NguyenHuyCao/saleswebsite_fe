@@ -44,7 +44,7 @@ const ProductItem = ({
       }}
     >
       <Image
-        src={`/images/products/${product.imageAvt}`}
+        src={`${product.imageAvt}`}
         alt={product.name}
         width={28}
         height={28}

@@ -15,7 +15,7 @@ import MuiAlert, { AlertColor } from "@mui/material/Alert";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const AlertSnackbar = ({
   open,
@@ -46,13 +46,7 @@ const AlertSnackbar = ({
   </Snackbar>
 );
 
-export default function ChangePasswordForm({
-  userId,
-  token,
-}: {
-  userId: number | null;
-  token: string | null;
-}) {
+export default function ChangePasswordForm() {
   const [formData, setFormData] = useState({
     currentPassword: "",
     newPassword: "",
@@ -65,6 +59,8 @@ export default function ChangePasswordForm({
     confirm: false,
   });
 
+  const [userId, setUserId] = useState<number | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [snackbar, setSnackbar] = useState<{
@@ -76,6 +72,25 @@ export default function ChangePasswordForm({
     message: "",
     severity: "success",
   });
+
+  // ✅ Lấy token và userId từ localStorage sau khi component mounted
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    const accessToken = localStorage.getItem("accessToken");
+
+    if (user) {
+      try {
+        const parsed = JSON.parse(user);
+        setUserId(parsed?.id || null);
+      } catch (err) {
+        console.error("Error parsing user from localStorage:", err);
+      }
+    }
+
+    if (accessToken) {
+      setToken(accessToken);
+    }
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -122,7 +137,7 @@ export default function ChangePasswordForm({
     try {
       setLoading(true);
 
-      const res = await fetch(
+      const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users/change_password${
           userId ? `?userId=${userId}` : ""
         }`,
@@ -140,8 +155,10 @@ export default function ChangePasswordForm({
         }
       );
 
-      const data = await res.json();
-      const success = res.ok && data.status === 200;
+      const data = await response.json();
+      console.log("Change password response:", data);
+
+      const success = data.status === 200;
 
       setSnackbar({
         open: true,
@@ -159,12 +176,12 @@ export default function ChangePasswordForm({
         });
       }
     } catch (err) {
+      console.error("Error changing password:", err);
       setSnackbar({
         open: true,
         message: "Lỗi kết nối tới máy chủ!",
         severity: "error",
       });
-      console.log(err);
     } finally {
       setLoading(false);
     }

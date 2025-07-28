@@ -127,7 +127,7 @@ const Trophy = () => {
     <>
       <Card sx={{ position: "relative", minHeight: 210 }}>
         <CardContent>
-          <Typography variant="h6">Chúc mừng bạn đã xuất sắc!</Typography>
+          <Typography variant="h6">Sản phẩm bán chạy nhất</Typography>
           <Typography variant="body2" sx={{ letterSpacing: "0.25px" }}>
             {product
               ? `${product.name} bán chạy nhất tháng này`

@@ -153,7 +153,7 @@ const TotalEarning = () => {
               }}
             >
               <Image
-                src={`/images/cards/${item.logo}`}
+                src={`${item.logo}`}
                 alt={item.name}
                 width={40}
                 height={20}
@@ -231,7 +231,7 @@ const TotalEarning = () => {
                 }}
               >
                 <Image
-                  src={`/images/cards/${item.logo}`}
+                  src={`${item.logo}`}
                   alt={item.name}
                   width={40}
                   height={20}

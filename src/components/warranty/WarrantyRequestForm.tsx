@@ -84,6 +84,7 @@ const WarrantyRequestForm = () => {
           }
         );
         const result = await res.json();
+        console.log("Order details:", result);
         setOrderProducts(result?.status === 200 ? result.data.items : []);
       } catch (error) {
         setOrderProducts([]);
@@ -147,7 +148,7 @@ const WarrantyRequestForm = () => {
       if (file) formDataToSend.append("imageUrl", file);
 
       const res = await fetch(
-        "${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/warranty_claim",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/warranty_claim`,
         {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
@@ -237,7 +238,7 @@ const WarrantyRequestForm = () => {
                 }
               >
                 {orderProducts.map((p) => (
-                  <MenuItem key={p.productId} value={p.productId}>
+                  <MenuItem key={p.productDetailId} value={p.productDetailId}>
                     {p.productName} (SL: {p.quantity})
                   </MenuItem>
                 ))}

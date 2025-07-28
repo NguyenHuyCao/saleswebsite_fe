@@ -26,8 +26,8 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
   const pathname = usePathname();
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return;
+    // const token = localStorage.getItem("accessToken");
+    // if (!token) return;
 
     const fetchData = async () => {
       try {

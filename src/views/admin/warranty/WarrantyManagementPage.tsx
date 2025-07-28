@@ -212,7 +212,7 @@ const WarrantyManagementPage = () => {
                       <TableCell>{claim.status}</TableCell>
                       <TableCell>
                         <Image
-                          src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/public/images/${claim.imageUrl}`}
+                          src={`${claim.imageUrl}`}
                           alt="Ảnh lỗi"
                           width={60}
                           height={60}
