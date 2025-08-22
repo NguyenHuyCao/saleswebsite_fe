@@ -203,6 +203,8 @@ const NotificationDropdown = () => {
                     width={38}
                     height={38}
                     alt={noti.title}
+                    sizes="38px"
+                    loading="lazy"
                   />
                 ) : noti.avatar ? (
                   <Avatar alt={noti.title} src={noti.avatar} />

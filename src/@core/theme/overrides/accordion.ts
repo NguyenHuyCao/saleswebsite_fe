@@ -7,7 +7,7 @@ const Accordion = (theme: Theme) => {
       styleOverrides: {
         root: {
           "&.Mui-disabled": {
-            backgroundColor: `rgba(${theme.palette.customColors.main}, 0.12)`,
+            backgroundColor: `rgba(${theme.palette.customColors.mainChannel}, 0.12)`,
           },
           "&.Mui-expanded": {
             boxShadow: theme.shadows[3],

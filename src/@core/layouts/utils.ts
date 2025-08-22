@@ -1,23 +1,17 @@
 "use client";
-// ** Types
+import {
+  ReadonlyURLSearchParams,
+  usePathname,
+  useSearchParams,
+} from "next/navigation";
 
-/**
- * Check for URL queries as well for matching
- * Current URL & Item Path
- *
- * @param item
- * @param activeItem
- */
-export const handleURLQueries = (
-  router: { query?: Record<string, any>; asPath: string },
-  path: string | undefined
-): boolean => {
-  if (!router?.query || !path) return false;
-
-  const arr = Object.keys(router.query);
-  return (
-    router.asPath.includes(path) &&
-    router.asPath.includes(router.query[arr[0]] as string) &&
-    path !== "/"
-  );
+/** Trả về true nếu `path` khớp pathname hiện tại và chứa cùng tham số query chính (nếu có). */
+export const useIsActivePath = (path?: string, key?: string) => {
+  const pathname = usePathname();
+  const search = useSearchParams();
+  if (!path) return false;
+  if (pathname !== path) return false;
+  if (!key) return true;
+  const current = search.get(key);
+  return typeof current === "string" && current.length > 0;
 };

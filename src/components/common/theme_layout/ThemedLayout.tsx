@@ -5,7 +5,7 @@ import {
   SettingsProvider,
   SettingsConsumer,
 } from "src/@core/context/settingsContext";
-import ThemeComponent from "@/@core/theme/ThemeComponent";
+import ThemeComponent from "@/@core/theme/overrides/ThemeComponent";
 import Providers from "@/components/redux/Providers";
 
 export default function ThemedLayout({

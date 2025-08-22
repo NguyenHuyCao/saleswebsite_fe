@@ -1,6 +1,8 @@
 "use client";
 
-// ** MUI Imports
+import { useEffect, useMemo, useState } from "react";
+
+// MUI
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import Avatar from "@mui/material/Avatar";
@@ -16,22 +18,26 @@ import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import { alpha } from "@mui/material/styles";
 
-// ** Icons Imports
+// Icons
 import MenuUp from "mdi-material-ui/MenuUp";
 import DotsVertical from "mdi-material-ui/DotsVertical";
 
-// ** Next Imports
+// Next
 import Image from "next/image";
-
-// ** React Imports
-import { useEffect, useState } from "react";
 
 interface BrandSaleType {
   name: string;
   logo: string;
   founded: string;
-  revenue: number;
+  revenue: number; // always number in state
 }
+
+const formatVND = (n: number) =>
+  new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0,
+  }).format(n || 0);
 
 const TotalEarning = () => {
   const [brandSales, setBrandSales] = useState<BrandSaleType[]>([]);
@@ -41,51 +47,67 @@ const TotalEarning = () => {
   const [openDetail, setOpenDetail] = useState(false);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem("accessToken");
+        const token =
+          typeof window !== "undefined"
+            ? localStorage.getItem("accessToken")
+            : null;
+
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/monthly-brand-report`,
           {
             headers: {
-              Authorization: `Bearer ${token}`,
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
             },
+            signal: controller.signal,
           }
         );
 
-        if (!res.ok) {
-          throw new Error(`HTTP error! Status: ${res.status}`);
-        }
+        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
 
         const json = await res.json();
 
-        if (json.status === 200 && json.data) {
+        if (json?.status === 200 && json?.data) {
           const data = json.data;
+
           setBrandSales(
-            data.brandSales.map((item: any) => ({
-              name: item[0],
-              logo: item[1],
-              founded: item[2],
-              revenue: item[3],
+            (data.brandSales || []).map((item: any) => ({
+              name: String(item?.[0] ?? ""),
+              logo: String(item?.[1] ?? ""),
+              founded: String(item?.[2] ?? ""),
+              revenue: Number(item?.[3]) || 0, // <-- ensure number
             }))
           );
-          setThisYearTotal(data.thisYearTotal);
-          setLastYearTotal(data.lastYearTotal);
-          setGrowthRate(data.growthRate);
+
+          setThisYearTotal(Number(data.thisYearTotal) || 0);
+          setLastYearTotal(Number(data.lastYearTotal) || 0);
+          setGrowthRate(Number(data.growthRate) || 0);
         } else {
           console.error("Invalid response structure:", json);
         }
-      } catch (error) {
-        console.error("Fetch brand report error:", error);
+      } catch (err) {
+        if ((err as any)?.name !== "AbortError") {
+          console.error("Fetch brand report error:", err);
+        }
       }
     };
 
     fetchData();
+    return () => controller.abort();
   }, []);
 
-  const topBrands = [...brandSales]
-    .sort((a, b) => b.revenue - a.revenue)
-    .slice(0, 3);
+  const topBrands = useMemo(
+    () => [...brandSales].sort((a, b) => b.revenue - a.revenue).slice(0, 3),
+    [brandSales]
+  );
+
+  const percent = (value: number, total: number) =>
+    total > 0 ? Math.min(100, Math.max(0, (value / total) * 100)) : 0;
+
+  const positive = growthRate >= 0;
 
   return (
     <Card>
@@ -107,30 +129,39 @@ const TotalEarning = () => {
           </IconButton>
         }
       />
+
       <CardContent sx={{ pt: (theme) => `${theme.spacing(2.25)} !important` }}>
         <Box sx={{ mb: 1.5, display: "flex", alignItems: "center" }}>
           <Typography
             variant="h4"
             sx={{ fontWeight: 600, fontSize: "2.125rem !important" }}
           >
-            {thisYearTotal.toLocaleString("vi-VN")} ₫
+            {formatVND(thisYearTotal)}
           </Typography>
+
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
-              color: growthRate >= 0 ? "success.main" : "error.main",
+              color: positive ? "success.main" : "error.main",
               ml: 2,
             }}
           >
-            <MenuUp sx={{ fontSize: "1.875rem", verticalAlign: "middle" }} />
+            <MenuUp
+              sx={{
+                fontSize: "1.875rem",
+                verticalAlign: "middle",
+                transform: positive ? "rotate(0deg)" : "rotate(180deg)",
+              }}
+            />
             <Typography variant="body2" sx={{ fontWeight: 600 }}>
               {Math.abs(growthRate).toFixed(2)}%
             </Typography>
           </Box>
         </Box>
+
         <Typography component="p" variant="caption" sx={{ mb: 10 }}>
-          So với {lastYearTotal.toLocaleString("vi-VN")} ₫ năm ngoái
+          So với {formatVND(lastYearTotal)} năm ngoái
         </Typography>
 
         {topBrands.map((item, index) => (
@@ -153,13 +184,14 @@ const TotalEarning = () => {
               }}
             >
               <Image
-                src={`${item.logo}`}
+                src={item.logo || "/logo-placeholder.png"}
                 alt={item.name}
                 width={40}
                 height={20}
                 style={{ objectFit: "contain" }}
               />
             </Avatar>
+
             <Box
               sx={{
                 width: "100%",
@@ -169,13 +201,7 @@ const TotalEarning = () => {
                 justifyContent: "space-between",
               }}
             >
-              <Box
-                sx={{
-                  marginRight: 2,
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
+              <Box sx={{ mr: 2, display: "flex", flexDirection: "column" }}>
                 <Typography
                   variant="body2"
                   sx={{ mb: 0.5, fontWeight: 600, color: "text.primary" }}
@@ -186,6 +212,7 @@ const TotalEarning = () => {
                   Thành lập: {item.founded}
                 </Typography>
               </Box>
+
               <Box
                 sx={{ minWidth: 85, display: "flex", flexDirection: "column" }}
               >
@@ -193,12 +220,12 @@ const TotalEarning = () => {
                   variant="body2"
                   sx={{ mb: 2, fontWeight: 600, color: "text.primary" }}
                 >
-                  {item.revenue.toLocaleString("vi-VN")} ₫
+                  {formatVND(item.revenue)}
                 </Typography>
                 <LinearProgress
                   color="primary"
-                  value={(item.revenue / thisYearTotal) * 100 || 0}
                   variant="determinate"
+                  value={percent(item.revenue, thisYearTotal)}
                 />
               </Box>
             </Box>
@@ -211,7 +238,7 @@ const TotalEarning = () => {
         onClose={() => setOpenDetail(false)}
         maxWidth="sm"
         fullWidth
-        disableScrollLock={true}
+        disableScrollLock
       >
         <DialogTitle>Chi tiết doanh thu theo thương hiệu</DialogTitle>
         <DialogContent dividers sx={{ maxHeight: 400 }}>
@@ -231,25 +258,26 @@ const TotalEarning = () => {
                 }}
               >
                 <Image
-                  src={`${item.logo}`}
+                  src={item.logo || "/logo-placeholder.png"}
                   alt={item.name}
                   width={40}
                   height={20}
                   style={{ objectFit: "contain" }}
                 />
               </Avatar>
+
               <Box sx={{ flex: 1 }}>
                 <Typography variant="body2" sx={{ fontWeight: 600 }}>
                   {item.name} ({item.founded})
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Doanh thu: {item.revenue.toLocaleString("vi-VN")} ₫
+                  Doanh thu: {formatVND(item.revenue)}
                 </Typography>
                 <LinearProgress
                   sx={{ mt: 1 }}
                   color="primary"
-                  value={(item.revenue / thisYearTotal) * 100 || 0}
                   variant="determinate"
+                  value={percent(item.revenue, thisYearTotal)}
                 />
               </Box>
             </Box>

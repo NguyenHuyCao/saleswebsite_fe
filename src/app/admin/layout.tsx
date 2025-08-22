@@ -3,12 +3,13 @@ import "@/styles/app.css";
 import UserLayout from "@/layouts/UserLayout";
 import { ReactNode } from "react";
 import { Metadata } from "next";
+import AppProviders from "@/providers/app-providers";
 
 export const metadata: Metadata = {
   title: "Cửa hàng Cường Hoa",
   description: "Chào mừng bạn đến với cửa hàng Cường Hoa",
   icons: {
-    icon: "/images/store/logo-removebg-preview.png", 
+    icon: "/images/store/logo-removebg-preview.png",
   },
 };
 
@@ -16,7 +17,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <>
       {/* <Provider store={store}> */}
-      <UserLayout>{children}</UserLayout>
+      <UserLayout>
+        <AppProviders>{children}</AppProviders>
+      </UserLayout>
       {/* </Provider> */}
     </>
   );

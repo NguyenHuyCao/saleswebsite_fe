@@ -1,33 +1,17 @@
 "use client";
 
 import ReduxProvider from "@/components/redux/Providers";
-import { Quicksand } from "next/font/google";
+import { quicksand } from "./fonts";
 import { ReactNode } from "react";
-import {
-  SettingsProvider,
-  SettingsConsumer,
-} from "src/@core/context/settingsContext";
-import ThemeComponent from "src/@core/theme/ThemeComponent";
-
-const quicksand = Quicksand({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  display: "swap",
-});
+import Providers from "./providers";
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="vi">
       <body className={quicksand.className}>
-        <SettingsProvider>
-          <SettingsConsumer>
-            {({ settings }) => (
-              <ThemeComponent settings={settings}>
-                <ReduxProvider>{children}</ReduxProvider>
-              </ThemeComponent>
-            )}
-          </SettingsConsumer>
-        </SettingsProvider>
+        <Providers>
+          <ReduxProvider>{children}</ReduxProvider>
+        </Providers>
       </body>
     </html>
   );

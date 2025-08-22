@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Box, Grid, TextField, Button, Typography } from "@mui/material";
 import { useRouter, useSearchParams } from "next/navigation";
-import AlertSnackbar from "@/model/notify/AlertSnackbar";
+import AlertSnackbar from "@/components/feedback/AlertSnackbar";
 
 interface Props {
   formData: any;

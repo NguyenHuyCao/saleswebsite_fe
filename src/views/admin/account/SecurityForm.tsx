@@ -15,7 +15,7 @@ import {
 import KeyOutline from "mdi-material-ui/KeyOutline";
 import EyeOutline from "mdi-material-ui/EyeOutline";
 import EyeOffOutline from "mdi-material-ui/EyeOffOutline";
-import AlertSnackbar from "@/model/notify/AlertSnackbar";
+import AlertSnackbar from "@/components/feedback/AlertSnackbar";
 
 const SecurityForm = ({
   onBack,

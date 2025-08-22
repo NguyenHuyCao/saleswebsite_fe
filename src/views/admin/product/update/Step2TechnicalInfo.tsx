@@ -6,7 +6,7 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import AlertSnackbar from "@/model/notify/AlertSnackbar";
+import AlertSnackbar from "@/components/feedback/AlertSnackbar";
 
 interface Props {
   formData: any;

@@ -11,7 +11,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Radio from "@mui/material/Radio";
 import FormLabel from "@mui/material/FormLabel";
 import Grid from "@mui/material/Grid";
-import AlertSnackbar from "@/model/notify/AlertSnackbar";
+import AlertSnackbar from "@/components/feedback/AlertSnackbar";
 
 interface Props {
   onNext: () => void;

@@ -7,7 +7,7 @@ import Button from "@mui/material/Button";
 import Image from "next/image";
 import { styled } from "@mui/material/styles";
 import { useRouter, useSearchParams } from "next/navigation";
-import AlertSnackbar from "@/model/notify/AlertSnackbar";
+import AlertSnackbar from "@/components/feedback/AlertSnackbar";
 
 interface Step4Props {
   formData: any;

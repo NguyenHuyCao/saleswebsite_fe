@@ -8,8 +8,11 @@ import List from "@mui/material/List";
 import Box, { BoxProps } from "@mui/material/Box";
 import { styled, useTheme } from "@mui/material/styles";
 
+import dynamic from "next/dynamic";
 // ** Third Party Components
-import PerfectScrollbar from "react-perfect-scrollbar";
+const PerfectScrollbar = dynamic(() => import("react-perfect-scrollbar"), {
+  ssr: false,
+});
 
 // ** Type Imports
 import { Settings } from "src/@core/context/settingsContext";
@@ -21,7 +24,7 @@ import VerticalNavItems from "./VerticalNavItems";
 import VerticalNavHeader from "./VerticalNavHeader";
 
 // ** Util Import
-import { hexToRGBA } from "src/@core/utils/hex-to-rgba";
+import { hexToRGBA } from "@/@core/utils/hex-to-rgba";
 
 interface Props {
   hidden: boolean;

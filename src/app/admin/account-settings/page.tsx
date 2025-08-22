@@ -1,14 +1,12 @@
 "use client";
-
 import dynamic from "next/dynamic";
 
-const ClientOnlyAccountPage = dynamic(
-  () => import("@/views/admin/account/ClientOnlyAccountPage"),
+// Tắt SSR vì form dùng localStorage token + chỉ chạy client
+const AccountSettings = dynamic(
+  () => import("@/features/account/components/AccountSettings"),
   { ssr: false }
 );
 
-const AccountPage = () => {
-  return <ClientOnlyAccountPage />;
-};
-
-export default AccountPage;
+export default function Page() {
+  return <AccountSettings />;
+}

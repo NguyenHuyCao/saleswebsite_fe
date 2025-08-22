@@ -1,21 +1,16 @@
 "use client";
-// ** React Imports
 import { ReactNode } from "react";
-
-// ** MUI Imports
 import { styled, useTheme } from "@mui/material/styles";
 import MuiAppBar, { AppBarProps } from "@mui/material/AppBar";
 import MuiToolbar, { ToolbarProps } from "@mui/material/Toolbar";
-
-// ** Type Import
-import { Settings } from "src/@core/context/settingsContext";
+import type { Settings } from "src/@core/context/settingsContext";
 
 interface Props {
   hidden: boolean;
   settings: Settings;
   toggleNavVisibility: () => void;
-  saveSettings: (values: Settings) => void;
-  verticalAppBarContent?: (props?: any) => ReactNode;
+  saveSettings: (v: Settings) => void;
+  verticalAppBarContent?: (p?: any) => ReactNode;
 }
 
 const AppBar = styled(MuiAppBar)<AppBarProps>(({ theme }) => ({
@@ -23,7 +18,8 @@ const AppBar = styled(MuiAppBar)<AppBarProps>(({ theme }) => ({
   alignItems: "center",
   justifyContent: "center",
   padding: theme.spacing(0, 6),
-  backgroundColor: "transparent",
+  backgroundColor: "rgba(255,255,255,0.6)",
+  backdropFilter: "saturate(180%) blur(8px)",
   color: theme.palette.text.primary,
   minHeight: theme.mixins.toolbar.minHeight,
   [theme.breakpoints.down("sm")]: {
@@ -31,25 +27,17 @@ const AppBar = styled(MuiAppBar)<AppBarProps>(({ theme }) => ({
     paddingRight: theme.spacing(4),
   },
 }));
-
 const Toolbar = styled(MuiToolbar)<ToolbarProps>(({ theme }) => ({
   width: "100%",
   borderBottomLeftRadius: 10,
   borderBottomRightRadius: 10,
   padding: `${theme.spacing(0)} !important`,
   minHeight: `${theme.mixins.toolbar.minHeight}px !important`,
-  transition:
-    "padding .25s ease-in-out, box-shadow .25s ease-in-out, backdrop-filter .25s ease-in-out, background-color .25s ease-in-out",
 }));
 
-const LayoutAppBar = (props: Props) => {
-  // ** Props
-  const { settings, verticalAppBarContent: userVerticalAppBarContent } = props;
-
-  // ** Hooks
+export default function LayoutAppBar(props: Props) {
+  const { settings, verticalAppBarContent: Slot } = props;
   const theme = useTheme();
-
-  // ** Vars
   const { contentWidth } = settings;
 
   return (
@@ -57,7 +45,7 @@ const LayoutAppBar = (props: Props) => {
       elevation={0}
       color="default"
       className="layout-navbar"
-      position="static"
+      position="sticky"
     >
       <Toolbar
         className="navbar-content-container"
@@ -69,11 +57,8 @@ const LayoutAppBar = (props: Props) => {
           }),
         }}
       >
-        {(userVerticalAppBarContent && userVerticalAppBarContent(props)) ||
-          null}
+        {Slot ? Slot(props) : null}
       </Toolbar>
     </AppBar>
   );
-};
-
-export default LayoutAppBar;
+}
