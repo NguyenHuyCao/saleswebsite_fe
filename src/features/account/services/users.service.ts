@@ -1,7 +1,25 @@
-import { http } from "@/lib/http";
+import { http } from "@/lib/api/http";
 import { User } from "../types/user";
 import { UserInfoInput } from "../schemas/user.schema";
 import { PasswordInput } from "../schemas/password.schema";
+
+import type { UserAccount } from "../types/user";
+
+type Env<T> = { status: number; message?: any; data: T };
+const unwrap = <T>(res: { data: Env<T> | any }) =>
+  (res.data?.data ?? res.data) as T;
+
+export async function fetchMe() {
+  const res = await http.get<Env<UserAccount>>("/api/v1/auth/account");
+  return unwrap(res);
+}
+
+export async function updateMe(
+  payload: Pick<UserAccount, "username" | "phone" | "address" | "gender">
+) {
+  const res = await http.put<Env<UserAccount>>("/api/v1/users/me", payload);
+  return unwrap(res);
+}
 
 export const getUserById = async (id: string) => {
   const res = await http.get<{ status: number; data: User }>(

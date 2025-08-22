@@ -1,44 +1,33 @@
 "use client";
-
 import { useEffect, useRef } from "react";
 
 const PageViewTracker = () => {
   const hasSent = useRef(false);
 
   useEffect(() => {
-    if (hasSent.current) return;
+    if (hasSent.current || typeof window === "undefined") return;
     hasSent.current = true;
 
-    const sendPageView = async () => {
-      if (typeof window === "undefined") return;
+    const endpoint = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/page_view`;
+    const payload = JSON.stringify({ pageUrl: window.location.href });
 
-      try {
-        const pageUrl = window.location.href;
+    // Ưu tiên sendBeacon
+    const ok = navigator.sendBeacon?.(
+      endpoint,
+      new Blob([payload], { type: "application/json" })
+    );
+    if (ok) return;
 
-        // Gửi khi idle để tránh blocking main thread
-        window.requestIdleCallback?.(() => {
-          fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/page_view`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ pageUrl }),
-          })
-            .then((res) => {
-              if (!res.ok) {
-                console.warn("Page view tracking failed:", res.status);
-              } else {
-                console.debug("Page view tracked:", pageUrl);
-              }
-            })
-            .catch((err) => {
-              console.error("Tracking error:", err);
-            });
-        });
-      } catch (err) {
-        console.error("Unexpected error in PageViewTracker:", err);
-      }
-    };
-
-    sendPageView();
+    // Fallback: requestIdleCallback hoặc setTimeout
+    const send = () =>
+      fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).catch(() => {});
+    (window as any).requestIdleCallback
+      ? (window as any).requestIdleCallback(send)
+      : setTimeout(send, 0);
   }, []);
 
   return null;
