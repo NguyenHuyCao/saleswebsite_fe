@@ -1,32 +1,12 @@
-import ConfirmButton from "@/components/checkout/ConfirmButton";
-import OrderSummary from "@/components/checkout/OrderSummary";
-import PaymentMethod from "@/components/checkout/PaymentMethod";
-import ShippingForm from "@/components/checkout/ShippingForm";
-// import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
+import { Container } from "@mui/material";
 import PageViewTracker from "@/components/common/traffic/PageViewTracker";
-import { Container, Grid } from "@mui/material";
+import CheckoutView from "@/features/checkout/CheckoutView";
 
-const CheckoutPage = () => {
+export default function CheckoutPage() {
   return (
-    <Container>
+    <Container maxWidth="lg">
       <PageViewTracker />
-      <Grid container spacing={2} mt={5} mb={10}>
-        {/* Left Column */}
-        <Grid size={{ xs: 12, md: 8 }}>
-          <ShippingForm />
-          {/* <ShippingMethod /> */}
-          <PaymentMethod />
-        </Grid>
-
-        {/* Right Column */}
-        <Grid size={{ xs: 12, md: 4 }}>
-          <OrderSummary />
-          <ConfirmButton />
-        </Grid>
-      </Grid>
-      {/* <FreezeScrollOnReload /> */}
+      <CheckoutView />
     </Container>
   );
-};
-
-export default CheckoutPage;
+}

@@ -2,7 +2,6 @@ import { http } from "@/lib/api/http";
 import { User } from "../types/user";
 import { UserInfoInput } from "../schemas/user.schema";
 import { PasswordInput } from "../schemas/password.schema";
-
 import type { UserAccount } from "../types/user";
 
 type Env<T> = { status: number; message?: any; data: T };
@@ -33,6 +32,7 @@ export const updateUser = async (id: string, payload: UserInfoInput) => {
   return res.data;
 };
 
+/** Đổi mật khẩu cho user bất kỳ (admin flow, cần id) */
 export const changePassword = async (id: string, payload: PasswordInput) => {
   const body = {
     currentPassword: payload.currentPassword,
@@ -43,5 +43,16 @@ export const changePassword = async (id: string, payload: PasswordInput) => {
     `/api/v1/users/change_password?userId=${id}`,
     body
   );
+  return res.data;
+};
+
+/** Đổi mật khẩu cho chính mình (me flow, không cần id) */
+export const changePasswordMe = async (payload: PasswordInput) => {
+  const body = {
+    currentPassword: payload.currentPassword,
+    newPassword: payload.newPassword,
+    confirmPassword: payload.confirmNewPassword,
+  };
+  const res = await http.post(`/api/v1/users/change_password`, body);
   return res.data;
 };

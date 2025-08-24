@@ -1,11 +1,11 @@
-import ChangePasswordForm from "@/components/change_password/ChangePasswordForm";
-// import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
 import PageViewTracker from "@/components/common/traffic/PageViewTracker";
+import ChangePasswordView from "@/features/account/change-password";
+
 export default function ChangePasswordPage() {
   return (
     <>
       <PageViewTracker />
-      <ChangePasswordForm />
+      <ChangePasswordView />
     </>
   );
 }
