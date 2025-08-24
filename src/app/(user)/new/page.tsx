@@ -1,16 +1,12 @@
-import NewsPage from "@/components/new/NewsPage";
 import PageViewTracker from "@/components/common/traffic/PageViewTracker";
+import NewsListView from "@/features/news/NewsListView";
 import { Container } from "@mui/material";
-// import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
 
-const NewPage = () => {
+export default function NewPage() {
   return (
-    <Container>
+    <Container sx={{ py: 4 }}>
       <PageViewTracker />
-      <NewsPage />
-      {/* <FreezeScrollOnReload /> */}
+      <NewsListView />
     </Container>
   );
-};
-
-export default NewPage;
+}

@@ -1,20 +1,14 @@
-import OrderHistoryHeroSection from "@/components/order/OrderHistoryHeroSection";
-import OrderListSection from "@/components/order/OrderListSection";
-import PageViewTracker from "@/components/common/traffic/PageViewTracker";
 import { Container } from "@mui/material";
-// import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
+import PageViewTracker from "@/components/common/traffic/PageViewTracker";
+import OrdersView from "@/features/order";
 
-const OrdersPage = () => {
+export default function OrdersPage() {
   return (
     <>
       <PageViewTracker />
-      <Container>
-        <OrderHistoryHeroSection />
-        <OrderListSection />
+      <Container sx={{ py: 4 }}>
+        <OrdersView />
       </Container>
-      {/* <FreezeScrollOnReload /> */}
     </>
   );
-};
-
-export default OrdersPage;
+}
