@@ -5,7 +5,7 @@ import type {
   LoginPayload,
   LoginResponse,
   RegisterPayload,
-} from "../types";
+} from "../type";
 
 const unwrap = <T>(res: { data: Envelope<T> | any }) =>
   (res.data?.data ?? res.data) as T;

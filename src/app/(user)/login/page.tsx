@@ -1,17 +1,14 @@
 import { Suspense } from "react";
 import PageViewTracker from "@/components/common/traffic/PageViewTracker";
-import LoginForm from "@/views/login/app.login";
-import { Container } from "@mui/material";
+import LoginView from "@/features/auth/LoginView";
 
-const LoginPage = async () => {
+export default function LoginPage() {
   return (
-    <Container maxWidth="sm" sx={{ mt: 4 }}>
+    <>
       <PageViewTracker />
       <Suspense fallback={<div>Đang tải...</div>}>
-        <LoginForm />
+        <LoginView />
       </Suspense>
-    </Container>
+    </>
   );
-};
-
-export default LoginPage;
+}
