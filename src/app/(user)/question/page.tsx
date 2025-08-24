@@ -1,14 +1,6 @@
-import FaqSupportPage from "@/components/question/FaqSupportPage";
-import PageViewTracker from "@/components/common/traffic/PageViewTracker";
-import { Container } from "@mui/material";
+// app/questions/page.tsx
+import QuestionsView from "@/features/questions/QuestionsView";
 
-const QuestionsPage = () => {
-  return (
-    <Container>
-      <PageViewTracker />
-      <FaqSupportPage />
-    </Container>
-  );
-};
-
-export default QuestionsPage;
+export default function Page() {
+  return <QuestionsView />;
+}
