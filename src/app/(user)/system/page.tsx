@@ -1,14 +1,6 @@
-import StoreHeroSection from "@/components/system/SystemStore";
-import PageViewTracker from "@/components/common/traffic/PageViewTracker";
-import { Container } from "@mui/material";
+// app/system/page.tsx
+import SystemView from "@/features/system/SystemView";
 
-const SystemPage = () => {
-  return (
-    <Container>
-      <PageViewTracker />
-      <StoreHeroSection />
-    </Container>
-  );
-};
-
-export default SystemPage;
+export default function Page() {
+  return <SystemView />;
+}
