@@ -7,3 +7,12 @@ export type LoginUser = {
 };
 export type LoginResponse = { accessToken: string; user: LoginUser };
 export type Envelope<T> = { status: number; message?: any; data: T };
+
+export type RegisterPayload = {
+  username: string;
+  email: string;
+  password: string;
+  phone?: string;
+  address?: string;
+  gender?: string;
+};

@@ -1,28 +1,18 @@
-import ExperienceMediaSection from "@/components/about/ExperienceMediaSection";
-import FinalCallToActionSection from "@/components/about/FinalCallToActionSection";
-import HeroSection from "@/components/about/HeroSection";
-import SupportCommitmentsSection from "@/components/about/SupportCommitmentsSection";
-import TestimonialsSection from "@/components/about/TestimonialsSection";
-import WhoWeAre from "@/components/about/WhoWeAre";
-import WhyTwoStrokeSection from "@/components/about/WhyTwoStrokeSection";
+import type { Metadata } from "next";
 import PageViewTracker from "@/components/common/traffic/PageViewTracker";
-import { Container } from "@mui/material";
+import AboutClient from "@/features/about/AboutClient";
 
-const AboutUsPage = () => {
+export const metadata: Metadata = {
+  title: "Về chúng tôi | Máy 2 Thì",
+  description:
+    "Chất lượng bền bỉ, hậu mãi trọn đời. Tìm hiểu về đội ngũ và cam kết của chúng tôi.",
+};
+
+export default function AboutUsPage() {
   return (
     <>
       <PageViewTracker />
-      <HeroSection />
-      <Container>
-        <WhoWeAre />
-        <WhyTwoStrokeSection />
-        <ExperienceMediaSection />
-        <TestimonialsSection />
-        <SupportCommitmentsSection />
-        <FinalCallToActionSection />
-      </Container>
+      <AboutClient />
     </>
   );
-};
-
-export default AboutUsPage;
+}

@@ -1,29 +1,18 @@
-import BrandAccordionSection from "@/components/brand/BrandAccordionSection";
-import BrandHeroSection from "@/components/brand/BrandHeroSection";
-import BrandListSection from "@/components/brand/BrandListSection";
-import BrandPageFinalSections from "@/components/brand/BrandPageFinalSections";
-import WhyChooseUs from "@/components/brand/WhyChooseUs ";
-// import FreezeScrollOnReload from "@/components/common/FreezeScrollOnReload";
+import type { Metadata } from "next";
 import PageViewTracker from "@/components/common/traffic/PageViewTracker";
-import { getBrands } from "@/lib/api/brand";
-import { Container } from "@mui/material";
+import BrandView from "@/features/brand/BrandView";
 
-const BrandPage = async () => {
-  const brands = await getBrands();
+export const metadata: Metadata = {
+  title: "Thương hiệu | Máy 2 Thì",
+  description:
+    "Danh sách thương hiệu chính hãng, nhập khẩu trực tiếp, bảo hành toàn quốc.",
+};
 
+export default function BrandPage() {
   return (
     <>
       <PageViewTracker />
-      <BrandHeroSection />
-      <Container>
-        <BrandListSection brands={brands} />
-        <WhyChooseUs />
-        <BrandAccordionSection brands={brands} />
-        <BrandPageFinalSections />
-      </Container>
-      {/* <FreezeScrollOnReload /> */}
+      <BrandView />
     </>
   );
-};
-
-export default BrandPage;
+}

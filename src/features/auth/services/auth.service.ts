@@ -1,6 +1,11 @@
 import { http } from "@/lib/api/http";
 import { setAccessToken, clearAccessToken } from "@/lib/api/token";
-import type { Envelope, LoginPayload, LoginResponse } from "../types";
+import type {
+  Envelope,
+  LoginPayload,
+  LoginResponse,
+  RegisterPayload,
+} from "../types";
 
 const unwrap = <T>(res: { data: Envelope<T> | any }) =>
   (res.data?.data ?? res.data) as T;
@@ -23,4 +28,14 @@ export async function logout() {
   } finally {
     clearAccessToken();
   }
+}
+
+/**
+ * Lưu ý: Back-end hiện đang đặt /api/v1/users là API cần quyền user:write.
+ * Nếu BE bật đăng ký public, đổi PreAuthorize hoặc cung cấp /auth/register.
+ * Ở đây vẫn gọi /users và handle 403 tử tế.
+ */
+export async function registerUser(payload: RegisterPayload) {
+  const res = await http.post("/api/v1/users", payload);
+  return unwrap(res);
 }
