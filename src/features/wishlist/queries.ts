@@ -1,0 +1,63 @@
+import useSWR, { mutate } from "swr";
+import { fetchWishlistApi } from "./api";
+
+export const WISHLIST_QUERY_KEY = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/wish_list`;
+
+const normalizeToProduct = (items: any[]): Product[] => {
+  const now = new Date().getTime();
+  return items.map((item: any): Product => {
+    const createdAt = new Date(item.createdAt).getTime();
+    const isNew = (now - createdAt) / (1000 * 60 * 60 * 24) <= 30;
+    const isHot = (item.totalStock ?? 0) - (item.stockQuantity ?? 0) > 10;
+    const status: string[] = [];
+    if (isNew) status.push("Mới");
+    if (isHot) status.push("Bán chạy");
+
+    return {
+      id: item.id,
+      name: item.name,
+      slug: item.slug,
+      imageAvt: item.imageAvt,
+      imageDetail1: item.imageDetail1 ?? "",
+      imageDetail2: item.imageDetail2 ?? "",
+      imageDetail3: item.imageDetail3 ?? "",
+      description: item.description ?? "",
+      price: item.pricePerUnit,
+      pricePerUnit: item.pricePerUnit,
+      originalPrice: item.price,
+      sale: (item.pricePerUnit ?? 0) < (item.price ?? 0),
+      inStock: (item.stockQuantity ?? 0) > 0,
+      label: (item.stockQuantity ?? 0) > 0 ? "Thêm vào giỏ" : "Hết hàng",
+      stockQuantity: item.stockQuantity ?? 0,
+      totalStock: item.totalStock ?? 0,
+      power: item.power ?? "N/A",
+      fuelType: item.fuelType ?? "N/A",
+      engineType: item.engineType ?? "N/A",
+      weight: item.weight ?? 0,
+      dimensions: item.dimensions ?? "",
+      tankCapacity: item.tankCapacity ?? 0,
+      origin: item.origin ?? "Không rõ",
+      warrantyMonths: item.warrantyMonths ?? 0,
+      createdAt: item.createdAt,
+      createdBy: item.createdBy ?? "",
+      updatedAt: item.updatedAt ?? null,
+      updatedBy: item.updatedBy ?? "",
+      rating: item.rating ?? 0,
+      status,
+      favorite: true,
+    };
+  });
+};
+
+export const useWishlist = () => {
+  return useSWR<Product[]>(WISHLIST_QUERY_KEY, async () => {
+    const raw = await fetchWishlistApi();
+    return normalizeToProduct(raw);
+  });
+};
+
+export const bounceWishlistCounters = () => {
+  const { WISHLIST_COUNT_KEY } = require("@/constants/apiKeys");
+  mutate(WISHLIST_QUERY_KEY);
+  mutate(WISHLIST_COUNT_KEY, undefined, { revalidate: true });
+};
