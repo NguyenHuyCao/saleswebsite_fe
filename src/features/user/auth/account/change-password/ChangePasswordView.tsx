@@ -16,7 +16,7 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
-import { useChangePasswordMe } from "@/features/account/hooks/useUser";
+import { useChangePasswordMe } from "@/features/user/auth/account/hooks/useUser";
 
 const AlertSnackbar = ({
   open,

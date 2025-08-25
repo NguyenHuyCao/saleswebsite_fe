@@ -1,6 +1,6 @@
 "use client";
 
-import MultiStepAccountPage from "@/views/admin/account/MultiStepAccountPage";
+import MultiStepAccountPage from "@/features/admin/users/components/MultiStepAccountPage";
 import UserTablePage from "@/views/admin/user/UserTablePage";
 import { useSearchParams } from "next/navigation";
 

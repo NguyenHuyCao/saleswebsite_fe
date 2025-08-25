@@ -1,6 +1,6 @@
 "use client";
 
-import MultiStepAccountPage from "@/views/admin/account/MultiStepAccountPage";
+import MultiStepAccountPage from "@/features/admin/users/components/MultiStepAccountPage";
 
 export default function ClientOnlyAccountPage() {
   return <MultiStepAccountPage />;

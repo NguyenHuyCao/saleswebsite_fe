@@ -9,7 +9,7 @@ import Step from "@mui/material/Step";
 import StepLabel from "@mui/material/StepLabel";
 import Typography from "@mui/material/Typography";
 
-import SecurityForm from "@/views/admin/account/SecurityForm";
+import SecurityForm from "@/features/admin/account/components/SecurityForm";
 import UserCombinedForm from "./UserCombinedForm";
 
 const steps = ["Thông tin cá nhân", "Bảo mật"];

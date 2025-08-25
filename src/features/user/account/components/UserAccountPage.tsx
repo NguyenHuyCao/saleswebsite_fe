@@ -1,8 +1,10 @@
+// src/features/account/components/UserAccountPage.tsx
 "use client";
 
 import {
   Box,
   Typography,
+  Grid,
   Paper,
   TextField,
   Button,
@@ -15,65 +17,75 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import Grid from "@mui/material/Grid"; 
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import {
-  useMeQuery,
-  useUpdateMe,
-} from "@/features/user/auth/account/hooks/useUser";
+import type { Gender, UserProfile } from "../types";
+import { getUserById, updateUser } from "../api";
 
-const genders = ["Nam", "Nữ", "Khác"];
+const GENDERS: Gender[] = ["Nam", "Nữ", "Khác"];
 
 export default function UserAccountPage() {
-  const { data: me, isLoading, error } = useMeQuery();
-  const { mutateAsync, isPending } = useUpdateMe();
-
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<UserProfile>({
+    id: 0,
     username: "",
     email: "",
     phone: "",
     address: "",
     gender: "Nam",
   });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error",
-  });
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>({ open: false, message: "", severity: "success" });
 
   const formRef = useRef<HTMLDivElement>(null);
   const scrollToTop = () =>
     formRef.current?.scrollIntoView({ behavior: "smooth" });
 
+  // Load profile
   useEffect(() => {
-    if (me) {
-      setFormData({
-        username: me.username || "",
-        email: me.email || "",
-        phone: me.phone || "",
-        address: me.address || "",
-        gender: me.gender || "Nam",
-      });
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const id = Number(user?.id);
+    if (!id) {
+      setLoading(false);
+      return;
     }
-  }, [me]);
+    getUserById(id)
+      .then((u) => setFormData(u))
+      .catch((e) =>
+        setSnackbar({ open: true, message: e.message, severity: "error" })
+      )
+      .finally(() => {
+        setLoading(false);
+        scrollToTop();
+      });
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  ) => setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.id) return;
     try {
-      await mutateAsync({
+      setSaving(true);
+      await updateUser(formData.id, {
         username: formData.username,
         phone: formData.phone,
         address: formData.address,
         gender: formData.gender,
       });
+      // đồng bộ localStorage
+      const localUser = JSON.parse(localStorage.getItem("user") || "{}");
+      localStorage.setItem(
+        "user",
+        JSON.stringify({ ...localUser, ...formData })
+      );
       setSnackbar({
         open: true,
         message: "Cập nhật thông tin thành công!",
@@ -82,28 +94,26 @@ export default function UserAccountPage() {
     } catch (err: any) {
       setSnackbar({
         open: true,
-        message: err.message || "Cập nhật thất bại!",
+        message: err.message || "Lỗi kết nối máy chủ!",
         severity: "error",
       });
     } finally {
+      setSaving(false);
       scrollToTop();
     }
   };
-
-  if (isLoading) return <Box p={4}>Đang tải…</Box>;
-  if (error) return <Box p={4}>Lỗi: {(error as any).message}</Box>;
 
   return (
     <Box ref={formRef} px={{ xs: 2, sm: 4 }} py={4}>
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <Alert
           severity={snackbar.severity}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
           sx={{ width: "100%" }}
         >
           {snackbar.message}
@@ -133,6 +143,7 @@ export default function UserAccountPage() {
                   value={formData.username}
                   onChange={handleChange}
                   required
+                  disabled={loading || saving}
                 />
               </Grid>
 
@@ -154,6 +165,7 @@ export default function UserAccountPage() {
                   value={formData.phone}
                   onChange={handleChange}
                   required
+                  disabled={loading || saving}
                 />
               </Grid>
 
@@ -167,11 +179,12 @@ export default function UserAccountPage() {
                   multiline
                   rows={2}
                   required
+                  disabled={loading || saving}
                 />
               </Grid>
 
               <Grid size={{ xs: 12 }}>
-                <FormControl component="fieldset">
+                <FormControl component="fieldset" disabled={loading || saving}>
                   <FormLabel component="legend">Giới tính</FormLabel>
                   <RadioGroup
                     row
@@ -179,7 +192,7 @@ export default function UserAccountPage() {
                     value={formData.gender}
                     onChange={handleChange}
                   >
-                    {genders.map((g) => (
+                    {GENDERS.map((g) => (
                       <FormControlLabel
                         key={g}
                         value={g}
@@ -196,7 +209,7 @@ export default function UserAccountPage() {
                   fullWidth
                   type="submit"
                   variant="contained"
-                  disabled={isPending}
+                  disabled={loading || saving}
                   sx={{
                     bgcolor: "#ffb700",
                     color: "#000",
@@ -206,7 +219,7 @@ export default function UserAccountPage() {
                     "&:hover": { bgcolor: "#e09e00" },
                   }}
                 >
-                  {isPending ? "Đang cập nhật..." : "Cập nhật"}
+                  {saving ? "Đang lưu..." : "Cập nhật"}
                 </Button>
               </Grid>
             </Grid>

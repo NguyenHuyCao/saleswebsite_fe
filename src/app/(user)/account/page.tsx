@@ -1,13 +1,16 @@
-import UserAccountPage from "@/components/account/UserAccountPage";
-import PageViewTracker from "@/components/common/traffic/PageViewTracker";
+import { Suspense } from "react";
 import { Container } from "@mui/material";
+import PageViewTracker from "@/components/common/traffic/PageViewTracker";
 
-const AccountPage = () => {
+import UserAccountPage from "@/features/user/account/components/UserAccountPage";
+
+export default function Page() {
   return (
     <Container>
       <PageViewTracker />
-      <UserAccountPage />
+      <Suspense fallback={<div>Loading...</div>}>
+        <UserAccountPage />
+      </Suspense>
     </Container>
   );
-};
-export default AccountPage;
+}
