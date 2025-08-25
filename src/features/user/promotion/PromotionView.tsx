@@ -2,7 +2,7 @@
 import { Container } from "@mui/material";
 import PageViewTracker from "@/components/common/traffic/PageViewTracker";
 import PromotionBanner from "@/components/home/PromotionBanner";
-import FinalCallToActionSection from "@/features/about/components/FinalCallToActionSection";
+import FinalCallToActionSection from "../about/components/FinalCallToActionSection";
 
 import FlashSaleShowcase from "./components/FlashSaleShowcase";
 import PromotionInfoBlock from "./components/PromotionInfoBlock";

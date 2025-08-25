@@ -1,9 +1,6 @@
-"use client";
+// Server component (mặc định), render client component bên trong
+import BrandsView from "@/features/admin/brands/components/BrandsView";
 
-import BrandTable from "@/views/admin/brand/BrandsTable";
-
-const BrandsPage = () => {
-  return <BrandTable />;
-};
-
-export default BrandsPage;
+export default function Page() {
+  return <BrandsView />;
+}
