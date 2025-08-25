@@ -1,13 +1,6 @@
-"use client";
-
-import dynamic from "next/dynamic";
 import { Suspense } from "react";
 
-// Lazy load client component
-const ClientOnlyUsersPage = dynamic(
-  () => import("@/views/admin/user/ClientOnlyUsersPage"),
-  { ssr: false }
-);
+import ClientOnlyUsersPage from "@/features/admin/users/components/ClientOnlyUsersPage";
 
 export default function Page() {
   return (
