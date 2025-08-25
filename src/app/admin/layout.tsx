@@ -1,9 +1,9 @@
 import "@/styles/app.css";
 
-import UserLayout from "@/layouts/UserLayout";
+import UserLayout from "@/components/layouts/UserLayout";
 import { ReactNode } from "react";
 import { Metadata } from "next";
-import AppProviders from "@/providers/app-providers";
+import AppProviders from "@/components/providers/app-providers";
 
 export const metadata: Metadata = {
   title: "Cửa hàng Cường Hoa",

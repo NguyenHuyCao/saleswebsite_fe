@@ -1,5 +1,5 @@
-import ClientOnlyContactPage from "@/views/admin/contact/ClientOnlyContactPage";
+import ContactsView from "@/features/admin/contacts/ContactsView";
 
 export default function ContactsPage() {
-  return <ClientOnlyContactPage />;
+  return <ContactsView />;
 }

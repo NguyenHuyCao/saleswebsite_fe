@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Box, Typography, useMediaQuery, useTheme, Fade } from "@mui/material";
 import Slider from "react-slick";
-import ProductCard from "../product/ProductCard";
+import ProductCard from "@/features/user/products/components/ProductCard";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";

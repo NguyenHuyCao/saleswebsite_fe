@@ -1,4 +1,4 @@
-import ClientDashboardPage from "@/views/admin/dashboard/ClientDashboardPage";
+import ClientDashboardPage from "@/views/dashboard/ClientDashboardPage";
 
 const AdminPage = () => {
   return <ClientDashboardPage />;

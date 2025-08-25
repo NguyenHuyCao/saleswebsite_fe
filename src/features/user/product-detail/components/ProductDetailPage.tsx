@@ -16,8 +16,7 @@ import SupportBox from "./SupportBox";
 import PromotionBox from "./PromotionBox";
 import ProductTabs from "./ProductTabs";
 import RelatedProductsSlick from "./RelatedProducts";
-import ProductReviewList from "@/components/review/ProductReviewList";
-// import type { Product, Category } from "@/product/types";
+import ProductReviewList from "@/views/review/ProductReviewList";
 
 interface Props {
   product: Product;

@@ -11,7 +11,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
-import ProductCard from "../product/ProductCard";
+import ProductCard from "@/features/user/products/components/ProductCard";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";

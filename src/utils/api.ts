@@ -30,7 +30,7 @@ export const sendRequest = async <T>(props: IRequest) => {
     const response = await fetch(url, options);
     const json = await response.json();
 
-    // ✅ Chuẩn hóa output với field 'status' (không phải 'statusCode')
+    // Chuẩn hóa output với field 'status' (không phải 'statusCode')
     return {
       status: json.status || response.status,
       message: json.message || "",

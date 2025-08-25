@@ -13,7 +13,7 @@ import {
 import { motion } from "framer-motion";
 import Image from "next/image";
 import BlankLayout from "src/@core/layouts/BlankLayout";
-import FooterIllustrations from "@/views/misc/FooterIllustrations";
+import FooterIllustrations from "@/components/misc/FooterIllustrations";
 
 // ===== Styled Components =====
 

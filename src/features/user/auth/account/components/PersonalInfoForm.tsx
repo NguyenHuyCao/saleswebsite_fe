@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 
-import type { User } from "../types/user";
+import type { User } from "../types";
 import { userInfoSchema, type UserInfoInput } from "../schemas/user.schema";
 import { useUpdateUser } from "../hooks/useUser";
 import { useSearchParams } from "next/navigation";

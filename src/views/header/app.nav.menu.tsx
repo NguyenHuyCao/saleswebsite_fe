@@ -16,7 +16,7 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import CompareIcon from "@mui/icons-material/Compare";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import BrandMegaMenu from "@/components/brand/BrandMegaMenu";
+import BrandMegaMenu from "@/features/user/brand/components/BrandMegaMenu";
 
 const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
   const [showMegaMenu, setShowMegaMenu] = useState(false);

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import ThemeRegistry from "@/views/theme-registry/theme.registry";
+import ThemeRegistry from "@/components/theme-registry/theme.registry";
 import "@/styles/app.css";
 import AppHeader from "@/views/header/app.header";
 import AppFooter from "@/views/footer/app.footer";

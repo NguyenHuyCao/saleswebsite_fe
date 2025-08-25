@@ -2,7 +2,7 @@
 
 import { Box, Typography, Skeleton, Fade } from "@mui/material";
 import { motion } from "framer-motion";
-import FlashSaleSlider from "@/components/home/FlashSaleSlider";
+import FlashSaleSlider from "@/views/home/FlashSaleSlider";
 import type { Promotion } from "../types";
 import TwoStrokePromoBanner from "./TwoStrokePromoBanner";
 import { useState, useEffect } from "react";

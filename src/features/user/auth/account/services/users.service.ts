@@ -1,8 +1,8 @@
 import { http } from "@/lib/api/http";
-import { User } from "../types/user";
+import { User } from "../types";
 import { UserInfoInput } from "../schemas/user.schema";
 import { PasswordInput } from "../schemas/password.schema";
-import type { UserAccount } from "../types/user";
+import type { UserAccount } from "../types";
 
 type Env<T> = { status: number; message?: any; data: T };
 const unwrap = <T>(res: { data: Env<T> | any }) =>

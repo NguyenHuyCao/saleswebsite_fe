@@ -25,7 +25,7 @@ import { NavLink } from "src/@core/layouts/types";
 import { Settings } from "src/@core/context/settingsContext";
 
 // ** Custom Components
-import UserIcon from "src/layouts/components/UserIcon";
+import UserIcon from "@/components/layouts/components/UserIcon";
 import NextLinkComposed from "../../NextLinkComposed";
 
 // ** Styled Components

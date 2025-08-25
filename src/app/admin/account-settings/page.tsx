@@ -1,12 +1,4 @@
-"use client";
-
-import dynamic from "next/dynamic";
-
-// Form dùng localStorage token ⇒ tắt SSR
-const AccountSettings = dynamic(
-  () => import("@/features/admin/account/components/AccountSettings"),
-  { ssr: false }
-);
+import AccountSettings from "@/features/admin/account/components/AccountSettings";
 
 export default function Page() {
   return <AccountSettings />;
