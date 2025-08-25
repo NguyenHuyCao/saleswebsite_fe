@@ -1,9 +1,10 @@
 "use client";
+
 import dynamic from "next/dynamic";
 
-// Tắt SSR vì form dùng localStorage token + chỉ chạy client
+// Form dùng localStorage token ⇒ tắt SSR
 const AccountSettings = dynamic(
-  () => import("@/features/account/components/AccountSettings"),
+  () => import("@/features/admin/account/components/AccountSettings"),
   { ssr: false }
 );
 
