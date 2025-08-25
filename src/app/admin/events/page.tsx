@@ -1,12 +1,6 @@
-"use client";
-
-import dynamic from "next/dynamic";
-
-const ClientOnlyPromotionPage = dynamic(
-  () => import("@/views/admin/event/ClientOnlyPromotionPage"),
-  { ssr: false }
-);
+// Form dùng localStorage token + date pickers ⇒ client-only
+import PromotionsClientPage from "@/features/admin/events/components/PromotionsClientPage";
 
 export default function Page() {
-  return <ClientOnlyPromotionPage />;
+  return <PromotionsClientPage />;
 }
