@@ -1,11 +1,5 @@
-"use client";
-import dynamic from "next/dynamic";
-
-const ClientOrdersPage = dynamic(
-  () => import("@/views/admin/order/ClientOrdersPage"),
-  { ssr: false }
-);
+import OrdersClientPage from "@/features/admin/orders/components/OrdersClientPage";
 
 export default function OrdersPage() {
-  return <ClientOrdersPage />;
+  return <OrdersClientPage />;
 }
