@@ -1,9 +1,5 @@
-"use client";
+import CategoriesView from "@/features/admin/categories/components/CategoriesView";
 
-import CategoryTable from "@/views/admin/catogory/CategoryTable";
-
-const CatoryPage = () => {
-  return <CategoryTable />;
-};
-
-export default CatoryPage;
+export default function Page() {
+  return <CategoriesView />;
+}
