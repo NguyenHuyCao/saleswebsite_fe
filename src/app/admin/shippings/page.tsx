@@ -1,7 +1,5 @@
-import ShippingPartnerList from "@/views/admin/shipping/ShippingPartnerList";
+import ShippingPartnerList from "@/features/admin/shipping/components/ShippingPartnerList";
 
-const ShippingsPage = () => {
+export default function ShippingsPage() {
   return <ShippingPartnerList />;
-};
-
-export default ShippingsPage;
+}
