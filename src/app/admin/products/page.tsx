@@ -1,14 +1,5 @@
-"use client";
+import ProductTable from "@/features/admin/products/components/ProductTable";
 
-import dynamic from "next/dynamic";
-
-const MultiPageProduct = dynamic(
-  () => import("@/views/admin/product/MultiPageProduct"),
-  { ssr: false }
-);
-
-const ProductPage = () => {
-  return <MultiPageProduct />;
-};
-
-export default ProductPage;
+export default function Page() {
+  return <ProductTable />;
+}
