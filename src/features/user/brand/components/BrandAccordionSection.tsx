@@ -15,7 +15,7 @@ import Grid from "@mui/material/Grid";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import type { Brand } from "@/features/brand/types";
+import type { Brand } from "@/features/user/brand/types";
 
 type Props = { brands: Brand[] };
 

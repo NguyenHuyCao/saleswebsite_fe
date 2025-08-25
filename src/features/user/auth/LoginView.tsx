@@ -26,8 +26,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { useLogin } from "@/features/auth/hooks/useLogin";
-import { useRegister } from "@/features/auth/hooks/useRegister";
+import { useLogin } from "@/features/user/auth/hooks/useLogin";
+import { useRegister } from "@/features/user/auth/hooks/useRegister";
 
 const provincesData: Record<string, string[]> = {
   "Hà Nội": ["Ba Đình", "Hoàn Kiếm", "Đống Đa"],

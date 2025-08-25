@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Box, Typography, useMediaQuery } from "@mui/material";
 import Slider from "react-slick";
-import ProductCard from "@/features/products/components/ProductCard";
+import ProductCard from "@/features/user/products/components/ProductCard";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { useDispatch, useSelector } from "react-redux";

@@ -1,4 +1,4 @@
-import WishlistView from "@/features/wishlist/WishlistView";
+import WishlistView from "@/features/user/wishlist/WishlistView";
 
 export default function WishListPage() {
   return <WishlistView />;

@@ -13,7 +13,7 @@ import {
 import Grid from "@mui/material/Grid"; 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import type { Brand } from "@/features/brand/types";
+import type { Brand } from "@/features/user/brand/types";
 
 type Props = { brands: Brand[] };
 
