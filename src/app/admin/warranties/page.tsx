@@ -1,7 +1,11 @@
-import WarrantyManagementPage from "@/views/admin/warranty/WarrantyManagementPage";
+import { Suspense } from "react";
 
-const WarrantiesPage = () => {
-  return <WarrantyManagementPage />;
-};
+import WarrantyManagementPage from "@/features/admin/warranty/components/WarrantyManagementPage";
 
-export default WarrantiesPage;
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <WarrantyManagementPage />
+    </Suspense>
+  );
+}
