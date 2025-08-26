@@ -8,17 +8,11 @@ import "slick-carousel/slick/slick-theme.css";
 import ClientLayoutWrapper from "@/components/fixed_elements/ClientLayoutWrapper";
 import Providers from "@/components/redux/Providers";
 
-// const quicksand = Quicksand({
-//   subsets: ["latin"],
-//   weight: ["400", "500", "700"],
-//   display: "swap",
-// });
-
 export const metadata: Metadata = {
   title: "Cửa hàng Cường Hoa",
   description: "Chào mừng bạn đến với cửa hàng Cường Hoa",
   icons: {
-    icon: "/images/store/logo-removebg-preview.png", // hoặc '/favicon.png'
+    icon: "/images/store/logo-removebg-preview.png",
   },
 };
 

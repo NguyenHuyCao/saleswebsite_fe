@@ -9,16 +9,15 @@ export interface Contact {
   createdBy: string;
 }
 
-export interface ContactsApiResponse {
-  status: number;
-  message?: string;
-  data?: {
-    result: Contact[];
-    meta?: {
-      page: number;
-      pageSize: number;
-      pages: number;
-      total: number;
-    };
-  };
+export interface ApiMeta {
+  page: number;
+  pageSize: number;
+  pages: number;
+  total: number;
+}
+
+/** payload thực sự BE trả trong field data */
+export interface ContactsList {
+  result: Contact[];
+  meta?: ApiMeta;
 }

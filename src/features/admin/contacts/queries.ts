@@ -1,18 +1,18 @@
 import useSWR from "swr";
-import { fetchContactsAll } from "./api";
-import type { Contact } from "./types";
+import { getAllContacts } from "./api";
+import type { Contact, ContactsList } from "./types";
 
-export const CONTACTS_KEY = "/admin/contacts/all";
+export const CONTACTS_KEY = "/api/v1/contacts?page=1&size=1000";
 
-/** Hook SWR lấy danh sách liên hệ */
 export function useContacts() {
-  const { data, error, isLoading, mutate } = useSWR(
+  const { data, error, isLoading, mutate } = useSWR<ContactsList>(
     CONTACTS_KEY,
-    fetchContactsAll
+    getAllContacts
   );
 
   return {
-    contacts: (data?.data?.result ?? []) as Contact[],
+    contacts: (data?.result ?? []) as Contact[],
+    meta: data?.meta,
     isLoading,
     error: error as Error | undefined,
     refresh: mutate,

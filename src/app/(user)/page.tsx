@@ -20,22 +20,12 @@ import {
   getCategoriesWithProducts,
 } from "@/lib/api/home-page";
 
-// Đảm bảo global.d.ts đã có:
-// export type CategoryWithProducts = {
-//   id: number;
-//   name: string;
-//   slug: string;
-//   products: Product[];
-// };
-
 export default async function HomePage() {
   const [categories, categoriesWithProducts, brands] = await Promise.all([
     getCategories(),
     getCategoriesWithProducts(),
     getBrands(),
   ]);
-
-  // const flashPromotions = promotions.filter((promo) => !promo.requiresCode);
 
   return (
     <>

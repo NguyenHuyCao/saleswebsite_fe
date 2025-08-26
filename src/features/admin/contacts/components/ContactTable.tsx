@@ -7,8 +7,8 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow,
   TablePagination,
+  TableRow,
 } from "@mui/material";
 import type { Contact } from "../types";
 
@@ -27,7 +27,7 @@ const ContactTable = ({
   onPageChange,
   onRowsPerPageChange,
 }: Props) => {
-  const sliced = rows.slice(
+  const paged = rows.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
@@ -48,7 +48,7 @@ const ContactTable = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {sliced.map((row) => (
+            {paged.map((row) => (
               <TableRow hover key={row.id}>
                 <TableCell>{row.id}</TableCell>
                 <TableCell>{row.fullName}</TableCell>

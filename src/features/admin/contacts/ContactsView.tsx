@@ -8,33 +8,26 @@ import { useSelector } from "react-redux";
 import type { AppState } from "@/redux/store";
 
 const ContactsView = () => {
-  const { contacts, isLoading, error, refresh } = useContacts();
-
-  // Từ slice search hiện tại
-  const keyword = useSelector((state: AppState) =>
-    state.search.keyword.trim().toLowerCase()
+  const { contacts, isLoading, error } = useContacts();
+  const keyword = useSelector((s: AppState) =>
+    s.search.keyword.trim().toLowerCase()
   );
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  // Lọc theo keyword
   const filtered = useMemo(() => {
-    const k = keyword;
-    if (!k) return contacts;
+    if (!keyword) return contacts;
     return contacts.filter(
       (c) =>
-        c.fullName.toLowerCase().includes(k) ||
-        c.email.toLowerCase().includes(k) ||
-        c.phone.toLowerCase().includes(k) ||
-        c.subject.toLowerCase().includes(k)
+        c.fullName.toLowerCase().includes(keyword) ||
+        c.email.toLowerCase().includes(keyword) ||
+        c.phone.toLowerCase().includes(keyword) ||
+        c.subject.toLowerCase().includes(keyword)
     );
   }, [contacts, keyword]);
 
-  // Reset trang khi lọc
-  useEffect(() => {
-    setPage(0);
-  }, [keyword]);
+  useEffect(() => setPage(0), [keyword]);
 
   return (
     <Box>
@@ -56,7 +49,7 @@ const ContactsView = () => {
         )}
         {error && (
           <Typography mt={1} variant="body2" color="error">
-            {(error as Error).message}
+            {error.message}
           </Typography>
         )}
       </Box>
