@@ -1,4 +1,3 @@
-// src/features/admin/users/components/ClientOnlyUsersPage.tsx
 "use client";
 
 import { useSearchParams } from "next/navigation";

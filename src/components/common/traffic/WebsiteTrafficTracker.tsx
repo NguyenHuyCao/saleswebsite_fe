@@ -1,58 +1,55 @@
 "use client";
-
 import { useEffect } from "react";
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
+import { api } from "@/lib/api/http";
 
-const WebsiteTrafficTracker = () => {
+export default function WebsiteTrafficTracker() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const track = async () => {
+    const run = async () => {
       try {
-        // 1. Load FingerprintJS
         const fp = await FingerprintJS.load();
-        const result = await fp.get();
-        const visitorId = result.visitorId;
+        const { visitorId } = await fp.get();
 
-        // 2. Lấy IP
+        // IP: không bắt buộc – có thể fail
         const ip = await fetch("https://api.ipify.org?format=json")
-          .then((res) => res.json())
-          .then((data) => data.ip)
+          .then((r) => r.json())
+          .then((d) => d?.ip)
           .catch(() => null);
 
-        // 3. Lấy userId từ localStorage
-        const userRaw = localStorage.getItem("user");
-        const userId = userRaw ? JSON.parse(userRaw)?.id : null;
-
-        // 4. Gửi dữ liệu
-        await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/website_traffic`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              requestId: visitorId,
-              ipAddress: ip,
-              userId,
-            }),
+        const userId = (() => {
+          try {
+            const raw = localStorage.getItem("user");
+            return raw ? JSON.parse(raw)?.id ?? null : null;
+          } catch {
+            return null;
           }
+        })();
+
+        const payload = { requestId: visitorId, ipAddress: ip, userId };
+
+        // Ưu tiên beacon
+        const beaconOk = navigator.sendBeacon?.(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/website_traffic`,
+          new Blob([JSON.stringify(payload)], { type: "application/json" })
         );
 
-        console.debug("Website traffic tracked:", { visitorId, userId, ip });
-      } catch (err) {
-        console.warn("Không thể gửi dữ liệu traffic:", err);
+        if (!beaconOk) {
+          await api.post<void, typeof payload>(
+            "/api/v1/website_traffic",
+            payload
+          );
+        }
+      } catch {
+        // bỏ qua
       }
     };
 
-    // Thực hiện khi trình duyệt rảnh
-    if ("requestIdleCallback" in window) {
-      (window as any).requestIdleCallback(track);
-    } else {
-      setTimeout(track, 300); // fallback
-    }
+    "requestIdleCallback" in window
+      ? (window as any).requestIdleCallback(run)
+      : setTimeout(run, 300);
   }, []);
 
   return null;
-};
-
-export default WebsiteTrafficTracker;
+}

@@ -1,72 +1,55 @@
-const BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
+// features/admin/promotions/api.ts
+import { api } from "@/lib/api/http";
+import type { Promotion, PromotionUpsert, Product, Brand } from "./types";
 
-const authHeader = () => ({
-  Authorization: `Bearer ${
-    typeof window !== "undefined" ? localStorage.getItem("accessToken") : ""
-  }`,
-});
+/** Lấy toàn bộ danh sách khuyến mãi */
+export async function fetchPromotions(): Promise<Promotion[]> {
+  return api.get<Promotion[]>("/api/v1/promotions");
+}
 
-export async function fetchPromotions() {
-  const res = await fetch(`${BASE}/api/v1/promotions`, {
-    headers: authHeader(),
+/** Lấy chi tiết khuyến mãi theo id (BE đang nhận qua query ?promotionId=) */
+export async function fetchPromotionById(
+  id: string | number
+): Promise<Promotion> {
+  return api.get<Promotion>("/api/v1/promotions/id", {
+    params: { promotionId: id },
   });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json?.message || "Không tải được khuyến mãi");
-  return json.data as any[]; // Promotion[]
 }
 
-export async function fetchPromotionById(id: string | number) {
-  const res = await fetch(`${BASE}/api/v1/promotions/id?promotionId=${id}`);
-  const json = await res.json();
-  if (!res.ok) throw new Error(json?.message || "Không tải được chi tiết KM");
-  return json.data; // Promotion
+/** Lấy danh sách sản phẩm áp dụng của 1 khuyến mãi */
+export async function fetchPromotionProducts(id: number): Promise<Product[]> {
+  return api.get<Product[]>(`/api/v1/promotions/${id}`);
 }
 
-export async function fetchPromotionProducts(id: number) {
-  const res = await fetch(`${BASE}/api/v1/promotions/${id}`, {
-    headers: authHeader(),
-  });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json?.message || "Không tải được SP áp dụng");
-  return json.data as any[]; // Product[]
-}
-
+/** Xoá 1 sản phẩm khỏi khuyến mãi */
 export async function deleteProductFromPromotion(
   promotionId: number,
   productId: number
-) {
-  const res = await fetch(
-    `${BASE}/api/v1/promotions/delete-product/${promotionId}?productId=${productId}`,
-    { method: "DELETE", headers: authHeader() }
-  );
-  const json = await res.json();
-  if (!res.ok) throw new Error(json?.message || "Xóa sản phẩm thất bại");
-  return json;
+): Promise<void> {
+  await api.delete<void>(`/api/v1/promotions/delete-product/${promotionId}`, {
+    params: { productId },
+  });
 }
 
+/** Tạo / Cập nhật khuyến mãi (JSON body) */
 export async function upsertPromotion(
   method: "POST" | "PUT",
-  payload: any,
+  payload: PromotionUpsert,
   id?: string | number
 ) {
-  const url =
-    method === "PUT"
-      ? `${BASE}/api/v1/promotions/${id}`
-      : `${BASE}/api/v1/promotions`;
-
-  const res = await fetch(url, {
-    method,
-    headers: { "Content-Type": "application/json", ...authHeader() },
-    body: JSON.stringify(payload),
-  });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json?.message || "Gửi dữ liệu thất bại");
-  return json;
+  if (method === "PUT" && id != null) {
+    return api.put<Promotion, PromotionUpsert>(
+      `/api/v1/promotions/${id}`,
+      payload
+    );
+  }
+  return api.post<Promotion, PromotionUpsert>("/api/v1/promotions", payload);
 }
 
-export async function fetchBrandsWithProducts() {
-  const res = await fetch(`${BASE}/api/v1/brands`, { headers: authHeader() });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json?.message || "Không tải được thương hiệu");
-  return (json.data?.result ?? []) as any[]; // Brand[]
+/** Cây Brand → Category → Products để chọn SP áp dụng KM
+ *  /api/v1/brands thường trả về { result, meta }, nên lấy result ra
+ */
+export async function fetchBrandsWithProducts(): Promise<Brand[]> {
+  const data = await api.get<{ result: Brand[]; meta?: any }>("/api/v1/brands");
+  return data.result ?? [];
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Box } from "@mui/material";
 import { LineChart, chartsGridClasses } from "@mui/x-charts";
 import { useTheme } from "@mui/material/styles";
+import { api } from "@/lib/api/http";
 
 interface MonthlyData {
   month: number;
@@ -12,31 +13,42 @@ interface MonthlyData {
   profit: number;
 }
 
+type AdvancedReportPayload =
+  | { monthlyRevenueCostProfit?: MonthlyData[] }
+  | { result?: { monthlyRevenueCostProfit?: MonthlyData[] } };
+
 const ReportChart = () => {
   const theme = useTheme();
   const [data, setData] = useState<MonthlyData[]>([]);
 
   useEffect(() => {
-    const fetchChartData = async () => {
-      const token = localStorage.getItem("accessToken");
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/advanced/revenue-cost-profit`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const json = await res.json();
-      if (json.status === 200) {
-        // Lọc bỏ tháng không có giá trị
-        const filtered = json.data.monthlyRevenueCostProfit.filter(
+    const controller = new AbortController();
+
+    (async () => {
+      try {
+        // api.get unwraps -> trả thẳng phần "data" (đã qua interceptor + token)
+        const payload = await api.get<AdvancedReportPayload>(
+          "/api/v1/dashboard/advanced/revenue-cost-profit",
+          { signal: controller.signal }
+        );
+
+        const list =
+          (payload as any)?.monthlyRevenueCostProfit ??
+          (payload as any)?.result?.monthlyRevenueCostProfit ??
+          [];
+
+        const filtered = (Array.isArray(list) ? list : []).filter(
           (m: MonthlyData) => m.revenue > 0 || m.cost > 0 || m.profit > 0
         );
+
         setData(filtered);
+      } catch (err) {
+        console.error("Lỗi tải dữ liệu biểu đồ:", err);
+        setData([]); // fail-soft
       }
-    };
-    fetchChartData();
+    })();
+
+    return () => controller.abort();
   }, []);
 
   const labels = data.map((item) => `Th${item.month}`);
@@ -89,10 +101,7 @@ const ReportChart = () => {
         ]}
         slotProps={{
           legend: {
-            position: {
-              vertical: "bottom",
-              horizontal: "center",
-            },
+            position: { vertical: "bottom", horizontal: "center" },
           },
         }}
         height={320}

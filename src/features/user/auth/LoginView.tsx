@@ -21,13 +21,13 @@ import {
   Select,
   Container,
 } from "@mui/material";
-import Grid from "@mui/material/Grid"; // ✅ MUI v6 Grid
+import Grid from "@mui/material/Grid";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { useLogin } from "@/features/user/auth/hooks/useLogin";
-import { useRegister } from "@/features/user/auth/hooks/useRegister";
+import { useLogin } from "./hooks/useLogin";
+import { useRegister } from "./hooks/useRegister";
 
 const provincesData: Record<string, string[]> = {
   "Hà Nội": ["Ba Đình", "Hoàn Kiếm", "Đống Đa"],
@@ -47,19 +47,18 @@ export default function LoginView() {
   const sp = useSearchParams();
 
   const showMessage = useCallback(
-    (severity: "success" | "error", message: string) => {
-      setSnackbar({ open: true, severity, message });
-    },
+    (severity: "success" | "error", message: string) =>
+      setSnackbar({ open: true, severity, message }),
     []
   );
 
-  // ---- LOGIN STATE
+  // LOGIN
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const { mutateAsync: doLogin, isPending: loggingIn } = useLogin();
 
-  // ---- REGISTER STATE
+  // REGISTER
   const [reg, setReg] = useState({
     name: "",
     email: "",
@@ -74,7 +73,6 @@ export default function LoginView() {
   const [showRegConfirm, setShowRegConfirm] = useState(false);
   const { mutateAsync: doRegister, isPending: registering } = useRegister();
 
-  // ✅ Đồng bộ ?page bằng useEffect (tránh setState trực tiếp trong render)
   useEffect(() => {
     const page = sp.get("page");
     setTab(page === "register" ? 1 : 0);
@@ -85,7 +83,6 @@ export default function LoginView() {
     router.replace(`/login?page=${v === 1 ? "register" : "login"}`);
   };
 
-  // ---- SUBMIT HANDLERS
   const onLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {

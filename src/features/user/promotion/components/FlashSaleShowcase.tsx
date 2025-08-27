@@ -2,22 +2,18 @@
 
 import { Box, Typography, Skeleton, Fade } from "@mui/material";
 import { motion } from "framer-motion";
-import FlashSaleSlider from "@/views/home/FlashSaleSlider";
+import FlashSaleSlider from "./FlashSaleSlider";
 import type { Promotion } from "../types";
 import TwoStrokePromoBanner from "./TwoStrokePromoBanner";
 import { useState, useEffect } from "react";
 
-/**
- * Nhận danh sách flash promotions từ server (SSR) qua prop.
- * Nếu muốn “tươi” theo thời gian thực, có thể bật auto-refresh nhẹ client-side.
- */
 export default function FlashSaleShowcase({
   promotions,
 }: {
-  promotions: Promotion[];
+  promotions: Promotion[] | null; // <- cho phép null = loading
 }) {
-  // tuỳ chọn: refresh nhẹ sau render lần đầu để tránh cache CDN
   const [list, setList] = useState<Promotion[] | null>(null);
+
   useEffect(() => setList(promotions), [promotions]);
 
   const loading = list === null;
@@ -25,7 +21,6 @@ export default function FlashSaleShowcase({
   return (
     <Box sx={{ pt: 8, mb: -5 }}>
       <TwoStrokePromoBanner />
-
       {loading ? (
         <Box px={2}>
           <Skeleton variant="rounded" height={260} sx={{ borderRadius: 3 }} />

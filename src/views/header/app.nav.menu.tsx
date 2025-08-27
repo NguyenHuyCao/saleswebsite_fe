@@ -17,7 +17,10 @@ import CompareIcon from "@mui/icons-material/Compare";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import BrandMegaMenu from "@/features/user/brand/components/BrandMegaMenu";
+import { api, toApiError } from "@/lib/api/http";
 
+// Nếu dự án đã có sẵn types Category/BrandWithCategories thì giữ nguyên.
+// Tại đây chỉ dùng lại như code cũ.
 const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
   const [showMegaMenu, setShowMegaMenu] = useState(false);
   const [categoriesRawData, setCategoriesRawData] = useState<Category[]>([]);
@@ -26,26 +29,35 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
   const pathname = usePathname();
 
   useEffect(() => {
-    // const token = localStorage.getItem("accessToken");
-    // if (!token) return;
+    const controller = new AbortController();
 
-    const fetchData = async () => {
-      try {
-        const [catRes, brandRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories`),
-          fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/brands`),
-        ]);
-        const catData = await catRes.json();
-        const brandData = await brandRes.json();
-
-        if (catRes.ok) setCategoriesRawData(catData.data.result || []);
-        if (brandRes.ok) setBrandsData(brandData.data.result || []);
-      } catch (err) {
-        console.error("Lỗi khi lấy dữ liệu:", err);
-      }
+    const normalize = <T,>(d: any): T[] => {
+      // unwrap của api.get() trả về thẳng "data".
+      // Một số API có thể trả { result: [...] } hoặc là array trực tiếp.
+      if (Array.isArray(d)) return d as T[];
+      if (Array.isArray(d?.result)) return d.result as T[];
+      if (Array.isArray(d?.items)) return d.items as T[];
+      return [];
     };
 
-    fetchData();
+    (async () => {
+      try {
+        const [cats, brands] = await Promise.all([
+          api.get<any>("/api/v1/categories", { signal: controller.signal }),
+          api.get<any>("/api/v1/brands", { signal: controller.signal }),
+        ]);
+
+        setCategoriesRawData(normalize<Category>(cats));
+        setBrandsData(normalize<BrandWithCategories>(brands));
+      } catch (e) {
+        if ((e as any)?.name === "CanceledError") return;
+        console.warn("Lỗi khi lấy dữ liệu:", toApiError(e).message);
+        setCategoriesRawData([]);
+        setBrandsData([]);
+      }
+    })();
+
+    return () => controller.abort();
   }, []);
 
   const navLinks = [
@@ -140,9 +152,7 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
               flexShrink: 0,
               borderRadius: 1,
               boxShadow: 2,
-              "&:hover": {
-                bgcolor: "#f25c05",
-              },
+              "&:hover": { bgcolor: "#f25c05" },
             }}
           >
             DANH MỤC SẢN PHẨM
@@ -197,9 +207,7 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
                 cursor: "pointer",
                 flexShrink: 0,
                 transition: "all 0.3s ease",
-                "&:hover .text": {
-                  color: "#f25c05",
-                },
+                "&:hover .text": { color: "#f25c05" },
               }}
             >
               <Typography

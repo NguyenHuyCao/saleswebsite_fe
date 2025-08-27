@@ -1,4 +1,3 @@
-// product-detail/ProductDetailView.tsx
 import { Container } from "@mui/material";
 import { notFound } from "next/navigation";
 import PageViewTracker from "@/components/common/traffic/PageViewTracker";

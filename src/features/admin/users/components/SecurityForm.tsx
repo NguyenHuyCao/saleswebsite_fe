@@ -1,4 +1,3 @@
-// src/features/admin/users/components/SecurityForm.tsx
 "use client";
 
 import { useState, ChangeEvent, MouseEvent } from "react";
@@ -16,7 +15,7 @@ import KeyOutline from "mdi-material-ui/KeyOutline";
 import EyeOutline from "mdi-material-ui/EyeOutline";
 import EyeOffOutline from "mdi-material-ui/EyeOffOutline";
 import AlertSnackbar from "@/components/feedback/AlertSnackbar";
-import { apiChangePassword } from "../../users/api";
+import { useChangePassword } from "../queries";
 
 export default function SecurityForm({
   onBack,
@@ -41,6 +40,8 @@ export default function SecurityForm({
     type: "success" as "success" | "error",
   });
 
+  const changePassword = useChangePassword(userId);
+
   const handleChange =
     (k: keyof typeof values) => (e: ChangeEvent<HTMLInputElement>) =>
       setValues((v) => ({ ...v, [k]: e.target.value }));
@@ -60,7 +61,7 @@ export default function SecurityForm({
       return;
     }
     try {
-      await apiChangePassword(userId, {
+      await changePassword.mutateAsync({
         currentPassword: values.currentPassword,
         newPassword: values.newPassword,
         confirmPassword: values.confirmNewPassword,
@@ -104,7 +105,7 @@ export default function SecurityForm({
             key.charAt(0).toUpperCase() + key.slice(1)
           }` as keyof typeof values;
           return (
-            <Grid size={{xs:12, md:6,}}  key={key}>
+            <Grid size={{ xs: 12, md: 6 }} key={key}>
               <InputLabel htmlFor={key}>{label}</InputLabel>
               <OutlinedInput
                 fullWidth

@@ -25,12 +25,22 @@ import DotsVertical from "mdi-material-ui/DotsVertical";
 // Next
 import Image from "next/image";
 
+// API
+import { api, toApiError } from "@/lib/api/http";
+
 interface BrandSaleType {
   name: string;
   logo: string;
   founded: string;
   revenue: number; // always number in state
 }
+
+type BrandReportRes = {
+  brandSales: Array<[string, string, string, number | string]> | any[];
+  thisYearTotal: number | string;
+  lastYearTotal: number | string;
+  growthRate: number | string;
+};
 
 const formatVND = (n: number) =>
   new Intl.NumberFormat("vi-VN", {
@@ -48,54 +58,39 @@ const TotalEarning = () => {
 
   useEffect(() => {
     const controller = new AbortController();
-
-    const fetchData = async () => {
+    (async () => {
       try {
-        const token =
-          typeof window !== "undefined"
-            ? localStorage.getItem("accessToken")
-            : null;
-
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/monthly-brand-report`,
-          {
-            headers: {
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-            signal: controller.signal,
-          }
+        const data = await api.get<BrandReportRes>(
+          "/api/v1/dashboard/overview/monthly-brand-report",
+          { signal: controller.signal }
         );
 
-        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+        const mapped =
+          (data?.brandSales || []).map((item: any) => {
+            // hỗ trợ cả dạng tuple [name, logo, founded, revenue] hoặc object
+            const name = String(item?.[0] ?? item?.name ?? "");
+            const logo = String(item?.[1] ?? item?.logo ?? "");
+            const founded = String(item?.[2] ?? item?.founded ?? "");
+            const revenueRaw = item?.[3] ?? item?.revenue ?? 0;
+            return {
+              name,
+              logo,
+              founded,
+              revenue: Number(revenueRaw) || 0,
+            } as BrandSaleType;
+          }) ?? [];
 
-        const json = await res.json();
-
-        if (json?.status === 200 && json?.data) {
-          const data = json.data;
-
-          setBrandSales(
-            (data.brandSales || []).map((item: any) => ({
-              name: String(item?.[0] ?? ""),
-              logo: String(item?.[1] ?? ""),
-              founded: String(item?.[2] ?? ""),
-              revenue: Number(item?.[3]) || 0, // <-- ensure number
-            }))
-          );
-
-          setThisYearTotal(Number(data.thisYearTotal) || 0);
-          setLastYearTotal(Number(data.lastYearTotal) || 0);
-          setGrowthRate(Number(data.growthRate) || 0);
-        } else {
-          console.error("Invalid response structure:", json);
-        }
+        setBrandSales(mapped);
+        setThisYearTotal(Number(data?.thisYearTotal ?? 0));
+        setLastYearTotal(Number(data?.lastYearTotal ?? 0));
+        setGrowthRate(Number(data?.growthRate ?? 0));
       } catch (err) {
-        if ((err as any)?.name !== "AbortError") {
-          console.error("Fetch brand report error:", err);
-        }
+        if ((err as any)?.name === "CanceledError") return;
+        const e = toApiError(err);
+        console.warn("Load monthly brand report failed:", e.message);
       }
-    };
+    })();
 
-    fetchData();
     return () => controller.abort();
   }, []);
 

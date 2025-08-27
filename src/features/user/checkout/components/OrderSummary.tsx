@@ -9,26 +9,22 @@ import {
   Box,
   Stack,
 } from "@mui/material";
-import type { CartItem } from "../CheckoutView";
+import type { CartItem } from "../types";
 
-type Props = { items?: CartItem[] };
-
-export default function OrderSummary({ items }: Props) {
-  // fallback mẫu nếu chưa truyền items
-  const cart =
-    items && items.length > 0
-      ? items
-      : [
-          {
-            productId: 1,
-            productName: "Máy xay cỏ",
-            productDescription: "Công suất lớn, dễ vệ sinh.",
-            productImage: "2-31b0f11c-68ae-4462-a707-4071c1a644eb.jpg",
-            unitPrice: 0,
-            quantity: 2,
-            totalPrice: 0,
-          },
-        ];
+export default function OrderSummary({ items }: { items: CartItem[] }) {
+  const cart = items?.length
+    ? items
+    : [
+        {
+          productId: 1,
+          productName: "Máy xay cỏ",
+          productDescription: "Công suất lớn, dễ vệ sinh.",
+          productImage: "2-31b0f11c-68ae-4462-a707-4071c1a644eb.jpg",
+          unitPrice: 0,
+          quantity: 2,
+          totalPrice: 0,
+        },
+      ];
 
   const subtotal = cart.reduce((sum, i) => sum + i.totalPrice, 0);
   const shippingFee = 30000;

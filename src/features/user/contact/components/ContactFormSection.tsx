@@ -22,10 +22,12 @@ import {
 } from "@mui/icons-material";
 import { useState, useCallback, JSX } from "react";
 import GlobalSnackbar from "@/components/alert/GlobalSnackbar";
+import { useSendContact } from "../queries";
+import type { ContactPayload } from "../types";
 
-const topics = ["Báo giá", "Bảo hành", "Kỹ thuật", "Hợp tác đại lý"];
+const topics = ["Báo giá", "Bảo hành", "Kỹ thuật", "Hợp tác đại lý"] as const;
 
-const initialForm = {
+const initialForm: ContactPayload = {
   fullName: "",
   email: "",
   phone: "",
@@ -34,8 +36,7 @@ const initialForm = {
 };
 
 export default function ContactFormSection() {
-  const [formData, setFormData] = useState(initialForm);
-  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<ContactPayload>(initialForm);
   const [snackbar, setSnackbar] = useState({
     open: false,
     type: "success" as "success" | "error",
@@ -44,6 +45,8 @@ export default function ContactFormSection() {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const { mutateAsync, isPending } = useSendContact();
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -55,35 +58,20 @@ export default function ContactFormSection() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/contacts`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        }
-      );
-      const result = await res.json();
-      if (res.status === 201) {
-        setSnackbar({
-          open: true,
-          type: "success",
-          message: "Đã gửi liên hệ thành công!",
-        });
-        setFormData(initialForm);
-      } else {
-        throw new Error(result.message || "Gửi thất bại!");
-      }
+      const res = await mutateAsync(formData);
+      setSnackbar({
+        open: true,
+        type: "success",
+        message: res?.message || "Đã gửi liên hệ thành công!",
+      });
+      setFormData(initialForm);
     } catch (error: any) {
       setSnackbar({
         open: true,
         type: "error",
-        message: error.message || "Đã xảy ra lỗi khi gửi liên hệ.",
+        message: error?.message || "Đã xảy ra lỗi khi gửi liên hệ.",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -212,7 +200,7 @@ export default function ContactFormSection() {
                 variant="contained"
                 color="warning"
                 size="large"
-                disabled={loading}
+                disabled={isPending}
                 sx={{
                   px: 5,
                   py: 1.5,
@@ -221,7 +209,7 @@ export default function ContactFormSection() {
                   textTransform: "none",
                 }}
               >
-                {loading ? (
+                {isPending ? (
                   <CircularProgress size={24} color="inherit" />
                 ) : (
                   "Gửi liên hệ"

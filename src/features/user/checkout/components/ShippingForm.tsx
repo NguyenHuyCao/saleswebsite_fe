@@ -2,23 +2,19 @@
 
 import { TextField, MenuItem, Typography, Paper } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import { useState } from "react";
+import type { ShippingFormValue } from "../types";
 
 const provinces = ["Hà Nội", "TP.HCM", "Đà Nẵng"];
 
-export default function ShippingForm() {
-  const [form, setForm] = useState({
-    email: "",
-    name: "",
-    phone: "",
-    address: "",
-    province: "",
-    commune: "",
-    shippingNote: "",
-  });
-
-  const handleChange = (field: keyof typeof form, value: string) =>
-    setForm((f) => ({ ...f, [field]: value }));
+export default function ShippingForm({
+  value,
+  onChange,
+}: {
+  value: ShippingFormValue;
+  onChange: (next: ShippingFormValue) => void;
+}) {
+  const set = (field: keyof ShippingFormValue, v: string) =>
+    onChange({ ...value, [field]: v });
 
   return (
     <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
@@ -32,10 +28,10 @@ export default function ShippingForm() {
             required
             fullWidth
             label="Email"
-            value={form.email}
-            onChange={(e) => handleChange("email", e.target.value)}
-            error={!form.email}
-            helperText={!form.email && "Vui lòng nhập email"}
+            value={value.email}
+            onChange={(e) => set("email", e.target.value)}
+            error={!value.email}
+            helperText={!value.email && "Vui lòng nhập email"}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
@@ -43,26 +39,26 @@ export default function ShippingForm() {
             required
             fullWidth
             label="Họ và tên"
-            value={form.name}
-            onChange={(e) => handleChange("name", e.target.value)}
-            error={!form.name}
-            helperText={!form.name && "Vui lòng nhập họ tên"}
+            value={value.name}
+            onChange={(e) => set("name", e.target.value)}
+            error={!value.name}
+            helperText={!value.name && "Vui lòng nhập họ tên"}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             fullWidth
             label="Số điện thoại"
-            value={form.phone}
-            onChange={(e) => handleChange("phone", e.target.value)}
+            value={value.phone}
+            onChange={(e) => set("phone", e.target.value)}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             fullWidth
             label="Địa chỉ cụ thể"
-            value={form.address}
-            onChange={(e) => handleChange("address", e.target.value)}
+            value={value.address}
+            onChange={(e) => set("address", e.target.value)}
           />
         </Grid>
 
@@ -72,10 +68,10 @@ export default function ShippingForm() {
             required
             fullWidth
             label="Tỉnh/Thành"
-            value={form.province}
-            onChange={(e) => handleChange("province", e.target.value)}
-            error={!form.province}
-            helperText={!form.province && "Bạn chưa chọn tỉnh thành"}
+            value={value.province}
+            onChange={(e) => set("province", e.target.value)}
+            error={!value.province}
+            helperText={!value.province && "Bạn chưa chọn tỉnh thành"}
             SelectProps={{ MenuProps: { disableScrollLock: true } }}
           >
             {provinces.map((p) => (
@@ -92,10 +88,10 @@ export default function ShippingForm() {
             required
             fullWidth
             label="Xã/Thị trấn"
-            value={form.commune}
-            onChange={(e) => handleChange("commune", e.target.value)}
-            error={!form.commune}
-            helperText={!form.commune && "Bạn chưa chọn Xã/Thị trấn"}
+            value={value.commune}
+            onChange={(e) => set("commune", e.target.value)}
+            error={!value.commune}
+            helperText={!value.commune && "Bạn chưa chọn Xã/Thị trấn"}
             SelectProps={{ MenuProps: { disableScrollLock: true } }}
           >
             {provinces.map((p) => (
@@ -111,8 +107,8 @@ export default function ShippingForm() {
             label="Ghi chú giao hàng"
             fullWidth
             placeholder="Ví dụ: Giao sáng thứ 2"
-            value={form.shippingNote}
-            onChange={(e) => handleChange("shippingNote", e.target.value)}
+            value={value.shippingNote}
+            onChange={(e) => set("shippingNote", e.target.value)}
           />
         </Grid>
       </Grid>

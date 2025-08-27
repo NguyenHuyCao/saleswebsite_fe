@@ -14,6 +14,7 @@ import {
   CircularProgress,
   TablePagination,
 } from "@mui/material";
+import { api } from "@/lib/api/http";
 
 interface UserFinance {
   totalSpent: number;
@@ -34,27 +35,31 @@ const DashboardTable = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const controller = new AbortController();
+
+    (async () => {
       try {
-        const token = localStorage.getItem("accessToken");
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/user-finance`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const result = await res.json();
-        setUsers(result.data);
+        // Backend có thể trả { data: [...] } hoặc { data: { result: [...] } }
+        const payload = await api.get<
+          UserFinance[] | { result: UserFinance[] }
+        >("/api/v1/dashboard/overview/user-finance", {
+          signal: controller.signal,
+        });
+
+        const list: UserFinance[] = Array.isArray(payload)
+          ? payload
+          : (payload as any)?.result ?? [];
+
+        setUsers(Array.isArray(list) ? list : []);
       } catch (error) {
         console.error("Error fetching user finance data:", error);
+        setUsers([]); // fail-soft
       } finally {
         setLoading(false);
       }
-    };
+    })();
 
-    fetchUsers();
+    return () => controller.abort();
   }, []);
 
   const formatDate = (isoString: string) =>
@@ -63,15 +68,13 @@ const DashboardTable = () => {
   const formatCurrency = (value: number) =>
     value.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
 
-  const handleChangePage = (_: unknown, newPage: number) => {
-    setPage(newPage);
-  };
+  const handleChangePage = (_: unknown, newPage: number) => setPage(newPage);
 
   const handleChangeRowsPerPage = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0); // reset page về đầu
+    setPage(0);
   };
 
   const paginatedUsers = users.slice(
@@ -141,7 +144,6 @@ const DashboardTable = () => {
         </Table>
       </TableContainer>
 
-      {/* Pagination */}
       <TablePagination
         component="div"
         count={users.length}
@@ -150,11 +152,7 @@ const DashboardTable = () => {
         rowsPerPage={rowsPerPage}
         onRowsPerPageChange={handleChangeRowsPerPage}
         labelRowsPerPage="Số dòng mỗi trang:"
-        SelectProps={{
-          MenuProps: {
-            disableScrollLock: true,
-          },
-        }}
+        SelectProps={{ MenuProps: { disableScrollLock: true } }}
       />
     </Card>
   );

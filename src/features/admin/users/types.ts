@@ -1,4 +1,3 @@
-// src/features/admin/users/types.ts
 export interface User {
   id: number;
   username: string;
@@ -11,10 +10,4 @@ export interface User {
 export interface PagedResp<T> {
   result: T[];
   meta: { page: number; pageSize: number; pages: number; total: number };
-}
-
-export interface ApiEnvelope<T> {
-  status: number;
-  message: string;
-  data: T;
 }

@@ -1,4 +1,3 @@
-// src/features/admin/users/components/UserCombinedForm.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -16,7 +15,7 @@ import Grid from "@mui/material/Grid";
 import AlertSnackbar from "@/components/feedback/AlertSnackbar";
 import { useSearchParams } from "next/navigation";
 import type { User } from "../../users/types";
-import { apiUpdateUser } from "../../users/api";
+import { useUpdateUser } from "../queries";
 
 export default function UserCombinedForm({
   onNext,
@@ -25,6 +24,9 @@ export default function UserCombinedForm({
   onNext: () => void;
   userData: User | null;
 }) {
+  const sp = useSearchParams();
+  const userId = sp.get("userId")!;
+
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -37,8 +39,8 @@ export default function UserCombinedForm({
     message: "",
     type: "success" as "success" | "error",
   });
-  const sp = useSearchParams();
-  const userId = sp.get("userId")!;
+
+  const updateUser = useUpdateUser(userId);
 
   useEffect(() => {
     if (userData) {
@@ -54,7 +56,7 @@ export default function UserCombinedForm({
 
   const save = async () => {
     try {
-      await apiUpdateUser(userId, form);
+      await updateUser.mutateAsync(form);
       setSnack({
         open: true,
         message: "Cập nhật thông tin thành công!",
@@ -73,7 +75,7 @@ export default function UserCombinedForm({
       </Typography>
 
       <Grid container spacing={4}>
-        <Grid size={{xs:12, md:6,}}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <TextField
             fullWidth
             label="Họ và tên"
@@ -81,7 +83,7 @@ export default function UserCombinedForm({
             onChange={(e) => setForm({ ...form, username: e.target.value })}
           />
         </Grid>
-        <Grid size={{xs:12, md:6,}}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <TextField
             fullWidth
             type="email"
@@ -90,7 +92,7 @@ export default function UserCombinedForm({
             onChange={(e) => setForm({ ...form, email: e.target.value })}
           />
         </Grid>
-        <Grid size={{xs:12, md:6,}}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <TextField
             fullWidth
             label="Số điện thoại"
@@ -98,7 +100,7 @@ export default function UserCombinedForm({
             onChange={(e) => setForm({ ...form, phone: e.target.value })}
           />
         </Grid>
-        <Grid size={{xs:12}} >
+        <Grid size={{ xs: 12 }}>
           <TextField
             fullWidth
             label="Địa chỉ"

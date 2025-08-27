@@ -1,4 +1,3 @@
-// src/features/admin/warranty/components/WarrantyManagementPage.tsx
 "use client";
 
 import {
@@ -25,19 +24,27 @@ import {
   Alert,
 } from "@mui/material";
 import Image from "next/image";
-import { useEffect, useMemo, useState, ChangeEvent } from "react";
+import { useMemo, useState, ChangeEvent } from "react";
 import { useSelector } from "react-redux";
 import type { AppState } from "@/redux/store";
-import { apiListWarrantyClaims, apiUpdateWarrantyClaim } from "../api";
-import type { WarrantyClaim, WarrantyStatus } from "../types";
+import {
+  useUpdateWarrantyClaim,
+  useWarrantyClaims,
+} from "../../warranty/queries";
+import type { WarrantyClaim, WarrantyStatus } from "../../warranty/types";
 
 const STATUS_OPTIONS: WarrantyStatus[] = ["PENDING", "APPROVED", "REJECTED"];
 
 export default function WarrantyManagementPage() {
-  const [claims, setClaims] = useState<WarrantyClaim[]>([]);
+  // data
+  const { data, isLoading, isError } = useWarrantyClaims();
+  const claims = (data?.result ?? []) as WarrantyClaim[];
+
+  // table state
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
+  // dialog state
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedClaim, setSelectedClaim] = useState<WarrantyClaim | null>(
     null
@@ -45,42 +52,42 @@ export default function WarrantyManagementPage() {
   const [status, setStatus] = useState<WarrantyStatus | string>("");
   const [note, setNote] = useState("");
 
+  // snackbar
   const [snackbar, setSnackbar] = useState({
     open: false,
     type: "success" as "success" | "error",
     message: "",
   });
 
+  // global search
   const keyword = useSelector((s: AppState) =>
     s.search.keyword.trim().toLowerCase()
   );
 
-  // load 1 lần, lấy nhiều nhất có thể rồi lọc - phân trang ở client
-  useEffect(() => {
-    apiListWarrantyClaims()
-      .then(({ result }) => setClaims(result))
-      .catch((e) => console.error(e));
-  }, []);
-
-  const filtered = useMemo(
-    () =>
-      claims.filter((c) => {
-        const k = keyword;
-        return (
-          c.userName?.toLowerCase().includes(k) ||
-          c.issueDesc?.toLowerCase().includes(k) ||
-          c.status?.toLowerCase().includes(k)
-        );
-      }),
-    [claims, keyword]
-  );
-
-  useEffect(() => setPage(0), [keyword]);
+  const filtered = useMemo(() => {
+    if (!keyword) return claims;
+    return claims.filter((c) => {
+      const k = keyword;
+      return (
+        (c.userName || "").toLowerCase().includes(k) ||
+        (c.issueDesc || "").toLowerCase().includes(k) ||
+        (c.status || "").toLowerCase().includes(k)
+      );
+    });
+  }, [claims, keyword]);
 
   const visible = filtered.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
+
+  const onChangeRowsPerPage = (e: ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(+e.target.value);
+    setPage(0);
+  };
+
+  // mutation
+  const updateClaim = useUpdateWarrantyClaim();
 
   const openEdit = (claim: WarrantyClaim) => {
     setSelectedClaim(claim);
@@ -96,29 +103,26 @@ export default function WarrantyManagementPage() {
     setNote("");
   };
 
-  const onChangeRowsPerPage = (e: ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(+e.target.value);
-    setPage(0);
-  };
-
   const saveUpdate = async () => {
     if (!selectedClaim) return;
     try {
-      await apiUpdateWarrantyClaim(selectedClaim.id, status, note);
+      await updateClaim.mutateAsync({
+        claimId: selectedClaim.id,
+        status,
+        resolutionNote: note,
+      });
       setSnackbar({
         open: true,
         type: "success",
         message: "Cập nhật thành công",
       });
-      // cập nhật local list cho nhanh
-      setClaims((prev) =>
-        prev.map((c) =>
-          c.id === selectedClaim.id ? { ...c, status, resolutionNote: note } : c
-        )
-      );
       closeEdit();
     } catch (e: any) {
-      setSnackbar({ open: true, type: "error", message: e.message });
+      setSnackbar({
+        open: true,
+        type: "error",
+        message: e?.message || "Cập nhật yêu cầu bảo hành thất bại",
+      });
       closeEdit();
     }
   };
@@ -129,9 +133,15 @@ export default function WarrantyManagementPage() {
         title="Quản lý bảo hành"
         titleTypographyProps={{ variant: "h6" }}
         action={
-          <Typography variant="body2">
-            Xem và xử lý yêu cầu bảo hành từ người dùng
-          </Typography>
+          isLoading ? (
+            <Typography variant="body2" color="text.secondary">
+              Đang tải...
+            </Typography>
+          ) : isError ? (
+            <Typography variant="body2" color="error">
+              Không thể tải dữ liệu
+            </Typography>
+          ) : null
         }
       />
       <CardContent>
@@ -174,6 +184,18 @@ export default function WarrantyManagementPage() {
                     </TableCell>
                   </TableRow>
                 ))}
+
+                {visible.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center">
+                      {isLoading
+                        ? "Đang tải..."
+                        : filtered.length === 0
+                        ? "Không có dữ liệu"
+                        : null}
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </TableContainer>
@@ -223,8 +245,12 @@ export default function WarrantyManagementPage() {
           </DialogContent>
           <DialogActions>
             <Button onClick={closeEdit}>Hủy</Button>
-            <Button variant="contained" onClick={saveUpdate}>
-              Lưu
+            <Button
+              variant="contained"
+              onClick={saveUpdate}
+              disabled={updateClaim.isPending}
+            >
+              {updateClaim.isPending ? "Đang lưu..." : "Lưu"}
             </Button>
           </DialogActions>
         </Dialog>

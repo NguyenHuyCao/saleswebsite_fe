@@ -1,95 +1,99 @@
-// src/features/admin/shipping/components/modals/ModalShippingEdit.tsx
 "use client";
 
-import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   Button,
-  Switch,
+  TextField,
   FormControlLabel,
+  Switch,
+  Stack,
 } from "@mui/material";
-import type { ShippingPartner } from "../../../shipping/types";
+import { useEffect, useState } from "react";
+import type { ShippingPartner, UpdateShippingPartner } from "../../types";
+
+type Props = {
+  open: boolean;
+  onClose: () => void;
+  initialData: ShippingPartner;
+  onSubmit: (data: UpdateShippingPartner) => Promise<void> | void;
+};
 
 export default function ModalShippingEdit({
   open,
   onClose,
-  onSubmit,
   initialData,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onSubmit: (data: {
-    name: string;
-    apiUrl: string | null;
-    active: boolean;
-  }) => void;
-  initialData: ShippingPartner | null;
-}) {
-  const [name, setName] = useState("");
-  const [apiUrl, setApiUrl] = useState<string | null>(null);
-  const [active, setActive] = useState(true);
+  onSubmit,
+}: Props) {
+  const [form, setForm] = useState<UpdateShippingPartner>({
+    name: "",
+    apiUrl: "",
+    active: true,
+  });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (open && initialData) {
-      setName(initialData.name);
-      setApiUrl(initialData.apiUrl);
-      setActive(initialData.active);
-    }
-    if (!open) {
-      setName("");
-      setApiUrl(null);
-      setActive(true);
-    }
-  }, [open, initialData]);
+    if (!initialData) return;
+    setForm({
+      name: initialData.name,
+      apiUrl: initialData.apiUrl,
+      active: initialData.active,
+    });
+  }, [initialData]);
 
-  const submit = () => {
-    if (!name.trim()) return;
-    onSubmit({ name, apiUrl, active });
-    onClose();
+  const handleChange =
+    (k: keyof UpdateShippingPartner) =>
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      setForm((s) => ({
+        ...s,
+        [k]: k === "active" ? e.target.checked : e.target.value,
+      }));
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    try {
+      await onSubmit(form);
+      onClose();
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth disableScrollLock>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Chỉnh sửa đơn vị vận chuyển</DialogTitle>
-      <DialogContent
-        sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
-      >
-        <TextField
-          label="Tên đơn vị"
-          fullWidth
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <TextField
-          label="Mã đơn vị"
-          fullWidth
-          value={initialData?.code || ""}
-          InputProps={{ readOnly: true }}
-          sx={{ opacity: 0.6 }}
-        />
-        <TextField
-          label="API URL (nếu có)"
-          fullWidth
-          value={apiUrl ?? ""}
-          onChange={(e) => setApiUrl(e.target.value || null)}
-        />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={active}
-              onChange={(e) => setActive(e.target.checked)}
-            />
-          }
-          label="Hoạt động"
-        />
+      <DialogContent dividers>
+        <Stack spacing={2} mt={1}>
+          <TextField
+            label="Tên đơn vị"
+            value={form.name}
+            onChange={handleChange("name")}
+            required
+            fullWidth
+          />
+          <TextField
+            label="API URL"
+            value={form.apiUrl ?? ""}
+            onChange={handleChange("apiUrl")}
+            fullWidth
+          />
+          <FormControlLabel
+            control={
+              <Switch checked={form.active} onChange={handleChange("active")} />
+            }
+            label="Hoạt động"
+          />
+        </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Hủy</Button>
-        <Button variant="contained" onClick={submit} disabled={!name.trim()}>
+        <Button
+          variant="contained"
+          onClick={handleSubmit}
+          disabled={submitting}
+        >
           Lưu
         </Button>
       </DialogActions>

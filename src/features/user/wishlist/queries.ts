@@ -1,4 +1,7 @@
+"use client";
+
 import useSWR, { mutate } from "swr";
+import type { Product } from "@/features/user/products/types";
 import { fetchWishlistApi } from "./api";
 
 export const WISHLIST_QUERY_KEY = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/wish_list`;
@@ -6,12 +9,20 @@ export const WISHLIST_QUERY_KEY = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1
 const normalizeToProduct = (items: any[]): Product[] => {
   const now = new Date().getTime();
   return items.map((item: any): Product => {
-    const createdAt = new Date(item.createdAt).getTime();
-    const isNew = (now - createdAt) / (1000 * 60 * 60 * 24) <= 30;
+    const createdAtMs = item?.createdAt
+      ? new Date(item.createdAt).getTime()
+      : now;
+    const isNew = (now - createdAtMs) / (1000 * 60 * 60 * 24) <= 30;
     const isHot = (item.totalStock ?? 0) - (item.stockQuantity ?? 0) > 10;
-    const status: string[] = [];
-    if (isNew) status.push("Mới");
-    if (isHot) status.push("Bán chạy");
+
+    const price = item.pricePerUnit ?? item.price ?? 0;
+    const originalPrice = item.price ?? price;
+
+    const tags: string[] = [];
+    if (isNew) tags.push("Mới");
+    if (isHot) tags.push("Bán chạy");
+
+    const inStock = (item.stockQuantity ?? 0) > 0;
 
     return {
       id: item.id,
@@ -22,12 +33,12 @@ const normalizeToProduct = (items: any[]): Product[] => {
       imageDetail2: item.imageDetail2 ?? "",
       imageDetail3: item.imageDetail3 ?? "",
       description: item.description ?? "",
-      price: item.pricePerUnit,
-      pricePerUnit: item.pricePerUnit,
-      originalPrice: item.price,
-      sale: (item.pricePerUnit ?? 0) < (item.price ?? 0),
-      inStock: (item.stockQuantity ?? 0) > 0,
-      label: (item.stockQuantity ?? 0) > 0 ? "Thêm vào giỏ" : "Hết hàng",
+      price,
+      pricePerUnit: price,
+      originalPrice,
+      sale: price < originalPrice,
+      inStock,
+      label: inStock ? "Thêm vào giỏ" : "Hết hàng",
       stockQuantity: item.stockQuantity ?? 0,
       totalStock: item.totalStock ?? 0,
       power: item.power ?? "N/A",
@@ -38,12 +49,12 @@ const normalizeToProduct = (items: any[]): Product[] => {
       tankCapacity: item.tankCapacity ?? 0,
       origin: item.origin ?? "Không rõ",
       warrantyMonths: item.warrantyMonths ?? 0,
-      createdAt: item.createdAt,
+      createdAt: item.createdAt ?? new Date().toISOString(),
       createdBy: item.createdBy ?? "",
       updatedAt: item.updatedAt ?? null,
       updatedBy: item.updatedBy ?? "",
       rating: item.rating ?? 0,
-      status,
+      status: tags,
       favorite: true,
     };
   });
@@ -60,4 +71,9 @@ export const bounceWishlistCounters = () => {
   const { WISHLIST_COUNT_KEY } = require("@/constants/apiKeys");
   mutate(WISHLIST_QUERY_KEY);
   mutate(WISHLIST_COUNT_KEY, undefined, { revalidate: true });
+};
+export const clearWishlistCache = () => {
+  const { WISHLIST_COUNT_KEY } = require("@/constants/apiKeys");
+  mutate(WISHLIST_QUERY_KEY, undefined, { revalidate: false });
+  mutate(WISHLIST_COUNT_KEY, undefined, { revalidate: false });
 };

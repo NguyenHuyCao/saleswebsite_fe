@@ -1,13 +1,14 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   Box,
+  Button,
   Typography,
   Avatar,
   Rating,
   Divider,
   Stack,
-  Button,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -15,7 +16,8 @@ import {
   TextField,
   Alert,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { http, toApiError, type ApiEnvelope } from "@/lib/api/http";
+import { getAccessToken } from "@/lib/api/token";
 
 interface Review {
   id: number;
@@ -39,19 +41,16 @@ const UserReviewList = ({ productId }: Props) => {
   const [updatedComment, setUpdatedComment] = useState("");
   const [updatedImages, setUpdatedImages] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const fetchUserReviews = async () => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return;
+    // Không dùng cookie; nếu chưa đăng nhập thì thôi
+    if (!getAccessToken()) return;
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reviews/user/${productId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const res = await http.get<ApiEnvelope<Review[]>>(
+        `/api/v1/reviews/user/${productId}`
       );
-      const data = await res.json();
-      setReviews(data.data || []);
+      setReviews(res.data?.data ?? []);
     } catch (err) {
       console.error("Lỗi khi lấy đánh giá người dùng:", err);
     }
@@ -59,6 +58,7 @@ const UserReviewList = ({ productId }: Props) => {
 
   useEffect(() => {
     fetchUserReviews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId]);
 
   const handleEditClick = (review: Review) => {
@@ -81,36 +81,32 @@ const UserReviewList = ({ productId }: Props) => {
   };
 
   const handleUpdate = async () => {
-    const token = localStorage.getItem("accessToken");
-    if (!token || !selectedReview) return;
+    if (!getAccessToken() || !selectedReview) return;
 
     if (!updatedComment.trim() || !updatedRating) {
       setError("Vui lòng nhập đủ thông tin");
       return;
     }
 
+    setSaving(true);
     try {
       const formData = new FormData();
-      formData.append("comment", updatedComment);
+      formData.append("comment", updatedComment.trim());
       formData.append("rating", String(updatedRating));
       updatedImages.forEach((img) => formData.append("imageReviews", img));
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reviews/${selectedReview.id}`,
-        {
-          method: "PUT",
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData,
-        }
-      );
-
-      if (!res.ok) throw new Error();
+      // Dùng http.put; interceptor tự gắn Bearer từ localStorage
+      await http.put(`/api/v1/reviews/${selectedReview.id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
       setOpenEdit(false);
-      fetchUserReviews();
+      await fetchUserReviews();
     } catch (err) {
-      setError("Không thể cập nhật đánh giá.");
+      setError(toApiError(err).message || "Không thể cập nhật đánh giá.");
       console.error(err);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -139,7 +135,9 @@ const UserReviewList = ({ productId }: Props) => {
                   </Typography>
                 </Box>
               </Stack>
+
               <Typography mt={1.5}>{review.comment}</Typography>
+
               <Stack direction="row" spacing={2} mt={1}>
                 {[review.image1, review.image2, review.image3]
                   .filter(Boolean)
@@ -159,6 +157,7 @@ const UserReviewList = ({ productId }: Props) => {
                     />
                   ))}
               </Stack>
+
               <Box mt={1}>
                 <Button
                   size="small"
@@ -168,6 +167,7 @@ const UserReviewList = ({ productId }: Props) => {
                   Sửa
                 </Button>
               </Box>
+
               <Divider sx={{ mt: 2 }} />
             </Box>
           ))}
@@ -186,7 +186,7 @@ const UserReviewList = ({ productId }: Props) => {
             {error && <Alert severity="error">{error}</Alert>}
             <Rating
               value={updatedRating}
-              onChange={(_, val) => setUpdatedRating(val || 0)}
+              onChange={(_, v) => setUpdatedRating(v || 0)}
             />
             <TextField
               value={updatedComment}
@@ -229,9 +229,11 @@ const UserReviewList = ({ productId }: Props) => {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenEdit(false)}>Huỷ</Button>
-          <Button variant="contained" onClick={handleUpdate}>
-            Lưu
+          <Button onClick={() => setOpenEdit(false)} disabled={saving}>
+            Huỷ
+          </Button>
+          <Button variant="contained" onClick={handleUpdate} disabled={saving}>
+            {saving ? "Đang lưu..." : "Lưu"}
           </Button>
         </DialogActions>
       </Dialog>

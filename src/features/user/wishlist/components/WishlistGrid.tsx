@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 import { Box, Typography, Pagination, Fade } from "@mui/material";
 import { motion } from "framer-motion";
-import ProductCard from "@/views/product/ProductCard";
+import ProductCard from "../../products/components/ProductCard";
 import { useWishlist, WISHLIST_QUERY_KEY } from "../queries";
 
 const ITEMS_PER_PAGE = 15;

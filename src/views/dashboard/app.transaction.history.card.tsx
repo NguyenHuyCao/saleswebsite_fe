@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   Avatar,
   AvatarGroup,
@@ -14,15 +15,15 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
 import MainCard from "@/components/dashboard/MainCard";
 import PaidOutlinedIcon from "@mui/icons-material/PaidOutlined";
 import Image from "next/image";
+import { api, toApiError } from "@/lib/api/http";
 
 interface Transaction {
   profitPercent: number;
   orderId: number;
-  paidAt: string;
+  paidAt: string; // ISO
   paidAmount: number;
   customer: {
     name: string;
@@ -30,38 +31,34 @@ interface Transaction {
   };
 }
 
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(value);
-};
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
+    value || 0
+  );
 
 const TransactionHistoryCard = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        const token = localStorage.getItem("accessToken");
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/transaction-history`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const json = await res.json();
-        if (json.status === 200) {
-          setTransactions(json.data.slice(0, 7));
-        }
-      } catch (error) {
-        console.error("Lỗi khi gọi API:", error);
-      }
-    };
+    const controller = new AbortController();
 
-    fetchTransactions();
+    (async () => {
+      try {
+        // Gọi qua Axios instance đã tự gắn Authorization từ localStorage
+        const data = await api.get<Transaction[]>(
+          "/api/v1/dashboard/overview/transaction-history",
+          { signal: controller.signal }
+        );
+        setTransactions(Array.isArray(data) ? data.slice(0, 7) : []);
+      } catch (e) {
+        if ((e as any)?.name === "CanceledError") return;
+        const err = toApiError(e);
+        console.warn("Lỗi khi tải transaction-history:", err.message);
+        setTransactions([]);
+      }
+    })();
+
+    return () => controller.abort();
   }, []);
 
   return (
@@ -78,34 +75,21 @@ const TransactionHistoryCard = () => {
             py: 0,
             maxHeight: 370,
             overflowY: "auto",
-            "& .MuiListItemButton-root": {
-              py: 1.5,
-              px: 2,
-            },
-            // Scrollbar customization
-            "&::-webkit-scrollbar": {
-              width: "6px",
-            },
-            "&::-webkit-scrollbar-track": {
-              backgroundColor: "transparent",
-            },
+            "& .MuiListItemButton-root": { py: 1.5, px: 2 },
+            "&::-webkit-scrollbar": { width: "6px" },
+            "&::-webkit-scrollbar-track": { backgroundColor: "transparent" },
             "&::-webkit-scrollbar-thumb": {
               backgroundColor: "#c1c1c1",
               borderRadius: "3px",
             },
-            "&::-webkit-scrollbar-thumb:hover": {
-              backgroundColor: "#a0a0a0",
-            },
+            "&::-webkit-scrollbar-thumb:hover": { backgroundColor: "#a0a0a0" },
           }}
         >
           {transactions.map((item) => (
             <ListItem component={ListItemButton} divider key={item.orderId}>
               <ListItemAvatar>
                 <Avatar
-                  sx={{
-                    color: "success.main",
-                    bgcolor: "success.lighter",
-                  }}
+                  sx={{ color: "success.main", bgcolor: "success.lighter" }}
                 >
                   <PaidOutlinedIcon />
                 </Avatar>
@@ -123,13 +107,14 @@ const TransactionHistoryCard = () => {
                   {formatCurrency(item.paidAmount)}
                 </Typography>
                 <Typography variant="caption" color="secondary" noWrap>
-                  {item.profitPercent.toFixed(2)}%
+                  {Number(item.profitPercent ?? 0).toFixed(2)}%
                 </Typography>
               </Stack>
             </ListItem>
           ))}
         </List>
       </MainCard>
+
       <MainCard sx={{ mt: 2, border: "none", boxShadow: "none" }}>
         <Stack sx={{ gap: 3 }}>
           <Grid container justifyContent="space-between" alignItems="center">

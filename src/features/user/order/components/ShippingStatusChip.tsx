@@ -1,3 +1,5 @@
+"use client";
+
 import { Chip } from "@mui/material";
 
 export default function ShippingStatusChip({ status }: { status: string }) {

@@ -22,7 +22,11 @@ import { useRouter } from "next/navigation";
 import { mutate as swrMutate } from "swr";
 import { CART_COUNT_KEY, ORDERS_COUNT_KEY } from "@/constants/apiKeys";
 import type { CartItem } from "../types";
-import { useClearCartMutation, usePlaceOrderMutation } from "../queries";
+import {
+  useClearCartMutation,
+  usePlaceOrderMutation,
+  useUserAddressQuery,
+} from "../queries";
 
 type Props = { items: CartItem[]; onApplyVoucher: (code: string) => void };
 
@@ -35,7 +39,23 @@ const communesMap: Record<string, string[]> = {
 
 export default function CartSummary({ items, onApplyVoucher }: Props) {
   const router = useRouter();
+  const [userId, setUserId] = useState<number | null>(null);
+
+  // lấy userId từ localStorage (client)
+  useEffect(() => {
+    try {
+      const u = localStorage.getItem("user");
+      if (u) setUserId(JSON.parse(u)?.id ?? null);
+    } catch {}
+  }, []);
+
+  // query địa chỉ hiện tại
+  const { data: fetchedAddress } = useUserAddressQuery(userId ?? undefined);
   const [userAddress, setUserAddress] = useState("");
+  useEffect(() => {
+    if (fetchedAddress) setUserAddress(fetchedAddress);
+  }, [fetchedAddress]);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProvince, setSelectedProvince] = useState("");
   const [selectedCommune, setSelectedCommune] = useState("");
@@ -46,29 +66,18 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
   );
   const [orderNote, setOrderNote] = useState("");
   const [voucherCode, setVoucherCode] = useState("");
-  const [snackbar, setSnackbar] = useState({
+
+  type SnackbarType = "success" | "error" | "info" | "warning";
+  type SnackbarState = { open: boolean; message: string; type: SnackbarType };
+  const [snackbar, setSnackbar] = useState<SnackbarState>({
     open: false,
-    type: "success" as const,
+    type: "success",
     message: "",
   });
 
   const { mutateAsync: clearCart, isPending: clearing } =
     useClearCartMutation();
   const { mutateAsync: place, isPending } = usePlaceOrderMutation();
-
-  useEffect(() => {
-    // lấy địa chỉ user hiện tại (giữ cách đơn giản như bản của bạn)
-    const token = localStorage.getItem("accessToken");
-    const user = localStorage.getItem("user");
-    if (token && user) {
-      const { id } = JSON.parse(user);
-      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/users/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((r) => r.json())
-        .then((d) => setUserAddress(d?.data?.address || ""));
-    }
-  }, []);
 
   const subtotal = useMemo(
     () => items.reduce((s, it) => s + it.totalPrice, 0),

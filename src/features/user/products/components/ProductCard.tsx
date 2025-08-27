@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Typography,
@@ -26,6 +26,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
 import type { AppDispatch, AppState } from "@/redux/store";
 import type { Product } from "../types";
+import { api, http } from "@/lib/api/http";
+
+type PromoResp =
+  | { discount?: number }
+  | { result?: { discount?: number } }
+  | null
+  | undefined;
 
 export default function ProductCard({
   product,
@@ -36,10 +43,13 @@ export default function ProductCard({
 }) {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-  const wishlistIds = useSelector(
-    (state: AppState) => new Set(state.wishlist.result.map((item) => item.id))
+
+  const wishlistItems = useSelector((s: AppState) => s.wishlist.result);
+  const favoriteIdSet = useMemo(
+    () => new Set(wishlistItems.map((i) => i.id)),
+    [wishlistItems]
   );
-  const isFavorite = wishlistIds.has(product.id);
+  const isFavorite = favoriteIdSet.has(product.id);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [actionType, setActionType] = useState<"favorite" | "cart" | null>(
@@ -52,18 +62,32 @@ export default function ProductCard({
   });
   const [discountPercent, setDiscountPercent] = useState<number | null>(null);
 
+  const [busyCart, setBusyCart] = useState(false);
+  const [busyFav, setBusyFav] = useState(false);
+
+  const normalizePct = (val: number) => (val > 1 ? val / 100 : val);
+
   useEffect(() => {
     const checkPromotion = async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/promotions/product?productId=${product.id}`
+        const payload = await api.get<PromoResp | { result: PromoResp }>(
+          `/api/v1/promotions/product?productId=${product.id}`
         );
-        const promo = await res.json();
-        if (promo?.data?.discount) setDiscountPercent(promo.data.discount);
-      } catch {}
+        const data = (payload as any)?.result ?? payload;
+        const raw = (data as any)?.discount;
+        if (typeof raw === "number") setDiscountPercent(normalizePct(raw));
+      } catch {
+        // im lặng
+      }
     };
     if (product.sale) checkPromotion();
   }, [product]);
+
+  const ensureLoggedIn = () => {
+    if (typeof window === "undefined") return false;
+    return !!localStorage.getItem("accessToken");
+    // Interceptor của bạn sẽ xử lý 401/refresh, ở đây chỉ check nhẹ để UX.
+  };
 
   const requireLogin = (type: "favorite" | "cart") => {
     setActionType(type);
@@ -72,65 +96,52 @@ export default function ProductCard({
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const token = localStorage.getItem("accessToken");
-    if (!token) return requireLogin("cart");
+    if (!ensureLoggedIn()) return requireLogin("cart");
+    if (busyCart) return;
 
+    setBusyCart(true);
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/carts`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ productId: product.id, quantity: 1 }),
-        }
-      );
-      const result = await res.json();
-      if (res.ok) {
-        setSnackbar({
-          open: true,
-          message: "Đã thêm vào giỏ hàng",
-          type: "success",
-        });
-        mutate(CART_COUNT_KEY);
-      } else throw new Error(result.message || "Lỗi khi thêm sản phẩm");
-    } catch {
+      await http.post("/api/v1/carts", { productId: product.id, quantity: 1 });
       setSnackbar({
         open: true,
-        message: "Lỗi kết nối hoặc xử lý giỏ hàng",
+        message: "Đã thêm vào giỏ hàng",
+        type: "success",
+      });
+      mutate(CART_COUNT_KEY, undefined, { revalidate: true });
+    } catch (err: any) {
+      setSnackbar({
+        open: true,
+        message: err?.message || "Lỗi kết nối hoặc xử lý giỏ hàng",
         type: "error",
       });
+    } finally {
+      setBusyCart(false);
     }
   };
 
   const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const token = localStorage.getItem("accessToken");
-    if (!token) return requireLogin("favorite");
+    if (!ensureLoggedIn()) return requireLogin("favorite");
+    if (busyFav) return;
 
+    setBusyFav(true);
     try {
       const formData = new FormData();
       formData.append("productId", String(product.id));
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/wish_list`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData,
-        }
-      );
-      if (!res.ok) throw new Error("Cập nhật yêu thích thất bại");
+      await http.post("/api/v1/wish_list", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       dispatch(fetchWishlist());
-      mutate(WISHLIST_COUNT_KEY);
-      if (mutateKey) mutate(mutateKey);
-    } catch {
+      mutate(WISHLIST_COUNT_KEY, undefined, { revalidate: true });
+      if (mutateKey) mutate(mutateKey, undefined, { revalidate: true });
+    } catch (err: any) {
       setSnackbar({
         open: true,
-        message: "Lỗi khi cập nhật yêu thích",
+        message: err?.message || "Lỗi khi cập nhật yêu thích",
         type: "error",
       });
+    } finally {
+      setBusyFav(false);
     }
   };
 
@@ -160,9 +171,10 @@ export default function ProductCard({
             bgcolor: "#fff",
           }}
         >
-          <Tooltip title="Thêm vào yêu thích">
+          <Tooltip title={isFavorite ? "Bỏ yêu thích" : "Thêm vào yêu thích"}>
             <IconButton
               onClick={handleToggleFavorite}
+              disabled={busyFav}
               sx={{
                 position: "absolute",
                 top: 8,
@@ -196,7 +208,7 @@ export default function ProductCard({
               bgcolor: "#f7f7f7",
             }}
           >
-            {product.sale && discountPercent && (
+            {product.sale && discountPercent !== null && (
               <Box
                 sx={{
                   position: "absolute",
@@ -285,7 +297,7 @@ export default function ProductCard({
           <Button
             fullWidth
             variant={product.inStock ? "contained" : "outlined"}
-            disabled={!product.inStock}
+            disabled={!product.inStock || busyCart}
             onClick={handleAddToCart}
             sx={{
               mt: 1.2,
@@ -305,9 +317,8 @@ export default function ProductCard({
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
         <DialogTitle>Yêu cầu đăng nhập</DialogTitle>
         <DialogContent>
-          {" "}
           Bạn cần đăng nhập để{" "}
-          {actionType === "cart" ? "mua hàng" : "thêm yêu thích"}.{" "}
+          {actionType === "cart" ? "mua hàng" : "thêm yêu thích"}.
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>Hủy</Button>

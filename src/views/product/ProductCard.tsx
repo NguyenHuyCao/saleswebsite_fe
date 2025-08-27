@@ -26,10 +26,15 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
 import type { AppDispatch, AppState } from "@/redux/store";
 
+// ✅ dùng http/api custom
+import { api, http } from "@/lib/api/http";
+
 type Props = {
   product: Product;
   mutateKey?: string;
 };
+
+type ProductPromo = { discount?: number };
 
 const ProductCard = ({ product, mutateKey }: Props) => {
   const router = useRouter();
@@ -53,11 +58,14 @@ const ProductCard = ({ product, mutateKey }: Props) => {
   useEffect(() => {
     const checkPromotion = async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/promotions/product?productId=${product.id}`
+        // GET với params qua Axios config
+        const promo = await api.get<ProductPromo>(
+          `/api/v1/promotions/product`,
+          {
+            params: { productId: product.id },
+          }
         );
-        const promo = await res.json();
-        if (promo?.data?.discount) setDiscountPercent(promo.data.discount);
+        if (promo?.discount) setDiscountPercent(promo.discount);
       } catch (err) {
         console.error("Lỗi khi kiểm tra khuyến mãi:", err);
       }
@@ -76,28 +84,16 @@ const ProductCard = ({ product, mutateKey }: Props) => {
     if (!token) return requireLogin("cart");
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/carts`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ productId: product.id, quantity: 1 }),
-        }
-      );
-      const result = await res.json();
-      if (res.ok) {
-        setSnackbar({
-          open: true,
-          message: "Đã thêm vào giỏ hàng",
-          type: "success",
-        });
-        mutate(CART_COUNT_KEY);
-      } else {
-        throw new Error(result.message || "Lỗi khi thêm sản phẩm");
-      }
+      await http.post(`/api/v1/carts`, {
+        productId: product.id,
+        quantity: 1,
+      });
+      setSnackbar({
+        open: true,
+        message: "Đã thêm vào giỏ hàng",
+        type: "success",
+      });
+      mutate(CART_COUNT_KEY);
     } catch {
       setSnackbar({
         open: true,
@@ -115,15 +111,9 @@ const ProductCard = ({ product, mutateKey }: Props) => {
     try {
       const formData = new FormData();
       formData.append("productId", String(product.id));
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/wish_list`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData,
-        }
-      );
-      if (!res.ok) throw new Error("Cập nhật yêu thích thất bại");
+      await http.post(`/api/v1/wish_list`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
       dispatch(fetchWishlist());
       mutate(WISHLIST_COUNT_KEY);

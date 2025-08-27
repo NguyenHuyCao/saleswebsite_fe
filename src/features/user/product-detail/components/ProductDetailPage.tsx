@@ -48,7 +48,6 @@ export default function ProductDetailPage({ product, category }: Props) {
   return (
     <Box sx={{ maxWidth: 1400, mx: "auto", py: 4, px: { xs: 1, sm: 2 } }}>
       <Grid container spacing={4}>
-        {/* Trái: Hình + info */}
         <Grid size={{ xs: 12, md: 8 }}>
           <Grid container spacing={4}>
             <Grid size={{ xs: 12, md: 5 }}>
@@ -66,7 +65,6 @@ export default function ProductDetailPage({ product, category }: Props) {
           </Grid>
         </Grid>
 
-        {/* Phải: Cam kết / Hỗ trợ / KM */}
         <Grid size={{ xs: 12, md: 4 }}>
           <CommitmentCard />
           <Box mt={2}>

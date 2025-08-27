@@ -14,33 +14,12 @@ import {
   CardHeader,
   CardContent,
 } from "@mui/material";
-import { useEffect, useState, ChangeEvent } from "react";
+import { useMemo, useState, ChangeEvent } from "react";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
-import { AppState } from "@/redux/store";
-
-interface OrderData {
-  orderId: number;
-  status: string;
-  shippingAddress: string;
-  paymentMethod: string;
-  shippingMethod: string;
-  totalAmount: number;
-  createdAt: string;
-  paymentStatus: string;
-  paidAt: string | null;
-  moneyChannel: string | null;
-  user: { email: string; phone: string };
-}
-
-interface ApiResponse {
-  status: number;
-  message: string;
-  data: {
-    meta: { page: number; pageSize: number; pages: number; total: number };
-    result: OrderData[];
-  };
-}
+import type { AppState } from "@/redux/store";
+import { useOrders } from "../../queries";
+import type { OrderListItem } from "../../types";
 
 interface Column {
   id: string;
@@ -62,42 +41,22 @@ const columns: Column[] = [
 ];
 
 export default function OrderListTable() {
-  const [orders, setOrders] = useState<OrderData[]>([]);
-  const [filteredOrders, setFilteredOrders] = useState<OrderData[]>([]);
+  const { data, isLoading } = useOrders();
+  const rows = (data?.result ?? []) as OrderListItem[];
+
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-
   const router = useRouter();
+
   const keyword = useSelector((state: AppState) =>
     state.search.keyword.trim().toLowerCase()
   );
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders?page=1&size=1000`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-            },
-          }
-        );
-        if (!res.ok) throw new Error("Không thể lấy dữ liệu");
-        const json: ApiResponse = await res.json();
-        setOrders(json.data.result);
-      } catch (error) {
-        console.error("Lỗi khi gọi API:", error);
-      }
-    };
-    fetchOrders();
-  }, []);
-
-  useEffect(() => {
-    const filtered = orders.filter((order) => {
+  const filtered = useMemo(() => {
+    if (!keyword) return rows;
+    return rows.filter((order) => {
       const fields = [
-        order.orderId.toString(),
+        String(order.orderId),
         order.user.email,
         order.user.phone,
         order.status,
@@ -111,19 +70,12 @@ export default function OrderListTable() {
       ];
       return fields.some((f) => f.toLowerCase().includes(keyword));
     });
-    setFilteredOrders(filtered);
-    setPage(0);
-  }, [orders, keyword]);
+  }, [rows, keyword]);
 
   const handleChangePage = (_: unknown, newPage: number) => setPage(newPage);
-
   const handleChangeRowsPerPage = (e: ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(+e.target.value);
     setPage(0);
-  };
-
-  const handleViewDetails = (orderId: number) => {
-    router.push(`/admin/orders?page=detail&orderId=${orderId}`);
   };
 
   return (
@@ -131,6 +83,7 @@ export default function OrderListTable() {
       <CardHeader
         title="Danh sách đơn hàng"
         titleTypographyProps={{ variant: "h6" }}
+        action={isLoading ? "Đang tải..." : null}
       />
       <CardContent>
         <Paper sx={{ width: "100%", overflow: "hidden" }}>
@@ -149,8 +102,9 @@ export default function OrderListTable() {
                   ))}
                 </TableRow>
               </TableHead>
+
               <TableBody>
-                {filteredOrders
+                {filtered
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((order) => (
                     <TableRow key={order.orderId} hover>
@@ -177,7 +131,11 @@ export default function OrderListTable() {
                         <Button
                           variant="outlined"
                           size="small"
-                          onClick={() => handleViewDetails(order.orderId)}
+                          onClick={() =>
+                            router.push(
+                              `/admin/orders?page=detail&orderId=${order.orderId}`
+                            )
+                          }
                         >
                           Xem chi tiết
                         </Button>
@@ -191,7 +149,7 @@ export default function OrderListTable() {
           <TablePagination
             rowsPerPageOptions={[3, 5, 10]}
             component="div"
-            count={filteredOrders.length}
+            count={filtered.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}

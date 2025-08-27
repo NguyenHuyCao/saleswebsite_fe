@@ -31,55 +31,84 @@ import { useEffect, useState } from "react";
 
 // ** Custom Components Imports
 import ReactApexcharts from "src/@core/components/react-apexcharts";
+import type { ApexOptions } from "apexcharts";
 
+// ** http/api custom
+import { api } from "@/lib/api/http";
+
+// ---------- Types ----------
+type Period = "twoWeeksAgo" | "lastWeek" | "thisWeek";
+
+type DayKey =
+  | "SUNDAY"
+  | "MONDAY"
+  | "TUESDAY"
+  | "WEDNESDAY"
+  | "THURSDAY"
+  | "FRIDAY"
+  | "SATURDAY";
+
+interface DailyPoint {
+  day: DayKey;
+  revenue: number;
+}
+
+interface WeekBlock {
+  range: string; // ví dụ "01/08 - 07/08"
+  daily: DailyPoint[];
+  total?: number;
+}
+
+interface WeeklyPerformance {
+  growthRate: number; // % so với tuần trước
+}
+
+interface WeeklyRevenueResponse {
+  twoWeeksAgo: WeekBlock;
+  lastWeek: WeekBlock;
+  thisWeek: WeekBlock;
+  weeklyPerformance?: WeeklyPerformance;
+}
+
+// ---------- Component ----------
 const WeeklyOverview = () => {
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [period, setPeriod] = useState<"twoWeeksAgo" | "lastWeek" | "thisWeek">(
-    "thisWeek"
-  );
-  const [data, setData] = useState<any>(null);
+  const [period, setPeriod] = useState<Period>("thisWeek");
+  const [data, setData] = useState<WeeklyRevenueResponse | null>(null);
   const [openDetail, setOpenDetail] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const controller = new AbortController();
+
+    (async () => {
       try {
-        const token = localStorage.getItem("accessToken");
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/weekly-revenue`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+        // http/api custom sẽ tự gắn Authorization nếu có token trong localStorage
+        const payload = await api.get<WeeklyRevenueResponse>(
+          "/api/v1/dashboard/overview/weekly-revenue",
+          { signal: controller.signal }
         );
-        const json = await res.json();
-        if (json.status === 200) {
-          setData(json.data);
-        }
+        setData(payload);
       } catch (error) {
         console.error("Fetch weekly revenue error:", error);
+        setData(null); // fail-soft
       }
-    };
-    fetchData();
+    })();
+
+    return () => controller.abort();
   }, []);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
+  const handleMenuClose = () => setAnchorEl(null);
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleSelectPeriod = (
-    value: "twoWeeksAgo" | "lastWeek" | "thisWeek"
-  ) => {
+  const handleSelectPeriod = (value: Period) => {
     setPeriod(value);
     setAnchorEl(null);
   };
 
-  const mapDays: Record<string, string> = {
+  const mapDays: Record<DayKey, string> = {
     SUNDAY: "CN",
     MONDAY: "T2",
     TUESDAY: "T3",
@@ -91,15 +120,15 @@ const WeeklyOverview = () => {
 
   const currentData = data?.[period];
   const chartCategories =
-    currentData?.daily.map((d: any) => mapDays[d.day]) || [];
+    currentData?.daily.map((d: DailyPoint) => mapDays[d.day]) ?? [];
   const chartSeries = [
     {
       name: "Doanh thu",
-      data: currentData?.daily.map((d: any) => d.revenue) || [],
+      data: currentData?.daily.map((d: DailyPoint) => d.revenue) ?? [],
     },
   ];
 
-  const options = {
+  const options: ApexOptions = {
     chart: {
       parentHeightOffset: 0,
       toolbar: { show: false },
@@ -138,16 +167,20 @@ const WeeklyOverview = () => {
         offsetX: -17,
         formatter: (value: number) =>
           `$${
-            value >= 1000000
-              ? `${(value / 1000000).toFixed(0)}M`
-              : (value / 1000).toFixed(0)
+            value >= 1_000_000
+              ? `${(value / 1_000_000).toFixed(0)}M`
+              : (value / 1_000).toFixed(0)
           }k`,
       },
     },
   };
 
-  const growth = data?.weeklyPerformance?.growthRate?.toFixed(2);
-  const isPositive = parseFloat(growth || "0") >= 0;
+  const growth =
+    data?.weeklyPerformance?.growthRate != null
+      ? data.weeklyPerformance.growthRate.toFixed(2)
+      : undefined;
+  const isPositive =
+    growth != null ? parseFloat(growth || "0") >= 0 : undefined;
 
   return (
     <Card>
@@ -169,7 +202,7 @@ const WeeklyOverview = () => {
               <DotsVertical />
             </IconButton>
             <Menu
-              disableScrollLock={true}
+              disableScrollLock
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
@@ -196,20 +229,26 @@ const WeeklyOverview = () => {
           options={options}
           series={chartSeries}
         />
-        {data?.weeklyPerformance && period === "thisWeek" && (
+
+        {data?.weeklyPerformance && period === "thisWeek" && growth != null && (
           <Box sx={{ mb: 7, display: "flex", alignItems: "center" }}>
             <Typography
               variant="h5"
-              sx={{ mr: 4, color: isPositive ? "success.main" : "error.main" }}
+              sx={{
+                mr: 4,
+                color: isPositive ? "success.main" : "error.main",
+              }}
             >
-              {isPositive ? "↑" : "↓"} {Math.abs(parseFloat(growth || "0"))}%
+              {isPositive ? "↑" : "↓"} {Math.abs(parseFloat(growth)).toFixed(2)}
+              %
             </Typography>
             <Typography variant="body2">
               Hiệu suất bán hàng {isPositive ? "tăng" : "giảm"}{" "}
-              {Math.abs(parseFloat(growth || "0"))}% so với tuần trước
+              {Math.abs(parseFloat(growth)).toFixed(2)}% so với tuần trước
             </Typography>
           </Box>
         )}
+
         <Button
           fullWidth
           variant="contained"
@@ -218,14 +257,15 @@ const WeeklyOverview = () => {
           Xem chi tiết
         </Button>
       </CardContent>
+
       <Dialog
         open={openDetail}
         onClose={() => setOpenDetail(false)}
         maxWidth="sm"
         fullWidth
-        disableScrollLock={true}
+        disableScrollLock
       >
-        <DialogTitle>Chi tiết doanh thu {data?.[period]?.range}</DialogTitle>
+        <DialogTitle>Chi tiết doanh thu {currentData?.range}</DialogTitle>
         <DialogContent>
           <TableContainer component={Paper}>
             <Table size="small">
@@ -236,14 +276,21 @@ const WeeklyOverview = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {data?.[period]?.daily.map((d: any, index: number) => (
+                {(currentData?.daily ?? []).map((d, index) => (
                   <TableRow key={index}>
-                    <TableCell>{mapDays[d.day]}</TableCell>
+                    <TableCell>{mapDays[d.day as DayKey]}</TableCell>
                     <TableCell align="right">
                       {d.revenue.toLocaleString("vi-VN")} ₫
                     </TableCell>
                   </TableRow>
                 ))}
+                {(!currentData || currentData.daily.length === 0) && (
+                  <TableRow>
+                    <TableCell colSpan={2} align="center">
+                      Không có dữ liệu
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </TableContainer>

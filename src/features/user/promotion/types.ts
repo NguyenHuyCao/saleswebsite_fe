@@ -10,5 +10,17 @@ export type Promotion = {
   requiresCode: boolean;
 };
 
+
+export type PromotionRaw = {
+  id: string | number;
+  name: string;
+  code?: string | null;
+  discount?: number | string | null;
+  maxDiscount?: number | string | null;
+  startDate: string;
+  endDate: string;
+  requiresCode?: boolean;
+};
+
 // Dùng lại Product/Category chung của app để đồng bộ với ProductCard
 // export type { Product, Category } from "@/product/types";

@@ -1,4 +1,3 @@
-// src/features/admin/warranty/types.ts
 export type WarrantyStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 export interface WarrantyClaim {
@@ -19,8 +18,7 @@ export interface MetaData {
   total: number;
 }
 
-export interface ApiEnvelope<T> {
-  status: number;
-  message: string;
-  data: T;
+export interface PagedWarrantyClaims {
+  result: WarrantyClaim[];
+  meta: MetaData;
 }

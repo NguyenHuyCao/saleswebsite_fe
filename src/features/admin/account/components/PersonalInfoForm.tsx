@@ -50,7 +50,10 @@ export default function PersonalInfoForm({
       : undefined,
   });
 
-  const [snackbar, setSnackbar] = useState({
+  type SnackbarType = "success" | "error" | "info" | "warning";
+  type SnackbarState = { open: boolean; message: string; type: SnackbarType };
+
+  const [snackbar, setSnackbar] = useState<SnackbarState>({
     open: false,
     message: "",
     type: "success" as const,

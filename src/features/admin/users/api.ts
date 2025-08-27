@@ -1,64 +1,38 @@
-// src/features/admin/users/api.ts
-import type { ApiEnvelope, PagedResp, User } from "./types";
+import { api, http } from "@/lib/api/http";
+import type { PagedResp, User } from "./types";
 
-const BASE = process.env.NEXT_PUBLIC_BACKEND_URL!;
-
-const authHeaders = () => {
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
+/** Lấy tất cả users (lọc bỏ admin nếu cần) */
 export async function apiListUsers(): Promise<User[]> {
-  const res = await fetch(`${BASE}/api/v1/users?page=1&size=1000`, {
-    headers: { ...authHeaders() },
+  const data = await api.get<PagedResp<User>>("/api/v1/users", {
+    params: { page: 1, size: 1000 },
   });
-  const json: ApiEnvelope<PagedResp<User>> = await res.json();
-  if (!res.ok) throw new Error((json as any)?.message || "Tải danh sách lỗi");
-  const list = json?.data?.result ?? [];
-  // loại bỏ admin nếu cần
+  const list = data?.result ?? [];
   return list.filter((u) => u.email !== "admin@gmail.com");
 }
 
-export async function apiGetUser(userId: string): Promise<User> {
-  const res = await fetch(`${BASE}/api/v1/users/${userId}`, {
-    headers: { "Content-Type": "application/json", ...authHeaders() },
-  });
-  const json: ApiEnvelope<User> = await res.json();
-  if (!res.ok || json.status !== 200)
-    throw new Error(json?.message || "Không lấy được người dùng");
-  return json.data;
+/** Lấy chi tiết 1 user */
+export async function apiGetUser(userId: string | number): Promise<User> {
+  return api.get<User>(`/api/v1/users/${userId}`);
 }
 
+/** Cập nhật user – endpoint không đảm bảo có data => dùng http trực tiếp */
 export async function apiUpdateUser(
-  userId: string,
+  userId: string | number,
   body: Partial<User>
 ): Promise<void> {
-  const res = await fetch(`${BASE}/api/v1/users/${userId}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
-    body: JSON.stringify(body),
-  });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(json?.message || "Cập nhật thất bại");
+  await http.put(`/api/v1/users/${userId}`, body);
 }
 
+/** Đổi mật khẩu – dùng query param userId như backend yêu cầu */
 export async function apiChangePassword(
-  userId: string,
+  userId: string | number,
   payload: {
     currentPassword: string;
     newPassword: string;
     confirmPassword: string;
   }
 ): Promise<void> {
-  const res = await fetch(
-    `${BASE}/api/v1/users/change_password?userId=${encodeURIComponent(userId)}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeaders() },
-      body: JSON.stringify(payload),
-    }
-  );
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(json?.message || "Đổi mật khẩu thất bại");
+  await http.post(`/api/v1/users/change_password`, payload, {
+    params: { userId: String(userId) },
+  });
 }

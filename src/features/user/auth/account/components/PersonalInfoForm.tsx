@@ -1,7 +1,7 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Box,
   Button,
@@ -12,8 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
-
-import type { User } from "../types";
+import type { User } from "../services";
 import { userInfoSchema, type UserInfoInput } from "../schemas/user.schema";
 import { useUpdateUser } from "../hooks/useUser";
 import { useSearchParams } from "next/navigation";
@@ -51,27 +50,23 @@ export default function PersonalInfoForm({
       : undefined,
   });
 
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({
+  const [snack, setSnack] = useState({
     open: false,
     message: "",
-    type: "success",
+    type: "success" as "success" | "error",
   });
 
   const onSubmit = async (data: UserInfoInput) => {
     try {
       await mutateAsync(data);
-      setSnackbar({
+      setSnack({
         open: true,
         message: "Cập nhật thông tin thành công!",
         type: "success",
       });
       onNext();
     } catch (e: any) {
-      setSnackbar({ open: true, message: e.message, type: "error" });
+      setSnack({ open: true, message: e.message, type: "error" });
     }
   };
 
@@ -171,10 +166,10 @@ export default function PersonalInfoForm({
       </Box>
 
       <AlertSnackbar
-        open={snackbar.open}
-        message={snackbar.message}
-        type={snackbar.type}
-        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        open={snack.open}
+        message={snack.message}
+        type={snack.type}
+        onClose={() => setSnack((s) => ({ ...s, open: false }))}
       />
     </Box>
   );

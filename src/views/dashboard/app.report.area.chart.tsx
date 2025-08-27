@@ -12,31 +12,47 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import ReportChart from "./app.report.chart";
+import { api, toApiError } from "@/lib/api/http";
+
+type Insights = {
+  profitMargin: number; // %
+  costRatio: number; // %
+  riskLevel: string;
+};
+
+const DEFAULT_INSIGHTS: Insights = {
+  profitMargin: 0,
+  costRatio: 0,
+  riskLevel: "Chưa rõ",
+};
 
 const DashboardDefault = () => {
-  const [insights, setInsights] = useState({
-    profitMargin: 0,
-    costRatio: 0,
-    riskLevel: "Chưa rõ",
-  });
+  const [insights, setInsights] = useState<Insights>(DEFAULT_INSIGHTS);
 
   useEffect(() => {
-    const fetchInsights = async () => {
-      const token = localStorage.getItem("accessToken");
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/advanced/financial-insights`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const json = await res.json();
-      if (json.status === 200) {
-        setInsights(json.data);
+    let mounted = true;
+    (async () => {
+      try {
+        // Gọi qua Axios instance đã có interceptor Authorization
+        const data = await api.get<Insights>(
+          "/api/v1/dashboard/advanced/financial-insights"
+        );
+        if (!mounted) return;
+        setInsights({
+          profitMargin: Number(data?.profitMargin ?? 0),
+          costRatio: Number(data?.costRatio ?? 0),
+          riskLevel: String(data?.riskLevel ?? "Chưa rõ"),
+        });
+      } catch (e) {
+        const err = toApiError(e);
+        console.warn("Load financial insights failed:", err.message);
+        if (!mounted) return;
+        setInsights(DEFAULT_INSIGHTS);
       }
+    })();
+    return () => {
+      mounted = false;
     };
-    fetchInsights();
   }, []);
 
   return (
@@ -73,6 +89,7 @@ const DashboardDefault = () => {
             </ListItemButton>
           </ListItem>
         </List>
+
         <ReportChart />
       </Card>
     </Box>

@@ -19,6 +19,7 @@ import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
 import GlobalSnackbar from "@/components/alert/GlobalSnackbar";
 import { motion } from "framer-motion";
+import { getOrderItems, submitWarrantyClaim } from "../api";
 
 const steps = [
   "Nhập thông tin đơn hàng",
@@ -71,28 +72,19 @@ const WarrantyRequestForm = () => {
     setActiveStep(stepParam);
   }, [stepParam]);
 
+  // Lấy sản phẩm theo mã đơn hàng (dùng api/http custom – tự gắn token qua interceptor)
   useEffect(() => {
-    const fetchOrderDetails = async () => {
+    const run = async () => {
       if (!formData.orderCode) return;
       setFetchingProducts(true);
       try {
-        const token = localStorage.getItem("accessToken");
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders/${formData.orderCode}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const result = await res.json();
-        console.log("Order details:", result);
-        setOrderProducts(result?.status === 200 ? result.data.items : []);
-      } catch (error) {
-        setOrderProducts([]);
+        const items = await getOrderItems(formData.orderCode);
+        setOrderProducts(items);
       } finally {
         setFetchingProducts(false);
       }
     };
-    fetchOrderDetails();
+    run();
   }, [formData.orderCode]);
 
   const updateStepInUrl = (step: number) => {
@@ -134,32 +126,27 @@ const WarrantyRequestForm = () => {
 
   const handleDragOver = (e: React.DragEvent) => e.preventDefault();
 
+  // Gửi claim bảo hành: dùng http.post (interceptor tự add Authorization từ localStorage)
   const handleSubmitWarrantyRequest = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("accessToken");
-      const formDataToSend = new FormData();
-      formDataToSend.append("orderId", formData.orderCode);
-      formDataToSend.append("email", formData.contactInfo);
-      formDataToSend.append("productId", formData.selectedProduct);
-      formDataToSend.append("issueDesc", formData.errorDescription);
+      const body = new FormData();
+      body.append("orderId", formData.orderCode);
+      body.append("email", formData.contactInfo);
+      body.append("productId", formData.selectedProduct);
+      body.append("issueDesc", formData.errorDescription);
 
       const file = fileInputRef.current?.files?.[0];
-      if (file) formDataToSend.append("imageUrl", file);
+      if (file) body.append("imageUrl", file);
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/warranty_claim`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-          body: formDataToSend,
-        }
-      );
+      const result = await submitWarrantyClaim(body);
 
-      const result = await res.json();
-
-      if (res.status === 201) {
-        setAlert({ open: true, type: "success", message: result.message });
+      if (result.status === 201 || result.status === 200) {
+        setAlert({
+          open: true,
+          type: "success",
+          message: result.message || "Đã gửi yêu cầu bảo hành.",
+        });
         setFormData({
           orderCode: "",
           contactInfo: "",
@@ -173,7 +160,11 @@ const WarrantyRequestForm = () => {
         throw new Error(result.message || "Đã xảy ra lỗi!");
       }
     } catch (error: any) {
-      setAlert({ open: true, type: "error", message: error.message });
+      setAlert({
+        open: true,
+        type: "error",
+        message: error?.message || "Lỗi gửi yêu cầu.",
+      });
     } finally {
       setLoading(false);
     }

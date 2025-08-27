@@ -1,58 +1,65 @@
 import { http } from "@/lib/api/http";
-import { User } from "../types";
-import { UserInfoInput } from "../schemas/user.schema";
-import { PasswordInput } from "../schemas/password.schema";
-import type { UserAccount } from "../types";
+import type { Envelope } from "./types";
+import type { User, UserAccount } from "./types";
+import type { UserInfoInput } from "../schemas/user.schema";
+import type { PasswordInput } from "../schemas/password.schema";
 
-type Env<T> = { status: number; message?: any; data: T };
-const unwrap = <T>(res: { data: Env<T> | any }) =>
+const unwrap = <T>(res: { data: Envelope<T> | any }) =>
   (res.data?.data ?? res.data) as T;
 
+/** Lấy thông tin tài khoản hiện tại */
 export async function fetchMe() {
-  const res = await http.get<Env<UserAccount>>("/api/v1/auth/account");
-  return unwrap(res);
+  const res = await http.get<Envelope<UserAccount>>("/api/v1/auth/account");
+  return unwrap<UserAccount>(res);
 }
 
+/** Cập nhật bản thân (me) */
 export async function updateMe(
   payload: Pick<UserAccount, "username" | "phone" | "address" | "gender">
 ) {
-  const res = await http.put<Env<UserAccount>>("/api/v1/users/me", payload);
+  const res = await http.put<Envelope<UserAccount>>(
+    "/api/v1/users/me",
+    payload
+  );
+  return unwrap<UserAccount>(res);
+}
+
+/** Lấy user theo id (dùng cho trang setting theo id – admin) */
+export async function getUserById(id: string) {
+  const res = await http.get<Envelope<User>>(`/api/v1/users/${id}`);
+  return unwrap<User>(res);
+}
+
+/** Cập nhật user theo id (admin) */
+export async function updateUser(id: string, payload: UserInfoInput) {
+  const res = await http.put<Envelope<User>>(`/api/v1/users/${id}`, payload);
+  return unwrap<User>(res);
+}
+
+/** Đổi mật khẩu cho user bất kỳ (admin flow, cần id) */
+export async function changePassword(id: string, payload: PasswordInput) {
+  const body = {
+    currentPassword: payload.currentPassword,
+    newPassword: payload.newPassword,
+    confirmPassword: payload.confirmNewPassword,
+  };
+  const res = await http.post<Envelope<unknown>>(
+    `/api/v1/users/change_password?userId=${encodeURIComponent(id)}`,
+    body
+  );
   return unwrap(res);
 }
 
-export const getUserById = async (id: string) => {
-  const res = await http.get<{ status: number; data: User }>(
-    `/api/v1/users/${id}`
-  );
-  return res.data.data;
-};
-
-export const updateUser = async (id: string, payload: UserInfoInput) => {
-  const res = await http.put(`/api/v1/users/${id}`, payload);
-  return res.data;
-};
-
-/** Đổi mật khẩu cho user bất kỳ (admin flow, cần id) */
-export const changePassword = async (id: string, payload: PasswordInput) => {
+/** Đổi mật khẩu cho chính mình (me flow) */
+export async function changePasswordMe(payload: PasswordInput) {
   const body = {
     currentPassword: payload.currentPassword,
     newPassword: payload.newPassword,
     confirmPassword: payload.confirmNewPassword,
   };
-  const res = await http.post(
-    `/api/v1/users/change_password?userId=${id}`,
+  const res = await http.post<Envelope<unknown>>(
+    `/api/v1/users/change_password`,
     body
   );
-  return res.data;
-};
-
-/** Đổi mật khẩu cho chính mình (me flow, không cần id) */
-export const changePasswordMe = async (payload: PasswordInput) => {
-  const body = {
-    currentPassword: payload.currentPassword,
-    newPassword: payload.newPassword,
-    confirmPassword: payload.confirmNewPassword,
-  };
-  const res = await http.post(`/api/v1/users/change_password`, body);
-  return res.data;
-};
+  return unwrap(res);
+}

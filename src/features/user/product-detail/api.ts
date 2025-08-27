@@ -1,35 +1,67 @@
-// product-detail/api.ts
+// src/features/user/product-detail/api.ts
 "use server";
 
 import { cookies } from "next/headers";
+import { http, type ApiEnvelope } from "@/lib/api/http";
 // import type { Product, Category } from "@/product/types";
 
-export async function getProductDetailBySlug(slug: string): Promise<{
-  product: Product | null;
-  category: Category | null;
-}> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("accessToken")?.value;
+/** Lấy accessToken tạm trên SERVER bằng refresh-cookie (httpOnly). */
+async function getAccessTokenFromRefresh(): Promise<string | null> {
+  const ck = cookies(); // Next.js App Router cookies (sync)
+  const all = (await ck).getAll();
+  if (!all.length) return null;
 
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
+  // "k1=v1; k2=v2"
+  const cookieHeader = all.map((c) => `${c.name}=${c.value}`).join("; ");
 
-  // 1) product
-  const productRes = await fetch(
-    `${process.env.BACKEND_URL}/api/v1/products/${slug}`,
-    { headers, cache: "no-store" }
-  );
-  const productData = await productRes.json();
-  const p = productData?.data;
-  if (!p) return { product: null, category: null };
+  try {
+    const res = await http.get<ApiEnvelope<{ accessToken: string }>>(
+      "/api/v1/auth/refresh",
+      {
+        headers: { Cookie: cookieHeader },
+        // withCredentials đã bật sẵn ở http
+      }
+    );
+    const anyRes = res as any;
+    const token =
+      res?.data?.data?.accessToken ??
+      anyRes?.data?.accessToken ??
+      anyRes?.accessToken ??
+      null;
 
-  // Chuẩn hoá theo Product (đồng bộ list page)
-  const currentPrice = p.pricePerUnit ?? p.price ?? 0;
-  const originalPrice = p.price ?? currentPrice;
+    return token || null;
+  } catch {
+    // Refresh hỏng -> coi như user chưa đăng nhập, vẫn trả dữ liệu public
+    return null;
+  }
+}
 
-  const product: Product = {
+/** GET helper trên server – chấp nhận cả envelope hoặc raw. */
+async function serverGet<T>(
+  path: string,
+  token?: string | null
+): Promise<T | null> {
+  try {
+    const res = await http.get<ApiEnvelope<T>>(path, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    const payload: any = res.data;
+    // Hỗ trợ cả 2 dạng: { data: T } hoặc T
+    return (payload?.data ?? payload) as T;
+  } catch {
+    return null;
+  }
+}
+
+/* -------------------- MAPPERS (đồng bộ với list page) -------------------- */
+const mapProduct = (p: any): Product => {
+  const price = p?.pricePerUnit ?? p?.price ?? 0;
+  const originalPrice = p?.price ?? price;
+
+  return {
     id: p.id,
     name: p.name,
     slug: p.slug,
@@ -38,10 +70,10 @@ export async function getProductDetailBySlug(slug: string): Promise<{
     imageDetail2: p.imageDetail2 || "",
     imageDetail3: p.imageDetail3 || "",
     description: p.description || "",
-    price: currentPrice,
-    pricePerUnit: currentPrice,
+    price,
+    pricePerUnit: price,
     originalPrice,
-    sale: currentPrice < originalPrice,
+    sale: price < originalPrice,
     inStock: p.active === true && (p.stockQuantity ?? 0) > 0,
     label: p.active ? "Thêm vào giỏ" : "Hết hàng",
     stockQuantity: p.stockQuantity ?? 0,
@@ -62,72 +94,86 @@ export async function getProductDetailBySlug(slug: string): Promise<{
     status: (p.stockQuantity ?? 0) === 0 ? ["Hết hàng"] : [],
     favorite: p.wishListUser === true,
   };
+};
 
-  // 2) category theo id của product
-  let category: Category | null = null;
-  if (p.categoryId) {
-    const categoryRes = await fetch(
-      `${process.env.BACKEND_URL}/api/v1/categories/${p.categoryId}`,
-      { headers, cache: "no-store" }
-    );
-    const categoryData = await categoryRes.json();
-    const c = categoryData?.data;
+const mapCategory = (c: any): Category => {
+  const now = Date.now();
 
-    if (c) {
-      const now = new Date();
-      category = {
-        id: c.id,
-        name: c.name,
-        slug: c.slug,
-        image: c.image || c.imageAvt,
-        products: (c.products || []).map((item: any): Product => {
-          const createdAt = new Date(item.createdAt);
-          const isNew =
-            (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
-          const cp = item.pricePerUnit ?? item.price ?? 0;
-          const op = item.price ?? cp;
+  return {
+    id: c.id,
+    name: c.name,
+    slug: c.slug,
+    image: c.image || c.imageAvt,
+    products: (c.products || []).map((it: any): Product => {
+      const createdAtMs = new Date(it.createdAt).getTime();
+      const isNew = (now - createdAtMs) / (1000 * 60 * 60 * 24) <= 30;
 
-          return {
-            id: item.id,
-            name: item.name,
-            slug: item.slug,
-            imageAvt: item.imageAvt,
-            imageDetail1: item.imageDetail1 || "",
-            imageDetail2: item.imageDetail2 || "",
-            imageDetail3: item.imageDetail3 || "",
-            description: item.description || "",
-            price: cp,
-            pricePerUnit: cp,
-            originalPrice: op,
-            sale: cp < op,
-            inStock: item.active === true && (item.stockQuantity ?? 0) > 0,
-            label: item.active ? "Thêm vào giỏ" : "Hết hàng",
-            stockQuantity: item.stockQuantity ?? 0,
-            totalStock: item.totalStock ?? 0,
-            power: item.power || "",
-            fuelType: item.fuelType || "",
-            engineType: item.engineType || "",
-            weight: item.weight || 0,
-            dimensions: item.dimensions || "",
-            tankCapacity: item.tankCapacity ?? 0,
-            origin: item.origin || "",
-            warrantyMonths: item.warrantyMonths ?? 0,
-            createdAt: item.createdAt,
-            createdBy: item.createdBy || "",
-            updatedAt: item.updatedAt || null,
-            updatedBy: item.updatedBy || "",
-            rating: item.rating ?? 0,
-            status:
-              (item.stockQuantity ?? 0) === 0
-                ? ["Hết hàng"]
-                : isNew
-                ? ["Mới"]
-                : [],
-            favorite: item.wishListUser === true,
-          };
-        }),
+      const price = it.pricePerUnit ?? it.price ?? 0;
+      const originalPrice = it.price ?? price;
+
+      return {
+        id: it.id,
+        name: it.name,
+        slug: it.slug,
+        imageAvt: it.imageAvt,
+        imageDetail1: it.imageDetail1 || "",
+        imageDetail2: it.imageDetail2 || "",
+        imageDetail3: it.imageDetail3 || "",
+        description: it.description || "",
+        price,
+        pricePerUnit: price,
+        originalPrice,
+        sale: price < originalPrice,
+        inStock: it.active === true && (it.stockQuantity ?? 0) > 0,
+        label: it.active ? "Thêm vào giỏ" : "Hết hàng",
+        stockQuantity: it.stockQuantity ?? 0,
+        totalStock: it.totalStock ?? 0,
+        power: it.power || "",
+        fuelType: it.fuelType || "",
+        engineType: it.engineType || "",
+        weight: it.weight || 0,
+        dimensions: it.dimensions || "",
+        tankCapacity: it.tankCapacity ?? 0,
+        origin: it.origin || "",
+        warrantyMonths: it.warrantyMonths ?? 0,
+        createdAt: it.createdAt,
+        createdBy: it.createdBy || "",
+        updatedAt: it.updatedAt || null,
+        updatedBy: it.updatedBy || "",
+        rating: it.rating ?? 0,
+        status:
+          (it.stockQuantity ?? 0) === 0 ? ["Hết hàng"] : isNew ? ["Mới"] : [],
+        favorite: it.wishListUser === true,
       };
-    }
+    }),
+  };
+};
+
+/* -------------------- PUBLIC API -------------------- */
+export async function getProductDetailBySlug(slug: string): Promise<{
+  product: Product | null;
+  category: Category | null;
+}> {
+  // accessToken không ở cookie -> phải dùng refresh-cookie để đổi access cho SSR (nếu có)
+  const token = await getAccessTokenFromRefresh();
+
+  // 1) Product theo slug
+  const rawProduct = await serverGet<any>(
+    `/api/v1/products/${encodeURIComponent(slug)}`,
+    token
+  );
+  if (!rawProduct) return { product: null, category: null };
+
+  const product = mapProduct(rawProduct);
+
+  // 2) Category theo categoryId
+  let category: Category | null = null;
+  if (rawProduct.categoryId) {
+    const rawCat = await serverGet<any>(
+      `/api/v1/categories/${rawProduct.categoryId}`,
+      token
+    );
+    if (rawCat) category = mapCategory(rawCat);
   }
 
   return { product, category };

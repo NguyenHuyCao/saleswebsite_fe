@@ -2,17 +2,46 @@
 
 import { Button, CircularProgress, Snackbar, Alert, Box } from "@mui/material";
 import { useState } from "react";
+import { usePlaceOrder } from "../queries";
+import type { PlaceOrderPayload } from "../types";
 
-export default function ConfirmButton() {
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+export default function ConfirmButton({
+  getPayload,
+  disabled,
+  onSuccess,
+}: {
+  getPayload: () => PlaceOrderPayload;
+  disabled?: boolean;
+  onSuccess?: (orderId: string | number) => void;
+}) {
+  const [toast, setToast] = useState<{
+    open: boolean;
+    msg: string;
+    type: "success" | "error";
+  }>({
+    open: false,
+    msg: "",
+    type: "success",
+  });
 
-  const handleConfirm = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setSuccess(true);
-    }, 1200);
+  const { mutateAsync, isPending } = usePlaceOrder();
+
+  const handleConfirm = async () => {
+    try {
+      const res = await mutateAsync(getPayload());
+      setToast({
+        open: true,
+        msg: res?.message || "Đặt hàng thành công!",
+        type: "success",
+      });
+      onSuccess?.(res.orderId);
+    } catch (e: any) {
+      setToast({
+        open: true,
+        msg: e?.message || "Đặt hàng thất bại",
+        type: "error",
+      });
+    }
   };
 
   return (
@@ -23,10 +52,10 @@ export default function ConfirmButton() {
         variant="contained"
         color="warning"
         onClick={handleConfirm}
-        disabled={loading}
+        disabled={disabled || isPending}
         sx={{ fontWeight: "bold", py: 1.5, borderRadius: 2 }}
       >
-        {loading ? (
+        {isPending ? (
           <CircularProgress size={24} color="inherit" />
         ) : (
           "Xác nhận đặt hàng"
@@ -34,12 +63,12 @@ export default function ConfirmButton() {
       </Button>
 
       <Snackbar
-        open={success}
+        open={toast.open}
         autoHideDuration={3000}
-        onClose={() => setSuccess(false)}
+        onClose={() => setToast((s) => ({ ...s, open: false }))}
       >
-        <Alert severity="success" sx={{ width: "100%" }}>
-          Đặt hàng thành công! Cảm ơn bạn đã mua sắm tại cửa hàng.
+        <Alert severity={toast.type} sx={{ width: "100%" }}>
+          {toast.msg}
         </Alert>
       </Snackbar>
     </Box>

@@ -1,9 +1,5 @@
-export type NewsPost = {
-  title: string;
-  date: string;
-  image: string;
-  slug: string;
-};
+// src/features/news/data.ts
+import type { NewsPost } from "./types";
 
 export const newsPosts: NewsPost[] = [
   {

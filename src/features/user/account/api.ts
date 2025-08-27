@@ -1,32 +1,14 @@
-// src/features/account/api.ts
-import type { ApiEnvelope, UserProfile } from "./types";
-
-const BASE = process.env.NEXT_PUBLIC_BACKEND_URL!;
-
-const authHeaders = () => {
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+import { api } from "@/lib/api/http";
+import type { UserProfile } from "./types";
 
 export async function getUserById(id: number): Promise<UserProfile> {
-  const res = await fetch(`${BASE}/api/v1/users/${id}`, {
-    headers: { ...authHeaders() },
-  });
-  const json: ApiEnvelope<UserProfile> = await res.json();
-  if (!res.ok) throw new Error((json as any)?.message || "Không tải được user");
-  return json.data as unknown as UserProfile;
+  // api.get đã unwrap -> trả thẳng UserProfile
+  return api.get<UserProfile>(`/api/v1/users/${id}`);
 }
 
 export async function updateUser(
   id: number,
   payload: Partial<UserProfile>
 ): Promise<void> {
-  const res = await fetch(`${BASE}/api/v1/users/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
-    body: JSON.stringify(payload),
-  });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(json?.message || "Cập nhật thất bại");
+  await api.put<void, Partial<UserProfile>>(`/api/v1/users/${id}`, payload);
 }

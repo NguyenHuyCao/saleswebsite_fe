@@ -9,13 +9,17 @@ import {
   Paper,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import { useState } from "react";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import type { PaymentMethod } from "../types";
 
-export default function PaymentMethod() {
-  const [method, setMethod] = useState("cod");
-
+export default function PaymentMethod({
+  value,
+  onChange,
+}: {
+  value: PaymentMethod;
+  onChange: (v: PaymentMethod) => void;
+}) {
   return (
     <Paper variant="outlined" sx={{ p: 3, borderRadius: 2, mt: 3 }}>
       <Grid container spacing={2}>
@@ -26,8 +30,8 @@ export default function PaymentMethod() {
         </Grid>
         <Grid size={{ xs: 12 }}>
           <RadioGroup
-            value={method}
-            onChange={(e) => setMethod(e.target.value)}
+            value={value}
+            onChange={(e) => onChange(e.target.value as PaymentMethod)}
           >
             <Tooltip title="Bạn sẽ chuyển khoản qua ngân hàng">
               <FormControlLabel

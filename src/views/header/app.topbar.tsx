@@ -24,6 +24,8 @@ import {
   ORDERS_COUNT_KEY,
 } from "@/constants/apiKeys";
 import { mutate } from "swr";
+import { http, toApiError } from "@/lib/api/http";
+import { getAccessToken, clearAccessToken } from "@/lib/api/token";
 
 const greetings = [
   "Chào mừng bạn đã đến với cửa hàng Cường Hoa",
@@ -39,46 +41,32 @@ const TopBar = () => {
   const [isClient, setIsClient] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [open, setOpen] = useState(false);
-  const [loginCheckTrigger, setLoginCheckTrigger] = useState(0);
 
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const token = localStorage.getItem("accessToken");
-      setIsLoggedIn(!!token);
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
-
-  useEffect(() => {
-    const updateLoginState = () => {
-      const token = localStorage.getItem("accessToken");
-      setIsLoggedIn(!!token);
-    };
-
-    // Lắng nghe cả hai sự kiện
-    window.addEventListener("storage", updateLoginState);
-    window.addEventListener("login", updateLoginState);
-
-    // Dọn dẹp
-    return () => {
-      window.removeEventListener("storage", updateLoginState);
-      window.removeEventListener("login", updateLoginState);
-    };
-  }, []);
-
+  // mount-only: xác định client & trạng thái đăng nhập ban đầu
   useEffect(() => {
     setIsClient(true);
-    const token = localStorage.getItem("accessToken");
-    setIsLoggedIn(!!token);
+    setIsLoggedIn(!!getAccessToken());
   }, []);
 
+  // xoay message
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % greetings.length);
     }, 3000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Theo dõi token thay đổi giữa tabs / trong app
+  useEffect(() => {
+    const updateLoginState = () => setIsLoggedIn(!!getAccessToken());
+    window.addEventListener("storage", updateLoginState);
+    window.addEventListener("login", updateLoginState);
+    window.addEventListener("logout", updateLoginState);
+    return () => {
+      window.removeEventListener("storage", updateLoginState);
+      window.removeEventListener("login", updateLoginState);
+      window.removeEventListener("logout", updateLoginState);
+    };
   }, []);
 
   const handleToggle = (event: React.MouseEvent<HTMLElement>) => {
@@ -87,40 +75,29 @@ const TopBar = () => {
   };
 
   const handleClose = (event: Event | React.SyntheticEvent) => {
-    if (anchorEl && anchorEl.contains(event.target as HTMLElement)) {
-      return;
-    }
+    if (anchorEl && anchorEl.contains(event.target as HTMLElement)) return;
     setOpen(false);
   };
 
   const handleLogout = async () => {
-    const token = localStorage.getItem("accessToken");
-
     try {
-      if (token) {
-        await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/logout`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-      }
-    } catch (error) {
-      console.error("Logout failed:", error);
+      // gọi qua Axios singleton (Authorization tự gắn từ localStorage)
+      await http.post("/api/v1/auth/logout");
+    } catch (e) {
+      // Không chặn logout local nếu API lỗi
+      console.warn("Logout failed:", toApiError(e).message);
     } finally {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("user");
+      clearAccessToken();
       setIsLoggedIn(false);
       setOpen(false);
+      // thông báo các nơi khác trong app
+      window.dispatchEvent(new Event("logout"));
 
+      // Invalidate các counters phụ thuộc auth
       mutate(CART_COUNT_KEY);
       mutate(WISHLIST_COUNT_KEY);
       mutate(ORDERS_COUNT_KEY);
-      setLoginCheckTrigger((prev) => prev + 1);
+
       router.push("/");
     }
   };
@@ -179,6 +156,7 @@ const TopBar = () => {
               >
                 <AccountCircleIcon />
               </IconButton>
+
               <Popper
                 open={open}
                 anchorEl={anchorEl}
@@ -201,15 +179,13 @@ const TopBar = () => {
                           anchorEl={anchorEl}
                           open={open}
                           onClose={handleClose}
-                          disableScrollLock={true}
-                          MenuListProps={{
-                            autoFocusItem: open,
-                          }}
+                          disableScrollLock
+                          MenuListProps={{ autoFocusItem: open }}
                         >
                           <MenuItem
                             onClick={(e) => {
-                              router.push("/account");
                               handleClose(e);
+                              router.push("/account");
                             }}
                             sx={{ fontSize: 13 }}
                           >
@@ -217,8 +193,8 @@ const TopBar = () => {
                           </MenuItem>
                           <MenuItem
                             onClick={(e) => {
-                              router.push("/change-password");
                               handleClose(e);
+                              router.push("/change-password");
                             }}
                             sx={{ fontSize: 13 }}
                           >
@@ -239,9 +215,9 @@ const TopBar = () => {
             </>
           ) : (
             isClient &&
-            ["Đăng ký", "Đăng nhập"].map((label, index) => (
+            ["Đăng ký", "Đăng nhập"].map((label, idx) => (
               <Box key={label} sx={{ display: "flex", alignItems: "center" }}>
-                {index > 0 && <Typography sx={{ mx: 0.2 }}>|</Typography>}
+                {idx > 0 && <Typography sx={{ mx: 0.2 }}>|</Typography>}
                 <Button
                   sx={{
                     color: "black",

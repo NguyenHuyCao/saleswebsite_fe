@@ -41,8 +41,11 @@ export default function SecurityForm({
     next: false,
     confirm: false,
   });
+
+  type SnackbarType = "success" | "error" | "info" | "warning";
+  type SnackbarState = { open: boolean; message: string; type: SnackbarType };
   const { mutateAsync } = useChangePassword(userId);
-  const [snackbar, setSnackbar] = useState({
+  const [snackbar, setSnackbar] = useState<SnackbarState>({
     open: false,
     message: "",
     type: "success" as const,

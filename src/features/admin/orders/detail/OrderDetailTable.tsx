@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Box,
@@ -25,46 +25,17 @@ import {
   CircularProgress,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
-
 import GlobalSnackbar from "@/components/alert/GlobalSnackbar";
-
-interface Promotion {
-  promotionName: string;
-  discount: number;
-  maxDiscount: number;
-  discountAmount: number;
-}
-interface OrderItem {
-  productDetailId: number;
-  productName: string;
-  quantity: number;
-  unitPrice: number;
-  promotions?: Promotion[];
-}
-interface UserInfo {
-  userId: number;
-  userName: string;
-  email: string;
-  phone: string;
-  address: string;
-}
-interface OrderData {
-  orderId: number;
-  status: string;
-  shippingAddress: string;
-  paymentMethod: string;
-  shippingMethod: string;
-  totalAmount: number;
-  createdAt: string;
-  items: OrderItem[];
-  paymentStatus: string;
-  paidAt: string | null;
-  user: UserInfo;
-}
+import {
+  useConfirmCodPaid,
+  useOrder,
+  useRefundOrder,
+  useUpdateOrderStatus,
+} from "../queries";
 
 const TAX_RATE = 0.07;
-const ccyFormat = (num: number) => `${num.toLocaleString("vi-VN")} ₫`;
-const formatDateTime = (s: string | null) =>
+const ccy = (n: number) => `${n.toLocaleString("vi-VN")} ₫`;
+const dt = (s: string | null) =>
   !s
     ? "-"
     : new Date(s).toLocaleString("vi-VN", {
@@ -73,7 +44,7 @@ const formatDateTime = (s: string | null) =>
         timeStyle: "short",
       });
 
-const orderStatusMap: Record<string, string> = {
+const ORDER_STATUS_LABEL: Record<string, string> = {
   PENDING: "Chờ xác nhận",
   CONFIRMED: "Đã xác nhận",
   DELIVERED: "Đã giao hàng",
@@ -82,133 +53,30 @@ const orderStatusMap: Record<string, string> = {
 
 export default function OrderDetailTable() {
   const orderId = useSearchParams().get("orderId");
-  const [order, setOrder] = useState<OrderData | null>(null);
-  const [paymentStatus, setPaymentStatus] = useState("");
-  const [orderStatus, setOrderStatus] = useState("");
+  const { data: order } = useOrder(orderId || undefined);
+
+  const [snOpen, setSnOpen] = useState(false);
+  const [snType, setSnType] = useState<"success" | "error">("success");
+  const [snMsg, setSnMsg] = useState("");
+
+  const [refundModal, setRefundModal] = useState({ open: false, amount: 0 });
   const [refundAmount, setRefundAmount] = useState<string>("");
   const [refundDetailId, setRefundDetailId] = useState<number | null>(null);
-  const [refundModal, setRefundModal] = useState({ open: false, amount: 0 });
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarType, setSnackbarType] = useState<"success" | "error">(
-    "success"
+
+  const updateStatus = useUpdateOrderStatus(orderId || "");
+  const confirmCOD = useConfirmCodPaid(orderId || "");
+  const refundMut = useRefundOrder(Number(orderId || 0));
+
+  const subtotal = useMemo(
+    () =>
+      (order?.items ?? []).reduce(
+        (sum, i) => sum + i.quantity * i.unitPrice,
+        0
+      ),
+    [order]
   );
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-
-  const handleRefundClick = (amount: number, detailId: number) => {
-    setRefundModal({ open: true, amount });
-    setRefundAmount(String(amount));
-    setRefundDetailId(detailId);
-  };
-
-  useEffect(() => {
-    if (!orderId) return;
-    (async () => {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders/${orderId}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-            },
-          }
-        );
-        if (!res.ok) throw new Error("Lỗi khi gọi API đơn hàng");
-        const json = await res.json();
-        setOrder(json.data);
-        setPaymentStatus(json.data.paymentStatus);
-        setOrderStatus(json.data.status);
-      } catch (err) {
-        console.error(err);
-      }
-    })();
-  }, [orderId]);
-
-  const handlePaymentStatusChange = async (newStatus: string) => {
-    setPaymentStatus(newStatus);
-    if (newStatus === "PAID" && order && paymentStatus !== "PAID") {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/payments/${order.orderId}/cod-paid`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-            },
-          }
-        );
-        const data = await res.json();
-        if (!res.ok || data.status !== 200)
-          throw new Error(data.message || "Lỗi xác nhận COD");
-        setSnackbarType("success");
-        setSnackbarMessage(data.message || "Đã xác nhận thanh toán thành công");
-      } catch (error: any) {
-        setSnackbarType("error");
-        setSnackbarMessage(
-          error?.message || "Đã xảy ra lỗi khi xác nhận thanh toán COD"
-        );
-      } finally {
-        setSnackbarOpen(true);
-      }
-    }
-  };
-
-  const handleStatusChange = async (value: string) => {
-    if (!order) return;
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/orders/${order.orderId}/status`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-          body: JSON.stringify({
-            status: value,
-            shippingStatusFromPartner: null,
-          }),
-        }
-      );
-      if (!res.ok) throw new Error("Lỗi khi cập nhật trạng thái");
-      setOrderStatus(value);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleRefundConfirm = async () => {
-    if (!order || !refundDetailId) return;
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/refund_order`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-          body: JSON.stringify({
-            orderId: order.orderId,
-            orderDetailId: refundDetailId,
-            refundAmount: Number(refundAmount),
-          }),
-        }
-      );
-      const data = await res.json();
-      if (!res.ok || data.status !== 200)
-        throw new Error(data.message || "Hoàn tiền thất bại");
-      setSnackbarType("success");
-      setSnackbarMessage(data.message || "Hoàn tiền thành công");
-    } catch (err: any) {
-      setSnackbarType("error");
-      setSnackbarMessage(err.message || "Lỗi trong quá trình hoàn tiền");
-    } finally {
-      setSnackbarOpen(true);
-      setRefundModal({ open: false, amount: 0 });
-    }
-  };
+  const tax = subtotal * TAX_RATE;
+  const total = subtotal + tax;
 
   if (!order)
     return (
@@ -217,12 +85,56 @@ export default function OrderDetailTable() {
       </Box>
     );
 
-  const subtotal = order.items.reduce(
-    (sum, i) => sum + i.quantity * i.unitPrice,
-    0
-  );
-  const tax = subtotal * TAX_RATE;
-  const total = subtotal + tax;
+  const onPaymentChange = async (val: string) => {
+    if (val !== "PAID") return;
+    try {
+      await confirmCOD.mutateAsync();
+      setSnType("success");
+      setSnMsg("Đã xác nhận thanh toán COD");
+    } catch (e: any) {
+      setSnType("error");
+      setSnMsg(e?.message || "Lỗi xác nhận COD");
+    } finally {
+      setSnOpen(true);
+    }
+  };
+
+  const onStatusChange = async (val: string) => {
+    try {
+      await updateStatus.mutateAsync(val);
+      setSnType("success");
+      setSnMsg("Cập nhật trạng thái thành công");
+    } catch (e: any) {
+      setSnType("error");
+      setSnMsg(e?.message || "Lỗi cập nhật trạng thái");
+    } finally {
+      setSnOpen(true);
+    }
+  };
+
+  const openRefund = (amount: number, detailId: number) => {
+    setRefundModal({ open: true, amount });
+    setRefundAmount(String(amount));
+    setRefundDetailId(detailId);
+  };
+
+  const confirmRefund = async () => {
+    if (!refundDetailId) return;
+    try {
+      await refundMut.mutateAsync({
+        orderDetailId: refundDetailId,
+        refundAmount: Number(refundAmount),
+      });
+      setSnType("success");
+      setSnMsg("Hoàn tiền thành công");
+    } catch (e: any) {
+      setSnType("error");
+      setSnMsg(e?.message || "Hoàn tiền thất bại");
+    } finally {
+      setSnOpen(true);
+      setRefundModal({ open: false, amount: 0 });
+    }
+  };
 
   return (
     <Grid container spacing={4}>
@@ -284,7 +196,7 @@ export default function OrderDetailTable() {
                   fullWidth
                   size="small"
                   label="Ngày đặt hàng"
-                  value={formatDateTime(order.createdAt)}
+                  value={dt(order.createdAt)}
                   InputProps={{ readOnly: true }}
                 />
               </Grid>
@@ -311,7 +223,7 @@ export default function OrderDetailTable() {
                   fullWidth
                   size="small"
                   label="Ngày thanh toán"
-                  value={formatDateTime(order.paidAt)}
+                  value={dt(order.paidAt)}
                   InputProps={{ readOnly: true }}
                 />
               </Grid>
@@ -330,8 +242,8 @@ export default function OrderDetailTable() {
                 <FormControl fullWidth size="small">
                   <InputLabel>Trạng thái thanh toán</InputLabel>
                   <Select
-                    value={paymentStatus}
-                    onChange={(e) => handlePaymentStatusChange(e.target.value)}
+                    value={order.paymentStatus}
+                    onChange={(e) => onPaymentChange(e.target.value)}
                     label="Trạng thái thanh toán"
                     MenuProps={{ disableScrollLock: true }}
                   >
@@ -344,12 +256,12 @@ export default function OrderDetailTable() {
                 <FormControl fullWidth size="small">
                   <InputLabel>Trạng thái đơn hàng</InputLabel>
                   <Select
-                    value={orderStatus}
-                    onChange={(e) => handleStatusChange(e.target.value)}
+                    value={order.status}
+                    onChange={(e) => onStatusChange(e.target.value)}
                     label="Trạng thái đơn hàng"
                     MenuProps={{ disableScrollLock: true }}
                   >
-                    {Object.entries(orderStatusMap).map(([val, label]) => (
+                    {Object.entries(ORDER_STATUS_LABEL).map(([val, label]) => (
                       <MenuItem key={val} value={val}>
                         {label}
                       </MenuItem>
@@ -362,7 +274,7 @@ export default function OrderDetailTable() {
         </Card>
       </Grid>
 
-      {/* Bảng sản phẩm */}
+      {/* Sản phẩm */}
       <Grid size={{ xs: 12 }}>
         <Card>
           <CardHeader title="Sản phẩm trong đơn hàng" />
@@ -398,18 +310,16 @@ export default function OrderDetailTable() {
                         )}
                       </TableCell>
                       <TableCell align="right">{item.quantity}</TableCell>
+                      <TableCell align="right">{ccy(item.unitPrice)}</TableCell>
                       <TableCell align="right">
-                        {ccyFormat(item.unitPrice)}
-                      </TableCell>
-                      <TableCell align="right">
-                        {ccyFormat(item.unitPrice * item.quantity)}
+                        {ccy(item.unitPrice * item.quantity)}
                       </TableCell>
                       <TableCell align="center">
                         <Button
                           variant="outlined"
                           color="error"
                           onClick={() =>
-                            handleRefundClick(
+                            openRefund(
                               item.unitPrice * item.quantity,
                               item.productDetailId
                             )
@@ -425,19 +335,19 @@ export default function OrderDetailTable() {
                     <TableCell colSpan={3} align="right">
                       Tạm tính
                     </TableCell>
-                    <TableCell align="right">{ccyFormat(subtotal)}</TableCell>
+                    <TableCell align="right">{ccy(subtotal)}</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell colSpan={3} align="right">
                       Thuế VAT
                     </TableCell>
-                    <TableCell align="right">{ccyFormat(tax)}</TableCell>
+                    <TableCell align="right">{ccy(tax)}</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell colSpan={3} align="right">
                       Tổng cộng
                     </TableCell>
-                    <TableCell align="right">{ccyFormat(total)}</TableCell>
+                    <TableCell align="right">{ccy(total)}</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
@@ -485,7 +395,7 @@ export default function OrderDetailTable() {
             </Button>
             <Button
               variant="contained"
-              onClick={handleRefundConfirm}
+              onClick={confirmRefund}
               disabled={!refundAmount || Number(refundAmount) <= 0}
             >
               Hoàn tiền
@@ -495,10 +405,10 @@ export default function OrderDetailTable() {
       </Modal>
 
       <GlobalSnackbar
-        open={snackbarOpen}
-        type={snackbarType}
-        message={snackbarMessage}
-        onClose={() => setSnackbarOpen(false)}
+        open={snOpen}
+        type={snType}
+        message={snMsg}
+        onClose={() => setSnOpen(false)}
       />
     </Grid>
   );

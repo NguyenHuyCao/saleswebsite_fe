@@ -11,9 +11,10 @@ import {
   CircularProgress,
 } from "@mui/material";
 import SalesChart from "@/components/dashboard/SalesChart";
+import { api, toApiError } from "@/lib/api/http";
 
 interface StatusOption {
-  value: string;
+  value: "today" | "month" | "year";
   label: string;
 }
 
@@ -30,45 +31,64 @@ interface FinancialData {
 }
 
 interface MonthlyData {
-  month: number;
+  month: number; // 1..12
   revenue: number;
   cost: number;
   profit: number;
 }
 
+type FinancialOverviewRes = {
+  today: FinancialData | null;
+  thisMonth: FinancialData | null;
+  thisYear: MonthlyData[];
+};
+
+const DEFAULT_OVERVIEW: FinancialOverviewRes = {
+  today: { revenue: 0, cost: 0, profit: 0 },
+  thisMonth: { revenue: 0, cost: 0, profit: 0 },
+  thisYear: [],
+};
+
 const SaleReportCard = () => {
-  const [value, setValue] = useState<string>("year");
+  const [value, setValue] = useState<StatusOption["value"]>("year");
   const [loading, setLoading] = useState<boolean>(true);
   const [today, setToday] = useState<FinancialData | null>(null);
   const [thisMonth, setThisMonth] = useState<FinancialData | null>(null);
   const [thisYear, setThisYear] = useState<MonthlyData[]>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    let mounted = true;
+    (async () => {
       try {
-        const token = localStorage.getItem("accessToken");
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/financial-overview`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+        // Dùng Axios instance đã gắn Authorization từ localStorage (http.ts)
+        const data = await api.get<FinancialOverviewRes>(
+          "/api/v1/dashboard/overview/financial-overview"
         );
+        if (!mounted) return;
 
-        const result = await res.json();
-        const { today, thisMonth, thisYear } = result.data;
-        setToday(today);
-        setThisMonth(thisMonth);
-        setThisYear(thisYear);
-      } catch (error) {
-        console.error("Error fetching financial data:", error);
+        const safe = {
+          today: data?.today ?? DEFAULT_OVERVIEW.today,
+          thisMonth: data?.thisMonth ?? DEFAULT_OVERVIEW.thisMonth,
+          thisYear: Array.isArray(data?.thisYear) ? data!.thisYear : [],
+        };
+
+        setToday(safe.today);
+        setThisMonth(safe.thisMonth);
+        setThisYear(safe.thisYear);
+      } catch (e) {
+        const err = toApiError(e);
+        console.warn("Load financial overview failed:", err.message);
+        if (!mounted) return;
+        setToday(DEFAULT_OVERVIEW.today);
+        setThisMonth(DEFAULT_OVERVIEW.thisMonth);
+        setThisYear(DEFAULT_OVERVIEW.thisYear);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
+    })();
+    return () => {
+      mounted = false;
     };
-
-    fetchData();
   }, []);
 
   const getChartData = () => {
@@ -78,9 +98,8 @@ const SaleReportCard = () => {
       case "month":
         return thisMonth ? [thisMonth] : [];
       case "year":
-        return thisYear;
       default:
-        return [];
+        return thisYear;
     }
   };
 
@@ -101,16 +120,12 @@ const SaleReportCard = () => {
             select
             size="small"
             value={value}
-            onChange={(e) => setValue(e.target.value)}
+            onChange={(e) => setValue(e.target.value as StatusOption["value"])}
             sx={{
               minWidth: 120,
               "& .MuiInputBase-input": { py: 0.75, fontSize: "0.875rem" },
             }}
-            SelectProps={{
-              MenuProps: {
-                disableScrollLock: true,
-              },
-            }}
+            SelectProps={{ MenuProps: { disableScrollLock: true } }}
           >
             {statusOptions.map((option) => (
               <MenuItem key={option.value} value={option.value}>

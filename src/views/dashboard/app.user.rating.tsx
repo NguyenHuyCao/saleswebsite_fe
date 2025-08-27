@@ -1,27 +1,36 @@
 "use client";
 
 import {
+  Avatar,
+  AvatarGroup,
   Box,
-  Card,
+  Button,
+  Grid,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemButton,
+  ListItemText,
   Stack,
   Typography,
-  LinearProgress,
-  IconButton,
+  Card,
   CardHeader,
   CardContent,
-  Button,
+  LinearProgress,
+  IconButton,
   Divider,
   Menu,
   MenuItem,
   Modal,
   Fade,
-  Avatar,
   useTheme,
   useMediaQuery,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import StarIcon from "@mui/icons-material/Star";
 import DotsVertical from "mdi-material-ui/DotsVertical";
+import Image from "next/image";
+import { api, toApiError } from "@/lib/api/http";
 
 const formatDate = (date: string) =>
   new Date(date).toLocaleString("vi-VN", {
@@ -41,12 +50,22 @@ type ReviewData = {
   username: string;
 };
 
+type TimeRange = "weekly" | "monthly" | "yearly";
+
+// BE trả về dạng mảng bucket: [any, rating, count]
+type BucketTuple = [unknown, number, number];
+
+type ReviewStatsRes = {
+  weekly?: BucketTuple[] | any[];
+  monthly?: BucketTuple[] | any[];
+  yearly?: BucketTuple[] | any[];
+  reviewDetails?: ReviewData[];
+};
+
 const UserRatingPage = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [timeRange, setTimeRange] = useState<"weekly" | "monthly" | "yearly">(
-    "monthly"
-  );
-  const [ratings, setRatings] = useState<number[]>([0, 0, 0, 0, 0]);
+  const [timeRange, setTimeRange] = useState<TimeRange>("monthly");
+  const [ratings, setRatings] = useState<number[]>([0, 0, 0, 0, 0]); // index 0 -> 5 sao
   const [reviewDetails, setReviewDetails] = useState<ReviewData[]>([]);
   const [openModal, setOpenModal] = useState(false);
 
@@ -58,51 +77,50 @@ const UserRatingPage = () => {
   const positiveRate =
     total === 0 ? 0 : Math.round(((ratings[0] + ratings[1]) / total) * 100);
 
-  const handleMenuOpen = (e: React.MouseEvent<HTMLElement>) => {
+  const handleMenuOpen = (e: React.MouseEvent<HTMLElement>) =>
     setAnchorEl(e.currentTarget);
-  };
-
-  const handleMenuClose = (range: "weekly" | "monthly" | "yearly") => {
+  const handleMenuClose = (range: TimeRange) => {
     setTimeRange(range);
     setAnchorEl(null);
   };
 
   useEffect(() => {
-    const fetchData = async () => {
+    const controller = new AbortController();
+
+    (async () => {
       try {
-        const token = localStorage.getItem("accessToken");
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/review-stats`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+        // Gọi qua Axios instance đã tự gắn Authorization (http.ts)
+        const data = await api.get<ReviewStatsRes>(
+          "/api/v1/dashboard/overview/review-stats",
+          { signal: controller.signal }
         );
 
-        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+        // Lấy buckets theo timeRange; fallback mảng trống
+        const buckets = (data?.[timeRange] as BucketTuple[] | any[]) ?? [];
 
-        const json = await res.json();
+        // Chuẩn hoá -> ratingMap: index 0 -> 5 sao, index 4 -> 1 sao
+        const ratingMap = [0, 0, 0, 0, 0];
+        buckets.forEach((row: any) => {
+          const rating = Number(
+            (Array.isArray(row) ? row[1] : row?.rating) ?? 0
+          );
+          const count = Number((Array.isArray(row) ? row[2] : row?.count) ?? 0);
+          if (rating >= 1 && rating <= 5) ratingMap[5 - rating] += count;
+        });
 
-        if (json.status === 200 && json.data) {
-          const data = json.data[timeRange] as number[][];
-          const ratingMap = [0, 0, 0, 0, 0];
-          data.forEach(([_, rating, count]) => {
-            if (rating >= 1 && rating <= 5) ratingMap[5 - rating] += count;
-          });
-          setRatings(ratingMap);
-          setReviewDetails(json.data.reviewDetails || []);
-        } else {
-          console.error("Invalid response:", json);
-          setRatings([0, 0, 0, 0, 0]);
-          setReviewDetails([]);
-        }
-      } catch (error) {
-        console.error("Failed to fetch review stats:", error);
+        setRatings(ratingMap);
+        setReviewDetails(
+          Array.isArray(data?.reviewDetails) ? data!.reviewDetails : []
+        );
+      } catch (e) {
+        if ((e as any)?.name === "CanceledError") return;
+        console.warn("Failed to load review stats:", toApiError(e).message);
         setRatings([0, 0, 0, 0, 0]);
         setReviewDetails([]);
       }
-    };
+    })();
 
-    fetchData();
+    return () => controller.abort();
   }, [timeRange]);
 
   return (
@@ -161,7 +179,7 @@ const UserRatingPage = () => {
           </Typography>
         </Stack>
 
-        {[5, 4, 3, 2, 1].map((r, i) => (
+        {[5, 4, 3, 2, 1].map((r) => (
           <Box key={r} sx={{ mb: 3 }}>
             <Stack direction="row" justifyContent="space-between">
               <Typography variant="body2" fontWeight={500}>

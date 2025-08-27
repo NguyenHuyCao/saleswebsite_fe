@@ -12,6 +12,7 @@ import {
   Chip,
 } from "@mui/material";
 import { useEffect, useState } from "react";
+import { api } from "@/lib/api/http";
 
 interface LatestOrder {
   orderId: number;
@@ -22,12 +23,10 @@ interface LatestOrder {
   customerName: string;
 }
 
-const formatCurrency = (value: number): string => {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(value);
-};
+const formatCurrency = (value: number): string =>
+  new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
+    value
+  );
 
 const statusColorMap: Record<
   string,
@@ -43,27 +42,24 @@ const OrderTable = () => {
   const [orders, setOrders] = useState<LatestOrder[]>([]);
 
   useEffect(() => {
-    const fetchLatestOrders = async () => {
-      try {
-        const token = localStorage.getItem("accessToken");
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/latest-orders`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const json = await res.json();
-        if (json.status === 200) {
-          setOrders(json.data.slice(0, 9));
-        }
-      } catch (error) {
-        console.error("Lỗi khi gọi API latest-orders:", error);
-      }
-    };
+    const controller = new AbortController();
 
-    fetchLatestOrders();
+    (async () => {
+      try {
+        // api.get sẽ unwrap { data: T } -> T, tự attach Authorization từ localStorage
+        const list = await api.get<LatestOrder[]>(
+          "/api/v1/dashboard/overview/latest-orders",
+          { signal: controller.signal }
+        );
+        setOrders(Array.isArray(list) ? list.slice(0, 9) : []);
+      } catch (err) {
+        // Fail-soft, log để debug nhưng không vỡ UI
+        console.error("Lỗi khi gọi API latest-orders:", err);
+        setOrders([]);
+      }
+    })();
+
+    return () => controller.abort();
   }, []);
 
   return (

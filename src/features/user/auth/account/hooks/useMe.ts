@@ -1,11 +1,15 @@
 "use client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchMe, updateMe } from "../services/users.service";
+
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchMe, updateMe } from "../services";
+import type { UserAccount } from "../services";
 import { QK } from "@/lib/api/cacheKeys";
-import type { UserAccount } from "../types";
 
 export function useMeQuery() {
-  return useQuery<UserAccount, Error>({ queryKey: QK.me, queryFn: fetchMe });
+  return useQuery<UserAccount, Error>({
+    queryKey: QK.me,
+    queryFn: fetchMe,
+  });
 }
 
 export function useUpdateMe() {

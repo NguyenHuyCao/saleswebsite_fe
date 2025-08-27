@@ -29,6 +29,23 @@ import { useSelector, useDispatch } from "react-redux";
 import { AppState } from "@/redux/store";
 import { setScrollTrigger } from "@/redux/slices/searchSlice";
 
+// ✅ dùng http/api custom
+import { api } from "@/lib/api/http";
+
+/* ------------ Types cho payload ------------- */
+type Period = "week" | "month" | "year";
+
+type SummaryByPeriod<T> = {
+  week: T;
+  month: T;
+  year: T;
+};
+
+type ProfitItem = { current: number; growth: number };
+type RefundItem = { current: number };
+type VisitorItem = { this: number; performance: number };
+type SalesItem = { this: number; performance: number };
+
 const DashboardPage = () => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
@@ -41,13 +58,17 @@ const DashboardPage = () => {
     (state: AppState) => state.search.scrollTrigger
   );
 
-  const [profit, setProfit] = useState<any>(null);
-  const [refund, setRefund] = useState<any>(null);
-  const [visitor, setVisitor] = useState<any>(null);
-  const [sales, setSales] = useState<any>(null);
-  const [selectedPeriod, setSelectedPeriod] = useState<
-    "week" | "month" | "year"
-  >("week");
+  const [profit, setProfit] = useState<SummaryByPeriod<ProfitItem> | null>(
+    null
+  );
+  const [refund, setRefund] = useState<SummaryByPeriod<RefundItem> | null>(
+    null
+  );
+  const [visitor, setVisitor] = useState<SummaryByPeriod<VisitorItem> | null>(
+    null
+  );
+  const [sales, setSales] = useState<SummaryByPeriod<SalesItem> | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<Period>("week");
 
   const sectionRefs: Record<string, React.RefObject<HTMLDivElement | null>> = {
     "Tổng lợi nhuận": useRef<HTMLDivElement | null>(null),
@@ -75,40 +96,45 @@ const DashboardPage = () => {
   }, [keyword, scrollTrigger, dispatch]);
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    const fetchData = async () => {
+    const controller = new AbortController();
+
+    (async () => {
       try {
-        const fetchFrom = async (url: string) => {
-          const res = await fetch(url, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          return res.json();
-        };
         const [profitData, refundData, visitorData, salesData] =
           await Promise.all([
-            fetchFrom(
-              `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/profit-summary`
+            api.get<SummaryByPeriod<ProfitItem>>(
+              "/api/v1/dashboard/overview/profit-summary",
+              { signal: controller.signal }
             ),
-            fetchFrom(
-              `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/total-refund`
+            api.get<SummaryByPeriod<RefundItem>>(
+              "/api/v1/dashboard/overview/total-refund",
+              { signal: controller.signal }
             ),
-            fetchFrom(
-              `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/visitor-statistics`
+            api.get<SummaryByPeriod<VisitorItem>>(
+              "/api/v1/dashboard/overview/visitor-statistics",
+              { signal: controller.signal }
             ),
-            fetchFrom(
-              `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/sales-statistics`
+            api.get<SummaryByPeriod<SalesItem>>(
+              "/api/v1/dashboard/overview/sales-statistics",
+              { signal: controller.signal }
             ),
           ]);
 
-        if (profitData.status === 200) setProfit(profitData.data);
-        if (refundData.status === 200) setRefund(refundData.data);
-        if (visitorData.status === 200) setVisitor(visitorData.data);
-        if (salesData.status === 200) setSales(salesData.data);
+        setProfit(profitData);
+        setRefund(refundData);
+        setVisitor(visitorData);
+        setSales(salesData);
       } catch (error) {
+        // Fail-soft để không vỡ trang; http.ts đã ném Error có message rõ ràng
         console.error("Fetch dashboard data error:", error);
+        setProfit(null);
+        setRefund(null);
+        setVisitor(null);
+        setSales(null);
       }
-    };
-    fetchData();
+    })();
+
+    return () => controller.abort();
   }, []);
 
   return (

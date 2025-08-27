@@ -15,21 +15,18 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import Grid from "@mui/material/Grid"; 
+import Grid from "@mui/material/Grid";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import {
-  useMeQuery,
-  useUpdateMe,
-} from "@/features/user/auth/account/hooks/useUser";
+import { useMeQuery, useUpdateMe } from "../hooks/useMe";
 
-const genders = ["Nam", "Nữ", "Khác"];
+const GENDERS = ["Nam", "Nữ", "Khác"] as const;
 
 export default function UserAccountPage() {
   const { data: me, isLoading, error } = useMeQuery();
   const { mutateAsync, isPending } = useUpdateMe();
 
-  const [formData, setFormData] = useState({
+  const [form, setForm] = useState({
     username: "",
     email: "",
     phone: "",
@@ -37,56 +34,48 @@ export default function UserAccountPage() {
     gender: "Nam",
   });
 
-  const [snackbar, setSnackbar] = useState({
+  const [snack, setSnack] = useState({
     open: false,
     message: "",
-    severity: "success" as "success" | "error",
+    type: "success" as "success" | "error",
   });
-
-  const formRef = useRef<HTMLDivElement>(null);
-  const scrollToTop = () =>
-    formRef.current?.scrollIntoView({ behavior: "smooth" });
+  const ref = useRef<HTMLDivElement>(null);
+  const scrollTop = () => ref.current?.scrollIntoView({ behavior: "smooth" });
 
   useEffect(() => {
     if (me) {
-      setFormData({
+      setForm({
         username: me.username || "",
         email: me.email || "",
         phone: me.phone || "",
         address: me.address || "",
-        gender: me.gender || "Nam",
+        gender: (me.gender as any) || "Nam",
       });
     }
   }, [me]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await mutateAsync({
-        username: formData.username,
-        phone: formData.phone,
-        address: formData.address,
-        gender: formData.gender,
+        username: form.username,
+        phone: form.phone,
+        address: form.address,
+        gender: form.gender as any,
       });
-      setSnackbar({
+      setSnack({
         open: true,
         message: "Cập nhật thông tin thành công!",
-        severity: "success",
+        type: "success",
       });
     } catch (err: any) {
-      setSnackbar({
+      setSnack({
         open: true,
-        message: err.message || "Cập nhật thất bại!",
-        severity: "error",
+        message: err?.message || "Cập nhật thất bại!",
+        type: "error",
       });
     } finally {
-      scrollToTop();
+      scrollTop();
     }
   };
 
@@ -94,19 +83,19 @@ export default function UserAccountPage() {
   if (error) return <Box p={4}>Lỗi: {(error as any).message}</Box>;
 
   return (
-    <Box ref={formRef} px={{ xs: 2, sm: 4 }} py={4}>
+    <Box ref={ref} px={{ xs: 2, sm: 4 }} py={4}>
       <Snackbar
-        open={snackbar.open}
+        open={snack.open}
         autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        onClose={() => setSnack((s) => ({ ...s, open: false }))}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <Alert
-          severity={snackbar.severity}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snack.type}
+          onClose={() => setSnack((s) => ({ ...s, open: false }))}
           sx={{ width: "100%" }}
         >
-          {snackbar.message}
+          {snack.message}
         </Alert>
       </Snackbar>
 
@@ -123,63 +112,68 @@ export default function UserAccountPage() {
             Cập nhật thông tin tài khoản
           </Typography>
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={submit}>
             <Grid container spacing={2}>
               <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label="Họ và tên"
                   name="username"
-                  value={formData.username}
-                  onChange={handleChange}
+                  value={form.username}
+                  onChange={(e) =>
+                    setForm({ ...form, username: e.target.value })
+                  }
                   required
+                  disabled={isPending}
                 />
               </Grid>
-
               <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label="Email"
                   name="email"
-                  value={formData.email}
+                  value={form.email}
                   disabled
                 />
               </Grid>
-
               <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label="Số điện thoại"
                   name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   required
+                  disabled={isPending}
                 />
               </Grid>
-
               <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label="Địa chỉ"
                   name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  multiline
+                  value={form.address}
+                  onChange={(e) =>
+                    setForm({ ...form, address: e.target.value })
+                  }
                   rows={2}
+                  multiline
                   required
+                  disabled={isPending}
                 />
               </Grid>
-
               <Grid size={{ xs: 12 }}>
-                <FormControl component="fieldset">
+                <FormControl component="fieldset" disabled={isPending}>
                   <FormLabel component="legend">Giới tính</FormLabel>
                   <RadioGroup
                     row
                     name="gender"
-                    value={formData.gender}
-                    onChange={handleChange}
+                    value={form.gender}
+                    onChange={(e) =>
+                      setForm({ ...form, gender: e.target.value })
+                    }
                   >
-                    {genders.map((g) => (
+                    {GENDERS.map((g) => (
                       <FormControlLabel
                         key={g}
                         value={g}
@@ -190,7 +184,6 @@ export default function UserAccountPage() {
                   </RadioGroup>
                 </FormControl>
               </Grid>
-
               <Grid size={{ xs: 12 }}>
                 <Button
                   fullWidth
@@ -202,11 +195,10 @@ export default function UserAccountPage() {
                     color: "#000",
                     fontWeight: 600,
                     textTransform: "none",
-                    transition: "0.3s",
                     "&:hover": { bgcolor: "#e09e00" },
                   }}
                 >
-                  {isPending ? "Đang cập nhật..." : "Cập nhật"}
+                  {isPending ? "Đang lưu..." : "Cập nhật"}
                 </Button>
               </Grid>
             </Grid>

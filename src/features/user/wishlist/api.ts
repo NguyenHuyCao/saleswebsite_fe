@@ -1,29 +1,45 @@
-const BASE = process.env.NEXT_PUBLIC_BACKEND_URL as string;
+// dùng axios http wrapper + unwrap
+import { api, toApiError } from "@/lib/api/http";
+import { WishlistRaw } from "./types";
 
-const authHeaders = () => {
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
+// BE chuẩn đang dùng /api/v1/wish_list cho cả GET+POST toggle
+// (nếu BE của bạn là /api/v1/wishlist cho GET thì sửa lại 1 chỗ dưới đây)
+
+export type WishlistResponse = {
+  result: WishlistRaw[];
+  meta?: { page: number; pageSize: number; pages: number; total: number };
 };
 
-export async function fetchWishlistApi() {
-  const res = await fetch(`${BASE}/api/v1/wish_list`, {
-    headers: { "Content-Type": "application/json", ...authHeaders() },
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error("Không tải được danh sách yêu thích");
-  const data = await res.json();
-  return (data?.data?.result ?? data?.data ?? []) as any[];
+/** GET wishlist */
+export async function fetchWishlistApi(): Promise<WishlistRaw[]> {
+  try {
+    // Nếu BE trả { data: { result } } thì unwrap sẽ trả { result, meta }
+    // Nếu BE trả thẳng mảng, unwrap sẽ trả mảng
+    const data = await api.get<WishlistResponse | WishlistRaw[]>(
+      "/api/v1/wish_list" // <— nếu BE của bạn là /api/v1/wishlist thì đổi tại đây
+    );
+
+    if (Array.isArray(data)) return data;
+    if (Array.isArray((data as WishlistResponse).result))
+      return (data as WishlistResponse).result;
+
+    return [];
+  } catch (e) {
+    throw toApiError(e);
+  }
 }
 
-/** server đang toggle bằng POST form-data: productId */
-export async function toggleWishlist(productId: number) {
-  const form = new FormData();
-  form.append("productId", String(productId));
-  const res = await fetch(`${BASE}/api/v1/wish_list`, {
-    method: "POST",
-    headers: { ...authHeaders() }, // KHÔNG set Content-Type khi gửi FormData
-    body: form,
-  });
-  if (!res.ok) throw new Error("Cập nhật yêu thích thất bại");
+/** Toggle bằng POST FormData: productId */
+export async function toggleWishlist(productId: number): Promise<void> {
+  try {
+    const form = new FormData();
+    form.append("productId", String(productId));
+
+    // quan trọng: override Content-Type để axios gửi multipart/form-data
+    await api.post<unknown, FormData>("/api/v1/wish_list", form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  } catch (e) {
+    throw toApiError(e);
+  }
 }

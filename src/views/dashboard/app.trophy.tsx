@@ -17,9 +17,10 @@ import {
 } from "@mui/material";
 import { styled, useTheme } from "@mui/material/styles";
 import CloseIcon from "@mui/icons-material/Close";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ReactApexChart from "@/components/wrapper/ApexChart";
 import { ApexOptions } from "apexcharts";
+import { api } from "@/lib/api/http";
 
 // Styled
 const TriangleImg = styled("img")({
@@ -81,47 +82,43 @@ const Trophy = () => {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem("accessToken");
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/best-selling-one`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const json = await res.json();
-        if (json.status === 200 && json.data) {
-          setProduct(json.data);
-        } else {
-          console.warn("Dữ liệu không hợp lệ:", json);
-        }
-      } catch (err) {
-        console.error("Lỗi khi fetch sản phẩm bán chạy:", err);
-      }
-    };
+    const controller = new AbortController();
 
-    fetchData();
+    (async () => {
+      try {
+        // http/api custom sẽ tự gắn Authorization nếu có token
+        const data = await api.get<BestSellingProduct>(
+          "/api/v1/dashboard/overview/best-selling-one",
+          { signal: controller.signal }
+        );
+        setProduct(data ?? null);
+      } catch (err) {
+        // Fail-soft, tránh vỡ UI
+        console.error("Lỗi khi load sản phẩm bán chạy:", err);
+        setProduct(null);
+      }
+    })();
+
+    return () => controller.abort();
   }, []);
 
-  const chartSeries =
-    product && chartMode === "revenue"
-      ? [
-          {
-            name: "Doanh thu (₫)",
-            data: [product.lastMonthRevenue ?? 0, product.revenue ?? 0],
-          },
-        ]
-      : product
-      ? [
-          {
-            name: "Số lượng bán",
-            data: [product.lastMonthQuantity ?? 0, product.quantitySold ?? 0],
-          },
-        ]
-      : [];
+  const chartSeries = useMemo(() => {
+    if (!product) return [];
+    if (chartMode === "revenue") {
+      return [
+        {
+          name: "Doanh thu (₫)",
+          data: [product.lastMonthRevenue ?? 0, product.revenue ?? 0],
+        },
+      ];
+    }
+    return [
+      {
+        name: "Số lượng bán",
+        data: [product.lastMonthQuantity ?? 0, product.quantitySold ?? 0],
+      },
+    ];
+  }, [product, chartMode]);
 
   return (
     <>
@@ -154,7 +151,7 @@ const Trophy = () => {
         fullScreen={isFullScreen}
         maxWidth="sm"
         fullWidth
-        disableScrollLock={true}
+        disableScrollLock
       >
         <DialogTitle>
           Chi tiết doanh số

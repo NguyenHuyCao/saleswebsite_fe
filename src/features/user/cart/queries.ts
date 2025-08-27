@@ -9,7 +9,7 @@ import {
   getUserAddressById,
   placeOrder,
 } from "./api";
-import type { PlaceOrderPayload, VoucherValidateResponse } from "./types";
+import type { PlaceOrderPayload } from "./types";
 
 export const cartKeys = {
   root: ["cart"] as const,
@@ -72,7 +72,6 @@ export const usePlaceOrderMutation = () =>
     mutationFn: (payload: PlaceOrderPayload) => placeOrder(payload),
   });
 
-// tiện cho page.tsx SSR prefetch nếu cần
 export const cartOptions = () =>
   queryOptions({
     queryKey: cartKeys.root,

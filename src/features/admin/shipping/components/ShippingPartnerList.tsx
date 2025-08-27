@@ -1,19 +1,18 @@
-// src/features/admin/shipping/components/ShippingPartnerList.tsx
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, ChangeEvent } from "react";
+import { useMemo, useState, ChangeEvent } from "react";
 import {
   Card,
   CardHeader,
   CardContent,
   Paper,
   Table,
+  TableHead,
   TableBody,
+  TableRow,
   TableCell,
   TableContainer,
-  TableHead,
   TablePagination,
-  TableRow,
   Button,
   Snackbar,
   Alert as MuiAlert,
@@ -23,51 +22,38 @@ import {
 import { useSelector } from "react-redux";
 import type { AppState } from "@/redux/store";
 import {
-  apiCreatePartner,
-  apiListPartners,
-  apiUpdatePartner,
-} from "../../shipping/api";
-import type { ShippingPartner } from "../../shipping/types";
+  useCreateShippingPartner,
+  useShippingPartners,
+  useUpdateShippingPartner,
+} from "../queries";
+import type { ShippingPartner, CreateShippingPartner } from "../types";
 import ModalShippingCreate from "./modals/ModalShippingCreate";
 import ModalShippingEdit from "./modals/ModalShippingEdit";
 
 const Alert = MuiAlert as React.ElementType;
+const DEFAULT_ROWS = 5;
 
 export default function ShippingPartnerList() {
-  const [partners, setPartners] = useState<ShippingPartner[]>([]);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(DEFAULT_ROWS);
+
+  const { data: partners = [], isLoading, isError } = useShippingPartners();
+  const { mutateAsync: createMut } = useCreateShippingPartner();
+  const { mutateAsync: updateMut } = useUpdateShippingPartner();
 
   const [openCreate, setOpenCreate] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [selected, setSelected] = useState<ShippingPartner | null>(null);
 
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    type: "success" as "success" | "error",
-    message: "",
-  });
+  const [snack, setSnack] = useState<{
+    open: boolean;
+    type: "success" | "error";
+    msg: string;
+  }>({ open: false, type: "success", msg: "" });
 
   const keyword = useSelector((s: AppState) =>
     s.search.keyword.trim().toLowerCase()
   );
-
-  const fetchPartners = useCallback(async () => {
-    try {
-      const list = await apiListPartners();
-      setPartners(list);
-    } catch (e: any) {
-      setSnackbar({
-        open: true,
-        type: "error",
-        message: e.message || "Lỗi tải danh sách",
-      });
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchPartners();
-  }, [fetchPartners]);
 
   const filtered = useMemo(() => {
     if (!keyword) return partners;
@@ -82,27 +68,14 @@ export default function ShippingPartnerList() {
     });
   }, [partners, keyword]);
 
-  useEffect(() => {
-    setPage(0);
-  }, [keyword]);
-
-  const handleCreate = async (data: {
-    name: string;
-    code: string;
-    apiUrl: string | null;
-    active: boolean;
-  }) => {
+  const handleCreate = async (data: CreateShippingPartner) => {
     try {
-      await apiCreatePartner(data);
-      setSnackbar({
-        open: true,
-        type: "success",
-        message: "Thêm đơn vị thành công",
-      });
+      await createMut(data);
+      setSnack({ open: true, type: "success", msg: "Thêm đơn vị thành công" });
       setOpenCreate(false);
-      fetchPartners();
+      setPage(0);
     } catch (e: any) {
-      setSnackbar({ open: true, type: "error", message: e.message });
+      setSnack({ open: true, type: "error", msg: e?.message || "Thất bại" });
     }
   };
 
@@ -113,17 +86,12 @@ export default function ShippingPartnerList() {
   }) => {
     if (!selected) return;
     try {
-      await apiUpdatePartner(selected.id, data);
-      setSnackbar({
-        open: true,
-        type: "success",
-        message: "Cập nhật thành công",
-      });
+      await updateMut({ id: selected.id, payload: data });
+      setSnack({ open: true, type: "success", msg: "Cập nhật thành công" });
       setOpenEdit(false);
       setSelected(null);
-      fetchPartners();
     } catch (e: any) {
-      setSnackbar({ open: true, type: "error", message: e.message });
+      setSnack({ open: true, type: "error", msg: e?.message || "Thất bại" });
     }
   };
 
@@ -146,38 +114,47 @@ export default function ShippingPartnerList() {
                 <TableRow>
                   <TableCell>ID</TableCell>
                   <TableCell>Tên đơn vị</TableCell>
-                  <TableCell>Mã đơn vị</TableCell>
+                  <TableCell>Mã</TableCell>
                   <TableCell>API URL</TableCell>
                   <TableCell>Trạng thái</TableCell>
-                  <TableCell align="center"></TableCell>
+                  <TableCell align="center">Hành động</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filtered
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((p) => (
-                    <TableRow key={p.id} hover>
-                      <TableCell>{p.id}</TableCell>
-                      <TableCell>{p.name}</TableCell>
-                      <TableCell>{p.code}</TableCell>
-                      <TableCell>{p.apiUrl || "-"}</TableCell>
-                      <TableCell>
-                        {p.active ? "Hoạt động" : "Tạm ngưng"}
-                      </TableCell>
-                      <TableCell align="center">
-                        <Button
-                          variant="outlined"
-                          onClick={() => {
-                            setSelected(p);
-                            setOpenEdit(true);
-                          }}
-                        >
-                          Chỉnh sửa
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                {filtered.length === 0 && (
+                {isLoading || isError ? (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center">
+                      {isLoading ? "Đang tải..." : "Không thể tải dữ liệu"}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filtered
+                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                    .map((p) => (
+                      <TableRow key={p.id} hover>
+                        <TableCell>{p.id}</TableCell>
+                        <TableCell>{p.name}</TableCell>
+                        <TableCell>{p.code}</TableCell>
+                        <TableCell>{p.apiUrl || "-"}</TableCell>
+                        <TableCell>
+                          {p.active ? "Hoạt động" : "Tạm ngưng"}
+                        </TableCell>
+                        <TableCell align="center">
+                          <Button
+                            variant="outlined"
+                            onClick={() => {
+                              setSelected(p);
+                              setOpenEdit(true);
+                            }}
+                          >
+                            Chỉnh sửa
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                )}
+
+                {!isLoading && !isError && filtered.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6}>
                       <Box py={6} textAlign="center">
@@ -212,6 +189,7 @@ export default function ShippingPartnerList() {
         onClose={() => setOpenCreate(false)}
         onSubmit={handleCreate}
       />
+
       {selected && (
         <ModalShippingEdit
           open={openEdit}
@@ -219,24 +197,20 @@ export default function ShippingPartnerList() {
             setOpenEdit(false);
             setSelected(null);
           }}
-          onSubmit={handleUpdate}
           initialData={selected}
+          onSubmit={handleUpdate}
         />
       )}
 
       <Snackbar
-        open={snackbar.open}
+        open={snack.open}
         autoHideDuration={4000}
-        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        onClose={() => setSnack((s) => ({ ...s, open: false }))}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        key={snackbar.type + snackbar.message}
+        key={`${snack.type}-${snack.msg}`}
       >
-        <Alert
-          severity={snackbar.type}
-          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
+        <Alert severity={snack.type} sx={{ width: "100%" }}>
+          {snack.msg}
         </Alert>
       </Snackbar>
     </Card>

@@ -1,4 +1,3 @@
-// src/features/account/types.ts
 export type Gender = "Nam" | "Nữ" | "Khác" | "";
 
 export interface UserProfile {
@@ -8,10 +7,4 @@ export interface UserProfile {
   phone: string;
   address: string;
   gender: Gender;
-}
-
-export interface ApiEnvelope<T> {
-  status: number;
-  message: string;
-  data: T;
 }

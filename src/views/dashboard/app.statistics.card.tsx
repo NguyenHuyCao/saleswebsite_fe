@@ -22,6 +22,30 @@ import CellphoneLink from "mdi-material-ui/CellphoneLink";
 import AccountOutline from "mdi-material-ui/AccountOutline";
 import ArrowDownward from "@mui/icons-material/ArrowDownward";
 import ArrowUpward from "@mui/icons-material/ArrowUpward";
+import { api, toApiError } from "@/lib/api/http";
+
+type Period = "week" | "month" | "year";
+
+interface SummaryBlock {
+  current: {
+    orders: number;
+    users: number;
+    products: number;
+    revenue: number;
+  };
+  growthRate: {
+    orders: { growthRate: number };
+    users: { growthRate: number };
+    products: { growthRate: number };
+    revenue: { growthRate: number };
+  };
+}
+
+type SummaryRes = {
+  week: SummaryBlock;
+  month: SummaryBlock;
+  year: SummaryBlock;
+};
 
 interface DataType {
   title: string;
@@ -32,44 +56,74 @@ interface DataType {
   unit?: string;
 }
 
+const DEFAULT_SUMMARY: SummaryRes = {
+  week: {
+    current: { orders: 0, users: 0, products: 0, revenue: 0 },
+    growthRate: {
+      orders: { growthRate: 0 },
+      users: { growthRate: 0 },
+      products: { growthRate: 0 },
+      revenue: { growthRate: 0 },
+    },
+  },
+  month: {
+    current: { orders: 0, users: 0, products: 0, revenue: 0 },
+    growthRate: {
+      orders: { growthRate: 0 },
+      users: { growthRate: 0 },
+      products: { growthRate: 0 },
+      revenue: { growthRate: 0 },
+    },
+  },
+  year: {
+    current: { orders: 0, users: 0, products: 0, revenue: 0 },
+    growthRate: {
+      orders: { growthRate: 0 },
+      users: { growthRate: 0 },
+      products: { growthRate: 0 },
+      revenue: { growthRate: 0 },
+    },
+  },
+};
+
 const StatisticsCard = () => {
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [period, setPeriod] = useState<"week" | "month" | "year">("month");
-  const [data, setData] = useState<any>(null);
+  const [period, setPeriod] = useState<Period>("month");
+  const [data, setData] = useState<SummaryRes | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
+    let mounted = true;
+    (async () => {
       try {
-        const token = localStorage.getItem("accessToken");
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/summary`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+        // Gọi qua Axios instance đã có interceptor Authorization
+        const res = await api.get<SummaryRes>(
+          "/api/v1/dashboard/overview/summary"
         );
-        const json = await res.json();
-        if (json.status === 200) {
-          setData(json.data);
-        }
-      } catch (error) {
-        console.error("Fetch summary error:", error);
+        if (!mounted) return;
+        // Ép safe
+        setData({
+          week: res?.week ?? DEFAULT_SUMMARY.week,
+          month: res?.month ?? DEFAULT_SUMMARY.month,
+          year: res?.year ?? DEFAULT_SUMMARY.year,
+        });
+      } catch (e) {
+        const err = toApiError(e);
+        console.warn("Fetch summary error:", err.message);
+        if (!mounted) return;
+        setData(DEFAULT_SUMMARY);
       }
+    })();
+    return () => {
+      mounted = false;
     };
-    fetchData();
   }, []);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleSelectPeriod = (value: "week" | "month" | "year") => {
+  const handleMenuClose = () => setAnchorEl(null);
+  const handleSelectPeriod = (value: Period) => {
     setPeriod(value);
     setAnchorEl(null);
   };
@@ -79,7 +133,7 @@ const StatisticsCard = () => {
   const growth = summary?.growthRate;
 
   const formatGrowth = (value: number) => {
-    const isPositive = value >= 0;
+    const isPositive = (value ?? 0) >= 0;
     return (
       <Stack
         direction="row"
@@ -93,45 +147,46 @@ const StatisticsCard = () => {
           <ArrowDownward fontSize="small" />
         )}
         <Typography variant="caption" color="inherit">
-          {Math.abs(value).toFixed(2)}%
+          {Math.abs(value ?? 0).toFixed(2)}%
         </Typography>
       </Stack>
     );
   };
 
-  const statsData: DataType[] = current
-    ? [
-        {
-          title: "Đơn hàng",
-          value: current.orders,
-          growth: growth.orders.growthRate,
-          color: theme.palette.primary.main,
-          icon: <TrendingUp sx={{ fontSize: "1.75rem" }} />,
-        },
-        {
-          title: "Khách hàng",
-          value: current.users,
-          growth: growth.users.growthRate,
-          color: theme.palette.success.main,
-          icon: <AccountOutline sx={{ fontSize: "1.75rem" }} />,
-        },
-        {
-          title: "Sản phẩm 2 thì",
-          value: current.products,
-          growth: growth.products.growthRate,
-          color: theme.palette.warning.main,
-          icon: <CellphoneLink sx={{ fontSize: "1.75rem" }} />,
-        },
-        {
-          title: "Doanh thu",
-          value: current.revenue,
-          growth: growth.revenue.growthRate,
-          color: theme.palette.info.main,
-          icon: <CurrencyUsd sx={{ fontSize: "1.75rem" }} />,
-          unit: "₫",
-        },
-      ]
-    : [];
+  const statsData: DataType[] =
+    current && growth
+      ? [
+          {
+            title: "Đơn hàng",
+            value: Number(current.orders ?? 0),
+            growth: Number(growth.orders?.growthRate ?? 0),
+            color: theme.palette.primary.main,
+            icon: <TrendingUp sx={{ fontSize: "1.75rem" }} />,
+          },
+          {
+            title: "Khách hàng",
+            value: Number(current.users ?? 0),
+            growth: Number(growth.users?.growthRate ?? 0),
+            color: theme.palette.success.main,
+            icon: <AccountOutline sx={{ fontSize: "1.75rem" }} />,
+          },
+          {
+            title: "Sản phẩm 2 thì",
+            value: Number(current.products ?? 0),
+            growth: Number(growth.products?.growthRate ?? 0),
+            color: theme.palette.warning.main,
+            icon: <CellphoneLink sx={{ fontSize: "1.75rem" }} />,
+          },
+          {
+            title: "Doanh thu",
+            value: Number(current.revenue ?? 0),
+            growth: Number(growth.revenue?.growthRate ?? 0),
+            color: theme.palette.info.main,
+            icon: <CurrencyUsd sx={{ fontSize: "1.75rem" }} />,
+            unit: "₫",
+          },
+        ]
+      : [];
 
   return (
     <Card sx={{ px: 4, pb: 4 }}>
@@ -146,7 +201,7 @@ const StatisticsCard = () => {
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
-              disableScrollLock={true}
+              disableScrollLock
             >
               <MenuItem onClick={() => handleSelectPeriod("week")}>
                 Tuần này

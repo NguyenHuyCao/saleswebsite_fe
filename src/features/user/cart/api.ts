@@ -1,65 +1,51 @@
-import { http } from "@/lib/api/http";
+import { api } from "@/lib/api/http";
 import type {
   CartItem,
   PlaceOrderPayload,
   VoucherValidateResponse,
 } from "./types";
 
-// Helper: header Authorization từ localStorage
-const authHeader = () => {
-  if (typeof window === "undefined") return {};
-  const token = localStorage.getItem("accessToken");
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+/** Tất cả dùng api.<method> đã unwrap -> trả thẳng T, không tự gắn headers nữa */
 
 export async function getCart(): Promise<CartItem[]> {
-  const res = await http.get("/api/v1/carts", { headers: authHeader() });
-  // BE trả { data: CartItem[] }
-  return res.data?.data ?? [];
+  return api.get<CartItem[]>("/api/v1/carts");
 }
 
 export async function updateCartItemQuantity(
   productId: number,
   quantity: number
 ) {
-  await http.put(
+  await api.put<void, { productId: number; quantity: number }>(
     "/api/v1/carts",
-    { productId, quantity },
-    { headers: { ...authHeader(), "Content-Type": "application/json" } }
+    { productId, quantity }
   );
 }
 
 export async function deleteCartItem(productId: number) {
-  await http.delete(`/api/v1/carts`, {
-    params: { productId },
-    headers: authHeader(),
-  });
+  await api.delete<void>("/api/v1/carts", { params: { productId } });
 }
 
 export async function clearUserCart() {
-  await http.delete(`/api/v1/carts/user`, { headers: authHeader() });
+  await api.delete<void>("/api/v1/carts/user");
 }
 
 export async function validateVoucher(
   code: string
 ): Promise<VoucherValidateResponse> {
-  const res = await http.get("/api/v1/promotions/validate", {
+  return api.get<VoucherValidateResponse>("/api/v1/promotions/validate", {
     params: { code },
-    headers: { "Content-Type": "application/json" },
   });
-  return res.data?.data as VoucherValidateResponse;
 }
 
+/** BE trả user object; ta trả về address (có thể rỗng) */
 export async function getUserAddressById(userId: number): Promise<string> {
-  const res = await http.get(`/api/v1/users/${userId}`, {
-    headers: authHeader(),
-  });
-  return res.data?.data?.address ?? "";
+  const user = await api.get<any>(`/api/v1/users/${userId}`);
+  return user?.address ?? "";
 }
 
 export async function placeOrder(payload: PlaceOrderPayload) {
-  const res = await http.post("/api/v1/orders", payload, {
-    headers: { ...authHeader(), "Content-Type": "application/json" },
-  });
-  return res.data?.data as { orderId: number; paymentUrl?: string };
+  return api.post<{ orderId: number; paymentUrl?: string }, PlaceOrderPayload>(
+    "/api/v1/orders",
+    payload
+  );
 }

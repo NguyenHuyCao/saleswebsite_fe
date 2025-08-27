@@ -3,25 +3,28 @@
 import dynamic from "next/dynamic";
 import { Container } from "@mui/material";
 
-// Phần nhẹ có thể import thẳng
-import WhoWeAre from "@/features/about/components/WhoWeAre";
-import WhyTwoStrokeSection from "@/features/about/components/WhyTwoStrokeSection";
-import SupportCommitmentsSection from "@/features/about/components/SupportCommitmentsSection";
-import FinalCallToActionSection from "@/features/about/components/FinalCallToActionSection";
+// Nhẹ: import thẳng
+import WhoWeAre from "./components/WhoWeAre";
+import WhyTwoStrokeSection from "./components/WhyTwoStrokeSection";
+import SupportCommitmentsSection from "./components/SupportCommitmentsSection";
+import FinalCallToActionSection from "./components/FinalCallToActionSection";
 
-// Phần nặng (chỉ chạy client, tách bundle)
-const HeroSection = dynamic(
-  () => import("@/features/about/components/HeroSection"),
-  { ssr: false }
-);
+// Nặng/CSR-only
+const HeroSection = dynamic(() => import("./components/HeroSection"), {
+  ssr: false,
+});
 const ExperienceMediaSection = dynamic(
-  () => import("@/features/about/components/ExperienceMediaSection"),
+  () => import("./components/ExperienceMediaSection"),
   { ssr: false }
 );
 const TestimonialsSection = dynamic(
-  () => import("@/features/about/components/TestimonialsSection"),
+  () => import("./components/TestimonialsSection"),
   { ssr: false }
 );
+
+// (tùy chọn) nếu muốn lấy content động:
+// import { AboutQueries } from ".";
+// const { data } = AboutQueries.useAboutContent();
 
 export default function AboutClient() {
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Box, Step, StepLabel, Stepper, Typography } from "@mui/material";
 import PersonalInfoForm from "./PersonalInfoForm";
@@ -13,7 +13,7 @@ export default function AccountSettings() {
   const sp = useSearchParams();
   const router = useRouter();
 
-  const userId = sp.get("userId"); // yêu cầu có userId trong URL
+  const userId = sp.get("userId");
   const initialStep = Number(sp.get("step") ?? 0);
   const [activeStep, setActiveStep] = useState(initialStep);
 
@@ -22,7 +22,7 @@ export default function AccountSettings() {
   useEffect(() => {
     const s = Number(sp.get("step") ?? 0);
     if (s !== activeStep) setActiveStep(s);
-  }, [sp]); // sync khi user đổi URL
+  }, [sp]); // sync khi đổi URL
 
   const go = (step: number) => {
     const params = new URLSearchParams(sp?.toString());
@@ -30,21 +30,18 @@ export default function AccountSettings() {
     router.replace(`?${params.toString()}`);
   };
 
-  const handleNext = () => {
+  const next = () =>
     setActiveStep((p) => {
       const n = p + 1;
       go(n);
       return n;
     });
-  };
-
-  const handleBack = () => {
+  const back = () =>
     setActiveStep((p) => {
       const n = Math.max(0, p - 1);
       go(n);
       return n;
     });
-  };
 
   return (
     <Box p={4}>
@@ -63,9 +60,9 @@ export default function AccountSettings() {
       {isLoading ? (
         <Typography align="center">Đang tải...</Typography>
       ) : activeStep === 0 ? (
-        <PersonalInfoForm user={user || null} onNext={handleNext} />
+        <PersonalInfoForm user={user || null} onNext={next} />
       ) : (
-        <SecurityForm onBack={handleBack} userId={userId || ""} />
+        <SecurityForm onBack={back} userId={userId || ""} />
       )}
     </Box>
   );

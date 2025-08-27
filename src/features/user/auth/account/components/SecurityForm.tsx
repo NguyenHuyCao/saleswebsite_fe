@@ -42,28 +42,23 @@ export default function SecurityForm({
     next: false,
     confirm: false,
   });
-
   const { mutateAsync } = useChangePassword(userId);
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({
+  const [snack, setSnack] = useState({
     open: false,
     message: "",
-    type: "success",
+    type: "success" as "success" | "error",
   });
 
   const onSubmit = async (data: PasswordInput) => {
     try {
       await mutateAsync(data);
-      setSnackbar({
+      setSnack({
         open: true,
         message: "Cập nhật mật khẩu thành công!",
         type: "success",
       });
     } catch (e: any) {
-      setSnackbar({ open: true, message: e.message, type: "error" });
+      setSnack({ open: true, message: e.message, type: "error" });
     }
   };
 
@@ -179,10 +174,10 @@ export default function SecurityForm({
       </Box>
 
       <AlertSnackbar
-        open={snackbar.open}
-        message={snackbar.message}
-        type={snackbar.type}
-        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        open={snack.open}
+        message={snack.message}
+        type={snack.type}
+        onClose={() => setSnack((s) => ({ ...s, open: false }))}
       />
     </Box>
   );

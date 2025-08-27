@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { api } from "@/lib/api/http";
 
 interface Product {
   imageAvt: string;
@@ -36,13 +37,7 @@ const ProductItem = ({
     : product.totalRevenue ?? 0;
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        mb: 4,
-      }}
-    >
+    <Box sx={{ display: "flex", alignItems: "center", mb: 4 }}>
       <Image
         src={`${product.imageAvt}`}
         alt={product.name}
@@ -83,32 +78,36 @@ const TopSellingAndLowRevenue = () => {
   const [openLow, setOpenLow] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
+    const controller = new AbortController();
 
-    const fetchTop = async () => {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/top-selling`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      const json = await res.json();
-      if (json.status === 200) setTopSelling(json.data);
-    };
+    (async () => {
+      try {
+        const [topPayload, lowPayload] = await Promise.all([
+          api.get<Product[] | { result: Product[] }>(
+            "/api/v1/dashboard/overview/top-selling",
+            { signal: controller.signal }
+          ),
+          api.get<Product[] | { result: Product[] }>(
+            "/api/v1/dashboard/overview/low-revenue-products",
+            { signal: controller.signal }
+          ),
+        ]);
 
-    const fetchLow = async () => {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/low-revenue-products`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      const json = await res.json();
-      if (json.status === 200) setLowRevenue(json.data);
-    };
+        const normalize = (
+          p: Product[] | { result?: Product[] } | null | undefined
+        ): Product[] => (Array.isArray(p) ? p : (p as any)?.result ?? []);
 
-    fetchTop();
-    fetchLow();
+        setTopSelling(normalize(topPayload));
+        setLowRevenue(normalize(lowPayload));
+      } catch (err) {
+        // Fail-soft: giữ UI chạy, log lỗi để debug
+        console.error("Load dashboard products failed:", err);
+        setTopSelling([]);
+        setLowRevenue([]);
+      }
+    })();
+
+    return () => controller.abort();
   }, []);
 
   return (
@@ -118,11 +117,7 @@ const TopSellingAndLowRevenue = () => {
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 6 }}>
               <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  mb: 5,
-                }}
+                sx={{ display: "flex", justifyContent: "space-between", mb: 5 }}
               >
                 <Typography fontWeight={500} fontSize={20}>
                   Bán chạy
@@ -136,17 +131,13 @@ const TopSellingAndLowRevenue = () => {
                 </Typography>
               </Box>
               {topSelling.slice(0, 5).map((p) => (
-                <ProductItem key={p.name} product={p} isTop={true} />
+                <ProductItem key={`${p.name}-top`} product={p} isTop />
               ))}
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }} sx={{ pl: { md: 4 } }}>
               <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  mb: 5,
-                }}
+                sx={{ display: "flex", justifyContent: "space-between", mb: 5 }}
               >
                 <Typography fontWeight={500} fontSize={20}>
                   Doanh số thấp
@@ -160,7 +151,7 @@ const TopSellingAndLowRevenue = () => {
                 </Typography>
               </Box>
               {lowRevenue.slice(0, 5).map((p) => (
-                <ProductItem key={p.name} product={p} isTop={false} />
+                <ProductItem key={`${p.name}-low`} product={p} isTop={false} />
               ))}
             </Grid>
           </Grid>
@@ -171,12 +162,8 @@ const TopSellingAndLowRevenue = () => {
       <Modal
         open={openTop}
         onClose={() => setOpenTop(false)}
-        disableScrollLock={true}
-        sx={{
-          "& .MuiBackdrop-root": {
-            backgroundColor: "none",
-          },
-        }}
+        disableScrollLock
+        sx={{ "& .MuiBackdrop-root": { backgroundColor: "none" } }}
       >
         <Fade in={openTop}>
           <Box
@@ -196,7 +183,7 @@ const TopSellingAndLowRevenue = () => {
               Danh sách sản phẩm bán chạy
             </Typography>
             {topSelling.map((p) => (
-              <ProductItem key={p.name} product={p} isTop={true} />
+              <ProductItem key={`${p.name}-top-modal`} product={p} isTop />
             ))}
             <Stack alignItems="flex-end" mt={2}>
               <Button onClick={() => setOpenTop(false)}>Đóng</Button>
@@ -209,12 +196,8 @@ const TopSellingAndLowRevenue = () => {
       <Modal
         open={openLow}
         onClose={() => setOpenLow(false)}
-        disableScrollLock={true}
-        sx={{
-          "& .MuiBackdrop-root": {
-            backgroundColor: "none",
-          },
-        }}
+        disableScrollLock
+        sx={{ "& .MuiBackdrop-root": { backgroundColor: "none" } }}
       >
         <Fade in={openLow}>
           <Box
@@ -234,7 +217,11 @@ const TopSellingAndLowRevenue = () => {
               Danh sách sản phẩm doanh số thấp
             </Typography>
             {lowRevenue.map((p) => (
-              <ProductItem key={p.name} product={p} isTop={false} />
+              <ProductItem
+                key={`${p.name}-low-modal`}
+                product={p}
+                isTop={false}
+              />
             ))}
             <Stack alignItems="flex-end" mt={2}>
               <Button onClick={() => setOpenLow(false)}>Đóng</Button>

@@ -1,78 +1,76 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Grid from "@mui/material/Grid";
 import { Skeleton, Box, Typography } from "@mui/material";
 import ShippingForm from "./components/ShippingForm";
 import PaymentMethod from "./components/PaymentMethod";
 import OrderSummary from "./components/OrderSummary";
 import ConfirmButton from "./components/ConfirmButton";
+import { useCartQuery } from "./queries";
+import type { PaymentMethod as PM, ShippingFormValue } from "./types";
 
-export type CartItem = {
-  productId: number;
-  productName: string;
-  productDescription: string;
-  productImage: string;
-  unitPrice: number;
-  quantity: number;
-  totalPrice: number;
+const EMPTY: ShippingFormValue = {
+  email: "",
+  name: "",
+  phone: "",
+  address: "",
+  province: "",
+  commune: "",
+  shippingNote: "",
 };
 
-const CART_API = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/carts`;
-
 export default function CheckoutView() {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: items, isLoading } = useCartQuery();
 
+  const [shipping, setShipping] = useState<ShippingFormValue>(EMPTY);
+  const [method, setMethod] = useState<PM>("cod");
+
+  // nếu có user đã đăng nhập, có thể hydrate form từ localStorage tại đây (tuỳ dự án)
   useEffect(() => {
-    const run = async () => {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const res = await fetch(CART_API, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const json = await res.json();
-        if (res.ok && Array.isArray(json?.data)) {
-          setItems(json.data);
-        }
-      } catch {
-        // im lặng để không chặn checkout layout
-      } finally {
-        setLoading(false);
-      }
-    };
-    run();
+    try {
+      const raw = localStorage.getItem("checkout_shipping");
+      if (raw) setShipping(JSON.parse(raw));
+    } catch {}
   }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem("checkout_shipping", JSON.stringify(shipping));
+    } catch {}
+  }, [shipping]);
 
   const isEmpty = useMemo(
-    () => !loading && items.length === 0,
-    [loading, items]
+    () => !isLoading && !items?.length,
+    [isLoading, items]
   );
+
+  const canSubmit =
+    !!shipping.email &&
+    !!shipping.name &&
+    !!shipping.province &&
+    !!shipping.commune &&
+    !!items?.length;
 
   return (
     <Grid container spacing={2} mt={5} mb={10}>
       {/* Left */}
       <Grid size={{ xs: 12, md: 8 }}>
-        {loading ? (
+        {isLoading ? (
           <>
             <Skeleton variant="rounded" height={220} sx={{ mb: 2 }} />
             <Skeleton variant="rounded" height={160} />
           </>
         ) : (
           <>
-            <ShippingForm />
-            <PaymentMethod />
+            <ShippingForm value={shipping} onChange={setShipping} />
+            <PaymentMethod value={method} onChange={setMethod} />
           </>
         )}
       </Grid>
 
       {/* Right */}
       <Grid size={{ xs: 12, md: 4 }}>
-        {loading ? (
+        {isLoading ? (
           <>
             <Skeleton variant="rounded" height={260} sx={{ mb: 2 }} />
             <Skeleton variant="rounded" height={56} />
@@ -83,8 +81,14 @@ export default function CheckoutView() {
           </Box>
         ) : (
           <>
-            <OrderSummary items={items} />
-            <ConfirmButton />
+            <OrderSummary items={items!} />
+            <ConfirmButton
+              disabled={!canSubmit}
+              getPayload={() => ({ method, shipping })}
+              onSuccess={() => {
+                // tuỳ bạn: điều hướng tới trang /orders/:id hoặc clear cache
+              }}
+            />
           </>
         )}
       </Grid>

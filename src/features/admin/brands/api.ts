@@ -1,42 +1,26 @@
-const BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
+import { api } from "@/lib/api/http";
+import type { Brand, BrandListResponse } from "./types";
 
-const authHeaders = () => {
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
+/** Lấy danh sách brand (unwrap sẵn -> trả về { result, meta }) */
 export async function getBrands(params?: { page?: number; size?: number }) {
   const page = params?.page ?? 1;
   const size = params?.size ?? 1000;
-  const res = await fetch(`${BASE}/api/v1/brands?page=${page}&size=${size}`, {
-    headers: { ...authHeaders() },
-    cache: "no-store",
+  return api.get<BrandListResponse>("/api/v1/brands", {
+    params: { page, size },
   });
-  if (!res.ok) throw new Error("Không thể tải danh sách thương hiệu");
-  const json = await res.json();
-  return json.data as { result: any[]; meta: any };
 }
 
-export async function createBrand(payload: FormData) {
-  const res = await fetch(`${BASE}/api/v1/brands`, {
-    method: "POST",
-    headers: { ...authHeaders() }, // KHÔNG set Content-Type cho FormData
-    body: payload,
+/** Tạo brand – payload là FormData */
+export async function createBrand(fd: FormData) {
+  // override Content-Type để upload multipart, không dùng header JSON mặc định
+  return api.post<Brand, FormData>("/api/v1/brands", fd, {
+    headers: { "Content-Type": "multipart/form-data" },
   });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json?.message || "Thêm thương hiệu thất bại");
-  return json.data;
 }
 
-export async function updateBrand(id: number, payload: FormData) {
-  const res = await fetch(`${BASE}/api/v1/brands/${id}`, {
-    method: "PUT",
-    headers: { ...authHeaders() },
-    body: payload,
+/** Cập nhật brand – payload là FormData */
+export async function updateBrand(id: number, fd: FormData) {
+  return api.put<Brand, FormData>(`/api/v1/brands/${id}`, fd, {
+    headers: { "Content-Type": "multipart/form-data" },
   });
-  const json = await res.json();
-  if (!res.ok)
-    throw new Error(json?.message || "Cập nhật thương hiệu thất bại");
-  return json.data;
 }

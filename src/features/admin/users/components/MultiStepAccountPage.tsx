@@ -1,24 +1,25 @@
-// src/features/admin/users/components/MultiStepAccountPage.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Box, Stepper, Step, StepLabel, Typography } from "@mui/material";
-import { apiGetUser } from "../../users/api";
-import type { User } from "../../users/types";
-import UserCombinedForm from "./UserCombinedForm";
-import SecurityForm from "./SecurityForm";
+import { useUser } from "../queries";
 
 const steps = ["Thông tin cá nhân", "Bảo mật"];
 
 export default function MultiStepAccountPage() {
-  const searchParams = useSearchParams();
+  const sp = useSearchParams();
   const router = useRouter();
-  const initialStep = parseInt(searchParams.get("step") || "0", 10);
-  const [activeStep, setActiveStep] = useState(initialStep);
+  const userId = sp.get("userId")!;
+  const initialStep = parseInt(sp.get("step") || "0", 10);
 
-  const userId = searchParams.get("userId")!;
-  const [userData, setUserData] = useState<User | null>(null);
+  const [activeStep, setActiveStep] = useState(initialStep);
+  const { data: userData } = useUser(userId);
+
+  useEffect(() => {
+    const s = parseInt(sp.get("step") || "0", 10);
+    if (s !== activeStep) setActiveStep(s);
+  }, [sp]); // eslint-disable-line
 
   const setStepInUrl = (step: number) => {
     const p = new URLSearchParams();
@@ -38,18 +39,6 @@ export default function MultiStepAccountPage() {
     setStepInUrl(s);
   };
 
-  useEffect(() => {
-    const stepFromUrl = parseInt(searchParams.get("step") || "0", 10);
-    if (stepFromUrl !== activeStep) setActiveStep(stepFromUrl);
-  }, [searchParams]); // eslint-disable-line
-
-  useEffect(() => {
-    if (!userId) return;
-    apiGetUser(userId)
-      .then(setUserData)
-      .catch((e) => console.error(e));
-  }, [userId]);
-
   return (
     <Box p={4}>
       <Typography variant="h4" mb={4} textAlign="center">
@@ -65,8 +54,9 @@ export default function MultiStepAccountPage() {
       </Stepper>
 
       {activeStep === 0 && (
-        <UserCombinedForm onNext={next} userData={userData} />
+        <UserCombinedForm onNext={next} userData={userData ?? null} />
       )}
+
       {activeStep === 1 && userData && (
         <SecurityForm
           onBack={back}
@@ -77,3 +67,7 @@ export default function MultiStepAccountPage() {
     </Box>
   );
 }
+
+// Lazy import để tránh vòng import
+import UserCombinedForm from "./UserCombinedForm";
+import SecurityForm from "./SecurityForm";

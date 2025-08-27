@@ -4,7 +4,6 @@ import {
   Box,
   Button,
   Divider,
-  Grid,
   IconButton,
   Paper,
   Stack,
@@ -14,6 +13,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
+import Grid from "@mui/material/Grid";
 import { ShoppingCart, Heart, Minus, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -23,6 +23,7 @@ import { selectIsProductInWishlist } from "@/redux/selectors/wishlistSelectors";
 import GlobalSnackbar from "@/components/alert/GlobalSnackbar";
 import { mutate } from "swr";
 import { CART_COUNT_KEY, WISHLIST_COUNT_KEY } from "@/constants/apiKeys";
+import { http } from "@/lib/api/http";
 // import type { Product, Category } from "@/product/types";
 
 interface Props {
@@ -50,7 +51,11 @@ export default function ProductDetails({ product, category }: Props) {
   }, [dispatch]);
 
   const handleAddToCart = async () => {
-    const token = localStorage.getItem("accessToken");
+    // Thông báo nhẹ nếu chưa đăng nhập (tránh 401 -> redirect)
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
     if (!token) {
       return setSnackbar({
         open: true,
@@ -58,19 +63,9 @@ export default function ProductDetails({ product, category }: Props) {
         message: "Bạn cần đăng nhập để thêm vào giỏ hàng.",
       });
     }
+
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/carts`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ quantity, productId: product.id }),
-        }
-      );
-      if (!res.ok) throw new Error();
+      await http.post("/api/v1/carts", { quantity, productId: product.id });
       mutate(CART_COUNT_KEY, undefined, { revalidate: true });
       setQuantity(1);
       setSnackbar({
@@ -78,17 +73,20 @@ export default function ProductDetails({ product, category }: Props) {
         type: "success",
         message: "Đã thêm vào giỏ hàng!",
       });
-    } catch {
+    } catch (e: any) {
       setSnackbar({
         open: true,
         type: "error",
-        message: "Thêm vào giỏ hàng thất bại.",
+        message: e?.message || "Thêm vào giỏ hàng thất bại.",
       });
     }
   };
 
   const toggleFavorite = async () => {
-    const token = localStorage.getItem("accessToken");
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken")
+        : null;
     if (!token) {
       return setSnackbar({
         open: true,
@@ -99,18 +97,16 @@ export default function ProductDetails({ product, category }: Props) {
     try {
       const formData = new FormData();
       formData.append("productId", String(product.id));
-      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/wish_list`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
+      await http.post("/api/v1/wish_list", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
       dispatch(fetchWishlist());
       mutate(WISHLIST_COUNT_KEY, undefined, { revalidate: true });
-    } catch {
+    } catch (e: any) {
       setSnackbar({
         open: true,
         type: "error",
-        message: "Lỗi cập nhật yêu thích.",
+        message: e?.message || "Lỗi cập nhật yêu thích.",
       });
     }
   };
@@ -156,7 +152,7 @@ export default function ProductDetails({ product, category }: Props) {
       </Typography>
 
       <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid size={{xs:12, sm:6}} >
+        <Grid size={{ xs: 12, sm: 6 }}>
           <Typography variant="body2">
             <b>Loại nhiên liệu:</b> {product.fuelType}
           </Typography>
@@ -167,7 +163,7 @@ export default function ProductDetails({ product, category }: Props) {
             <b>Dung tích bình:</b> {product.tankCapacity}L
           </Typography>
         </Grid>
-        <Grid size={{xs:12, sm:6}} >
+        <Grid size={{ xs: 12, sm: 6 }}>
           <Typography variant="body2">
             <b>Kích thước:</b> {product.dimensions}
           </Typography>

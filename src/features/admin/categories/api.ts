@@ -1,52 +1,29 @@
-const BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
+import { api } from "@/lib/api/http";
+import type { Category, CategoryListResponse } from "./types";
 
-const authHeader = () => ({
-  Authorization: `Bearer ${
-    typeof window !== "undefined" ? localStorage.getItem("accessToken") : ""
-  }`,
-});
-
+/** Lấy danh sách danh mục (unwrap -> trả về { result, meta }) */
 export async function fetchCategories(page = 1, size = 1000) {
-  const res = await fetch(
-    `${BASE}/api/v1/categories?page=${page}&size=${size}`,
-    {
-      headers: authHeader(),
-      cache: "no-store",
-    }
-  );
-  const json = await res.json();
-  if (!res.ok) throw new Error(json?.message || "Không tải được danh mục");
-  return json.data; // { result, meta }
+  return api.get<CategoryListResponse>("/api/v1/categories", {
+    params: { page, size },
+  });
 }
 
+/** Tạo danh mục – gửi FormData */
 export async function createCategory(fd: FormData) {
-  const res = await fetch(`${BASE}/api/v1/categories`, {
-    method: "POST",
-    headers: authHeader(),
-    body: fd,
+  return api.post<Category, FormData>("/api/v1/categories", fd, {
+    headers: { "Content-Type": "multipart/form-data" },
   });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json?.message || "Thêm danh mục thất bại");
-  return json.data;
 }
 
+/** Cập nhật danh mục – gửi FormData */
 export async function updateCategory(id: number, fd: FormData) {
-  const res = await fetch(`${BASE}/api/v1/categories/${id}`, {
-    method: "PUT",
-    headers: authHeader(),
-    body: fd,
+  return api.put<Category, FormData>(`/api/v1/categories/${id}`, fd, {
+    headers: { "Content-Type": "multipart/form-data" },
   });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json?.message || "Cập nhật danh mục thất bại");
-  return json.data;
 }
 
+/** Xoá danh mục */
 export async function deleteCategory(id: number) {
-  const res = await fetch(`${BASE}/api/v1/categories/${id}`, {
-    method: "DELETE",
-    headers: authHeader(),
-  });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json?.message || "Xóa danh mục thất bại");
-  return json.data;
+  // backend có thể trả data rỗng -> dùng void cũng được
+  return api.delete<void>(`/api/v1/categories/${id}`);
 }

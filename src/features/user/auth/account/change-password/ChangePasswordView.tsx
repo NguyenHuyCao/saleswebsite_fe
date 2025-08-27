@@ -16,7 +16,7 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
-import { useChangePasswordMe } from "@/features/user/auth/account/hooks/useUser";
+import { useChangePasswordMe } from "../hooks/useUser";
 
 const AlertSnackbar = ({
   open,
@@ -48,17 +48,17 @@ const AlertSnackbar = ({
 );
 
 export default function ChangePasswordView() {
-  const [formData, setFormData] = useState({
+  const [form, setForm] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
-  const [showPassword, setShowPassword] = useState({
+  const [show, setShow] = useState({
     current: false,
     new: false,
     confirm: false,
   });
-  const [snackbar, setSnackbar] = useState<{
+  const [snack, setSnack] = useState<{
     open: boolean;
     message: string;
     severity: AlertColor;
@@ -67,59 +67,45 @@ export default function ChangePasswordView() {
   const { mutateAsync, isPending } = useChangePasswordMe();
 
   const canSubmit = useMemo(() => {
-    const { currentPassword, newPassword, confirmPassword } = formData;
+    const { currentPassword, newPassword, confirmPassword } = form;
     if (!currentPassword || !newPassword || !confirmPassword) return false;
     if (newPassword !== confirmPassword) return false;
     if (newPassword.length < 6) return false;
     if (newPassword === currentPassword) return false;
     return true;
-  }, [formData]);
+  }, [form]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
-
-  const handleToggleVisibility = (field: keyof typeof showPassword) =>
-    setShowPassword((prev) => ({ ...prev, [field]: !prev[field] }));
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) {
-      setSnackbar({
+      setSnack({
         open: true,
         message:
-          formData.newPassword !== formData.confirmPassword
+          form.newPassword !== form.confirmPassword
             ? "Mật khẩu mới không khớp."
             : "Vui lòng kiểm tra lại thông tin.",
         severity: "warning",
       });
       return;
     }
-
     try {
       const res = await mutateAsync({
-        currentPassword: formData.currentPassword,
-        newPassword: formData.newPassword,
-        confirmNewPassword: formData.confirmPassword,
+        currentPassword: form.currentPassword,
+        newPassword: form.newPassword,
+        confirmNewPassword: form.confirmPassword,
       });
-
-      const ok = res?.status === 200;
-      setSnackbar({
+      const ok = (res as any)?.status === 200 || !("status" in (res as any));
+      setSnack({
         open: true,
         message:
-          res?.message ||
+          (res as any)?.message ||
           (ok ? "Đổi mật khẩu thành công!" : "Đổi mật khẩu thất bại."),
         severity: ok ? "success" : "error",
       });
-
       if (ok)
-        setFormData({
-          currentPassword: "",
-          newPassword: "",
-          confirmPassword: "",
-        });
+        setForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
     } catch (err: any) {
-      setSnackbar({
+      setSnack({
         open: true,
         message: err?.message || "Lỗi kết nối tới máy chủ!",
         severity: "error",
@@ -147,43 +133,47 @@ export default function ChangePasswordView() {
           Thay đổi mật khẩu
         </Typography>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={submit}>
           {[
             {
               name: "currentPassword",
               label: "Mật khẩu hiện tại",
-              field: "current",
+              key: "current",
             },
-            { name: "newPassword", label: "Mật khẩu mới", field: "new" },
+            { name: "newPassword", label: "Mật khẩu mới", key: "new" },
             {
               name: "confirmPassword",
               label: "Xác nhận mật khẩu",
-              field: "confirm",
+              key: "confirm",
             },
-          ].map(({ name, label, field }) => (
+          ].map(({ name, label, key }) => (
             <TextField
               key={name}
               fullWidth
+              size="small"
+              sx={{ mb: 2 }}
               label={label}
               name={name}
               type={
-                showPassword[field as keyof typeof showPassword]
-                  ? "text"
-                  : "password"
+                show[key as "current" | "new" | "confirm"] ? "text" : "password"
               }
-              value={formData[name as keyof typeof formData]}
-              onChange={handleChange}
-              sx={{ mb: 2 }}
-              size="small"
-              required
+              value={(form as any)[name]}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, [name]: e.target.value }))
+              }
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
-                      onClick={() => handleToggleVisibility(field as any)}
+                      onClick={() =>
+                        setShow((s) => ({
+                          ...s,
+                          [key]: !s[key as keyof typeof s],
+                        }))
+                      }
                       edge="end"
                     >
-                      {showPassword[field as keyof typeof showPassword] ? (
+                      {show[key as keyof typeof show] ? (
                         <VisibilityOff />
                       ) : (
                         <Visibility />
@@ -192,6 +182,7 @@ export default function ChangePasswordView() {
                   </InputAdornment>
                 ),
               }}
+              required
             />
           ))}
 
@@ -221,10 +212,10 @@ export default function ChangePasswordView() {
       </Paper>
 
       <AlertSnackbar
-        open={snackbar.open}
-        message={snackbar.message}
-        severity={snackbar.severity}
-        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        open={snack.open}
+        message={snack.message}
+        severity={snack.severity}
+        onClose={() => setSnack((prev) => ({ ...prev, open: false }))}
       />
     </Box>
   );

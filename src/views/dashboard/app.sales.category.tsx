@@ -20,6 +20,7 @@ import { useEffect, useState } from "react";
 import DotsVertical from "mdi-material-ui/DotsVertical";
 import ChevronUp from "mdi-material-ui/ChevronUp";
 import ChevronDown from "mdi-material-ui/ChevronDown";
+import { api } from "@/lib/api/http";
 
 type Period = "week" | "month" | "year";
 
@@ -54,27 +55,28 @@ const SalesByCategories = () => {
   const [period, setPeriod] = useState<Period>("month");
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem("accessToken");
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/category-sales`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const json = await res.json();
-        if (json.status === 200) {
-          setData(json.data);
-        }
-      } catch (err) {
-        console.error("API error:", err);
-      }
-    };
+    const controller = new AbortController();
 
-    fetchData();
+    (async () => {
+      try {
+        // Backend có thể trả { data: Category[] } hoặc { data: { result: Category[] } }
+        const payload = await api.get<Category[] | { result: Category[] }>(
+          "/api/v1/dashboard/overview/category-sales",
+          { signal: controller.signal }
+        );
+
+        const list: Category[] = Array.isArray(payload)
+          ? payload
+          : (payload as any)?.result ?? [];
+
+        setData(Array.isArray(list) ? list : []);
+      } catch (err) {
+        console.error("API error (category-sales):", err);
+        setData([]); // fail-soft
+      }
+    })();
+
+    return () => controller.abort();
   }, []);
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -107,7 +109,7 @@ const SalesByCategories = () => {
                 <DotsVertical />
               </IconButton>
               <Menu
-                disableScrollLock={true}
+                disableScrollLock
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
                 onClose={handleMenuClose}
@@ -158,7 +160,7 @@ const SalesByCategories = () => {
         onClose={() => setOpenModal(false)}
         closeAfterTransition
         hideBackdrop
-        disableScrollLock={true}
+        disableScrollLock
       >
         <Fade in={openModal}>
           <Box

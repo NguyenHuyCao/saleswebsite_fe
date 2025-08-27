@@ -11,6 +11,8 @@ import {
   Box,
 } from "@mui/material";
 import { useState } from "react";
+import { http, toApiError } from "@/lib/api/http";
+import { getAccessToken } from "@/lib/api/token";
 
 interface Props {
   productId: number;
@@ -22,6 +24,7 @@ const ReviewForm = ({ productId, onSuccess }: Props) => {
   const [comment, setComment] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -35,35 +38,36 @@ const ReviewForm = ({ productId, onSuccess }: Props) => {
   };
 
   const handleSubmit = async () => {
-    const token = localStorage.getItem("accessToken");
+    const token = getAccessToken(); // chỉ để kiểm tra đăng nhập
     if (!token || !rating || !comment.trim()) {
       setError("Vui lòng nhập đầy đủ thông tin và đăng nhập.");
       return;
     }
 
+    setSubmitting(true);
     try {
       const formData = new FormData();
       formData.append("rating", String(rating));
       formData.append("comment", comment.trim());
       images.forEach((img) => formData.append("imageReviews", img));
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reviews/${productId}`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData,
-        }
-      );
-      if (!res.ok) throw new Error();
+      // Gọi qua Axios singleton; Authorization sẽ tự gắn từ interceptor
+      await http.post(`/api/v1/reviews/${productId}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
+      // Reset form
       setComment("");
       setImages([]);
       setRating(0);
       setError(null);
       onSuccess();
-    } catch {
-      setError("Không thể gửi đánh giá, vui lòng thử lại.");
+    } catch (err) {
+      setError(
+        toApiError(err).message || "Không thể gửi đánh giá, vui lòng thử lại."
+      );
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -79,7 +83,7 @@ const ReviewForm = ({ productId, onSuccess }: Props) => {
           rows={3}
           placeholder="Nội dung đánh giá"
         />
-        <Button component="label" variant="outlined">
+        <Button component="label" variant="outlined" disabled={submitting}>
           Tải ảnh (tối đa 3)
           <input
             hidden
@@ -90,7 +94,7 @@ const ReviewForm = ({ productId, onSuccess }: Props) => {
           />
         </Button>
         <Typography fontSize={13}>{images.length} ảnh được chọn</Typography>
-        <Box display="flex" gap={1}>
+        <Box display="flex" gap={1} flexWrap="wrap">
           {images.map((file, idx) => (
             <Box
               key={idx}
@@ -103,11 +107,16 @@ const ReviewForm = ({ productId, onSuccess }: Props) => {
                 borderRadius: 1,
                 border: "1px solid #ccc",
               }}
+              alt={`preview-${idx}`}
             />
           ))}
         </Box>
-        <Button variant="contained" onClick={handleSubmit}>
-          Gửi đánh giá
+        <Button
+          variant="contained"
+          onClick={handleSubmit}
+          disabled={submitting}
+        >
+          {submitting ? "Đang gửi..." : "Gửi đánh giá"}
         </Button>
       </Stack>
     </Paper>

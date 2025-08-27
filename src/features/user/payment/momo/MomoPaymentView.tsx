@@ -8,15 +8,20 @@ import {
   Stack,
   Button,
   Tooltip,
+  Skeleton,
 } from "@mui/material";
 import Image from "next/image";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DownloadIcon from "@mui/icons-material/Download";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import { useState } from "react";
-import { MOMO_INFO } from "./constants";
+import { useMemo, useState } from "react";
+import { useMomoConfigQuery } from "./queries";
+import { DEFAULT_MOMO_INFO } from "./constants";
 
 export default function MomoPaymentView() {
+  const { data, isLoading, isError } = useMomoConfigQuery();
+  const cfg = useMemo(() => data ?? DEFAULT_MOMO_INFO, [data]);
+
   const [copied, setCopied] = useState<"phone" | "note" | null>(null);
 
   const copy = async (text: string, key: "phone" | "note") => {
@@ -27,10 +32,9 @@ export default function MomoPaymentView() {
     } catch {}
   };
 
-  const downloadQR = async () => {
-    // Cho phép người dùng tải ảnh QR (asset tĩnh)
+  const downloadQR = () => {
     const a = document.createElement("a");
-    a.href = MOMO_INFO.qrSrc;
+    a.href = cfg.qrSrc;
     a.download = "momo_qr.jpg";
     document.body.appendChild(a);
     a.click();
@@ -74,16 +78,24 @@ export default function MomoPaymentView() {
           Vui lòng quét mã QR bên dưới bằng ứng dụng MoMo để thanh toán.
         </Typography>
 
-        <Box display="flex" justifyContent="center" mb={2}>
-          <Image
-            src={MOMO_INFO.qrSrc}
-            alt="QR MoMo"
-            width={300}
+        {isLoading ? (
+          <Skeleton
+            variant="rounded"
             height={300}
-            style={{ borderRadius: 8, border: "1px solid #e0e0e0" }}
-            priority
+            sx={{ borderRadius: 2, mx: "auto", maxWidth: 300, mb: 2 }}
           />
-        </Box>
+        ) : (
+          <Box display="flex" justifyContent="center" mb={2}>
+            <Image
+              src={cfg.qrSrc}
+              alt="QR MoMo"
+              width={300}
+              height={300}
+              style={{ borderRadius: 8, border: "1px solid #e0e0e0" }}
+              priority
+            />
+          </Box>
+        )}
 
         <Box display="flex" justifyContent="center" gap={1} mb={3}>
           <Button
@@ -99,7 +111,7 @@ export default function MomoPaymentView() {
             <Button
               variant="outlined"
               startIcon={<ContentCopyIcon />}
-              onClick={() => copy(MOMO_INFO.phone.replaceAll(" ", ""), "phone")}
+              onClick={() => copy(cfg.phone.replaceAll(" ", ""), "phone")}
             >
               Sao chép số
             </Button>
@@ -108,18 +120,24 @@ export default function MomoPaymentView() {
 
         <Stack spacing={1.2} mb={3}>
           <Typography variant="body2">
-            <strong>Chủ tài khoản:</strong> {MOMO_INFO.ownerName}
+            <strong>Chủ tài khoản:</strong> {cfg.ownerName}
           </Typography>
           <Typography variant="body2">
-            <strong>Số điện thoại MoMo:</strong> {MOMO_INFO.phone}
+            <strong>Số điện thoại MoMo:</strong> {cfg.phone}
           </Typography>
           <Typography variant="body2">
             <strong>Số tiền:</strong> Theo giá trị đơn hàng
           </Typography>
           <Typography variant="body2">
             <strong>Thời gian hiệu lực:</strong> Trong vòng{" "}
-            {MOMO_INFO.validWithinMins} phút kể từ lúc đặt hàng
+            {cfg.validWithinMins} phút kể từ lúc đặt hàng
           </Typography>
+          {isError && (
+            <Typography variant="caption" color="text.secondary">
+              (Đang dùng cấu hình mặc định do không đọc được cấu hình từ máy
+              chủ)
+            </Typography>
+          )}
         </Stack>
 
         <Box
@@ -140,7 +158,7 @@ export default function MomoPaymentView() {
             mt={1}
           >
             <Typography variant="body2">
-              Vui lòng ghi đúng cú pháp: <strong>{MOMO_INFO.noteFormat}</strong>
+              Vui lòng ghi đúng cú pháp: <strong>{cfg.noteFormat}</strong>
             </Typography>
             <Tooltip
               title={copied === "note" ? "Đã sao chép!" : "Sao chép cú pháp"}
@@ -149,7 +167,7 @@ export default function MomoPaymentView() {
                 size="small"
                 variant="text"
                 startIcon={<ContentCopyIcon fontSize="small" />}
-                onClick={() => copy(MOMO_INFO.noteFormat, "note")}
+                onClick={() => copy(cfg.noteFormat, "note")}
               >
                 Sao chép
               </Button>

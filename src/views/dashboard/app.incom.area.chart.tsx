@@ -10,6 +10,31 @@ import {
   ToggleButton,
 } from "@mui/material";
 import { LineChart, areaElementClasses } from "@mui/x-charts";
+import { api, toApiError } from "@/lib/api/http";
+
+type TrafficWeeklyItem = {
+  day:
+    | "MONDAY"
+    | "TUESDAY"
+    | "WEDNESDAY"
+    | "THURSDAY"
+    | "FRIDAY"
+    | "SATURDAY"
+    | "SUNDAY";
+  pageViews: number;
+  traffic: number;
+};
+
+type TrafficMonthlyItem = {
+  month: number; // 1..12
+  pageViews: number;
+  traffic: number;
+};
+
+type TrafficRes = {
+  weeklyStats: TrafficWeeklyItem[];
+  monthlyStats: TrafficMonthlyItem[];
+};
 
 const IncomeAreaChart = () => {
   const [view, setView] = useState<"monthly" | "weekly">("monthly");
@@ -19,36 +44,35 @@ const IncomeAreaChart = () => {
     "Phiên truy cập": true,
   });
 
-  const [weeklyStats, setWeeklyStats] = useState([]);
-  const [monthlyStats, setMonthlyStats] = useState([]);
+  const [weeklyStats, setWeeklyStats] = useState<TrafficWeeklyItem[]>([]);
+  const [monthlyStats, setMonthlyStats] = useState<TrafficMonthlyItem[]>([]);
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    const fetchTraffic = async () => {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/dashboard/overview/traffic`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      const json = await res.json();
-      if (json.status === 200) {
-        setWeeklyStats(json.data.weeklyStats);
-        setMonthlyStats(json.data.monthlyStats);
+    let mounted = true;
+    (async () => {
+      try {
+        // Gọi qua api.get => unwrap ApiEnvelope.data
+        const data = await api.get<TrafficRes>(
+          "/api/v1/dashboard/overview/traffic"
+        );
+        if (!mounted) return;
+        setWeeklyStats(data.weeklyStats ?? []);
+        setMonthlyStats(data.monthlyStats ?? []);
+      } catch (e) {
+        const err = toApiError(e);
+        // Optional: bạn có thể log/snackbar
+        console.warn("Load traffic failed:", err.message);
+        if (!mounted) return;
+        setWeeklyStats([]);
+        setMonthlyStats([]);
       }
+    })();
+    return () => {
+      mounted = false;
     };
-    fetchTraffic();
   }, []);
 
-  const weeklyLabels = [
-    "Thứ 2",
-    "Thứ 3",
-    "Thứ 4",
-    "Thứ 5",
-    "Thứ 6",
-    "Thứ 7",
-    "CN",
-  ];
+  const weeklyLabels = ["Th2", "Th3", "Th4", "Th5", "Th6", "Th7", "CN"];
   const monthlyLabels = [
     "Th1",
     "Th2",
@@ -64,8 +88,12 @@ const IncomeAreaChart = () => {
     "Th12",
   ];
 
-  const dataFromStats = (stats: any[], key: string, length: number) => {
-    const map = new Array(length).fill(0);
+  const dataFromStats = (
+    stats: any[],
+    key: "pageViews" | "traffic",
+    length: number
+  ) => {
+    const map = new Array<number>(length).fill(0);
     stats.forEach((item: any) => {
       if (view === "weekly") {
         const days = [
@@ -78,10 +106,10 @@ const IncomeAreaChart = () => {
           "SUNDAY",
         ];
         const idx = days.indexOf(item.day);
-        if (idx !== -1) map[idx] = item[key];
+        if (idx !== -1) map[idx] = Number(item[key] ?? 0);
       } else {
-        const idx = item.month - 1;
-        if (idx >= 0 && idx < 12) map[idx] = item[key];
+        const idx = Number(item.month ?? 0) - 1;
+        if (idx >= 0 && idx < 12) map[idx] = Number(item[key] ?? 0);
       }
     });
     return map;
@@ -97,9 +125,8 @@ const IncomeAreaChart = () => {
       ? dataFromStats(monthlyStats, "traffic", 12)
       : dataFromStats(weeklyStats, "traffic", 7);
 
-  const toggleVisibility = (label: string) => {
+  const toggleVisibility = (label: string) =>
     setVisibility((prev) => ({ ...prev, [label]: !prev[label] }));
-  };
 
   const visibleSeries = [
     {
@@ -108,7 +135,7 @@ const IncomeAreaChart = () => {
       showMark: false,
       area: true,
       id: "PageViews",
-      color: "#1976d2", // Màu xanh lam đậm
+      color: "#1976d2",
       visible: visibility["Lượt xem trang"],
     },
     {
@@ -117,10 +144,11 @@ const IncomeAreaChart = () => {
       showMark: false,
       area: true,
       id: "Sessions",
-      color: "#ff9800", // Màu cam nổi bật
+      color: "#ff9800",
       visible: visibility["Phiên truy cập"],
     },
   ];
+
   const axisFontStyle = { fontSize: 10, fill: theme.palette.text.secondary };
 
   return (
@@ -163,16 +191,16 @@ const IncomeAreaChart = () => {
         height={400}
         margin={{ top: 40, bottom: 20, right: 20 }}
         series={visibleSeries
-          .filter((series) => series.visible)
-          .map((series) => ({
+          .filter((s) => s.visible)
+          .map((s) => ({
             type: "line",
-            data: series.data,
-            label: series.label,
-            showMark: series.showMark,
-            area: series.area,
-            id: series.id,
-            color: series.color,
-            stroke: series.color,
+            data: s.data,
+            label: s.label,
+            showMark: s.showMark,
+            area: s.area,
+            id: s.id,
+            color: s.color,
+            stroke: s.color,
             strokeWidth: 2,
           }))}
         sx={{
@@ -210,25 +238,25 @@ const IncomeAreaChart = () => {
       </LineChart>
 
       <Stack direction="row" spacing={3} justifyContent="center" mt={2}>
-        {visibleSeries.map((series) => (
+        {visibleSeries.map((s) => (
           <Stack
-            key={series.label}
+            key={s.label}
             direction="row"
             spacing={1}
             alignItems="center"
             sx={{ cursor: "pointer" }}
-            onClick={() => toggleVisibility(series.label)}
+            onClick={() => toggleVisibility(s.label)}
           >
             <Box
               sx={{
                 width: 12,
                 height: 12,
                 borderRadius: "50%",
-                bgcolor: series.visible ? series.color : "grey.500",
+                bgcolor: s.visible ? s.color : "grey.500",
               }}
             />
             <Typography variant="body2" color="text.primary">
-              {series.label}
+              {s.label}
             </Typography>
           </Stack>
         ))}

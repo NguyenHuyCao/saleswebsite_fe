@@ -1,7 +1,6 @@
-// src/features/admin/users/components/UserTablePage.tsx
 "use client";
 
-import { useEffect, useMemo, useState, ChangeEvent } from "react";
+import { useMemo, useState, ChangeEvent } from "react";
 import {
   Card,
   CardHeader,
@@ -21,37 +20,29 @@ import UploadOutlinedIcon from "@mui/icons-material/UploadOutlined";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import type { AppState } from "@/redux/store";
-import { apiListUsers } from "../../users/api";
+import { useUsers } from "../queries";
 import type { User } from "../../users/types";
 
 export default function UserTablePage() {
-  const [users, setUsers] = useState<User[]>([]);
+  const router = useRouter();
+  const { data = [], isLoading } = useUsers();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const router = useRouter();
 
   const keyword = useSelector((s: AppState) =>
     s.search.keyword.trim().toLowerCase()
   );
 
-  useEffect(() => {
-    apiListUsers()
-      .then(setUsers)
-      .catch((e) => console.error(e));
-  }, []);
-
-  const filtered = useMemo(
+  const filtered = useMemo<User[]>(
     () =>
-      users.filter(
+      (data || []).filter(
         (u) =>
           u.username.toLowerCase().includes(keyword) ||
           u.email.toLowerCase().includes(keyword) ||
           (u.phone ?? "").toLowerCase().includes(keyword)
       ),
-    [users, keyword]
+    [data, keyword]
   );
-
-  useEffect(() => setPage(0), [keyword]);
 
   const paged = filtered.slice(
     page * rowsPerPage,
@@ -65,7 +56,7 @@ export default function UserTablePage() {
         titleTypographyProps={{ variant: "h6" }}
         action={
           <Typography variant="body2" color="text.secondary">
-            Quản lý tài khoản người dùng
+            {isLoading ? "Đang tải..." : "Quản lý tài khoản người dùng"}
           </Typography>
         }
       />
@@ -103,6 +94,15 @@ export default function UserTablePage() {
                     </TableCell>
                   </TableRow>
                 ))}
+                {!isLoading && filtered.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6}>
+                      <Typography textAlign="center" py={4}>
+                        Không có dữ liệu
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </TableContainer>

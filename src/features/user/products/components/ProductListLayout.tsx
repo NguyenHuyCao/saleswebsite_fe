@@ -18,8 +18,64 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
 import type { Brand, Category, Product } from "../types";
+import { api } from "@/lib/api/http";
 
 const ITEMS_PER_PAGE = 8;
+
+/** Chuẩn hoá tên -> slug để lọc tìm kiếm client */
+const toSlug = (str: string) =>
+  str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-");
+
+/** Mapper chuẩn hoá product theo format thống nhất của dự án */
+function mapProduct(item: any, nowMs: number): Product {
+  const createdAtMs = new Date(item.createdAt).getTime();
+  const isNew = (nowMs - createdAtMs) / (1000 * 60 * 60 * 24) <= 30;
+
+  const currentPrice = item.pricePerUnit ?? item.price ?? 0;
+  const originalPrice = item.price ?? currentPrice;
+
+  return {
+    id: item.id,
+    name: item.name,
+    slug: item.slug,
+    imageAvt: item.imageAvt,
+    imageDetail1: item.imageDetail1 || "",
+    imageDetail2: item.imageDetail2 || "",
+    imageDetail3: item.imageDetail3 || "",
+    description: item.description || "",
+    price: currentPrice,
+    pricePerUnit: currentPrice,
+    originalPrice,
+    sale: currentPrice < originalPrice,
+    inStock: item.active === true && (item.stockQuantity ?? 0) > 0,
+    label: item.active ? "Thêm vào giỏ hàng" : "Hết hàng",
+    stockQuantity: item.stockQuantity ?? 0,
+    totalStock: item.totalStock ?? 0,
+    power: item.power || "N/A",
+    fuelType: item.fuelType || "N/A",
+    engineType: item.engineType || "N/A",
+    weight: item.weight || 0,
+    dimensions: item.dimensions || "",
+    tankCapacity: item.tankCapacity || 0,
+    origin: item.origin || "Không rõ",
+    warrantyMonths: item.warrantyMonths || 0,
+    createdAt: item.createdAt,
+    createdBy: item.createdBy || "",
+    updatedAt: item.updatedAt || null,
+    updatedBy: item.updatedBy || "",
+    rating: item.rating || 0,
+    status:
+      (item.stockQuantity ?? 0) === 0 ? ["Hết hàng"] : isNew ? ["Mới"] : [],
+    favorite: item.wishListUser === true,
+  };
+}
 
 export default function ProductListLayout({
   categories,
@@ -38,92 +94,35 @@ export default function ProductListLayout({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const toSlug = (str: string) =>
-    str
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/đ/g, "d")
-      .replace(/[^a-z0-9\s-]/g, "")
-      .trim()
-      .replace(/\s+/g, "-");
-
   const fetchProducts = async () => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem("accessToken");
+      // Build query từ URL hiện tại
       const query = new URLSearchParams();
-
       ["category", "brand", "price"].forEach((key) => {
         const value = searchParams.get(key);
         if (value) query.set(key, value);
       });
 
-      const res = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_BACKEND_URL
-        }/api/v1/products?${query.toString()}`,
-        { headers: token ? { Authorization: `Bearer ${token}` } : undefined }
-      );
-      const data = await res.json();
+      // Quan trọng: dùng api.get (đã unwrap), KEY là PATH để đồng bộ với interceptor/token
+      const path = `/api/v1/products?${query.toString()}`;
+      const payload = await api.get<
+        { result?: any[]; items?: any[]; rows?: any[] } | any[]
+      >(path);
 
-      if (!res.ok || !data?.data?.result)
-        throw new Error(data?.message || "Không thể tải danh sách sản phẩm.");
+      // Hỗ trợ nhiều shape: mảng trực tiếp hoặc {result|items|rows}
+      const raw: any[] = Array.isArray(payload)
+        ? payload
+        : payload?.result ?? payload?.items ?? payload?.rows ?? [];
 
-      const now = new Date();
-      const mapped: Product[] = data.data.result.map((item: any) => {
-        const createdAt = new Date(item.createdAt);
-        const isNew =
-          (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
-
-        const currentPrice = item.pricePerUnit ?? item.price ?? 0;
-        const originalPrice = item.price ?? currentPrice;
-
-        return {
-          id: item.id,
-          name: item.name,
-          slug: item.slug,
-          imageAvt: item.imageAvt,
-          imageDetail1: item.imageDetail1 || "",
-          imageDetail2: item.imageDetail2 || "",
-          imageDetail3: item.imageDetail3 || "",
-          price: currentPrice,
-          pricePerUnit: currentPrice,
-          originalPrice,
-          sale: currentPrice < originalPrice,
-          inStock: item.active === true && (item.stockQuantity ?? 0) > 0,
-          label: item.active ? "Thêm vào giỏ hàng" : "Hết hàng",
-          description: item.description || "",
-          stockQuantity: item.stockQuantity ?? 0,
-          totalStock: item.totalStock ?? 0,
-          power: item.power || "N/A",
-          fuelType: item.fuelType || "N/A",
-          engineType: item.engineType || "N/A",
-          weight: item.weight || 0,
-          dimensions: item.dimensions || "",
-          tankCapacity: item.tankCapacity || 0,
-          origin: item.origin || "Không rõ",
-          warrantyMonths: item.warrantyMonths || 0,
-          createdAt: item.createdAt,
-          createdBy: item.createdBy || "",
-          updatedAt: item.updatedAt || null,
-          updatedBy: item.updatedBy || "",
-          rating: item.rating || 0,
-          status:
-            (item.stockQuantity ?? 0) === 0
-              ? ["Hết hàng"]
-              : isNew
-              ? ["Mới"]
-              : [],
-          favorite: item.wishListUser === true,
-        };
-      });
+      const nowMs = Date.now();
+      const mapped = raw.map((item) => mapProduct(item, nowMs));
 
       setProducts(mapped);
       setPage(1);
     } catch (err: any) {
-      setError(err.message || "Đã xảy ra lỗi khi tải sản phẩm.");
+      setError(err?.message || "Không thể tải danh sách sản phẩm.");
     } finally {
       setLoading(false);
     }
