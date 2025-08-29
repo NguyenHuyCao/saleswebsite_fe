@@ -61,7 +61,7 @@ export const fetchWishlist = createAsyncThunk(
       if (!token) throw new Error("Không có token");
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/wish_list`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/wishlist`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

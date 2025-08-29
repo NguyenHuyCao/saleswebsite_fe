@@ -76,34 +76,37 @@ declare global {
     name: string;
     slug: string;
     imageAvt: string;
-    imageDetail1: string;
-    imageDetail2: string;
-    imageDetail3: string;
+    imageDetail1?: string;
+    imageDetail2?: string;
+    imageDetail3?: string;
+    description?: string;
+
     price: number;
     pricePerUnit: number;
     originalPrice: number;
     sale: boolean;
+
     inStock: boolean;
     label: string;
-    description: string;
     stockQuantity: number;
     totalStock: number;
-    power: string;
-    fuelType: string;
-    engineType: string;
-    weight: number;
-    dimensions: string;
-    tankCapacity: number;
-    origin: string;
-    warrantyMonths: number;
+
+    power?: string;
+    fuelType?: string;
+    engineType?: string;
+    weight?: number;
+    dimensions?: string;
+    tankCapacity?: number;
+    origin?: string;
+    warrantyMonths?: number;
+
     createdAt: string;
     createdBy?: string;
     updatedAt?: string | null;
     updatedBy?: string | null;
-    active?: boolean;
     rating?: number;
     status: string[];
-    favorite: boolean;
+    favorite?: boolean;
   };
 
   interface IBackendRes<T> {

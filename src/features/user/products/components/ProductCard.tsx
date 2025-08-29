@@ -25,8 +25,10 @@ import { CART_COUNT_KEY, WISHLIST_COUNT_KEY } from "@/constants/apiKeys";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
 import type { AppDispatch, AppState } from "@/redux/store";
-import type { Product } from "../types";
+// import type { Product } from "../types";
 import { api, http } from "@/lib/api/http";
+import type { Product } from "@/features/user/products/types";
+
 
 type PromoResp =
   | { discount?: number }
@@ -128,7 +130,7 @@ export default function ProductCard({
     try {
       const formData = new FormData();
       formData.append("productId", String(product.id));
-      await http.post("/api/v1/wish_list", formData, {
+      await http.post("/api/v1/wishlist/toggle", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       dispatch(fetchWishlist());

@@ -17,6 +17,7 @@ import { AppDispatch } from "@/redux/store";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
 import deepEqual from "fast-deep-equal";
 import { motion } from "framer-motion";
+import type { CategoryWithProducts } from "@/features/user/home/types";
 
 interface OtherToolsSectionProps {
   categories: CategoryWithProducts[];

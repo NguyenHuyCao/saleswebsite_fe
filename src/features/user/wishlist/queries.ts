@@ -4,7 +4,7 @@ import useSWR, { mutate } from "swr";
 import type { Product } from "@/features/user/products/types";
 import { fetchWishlistApi } from "./api";
 
-export const WISHLIST_QUERY_KEY = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/wish_list`;
+export const WISHLIST_QUERY_KEY = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/wishlist`;
 
 const normalizeToProduct = (items: any[]): Product[] => {
   const now = new Date().getTime();

@@ -135,11 +135,12 @@ const WeeklyOverview = () => {
     },
     plotOptions: {
       bar: {
-        borderRadius: 9,
+        borderRadius: 9, // độ bo góc
+        borderRadiusApplication: "end", // bo ở đầu cột (hướng tăng)
+        // borderRadiusWhenStacked: "last", // nếu là stacked, bo cột trên cùng
         distributed: true,
         columnWidth: "40%",
-        endingShape: "rounded",
-        startingShape: "rounded",
+        // ❌ startingShape / endingShape: không còn trong type ApexOptions
       },
     },
     stroke: {

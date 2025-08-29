@@ -24,7 +24,9 @@ import GlobalSnackbar from "@/components/alert/GlobalSnackbar";
 import { mutate } from "swr";
 import { CART_COUNT_KEY, WISHLIST_COUNT_KEY } from "@/constants/apiKeys";
 import { http } from "@/lib/api/http";
-// import type { Product, Category } from "@/product/types";
+
+// Nếu bạn dùng type toàn cục thì bỏ phần import type
+// import type { Product, Category } from "@/features/user/products/types";
 
 interface Props {
   product: Product;
@@ -46,12 +48,16 @@ export default function ProductDetails({ product, category }: Props) {
     message: "",
   });
 
+  // ✅ Chuẩn hoá các field có thể undefined
+  const warranty = product.warrantyMonths ?? 0;
+  const stockQty = product.stockQuantity ?? 0;
+  const totalStock = product.totalStock ?? 0;
+
   useEffect(() => {
     dispatch(fetchWishlist());
   }, [dispatch]);
 
   const handleAddToCart = async () => {
-    // Thông báo nhẹ nếu chưa đăng nhập (tránh 401 -> redirect)
     const token =
       typeof window !== "undefined"
         ? localStorage.getItem("accessToken")
@@ -97,7 +103,7 @@ export default function ProductDetails({ product, category }: Props) {
     try {
       const formData = new FormData();
       formData.append("productId", String(product.id));
-      await http.post("/api/v1/wish_list", formData, {
+      await http.post("/api/v1/wishlist", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       dispatch(fetchWishlist());
@@ -112,15 +118,12 @@ export default function ProductDetails({ product, category }: Props) {
   };
 
   const progressPercent =
-    product.totalStock > 0
-      ? Math.round(
-          ((product.totalStock - product.stockQuantity) / product.totalStock) *
-            100
-        )
+    totalStock > 0
+      ? Math.round(((totalStock - stockQty) / totalStock) * 100)
       : 0;
 
   const handleQuantityChange = (value: number) => {
-    if (!Number.isNaN(value) && value >= 1 && value <= product.stockQuantity) {
+    if (!Number.isNaN(value) && value >= 1 && value <= stockQty) {
       setQuantity(value);
     }
   };
@@ -136,8 +139,8 @@ export default function ProductDetails({ product, category }: Props) {
         <Box component="span" color="warning.main" fontWeight={500}>
           {category?.name || "Không rõ"}
         </Box>{" "}
-        | Loại: {product.fuelType || "--"} | Xuất xứ: {product.origin} | Công
-        suất: {product.power}
+        | Loại: {product.fuelType || "--"} | Xuất xứ: {product.origin || "--"} |
+        Công suất: {product.power || "--"}
       </Typography>
 
       <Divider sx={{ my: 2 }} />
@@ -148,33 +151,30 @@ export default function ProductDetails({ product, category }: Props) {
           : "Liên hệ báo giá"}
       </Typography>
       <Typography color="success.main" variant="body2" mb={2}>
-        Còn hàng: {product.stockQuantity} sản phẩm
+        Còn hàng: {stockQty} sản phẩm
       </Typography>
 
       <Grid container spacing={2} sx={{ mb: 2 }}>
         <Grid size={{ xs: 12, sm: 6 }}>
           <Typography variant="body2">
-            <b>Loại nhiên liệu:</b> {product.fuelType}
+            <b>Loại nhiên liệu:</b> {product.fuelType || "--"}
           </Typography>
           <Typography variant="body2">
-            <b>Loại động cơ:</b> {product.engineType}
+            <b>Loại động cơ:</b> {product.engineType || "--"}
           </Typography>
           <Typography variant="body2">
-            <b>Dung tích bình:</b> {product.tankCapacity}L
+            <b>Dung tích bình:</b> {product.tankCapacity ?? 0}L
           </Typography>
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
           <Typography variant="body2">
-            <b>Kích thước:</b> {product.dimensions}
+            <b>Kích thước:</b> {product.dimensions || "--"}
           </Typography>
           <Typography variant="body2">
-            <b>Trọng lượng:</b> {product.weight}g
+            <b>Trọng lượng:</b> {product.weight ?? 0}g
           </Typography>
           <Typography variant="body2">
-            <b>Bảo hành:</b>{" "}
-            {product.warrantyMonths > 0
-              ? `${product.warrantyMonths} tháng`
-              : "Không có"}
+            <b>Bảo hành:</b> {warranty > 0 ? `${warranty} tháng` : "Không có"}
           </Typography>
         </Grid>
       </Grid>
@@ -210,7 +210,7 @@ export default function ProductDetails({ product, category }: Props) {
           />
         </Box>
         <Typography variant="body2" fontWeight={600} mt={1}>
-          Đã bán {product.totalStock - product.stockQuantity}
+          Đã bán {totalStock - stockQty}
         </Typography>
       </Box>
 
@@ -250,7 +250,7 @@ export default function ProductDetails({ product, category }: Props) {
           <IconButton
             size="small"
             sx={{ borderRadius: 0 }}
-            disabled={quantity >= product.stockQuantity}
+            disabled={quantity >= stockQty}
             onClick={() => handleQuantityChange(quantity + 1)}
           >
             <Plus size={16} />

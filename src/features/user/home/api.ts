@@ -1,14 +1,9 @@
 import { api } from "@/lib/api/http";
-import type {
-  Product,
-  Category,
-  CategoryWithProducts,
-  Promotion,
-} from "./types";
+import type { Category, CategoryWithProducts, Promotion } from "./types";
 
 const P_NEW = "/api/v1/products?sort=createdAt,desc";
 const P_PROMOS = "/api/v1/promotions";
-const P_VOUCHERS = "/api/v1/promotions/requires-products";
+const P_VOUCHERS = "/api/v1/promotions/type?requiresCode=true&activeOnly=true";
 const P_BRANDS = "/api/v1/brands";
 const P_CATS = "/api/v1/categories";
 
@@ -44,7 +39,9 @@ const toProduct = (item: any): Product => ({
   updatedBy: item.updatedBy ?? "",
   rating: item.rating ?? 0,
   favorite: item.wishListUser === true,
+  status: [], // <-- BỔ SUNG: đáp ứng type Product
 });
+
 
 export async function fetchNewProducts(): Promise<Product[]> {
   const raw = await api.get<any>(P_NEW);

@@ -4,7 +4,7 @@ import React from "react";
 import { Box, Typography, useMediaQuery, useTheme } from "@mui/material";
 import Slider from "react-slick";
 import ProductCard from "@/features/user/products/components/ProductCard";
-import type { Product } from "../types";
+import type { Product } from "@/features/user/products/types";
 
 type Props = { products: Product[] };
 

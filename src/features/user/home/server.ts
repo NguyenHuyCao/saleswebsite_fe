@@ -6,7 +6,9 @@ import type { Promotion } from "./types";
 
 /** Client fetch: interceptor tự gắn Bearer từ localStorage */
 export async function getFlashPromotions(): Promise<Promotion[]> {
-  const list = await api.get<PromotionRaw[]>("/api/v1/promotions");
+  const list = await api.get<PromotionRaw[]>(
+    "/api/v1/promotions/type?requiresCode=false&activeOnly=true"
+  );
   const mapped: Promotion[] =
     (list || []).map((p) => ({
       id: Number(p.id),

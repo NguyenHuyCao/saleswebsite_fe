@@ -29,7 +29,7 @@ import { getFlashPromotions } from "./server";
 
 export default function HomeView() {
   const { data: products, isLoading: loadingNew } = useNewProducts();
-  const { data: brands, isLoading: loadingBrands } = useBrands();
+  const { data: brandAs, isLoading: loadingBrands } = useBrands();
   const { data: categoriesWithProducts, isLoading: loadingCatProds } =
     useCategoriesWithProducts();
   const { data: vouchers } = useVouchers();
@@ -53,6 +53,8 @@ export default function HomeView() {
       cancelled = true;
     };
   }, []);
+
+  console.log("vouchers", vouchers);
 
   return (
     <>

@@ -152,7 +152,7 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
   const dispatch = useDispatch<AppDispatch>();
 
   // Quan trọng: dùng PATH để khớp với api.get + mutate
-  const swrKey = `/api/v1/promotions/${promotion.id}`;
+  const swrKey = `/api/v1/promotions/${promotion.id}/products`;
   const { data: products = [] } = useSWR(swrKey, fetcher);
 
   React.useEffect(() => {

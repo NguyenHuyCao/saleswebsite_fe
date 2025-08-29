@@ -1,4 +1,4 @@
-// product/types.ts
+// src/features/user/products/types.ts
 export type Product = {
   id: number;
   name: string;
@@ -9,7 +9,6 @@ export type Product = {
   imageDetail3?: string;
   description?: string;
 
-  // Giá đã đồng bộ: price hiển thị (đã áp khuyến mãi), originalPrice là giá gốc
   price: number;
   pricePerUnit: number;
   originalPrice: number;
@@ -32,26 +31,26 @@ export type Product = {
   createdAt: string;
   createdBy?: string;
   updatedAt?: string | null;
-  updatedBy?: string;
+  updatedBy?: string | null;
   rating?: number;
-  status: string[];
+  status: string[]; // BẮT BUỘC, dùng cho tag “Mới”, “Hết hàng”
   favorite?: boolean;
 };
 
 export type Category = {
   id: number;
   name: string;
-  slug?: string;
-  image?: string;
-  products: Product[];
+  slug: string;
+  image: string;
+  products?: Product[]; // optional nếu trang không cần
 };
 
-export type CategoryWithProducts = Category;
+export type CategoryWithProducts = Category & { products: Product[] };
 
 export type Brand = {
   id: number;
   name: string;
   logo: string;
   originCountry: string;
-  slug?: string;
+  slug: string;
 };

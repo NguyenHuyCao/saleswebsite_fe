@@ -26,7 +26,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
 import type { AppDispatch, AppState } from "@/redux/store";
 
-// ✅ dùng http/api custom
 import { api, http } from "@/lib/api/http";
 
 type Props = {
@@ -111,7 +110,7 @@ const ProductCard = ({ product, mutateKey }: Props) => {
     try {
       const formData = new FormData();
       formData.append("productId", String(product.id));
-      await http.post(`/api/v1/wish_list`, formData, {
+      await http.post(`/api/v1/wishlist`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
