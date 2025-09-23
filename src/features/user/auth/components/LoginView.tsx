@@ -15,10 +15,10 @@ import {
   Button,
   InputAdornment,
   IconButton,
-  MenuItem,
   FormControl,
   InputLabel,
   Select,
+  MenuItem,
   Container,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
@@ -26,8 +26,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { useLogin } from "./hooks/useLogin";
-import { useRegister } from "./hooks/useRegister";
+import { useLogin, useRegister } from "../queries";
 
 const provincesData: Record<string, string[]> = {
   "Hà Nội": ["Ba Đình", "Hoàn Kiếm", "Đống Đa"],
@@ -45,7 +44,6 @@ export default function LoginView() {
 
   const router = useRouter();
   const sp = useSearchParams();
-
   const showMessage = useCallback(
     (severity: "success" | "error", message: string) =>
       setSnackbar({ open: true, severity, message }),
@@ -74,8 +72,7 @@ export default function LoginView() {
   const { mutateAsync: doRegister, isPending: registering } = useRegister();
 
   useEffect(() => {
-    const page = sp.get("page");
-    setTab(page === "register" ? 1 : 0);
+    setTab(sp.get("page") === "register" ? 1 : 0);
   }, [sp]);
 
   const handleChangeTab = (_: any, v: number) => {
@@ -96,10 +93,8 @@ export default function LoginView() {
 
   const onRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (reg.password !== reg.confirmPassword) {
-      showMessage("error", "Mật khẩu xác nhận không khớp");
-      return;
-    }
+    if (reg.password !== reg.confirmPassword)
+      return showMessage("error", "Mật khẩu xác nhận không khớp");
     try {
       await doRegister({
         username: reg.name,
@@ -235,7 +230,6 @@ export default function LoginView() {
                       setReg((s) => ({ ...s, phone: e.target.value }))
                     }
                   />
-
                   <Grid container spacing={2}>
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <FormControl fullWidth size="small">
@@ -288,7 +282,6 @@ export default function LoginView() {
                       </FormControl>
                     </Grid>
                   </Grid>
-
                   <FormControl fullWidth size="small">
                     <InputLabel id="gender-label">Giới tính</InputLabel>
                     <Select
@@ -308,7 +301,6 @@ export default function LoginView() {
                       <MenuItem value="Khác">Khác</MenuItem>
                     </Select>
                   </FormControl>
-
                   <TextField
                     label="Email"
                     size="small"

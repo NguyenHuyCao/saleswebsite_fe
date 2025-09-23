@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import PageViewTracker from "@/components/common/traffic/PageViewTracker";
-import LoginView from "@/features/user/auth/LoginView";
+import { LoginView } from "@/features/user/auth";
 
 export default function LoginPage() {
   return (

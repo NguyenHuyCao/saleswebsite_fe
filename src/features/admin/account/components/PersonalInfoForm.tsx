@@ -12,9 +12,9 @@ import {
   Typography,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import type { User } from "@/features/user/auth/account";
-import { userInfoSchema, type UserInfoInput }  from "@/features/user/auth/account";
-import { useUpdateUser } from "@/features/user/auth/account";
+import type { User } from "../../users/types";
+import { userInfoSchema, type UserInfoInput } from "@/features/user/account";
+import { useUpdateUser } from "../../users/queries";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import AlertSnackbar from "@/components/feedback/AlertSnackbar";

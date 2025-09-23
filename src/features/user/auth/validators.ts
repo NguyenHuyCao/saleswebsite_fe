@@ -10,5 +10,3 @@ export const passwordSchema = z
     path: ["confirmNewPassword"],
     message: "Mật khẩu xác nhận không khớp",
   });
-
-export type PasswordInput = z.infer<typeof passwordSchema>;

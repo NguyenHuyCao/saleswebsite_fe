@@ -15,8 +15,9 @@ import Grid from "@mui/material/Grid";
 import KeyOutline from "mdi-material-ui/KeyOutline";
 import EyeOutline from "mdi-material-ui/EyeOutline";
 import EyeOffOutline from "mdi-material-ui/EyeOffOutline";
-import { passwordSchema, type PasswordInput }  from "@/features/user/auth/account/schemas/password.schema";
-import { useChangePassword } from "@/features/user/auth/account";
+import { passwordSchema } from "@/features/user/auth/validators";
+import type { ChangePasswordInput } from "@/features/user/auth/types";
+import { useChangePassword } from "../../users/queries";
 import { useState } from "react";
 import AlertSnackbar from "@/components/feedback/AlertSnackbar";
 
@@ -27,12 +28,12 @@ export default function SecurityForm({
   onBack: () => void;
   userId: string;
 }) {
-  const { control, handleSubmit } = useForm<PasswordInput>({
+  const { control, handleSubmit } = useForm<ChangePasswordInput>({
     resolver: zodResolver(passwordSchema),
     defaultValues: {
       currentPassword: "",
       newPassword: "",
-      confirmNewPassword: "",
+      confirmPassword: "", // <-- confirmPassword
     },
   });
 
@@ -51,7 +52,7 @@ export default function SecurityForm({
     type: "success" as const,
   });
 
-  const onSubmit = async (data: PasswordInput) => {
+  const onSubmit = async (data: ChangePasswordInput) => {
     try {
       await mutateAsync(data);
       setSnackbar({
@@ -136,16 +137,16 @@ export default function SecurityForm({
           </Grid>
 
           <Grid size={{ xs: 12, md: 6 }}>
-            <InputLabel htmlFor="confirmNewPassword">
+            <InputLabel htmlFor="confirmPassword">
               Xác nhận mật khẩu mới
             </InputLabel>
             <Controller
-              name="confirmNewPassword"
+              name="confirmPassword"
               control={control}
               render={({ field, fieldState }) => (
                 <OutlinedInput
                   {...field}
-                  id="confirmNewPassword"
+                  id="confirmPassword"
                   fullWidth
                   type={show.confirm ? "text" : "password"}
                   error={!!fieldState.error}

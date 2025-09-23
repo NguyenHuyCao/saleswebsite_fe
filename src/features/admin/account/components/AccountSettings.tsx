@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Box, Step, StepLabel, Stepper, Typography } from "@mui/material";
 import PersonalInfoForm from "./PersonalInfoForm";
 import SecurityForm from "./SecurityForm";
-import { useUser } from "@/features/user/auth/account";
+import { useUser } from "../../users/queries";
 
 const steps = ["Thông tin cá nhân", "Bảo mật"];
 

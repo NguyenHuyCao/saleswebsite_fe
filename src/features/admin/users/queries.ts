@@ -6,6 +6,7 @@ import {
   apiChangePassword,
 } from "./api";
 import type { User } from "./types";
+import { ChangePasswordInput } from "@/features/user/auth";
 
 export const QK = {
   users: ["admin", "users"] as const,
@@ -45,11 +46,13 @@ export function useUpdateUser(userId: string | number) {
 
 /** Đổi mật khẩu user */
 export function useChangePassword(userId: string | number) {
-  return useMutation({
-    mutationFn: (payload: {
-      currentPassword: string;
-      newPassword: string;
-      confirmPassword: string;
-    }) => apiChangePassword(String(userId), payload),
+  return useMutation<void, Error, ChangePasswordInput>({
+    mutationFn: (p) =>
+      apiChangePassword(String(userId), {
+        currentPassword: p.currentPassword,
+        newPassword: p.newPassword,
+        confirmPassword: p.confirmPassword,
+      }),
   });
 }
+

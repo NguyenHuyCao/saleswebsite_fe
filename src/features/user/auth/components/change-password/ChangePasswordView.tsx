@@ -16,7 +16,7 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
-import { useChangePasswordMe } from "../hooks/useUser";
+import { useChangePasswordMe } from "../../queries";
 
 const AlertSnackbar = ({
   open,
@@ -89,21 +89,17 @@ export default function ChangePasswordView() {
       return;
     }
     try {
-      const res = await mutateAsync({
+      await mutateAsync({
         currentPassword: form.currentPassword,
         newPassword: form.newPassword,
-        confirmNewPassword: form.confirmPassword,
+        confirmPassword: form.confirmPassword,
       });
-      const ok = (res as any)?.status === 200 || !("status" in (res as any));
       setSnack({
         open: true,
-        message:
-          (res as any)?.message ||
-          (ok ? "Đổi mật khẩu thành công!" : "Đổi mật khẩu thất bại."),
-        severity: ok ? "success" : "error",
+        message: "Đổi mật khẩu thành công!",
+        severity: "success",
       });
-      if (ok)
-        setForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
     } catch (err: any) {
       setSnack({
         open: true,
