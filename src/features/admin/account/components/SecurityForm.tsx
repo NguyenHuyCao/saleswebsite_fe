@@ -33,7 +33,7 @@ export default function SecurityForm({
     defaultValues: {
       currentPassword: "",
       newPassword: "",
-      confirmPassword: "", // <-- confirmPassword
+      confirmPassword: "",
     },
   });
 

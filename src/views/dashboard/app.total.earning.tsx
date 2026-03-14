@@ -27,6 +27,7 @@ import Image from "next/image";
 
 // API
 import { api, toApiError } from "@/lib/api/http";
+import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError";
 
 interface BrandSaleType {
   name: string;
@@ -58,16 +59,16 @@ const TotalEarning = () => {
 
   useEffect(() => {
     const controller = new AbortController();
+
     (async () => {
       try {
         const data = await api.get<BrandReportRes>(
           "/api/v1/dashboard/overview/monthly-brand-report",
-          { signal: controller.signal }
+          { signal: controller.signal },
         );
 
         const mapped =
           (data?.brandSales || []).map((item: any) => {
-            // hỗ trợ cả dạng tuple [name, logo, founded, revenue] hoặc object
             const name = String(item?.[0] ?? item?.name ?? "");
             const logo = String(item?.[1] ?? item?.logo ?? "");
             const founded = String(item?.[2] ?? item?.founded ?? "");
@@ -85,9 +86,9 @@ const TotalEarning = () => {
         setLastYearTotal(Number(data?.lastYearTotal ?? 0));
         setGrowthRate(Number(data?.growthRate ?? 0));
       } catch (err) {
-        if ((err as any)?.name === "CanceledError") return;
-        const e = toApiError(err);
-        console.warn("Load monthly brand report failed:", e.message);
+        // Sử dụng helper - nếu là CanceledError sẽ tự động bỏ qua, không log
+        logIfNotCanceled(err, "Load monthly brand report failed:");
+        // Không cần set state vì đây là lỗi, UI sẽ hiển thị dữ liệu mặc định
       }
     })();
 

@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import SalesChart from "@/components/dashboard/SalesChart";
 import { api, toApiError } from "@/lib/api/http";
+import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError";
 
 interface StatusOption {
   value: "today" | "month" | "year";
@@ -57,14 +58,14 @@ const SaleReportCard = () => {
   const [thisYear, setThisYear] = useState<MonthlyData[]>([]);
 
   useEffect(() => {
-    let mounted = true;
+    const controller = new AbortController();
+
     (async () => {
       try {
-        // Dùng Axios instance đã gắn Authorization từ localStorage (http.ts)
         const data = await api.get<FinancialOverviewRes>(
-          "/api/v1/dashboard/overview/financial-overview"
+          "/api/v1/dashboard/overview/financial-overview",
+          { signal: controller.signal }, // Thêm signal
         );
-        if (!mounted) return;
 
         const safe = {
           today: data?.today ?? DEFAULT_OVERVIEW.today,
@@ -75,20 +76,18 @@ const SaleReportCard = () => {
         setToday(safe.today);
         setThisMonth(safe.thisMonth);
         setThisYear(safe.thisYear);
-      } catch (e) {
-        const err = toApiError(e);
-        console.warn("Load financial overview failed:", err.message);
-        if (!mounted) return;
+      } catch (err) {
+        // Sử dụng helper để chỉ log khi không phải CanceledError
+        logIfNotCanceled(err, "Load financial overview failed:");
         setToday(DEFAULT_OVERVIEW.today);
         setThisMonth(DEFAULT_OVERVIEW.thisMonth);
         setThisYear(DEFAULT_OVERVIEW.thisYear);
       } finally {
-        if (mounted) setLoading(false);
+        setLoading(false); // Không cần kiểm tra mounted vì đã dùng AbortController
       }
     })();
-    return () => {
-      mounted = false;
-    };
+
+    return () => controller.abort(); // Cleanup với AbortController
   }, []);
 
   const getChartData = () => {

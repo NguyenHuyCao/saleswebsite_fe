@@ -91,8 +91,8 @@ export default function HomeView() {
           <Box my={2}>
             <Skeleton variant="rounded" height={120} />
           </Box>
-        ) : brands?.length ? (
-          <FeaturedBrandsSlider brands={brands} />
+        ) : brandAs?.length ? (
+          <FeaturedBrandsSlider brands={brandAs} />
         ) : null}
       </Container>
     </>

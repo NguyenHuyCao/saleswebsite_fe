@@ -69,8 +69,26 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({
   const activeCategory = categoryProducts[activeIndex];
 
   return (
-    <Box sx={{ py: 4, px: isMobile ? 2 : 4 }}>
-      <Typography variant="h5" fontWeight="bold" mb={2}>
+    <Box sx={{ py: 3, px: isMobile ? 2 : 4 }}>
+      <Typography
+        variant="h5"
+        fontWeight="bold"
+        mb={3}
+        sx={{
+          position: "relative",
+          display: "inline-block",
+          "&:after": {
+            content: '""',
+            position: "absolute",
+            bottom: -8,
+            left: 0,
+            width: 60,
+            height: 3,
+            bgcolor: "#ffb700",
+            borderRadius: 2,
+          },
+        }}
+      >
         DỤNG CỤ <span style={{ color: "#ffb700" }}>KHÁC</span>
       </Typography>
 

@@ -35,6 +35,7 @@ import type { ApexOptions } from "apexcharts";
 
 // ** http/api custom
 import { api } from "@/lib/api/http";
+import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError";
 
 // ---------- Types ----------
 type Period = "twoWeeksAgo" | "lastWeek" | "thisWeek";
@@ -78,25 +79,25 @@ const WeeklyOverview = () => {
   const [data, setData] = useState<WeeklyRevenueResponse | null>(null);
   const [openDetail, setOpenDetail] = useState(false);
 
-  useEffect(() => {
-    const controller = new AbortController();
+useEffect(() => {
+  const controller = new AbortController();
 
-    (async () => {
-      try {
-        // http/api custom sẽ tự gắn Authorization nếu có token trong localStorage
-        const payload = await api.get<WeeklyRevenueResponse>(
-          "/api/v1/dashboard/overview/weekly-revenue",
-          { signal: controller.signal }
-        );
-        setData(payload);
-      } catch (error) {
-        console.error("Fetch weekly revenue error:", error);
-        setData(null); // fail-soft
-      }
-    })();
+  (async () => {
+    try {
+      const payload = await api.get<WeeklyRevenueResponse>(
+        "/api/v1/dashboard/overview/weekly-revenue",
+        { signal: controller.signal },
+      );
+      setData(payload);
+    } catch (error) {
+      // Sử dụng helper để chỉ log khi không phải CanceledError
+      logIfNotCanceled(error, "Fetch weekly revenue error:");
+      setData(null);
+    }
+  })();
 
-    return () => controller.abort();
-  }, []);
+  return () => controller.abort();
+}, []);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);

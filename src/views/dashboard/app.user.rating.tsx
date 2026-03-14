@@ -31,6 +31,7 @@ import StarIcon from "@mui/icons-material/Star";
 import DotsVertical from "mdi-material-ui/DotsVertical";
 import Image from "next/image";
 import { api, toApiError } from "@/lib/api/http";
+import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError";
 
 const formatDate = (date: string) =>
   new Date(date).toLocaleString("vi-VN", {
@@ -89,20 +90,17 @@ const UserRatingPage = () => {
 
     (async () => {
       try {
-        // Gọi qua Axios instance đã tự gắn Authorization (http.ts)
         const data = await api.get<ReviewStatsRes>(
           "/api/v1/dashboard/overview/review-stats",
-          { signal: controller.signal }
+          { signal: controller.signal },
         );
 
-        // Lấy buckets theo timeRange; fallback mảng trống
         const buckets = (data?.[timeRange] as BucketTuple[] | any[]) ?? [];
 
-        // Chuẩn hoá -> ratingMap: index 0 -> 5 sao, index 4 -> 1 sao
         const ratingMap = [0, 0, 0, 0, 0];
         buckets.forEach((row: any) => {
           const rating = Number(
-            (Array.isArray(row) ? row[1] : row?.rating) ?? 0
+            (Array.isArray(row) ? row[1] : row?.rating) ?? 0,
           );
           const count = Number((Array.isArray(row) ? row[2] : row?.count) ?? 0);
           if (rating >= 1 && rating <= 5) ratingMap[5 - rating] += count;
@@ -110,11 +108,11 @@ const UserRatingPage = () => {
 
         setRatings(ratingMap);
         setReviewDetails(
-          Array.isArray(data?.reviewDetails) ? data!.reviewDetails : []
+          Array.isArray(data?.reviewDetails) ? data!.reviewDetails : [],
         );
-      } catch (e) {
-        if ((e as any)?.name === "CanceledError") return;
-        console.warn("Failed to load review stats:", toApiError(e).message);
+      } catch (err) {
+        // Sử dụng helper - nếu là CanceledError sẽ tự động bỏ qua, không log
+        logIfNotCanceled(err, "Failed to load review stats:");
         setRatings([0, 0, 0, 0, 0]);
         setReviewDetails([]);
       }

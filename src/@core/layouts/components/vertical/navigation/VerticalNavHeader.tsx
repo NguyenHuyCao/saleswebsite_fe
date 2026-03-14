@@ -128,6 +128,13 @@ const VerticalNavHeader = (props: Props) => {
               alt="Logo Cường Hoa"
               width={120}
               height={60}
+              style={{
+                objectFit: "contain", // Giữ tỷ lệ, không méo
+                width: "auto", // Tự động điều chỉnh
+                height: "auto", // Tự động điều chỉnh
+                maxWidth: "100%", // Không vượt quá container
+                maxHeight: "60px", // Giới hạn chiều cao
+              }}
             />
 
             <HeaderTitle variant="h6" sx={{ ml: 3 }}>

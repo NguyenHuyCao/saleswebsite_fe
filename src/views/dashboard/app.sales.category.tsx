@@ -21,6 +21,7 @@ import DotsVertical from "mdi-material-ui/DotsVertical";
 import ChevronUp from "mdi-material-ui/ChevronUp";
 import ChevronDown from "mdi-material-ui/ChevronDown";
 import { api } from "@/lib/api/http";
+import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError";
 
 type Period = "week" | "month" | "year";
 
@@ -59,20 +60,20 @@ const SalesByCategories = () => {
 
     (async () => {
       try {
-        // Backend có thể trả { data: Category[] } hoặc { data: { result: Category[] } }
         const payload = await api.get<Category[] | { result: Category[] }>(
           "/api/v1/dashboard/overview/category-sales",
-          { signal: controller.signal }
+          { signal: controller.signal },
         );
 
         const list: Category[] = Array.isArray(payload)
           ? payload
-          : (payload as any)?.result ?? [];
+          : ((payload as any)?.result ?? []);
 
         setData(Array.isArray(list) ? list : []);
       } catch (err) {
-        console.error("API error (category-sales):", err);
-        setData([]); // fail-soft
+        // Sử dụng helper để chỉ log khi không phải CanceledError
+        logIfNotCanceled(err, "API error (category-sales):");
+        setData([]);
       }
     })();
 

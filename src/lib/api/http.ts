@@ -71,18 +71,34 @@ const NO_REFRESH = [/\/auth\/(login|logout|refresh)(\?|$)/];
 http.interceptors.response.use(
   (r) => r,
   async (err: AxiosError<ApiError>) => {
+    // Xử lý lỗi canceled - KIỂM TRA ĐẦU TIÊN
+    if (err.code === "ERR_CANCELED" || err.message === "canceled") {
+      // Tạo lỗi mới rõ ràng hơn nhưng vẫn giữ nguyên tính chất canceled
+      const cancelError = new Error("Request cancelled");
+      cancelError.name = "CanceledError";
+      return Promise.reject(cancelError);
+    }
+
+    // Lấy original config - sửa lỗi cú pháp ở đây
     const original = err.config as
       | (AxiosRequestConfig & { _retry?: boolean })
       | undefined;
+
+    // Lấy status - kiểm tra tồn tại
     const status = err.response?.status;
+
+    // Lấy message - sửa lỗi cú pháp và optional chaining
     const msg =
       (err.response?.data as any)?.message ||
       (err.response?.data as any)?.error ||
       err.message ||
       "Có lỗi xảy ra";
+
+    // Phần còn lại của interceptor giữ nguyên
     const url = (original?.url || "") as string;
     const skip = NO_REFRESH.some((rx) => rx.test(url));
 
+    // Xử lý rate limit
     if (
       (status === 429 || status === 503) &&
       original?.method === "get" &&
@@ -93,6 +109,7 @@ http.interceptors.response.use(
       return http(original!);
     }
 
+    // Xử lý 401 và refresh token
     if (status === 401 && original && !original._retry && !skip) {
       original._retry = true;
 
@@ -139,8 +156,9 @@ http.interceptors.response.use(
 
     if (status === 403)
       throw new Error(msg || "Bạn không có quyền thực hiện thao tác này.");
+
     throw new Error(msg);
-  }
+  },
 );
 
 export const toApiError = (e: unknown) =>

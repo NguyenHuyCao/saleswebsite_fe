@@ -31,6 +31,7 @@ import { setScrollTrigger } from "@/redux/slices/searchSlice";
 
 // ✅ dùng http/api custom
 import { api } from "@/lib/api/http";
+import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError"; // Import helper
 
 /* ------------ Types cho payload ------------- */
 type Period = "week" | "month" | "year";
@@ -52,20 +53,20 @@ const DashboardPage = () => {
 
   const dispatch = useDispatch();
   const keyword = useSelector((state: AppState) =>
-    state.search.keyword.trim().toLowerCase()
+    state.search.keyword.trim().toLowerCase(),
   );
   const scrollTrigger = useSelector(
-    (state: AppState) => state.search.scrollTrigger
+    (state: AppState) => state.search.scrollTrigger,
   );
 
   const [profit, setProfit] = useState<SummaryByPeriod<ProfitItem> | null>(
-    null
+    null,
   );
   const [refund, setRefund] = useState<SummaryByPeriod<RefundItem> | null>(
-    null
+    null,
   );
   const [visitor, setVisitor] = useState<SummaryByPeriod<VisitorItem> | null>(
-    null
+    null,
   );
   const [sales, setSales] = useState<SummaryByPeriod<SalesItem> | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<Period>("week");
@@ -86,7 +87,7 @@ const DashboardPage = () => {
   useEffect(() => {
     if (!keyword || !scrollTrigger) return;
     const closestMatch = Object.keys(sectionRefs).find((title) =>
-      title.toLowerCase().includes(keyword)
+      title.toLowerCase().includes(keyword),
     );
     const ref = closestMatch ? sectionRefs[closestMatch] : null;
     if (ref?.current) {
@@ -104,19 +105,19 @@ const DashboardPage = () => {
           await Promise.all([
             api.get<SummaryByPeriod<ProfitItem>>(
               "/api/v1/dashboard/overview/profit-summary",
-              { signal: controller.signal }
+              { signal: controller.signal },
             ),
             api.get<SummaryByPeriod<RefundItem>>(
               "/api/v1/dashboard/overview/total-refund",
-              { signal: controller.signal }
+              { signal: controller.signal },
             ),
             api.get<SummaryByPeriod<VisitorItem>>(
               "/api/v1/dashboard/overview/visitor-statistics",
-              { signal: controller.signal }
+              { signal: controller.signal },
             ),
             api.get<SummaryByPeriod<SalesItem>>(
               "/api/v1/dashboard/overview/sales-statistics",
-              { signal: controller.signal }
+              { signal: controller.signal },
             ),
           ]);
 
@@ -125,8 +126,7 @@ const DashboardPage = () => {
         setVisitor(visitorData);
         setSales(salesData);
       } catch (error) {
-        // Fail-soft để không vỡ trang; http.ts đã ném Error có message rõ ràng
-        console.error("Fetch dashboard data error:", error);
+        logIfNotCanceled(error, "Fetch dashboard data error:");
         setProfit(null);
         setRefund(null);
         setVisitor(null);
@@ -165,7 +165,7 @@ const DashboardPage = () => {
                       icon={<Poll />}
                       color="success"
                       trendNumber={`${Math.abs(
-                        profit?.[selectedPeriod]?.growth || 0
+                        profit?.[selectedPeriod]?.growth || 0,
                       ).toFixed(2)}%`}
                       trend={
                         (profit?.[selectedPeriod]?.growth || 0) >= 0
@@ -227,7 +227,7 @@ const DashboardPage = () => {
                           : "negative"
                       }
                       trendNumber={`${Math.abs(
-                        sales?.[selectedPeriod]?.performance || 0
+                        sales?.[selectedPeriod]?.performance || 0,
                       ).toFixed(2)}%`}
                       title="Doanh thu"
                       subtitle="So với kỳ trước"

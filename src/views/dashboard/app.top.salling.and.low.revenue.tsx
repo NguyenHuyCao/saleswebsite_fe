@@ -16,6 +16,7 @@ import {
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api/http";
+import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError";
 
 interface Product {
   imageAvt: string;
@@ -33,8 +34,8 @@ const ProductItem = ({
   isTop: boolean;
 }) => {
   const revenue = isTop
-    ? product.revenueThisMonth ?? 0
-    : product.totalRevenue ?? 0;
+    ? (product.revenueThisMonth ?? 0)
+    : (product.totalRevenue ?? 0);
 
   return (
     <Box sx={{ display: "flex", alignItems: "center", mb: 4 }}>
@@ -85,23 +86,23 @@ const TopSellingAndLowRevenue = () => {
         const [topPayload, lowPayload] = await Promise.all([
           api.get<Product[] | { result: Product[] }>(
             "/api/v1/dashboard/overview/top-selling",
-            { signal: controller.signal }
+            { signal: controller.signal },
           ),
           api.get<Product[] | { result: Product[] }>(
             "/api/v1/dashboard/overview/low-revenue-products",
-            { signal: controller.signal }
+            { signal: controller.signal },
           ),
         ]);
 
         const normalize = (
-          p: Product[] | { result?: Product[] } | null | undefined
-        ): Product[] => (Array.isArray(p) ? p : (p as any)?.result ?? []);
+          p: Product[] | { result?: Product[] } | null | undefined,
+        ): Product[] => (Array.isArray(p) ? p : ((p as any)?.result ?? []));
 
         setTopSelling(normalize(topPayload));
         setLowRevenue(normalize(lowPayload));
       } catch (err) {
-        // Fail-soft: giữ UI chạy, log lỗi để debug
-        console.error("Load dashboard products failed:", err);
+        // Sử dụng helper để chỉ log khi không phải CanceledError
+        logIfNotCanceled(err, "Load dashboard products failed:");
         setTopSelling([]);
         setLowRevenue([]);
       }

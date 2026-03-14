@@ -5,6 +5,7 @@ import { Box } from "@mui/material";
 import { LineChart, chartsGridClasses } from "@mui/x-charts";
 import { useTheme } from "@mui/material/styles";
 import { api } from "@/lib/api/http";
+import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError";
 
 interface MonthlyData {
   month: number;
@@ -26,10 +27,9 @@ const ReportChart = () => {
 
     (async () => {
       try {
-        // api.get unwraps -> trả thẳng phần "data" (đã qua interceptor + token)
         const payload = await api.get<AdvancedReportPayload>(
           "/api/v1/dashboard/advanced/revenue-cost-profit",
-          { signal: controller.signal }
+          { signal: controller.signal },
         );
 
         const list =
@@ -38,13 +38,14 @@ const ReportChart = () => {
           [];
 
         const filtered = (Array.isArray(list) ? list : []).filter(
-          (m: MonthlyData) => m.revenue > 0 || m.cost > 0 || m.profit > 0
+          (m: MonthlyData) => m.revenue > 0 || m.cost > 0 || m.profit > 0,
         );
 
         setData(filtered);
       } catch (err) {
-        console.error("Lỗi tải dữ liệu biểu đồ:", err);
-        setData([]); // fail-soft
+        // Sử dụng helper để chỉ log khi không phải CanceledError
+        logIfNotCanceled(err, "Lỗi tải dữ liệu biểu đồ:");
+        setData([]);
       }
     })();
 

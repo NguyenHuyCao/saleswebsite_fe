@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { LineChart, areaElementClasses } from "@mui/x-charts";
 import { api, toApiError } from "@/lib/api/http";
+import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError";
 
 type TrafficWeeklyItem = {
   day:
@@ -48,28 +49,22 @@ const IncomeAreaChart = () => {
   const [monthlyStats, setMonthlyStats] = useState<TrafficMonthlyItem[]>([]);
 
   useEffect(() => {
-    let mounted = true;
+    const controller = new AbortController(); 
     (async () => {
       try {
-        // Gọi qua api.get => unwrap ApiEnvelope.data
         const data = await api.get<TrafficRes>(
-          "/api/v1/dashboard/overview/traffic"
+          "/api/v1/dashboard/overview/traffic",
+          { signal: controller.signal },
         );
-        if (!mounted) return;
         setWeeklyStats(data.weeklyStats ?? []);
         setMonthlyStats(data.monthlyStats ?? []);
-      } catch (e) {
-        const err = toApiError(e);
-        // Optional: bạn có thể log/snackbar
-        console.warn("Load traffic failed:", err.message);
-        if (!mounted) return;
+      } catch (err) {
+        logIfNotCanceled(err, "Load traffic failed:");
         setWeeklyStats([]);
         setMonthlyStats([]);
       }
     })();
-    return () => {
-      mounted = false;
-    };
+    return () => controller.abort();
   }, []);
 
   const weeklyLabels = ["Th2", "Th3", "Th4", "Th5", "Th6", "Th7", "CN"];

@@ -23,6 +23,7 @@ import AccountOutline from "mdi-material-ui/AccountOutline";
 import ArrowDownward from "@mui/icons-material/ArrowDownward";
 import ArrowUpward from "@mui/icons-material/ArrowUpward";
 import { api, toApiError } from "@/lib/api/http";
+import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError";
 
 type Period = "week" | "month" | "year";
 
@@ -93,30 +94,28 @@ const StatisticsCard = () => {
   const [data, setData] = useState<SummaryRes | null>(null);
 
   useEffect(() => {
-    let mounted = true;
+    const controller = new AbortController();
+
     (async () => {
       try {
-        // Gọi qua Axios instance đã có interceptor Authorization
         const res = await api.get<SummaryRes>(
-          "/api/v1/dashboard/overview/summary"
+          "/api/v1/dashboard/overview/summary",
+          { signal: controller.signal }, // Thêm signal
         );
-        if (!mounted) return;
-        // Ép safe
+
         setData({
           week: res?.week ?? DEFAULT_SUMMARY.week,
           month: res?.month ?? DEFAULT_SUMMARY.month,
           year: res?.year ?? DEFAULT_SUMMARY.year,
         });
-      } catch (e) {
-        const err = toApiError(e);
-        console.warn("Fetch summary error:", err.message);
-        if (!mounted) return;
+      } catch (err) {
+        // Sử dụng helper để chỉ log khi không phải CanceledError
+        logIfNotCanceled(err, "Fetch summary error:");
         setData(DEFAULT_SUMMARY);
       }
     })();
-    return () => {
-      mounted = false;
-    };
+
+    return () => controller.abort(); // Cleanup với AbortController
   }, []);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -224,8 +223,8 @@ const StatisticsCard = () => {
               {period === "week"
                 ? "Theo tuần"
                 : period === "month"
-                ? "Theo tháng"
-                : "Theo năm"}
+                  ? "Theo tháng"
+                  : "Theo năm"}
             </Box>{" "}
             - So sánh với kỳ trước
           </Typography>

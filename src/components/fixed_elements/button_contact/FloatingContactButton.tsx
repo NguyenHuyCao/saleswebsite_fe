@@ -16,14 +16,14 @@ const FloatingContactButtons = () => {
       {
         href: "https://www.facebook.com/messages/e2ee/t/9200105130025225",
         title: "Chat Facebook",
-        src: "/images/icons/messenger.png",
+        src: "/images/icons/messenger1.png",
         alt: "Messenger",
         animation: false,
       },
       {
         href: "https://zalo.me/0367164126",
         title: "Chat Zalo",
-        src: "/images/icons/zalo.png",
+        src: "/images/icons/Logo-Zalo-Arc.webp",
         alt: "Zalo",
         animation: false,
       },
@@ -35,7 +35,7 @@ const FloatingContactButtons = () => {
         animation: true,
       },
     ],
-    []
+    [],
   );
 
   return (
@@ -67,12 +67,12 @@ const FloatingContactButtons = () => {
                   borderRadius: "50%",
                   overflow: "hidden",
                   cursor: "pointer",
-                  animation: `fadeInUp 0.6s ease ${index * 0.2}s both, ${
+                  animation: `fadeInUp 0.2s ease ${index * 0.2}s both, ${
                     item.animation
-                      ? "bellShake 1.4s infinite ease-in-out"
+                      ? "bellShake 1s infinite ease-in-out"
                       : "none"
                   }`,
-                  transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
                   "&:hover": {
                     transform: "scale(1.12)",
                     boxShadow: "0 6px 14px rgba(0, 0, 0, 0.2)",
@@ -96,13 +96,8 @@ const FloatingContactButtons = () => {
                   fill
                   sizes={`${size}px`}
                   style={{
-                    objectFit: "contain",
-                    backgroundColor: "#fff",
+                    objectFit: "cover",
                     borderRadius: "50%",
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    zIndex: 1,
                   }}
                 />
               </Box>

@@ -13,6 +13,7 @@ import {
 import { useEffect, useState } from "react";
 import ReportChart from "./app.report.chart";
 import { api, toApiError } from "@/lib/api/http";
+import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError";
 
 type Insights = {
   profitMargin: number; // %
@@ -30,29 +31,27 @@ const DashboardDefault = () => {
   const [insights, setInsights] = useState<Insights>(DEFAULT_INSIGHTS);
 
   useEffect(() => {
-    let mounted = true;
+    const controller = new AbortController();
+
     (async () => {
       try {
-        // Gọi qua Axios instance đã có interceptor Authorization
         const data = await api.get<Insights>(
-          "/api/v1/dashboard/advanced/financial-insights"
+          "/api/v1/dashboard/advanced/financial-insights",
+          { signal: controller.signal }, // Thêm signal
         );
-        if (!mounted) return;
         setInsights({
           profitMargin: Number(data?.profitMargin ?? 0),
           costRatio: Number(data?.costRatio ?? 0),
           riskLevel: String(data?.riskLevel ?? "Chưa rõ"),
         });
-      } catch (e) {
-        const err = toApiError(e);
-        console.warn("Load financial insights failed:", err.message);
-        if (!mounted) return;
+      } catch (err) {
+        // Sử dụng helper để chỉ log khi không phải CanceledError
+        logIfNotCanceled(err, "Load financial insights failed:");
         setInsights(DEFAULT_INSIGHTS);
       }
     })();
-    return () => {
-      mounted = false;
-    };
+
+    return () => controller.abort(); // Cleanup với AbortController
   }, []);
 
   return (

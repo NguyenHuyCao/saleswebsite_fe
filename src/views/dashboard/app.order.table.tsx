@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api/http";
+import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError";
 
 interface LatestOrder {
   orderId: number;
@@ -25,7 +26,7 @@ interface LatestOrder {
 
 const formatCurrency = (value: number): string =>
   new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
-    value
+    value,
   );
 
 const statusColorMap: Record<
@@ -46,15 +47,14 @@ const OrderTable = () => {
 
     (async () => {
       try {
-        // api.get sẽ unwrap { data: T } -> T, tự attach Authorization từ localStorage
         const list = await api.get<LatestOrder[]>(
           "/api/v1/dashboard/overview/latest-orders",
-          { signal: controller.signal }
+          { signal: controller.signal },
         );
         setOrders(Array.isArray(list) ? list.slice(0, 9) : []);
       } catch (err) {
-        // Fail-soft, log để debug nhưng không vỡ UI
-        console.error("Lỗi khi gọi API latest-orders:", err);
+        // Sử dụng helper để chỉ log khi không phải CanceledError
+        logIfNotCanceled(err, "Lỗi khi gọi API latest-orders:");
         setOrders([]);
       }
     })();

@@ -1,43 +1,39 @@
+// components/product/ProductListLayout.tsx (FIXED TYPE ERRORS)
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
-  Typography,
-  Chip,
   Pagination,
-  InputBase,
-  CircularProgress,
+  Alert,
+  Slide,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
-import Grid from "@mui/material/Grid";
 import { useSearchParams } from "next/navigation";
-import ProductCard from "./ProductCard";
-import CategorySidebar from "./CategorySidebar";
-import ProductFilterPanel from "./ProductFilterPanel";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
-import type { Brand, Category, Product } from "../types";
 import { api } from "@/lib/api/http";
+import { useProductFilters } from "../hooks";
+import CategorySidebar from "./CategorySidebar";
+import ProductFilterPanel from "./ProductFilterPanel";
+import ProductSearchBar from "./ProductSearchBar";
+import ProductGrid from "./ProductGrid";
+import { ProductGridSkeleton } from "./ProductSkeleton";
+import type { Brand, Category, Product } from "../types";
 
-const ITEMS_PER_PAGE = 8;
+// Định nghĩa interface cho API response
+interface ApiResponse {
+  result?: any[];
+  items?: any[];
+  rows?: any[];
+  data?: any[];
+}
 
-/** Chuẩn hoá tên -> slug để lọc tìm kiếm client */
-const toSlug = (str: string) =>
-  str
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/g, "d")
-    .replace(/[^a-z0-9\s-]/g, "")
-    .trim()
-    .replace(/\s+/g, "-");
-
-/** Mapper chuẩn hoá product theo format thống nhất của dự án */
-function mapProduct(item: any, nowMs: number): Product {
-  const createdAtMs = new Date(item.createdAt).getTime();
-  const isNew = (nowMs - createdAtMs) / (1000 * 60 * 60 * 24) <= 30;
-
+const mapProduct = (item: any, nowMs: number): Product => {
+  const isNew =
+    (nowMs - new Date(item.createdAt).getTime()) / (1000 * 60 * 60 * 24) <= 30;
   const currentPrice = item.pricePerUnit ?? item.price ?? 0;
   const originalPrice = item.price ?? currentPrice;
 
@@ -54,8 +50,8 @@ function mapProduct(item: any, nowMs: number): Product {
     pricePerUnit: currentPrice,
     originalPrice,
     sale: currentPrice < originalPrice,
-    inStock: item.active === true && (item.stockQuantity ?? 0) > 0,
-    label: item.active ? "Thêm vào giỏ hàng" : "Hết hàng",
+    inStock: (item.stockQuantity ?? 0) > 0,
+    label: (item.stockQuantity ?? 0) > 0 ? "Thêm vào giỏ hàng" : "Hết hàng",
     stockQuantity: item.stockQuantity ?? 0,
     totalStock: item.totalStock ?? 0,
     power: item.power || "N/A",
@@ -75,7 +71,7 @@ function mapProduct(item: any, nowMs: number): Product {
       (item.stockQuantity ?? 0) === 0 ? ["Hết hàng"] : isNew ? ["Mới"] : [],
     favorite: item.wishListUser === true,
   };
-}
+};
 
 export default function ProductListLayout({
   categories,
@@ -84,156 +80,133 @@ export default function ProductListLayout({
   categories: Category[];
   brands: Brand[];
 }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const searchParams = useSearchParams();
   const dispatch = useDispatch<AppDispatch>();
-
   const [products, setProducts] = useState<Product[]>([]);
-  const [search, setSearch] = useState("");
-  const [sortType, setSortType] = useState("");
-  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProducts = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Build query từ URL hiện tại
-      const query = new URLSearchParams();
-      ["category", "brand", "price"].forEach((key) => {
-        const value = searchParams.get(key);
-        if (value) query.set(key, value);
-      });
-
-      // Quan trọng: dùng api.get (đã unwrap), KEY là PATH để đồng bộ với interceptor/token
-      const path = `/api/v1/products?${query.toString()}`;
-      const payload = await api.get<
-        { result?: any[]; items?: any[]; rows?: any[] } | any[]
-      >(path);
-
-      // Hỗ trợ nhiều shape: mảng trực tiếp hoặc {result|items|rows}
-      const raw: any[] = Array.isArray(payload)
-        ? payload
-        : payload?.result ?? payload?.items ?? payload?.rows ?? [];
-
-      const nowMs = Date.now();
-      const mapped = raw.map((item) => mapProduct(item, nowMs));
-
-      setProducts(mapped);
-      setPage(1);
-    } catch (err: any) {
-      setError(err?.message || "Không thể tải danh sách sản phẩm.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredProducts = useMemo(() => {
-    return products
-      .filter((p) => toSlug(p.name).includes(toSlug(search)))
-      .sort((a, b) => {
-        if (sortType === "newest")
-          return (
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
-        if (sortType === "asc") return a.price - b.price;
-        if (sortType === "desc") return b.price - a.price;
-        return 0;
-      });
-  }, [products, search, sortType]);
-
-  const paginated = useMemo(() => {
-    const start = (page - 1) * ITEMS_PER_PAGE;
-    return filteredProducts.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredProducts, page]);
-
-  const pageCount = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE) || 1;
+  const {
+    page,
+    setPage,
+    paginatedProducts,
+    totalPages,
+    handleSearch,
+    handleSort,
+  } = useProductFilters(products);
 
   useEffect(() => {
     dispatch(fetchWishlist());
+  }, [dispatch]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const query = new URLSearchParams();
+        ["category", "brand", "price"].forEach((key) => {
+          const value = searchParams.get(key);
+          if (value) query.set(key, value);
+        });
+
+        const path = `/api/v1/products?${query.toString()}`;
+        // SỬA: Thêm type cho api.get
+        const payload = await api.get<any[] | ApiResponse>(path);
+
+        let raw: any[] = [];
+
+        if (Array.isArray(payload)) {
+          raw = payload;
+        } else {
+          const response = payload as ApiResponse;
+          raw =
+            response?.result ??
+            response?.items ??
+            response?.rows ??
+            response?.data ??
+            [];
+        }
+
+        const nowMs = Date.now();
+        const mapped = raw.map((item) => mapProduct(item, nowMs));
+        setProducts(mapped);
+      } catch (err: any) {
+        setError(err?.message || "Không thể tải sản phẩm");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchProducts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams.toString()]);
+  }, [searchParams]);
 
   return (
     <Box
-      display={{ xs: "block", md: "flex" }}
-      py={4}
-      gap={3}
-      px={{ xs: 1, sm: 2 }}
+      sx={{
+        display: { xs: "block", md: "flex" },
+        gap: 3,
+        py: 4,
+        px: { xs: 1, sm: 2 },
+      }}
     >
-      <Box
-        width={{ xs: "100%", md: 250 }}
-        mb={{ xs: 3, md: 0 }}
-        display="flex"
-        flexDirection="column"
-        gap={2}
-      >
-        <CategorySidebar categories={categories} />
-        <ProductFilterPanel brands={brands} />
-      </Box>
-
-      <Box flex={1}>
-        <Box display="flex" alignItems="center" mb={3} gap={2} flexWrap="wrap">
-          <Typography variant="body2" fontWeight={500}>
-            Xếp theo:
-          </Typography>
-          <Chip label="Hàng mới" onClick={() => setSortType("newest")} />
-          <Chip label="Giá thấp đến cao" onClick={() => setSortType("asc")} />
-          <Chip
-            label="Giá cao xuống thấp"
-            onClick={() => setSortType("desc")}
-          />
-          <InputBase
-            placeholder="Tìm kiếm sản phẩm..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            sx={{
-              ml: 2,
-              border: "1px solid #ccc",
-              px: 2,
-              borderRadius: 1,
-              minWidth: 200,
-              "&:focus-within": { borderColor: "#ffb700" },
-            }}
-          />
+      {/* Sidebar */}
+      <Slide direction="right" in timeout={500}>
+        <Box
+          sx={{
+            width: { xs: "100%", md: 240 },
+            mb: { xs: 3, md: 0 },
+            position: { md: "sticky" },
+            top: { md: 20 },
+            height: { md: "fit-content" },
+          }}
+        >
+          <CategorySidebar categories={categories} />
+          <ProductFilterPanel brands={brands} />
         </Box>
+      </Slide>
+
+      {/* Main Content */}
+      <Box sx={{ flex: 1 }}>
+        <ProductSearchBar onSearch={handleSearch} onSort={handleSort} />
 
         {loading ? (
-          <Box py={8} display="flex" justifyContent="center">
-            <CircularProgress />
-          </Box>
+          <ProductGridSkeleton count={8} />
         ) : error ? (
-          <Box py={8} textAlign="center">
-            <Typography color="error">{error}</Typography>
-          </Box>
+          <Alert severity="error" sx={{ borderRadius: 3 }}>
+            {error}
+          </Alert>
         ) : (
           <>
-            <Grid container spacing={1.5}>
-              {paginated.map((item) => (
-                <Grid
-                  key={item.id}
-                  size={{ xs: 6, sm: 4, md: 3 }}
-                  display="flex"
-                  justifyContent="center"
-                >
-                  <Box sx={{ width: "100%", maxWidth: 240 }}>
-                    <ProductCard product={item} />
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
+            <ProductGrid products={paginatedProducts} />
 
-            {filteredProducts.length > ITEMS_PER_PAGE && (
-              <Box display="flex" justifyContent="center" mt={5}>
+            {totalPages > 1 && (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  mt: 5,
+                  mb: 2,
+                }}
+              >
                 <Pagination
-                  count={pageCount}
+                  count={totalPages}
                   page={page}
                   onChange={(_, value) => setPage(value)}
                   color="primary"
                   shape="rounded"
-                  siblingCount={0}
-                  boundaryCount={1}
+                  size={isMobile ? "small" : "medium"}
+                  sx={{
+                    "& .MuiPaginationItem-root": {
+                      "&.Mui-selected": {
+                        bgcolor: "#f25c05",
+                        color: "#fff",
+                        "&:hover": { bgcolor: "#e64a19" },
+                      },
+                    },
+                  }}
                 />
               </Box>
             )}

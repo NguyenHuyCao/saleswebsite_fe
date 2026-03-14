@@ -45,7 +45,25 @@ export default function KnowledgeShare() {
       transition={{ duration: 1 }}
     >
       <Box px={3} py={5}>
-        <Typography variant="h5" fontWeight="bold" mb={3}>
+        <Typography
+          variant="h5"
+          fontWeight="bold"
+          mb={3}
+          sx={{
+            position: "relative",
+            display: "inline-block",
+            "&:after": {
+              content: '""',
+              position: "absolute",
+              bottom: -8,
+              left: 0,
+              width: 60,
+              height: 3,
+              bgcolor: "#ffb700",
+              borderRadius: 2,
+            },
+          }}
+        >
           CHIA SẺ <span style={{ color: "#ffb700" }}>KIẾN THỨC</span>
         </Typography>
 
@@ -57,7 +75,7 @@ export default function KnowledgeShare() {
                 transition={{ duration: 0.3 }}
                 onClick={() =>
                   router.push(
-                    `/new?article=${encodeURIComponent(article.title)}`
+                    `/new?article=${encodeURIComponent(article.title)}`,
                   )
                 }
                 style={{ cursor: "pointer" }}

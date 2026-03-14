@@ -19,6 +19,7 @@ import MainCard from "@/components/dashboard/MainCard";
 import PaidOutlinedIcon from "@mui/icons-material/PaidOutlined";
 import Image from "next/image";
 import { api, toApiError } from "@/lib/api/http";
+import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError";
 
 interface Transaction {
   profitPercent: number;
@@ -33,7 +34,7 @@ interface Transaction {
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
-    value || 0
+    value || 0,
   );
 
 const TransactionHistoryCard = () => {
@@ -44,16 +45,14 @@ const TransactionHistoryCard = () => {
 
     (async () => {
       try {
-        // Gọi qua Axios instance đã tự gắn Authorization từ localStorage
         const data = await api.get<Transaction[]>(
           "/api/v1/dashboard/overview/transaction-history",
-          { signal: controller.signal }
+          { signal: controller.signal },
         );
         setTransactions(Array.isArray(data) ? data.slice(0, 7) : []);
-      } catch (e) {
-        if ((e as any)?.name === "CanceledError") return;
-        const err = toApiError(e);
-        console.warn("Lỗi khi tải transaction-history:", err.message);
+      } catch (err) {
+        // Sử dụng helper - nếu là CanceledError sẽ tự động bỏ qua, không log
+        logIfNotCanceled(err, "Lỗi khi tải transaction-history:");
         setTransactions([]);
       }
     })();

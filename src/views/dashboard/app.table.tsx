@@ -15,6 +15,7 @@ import {
   TablePagination,
 } from "@mui/material";
 import { api } from "@/lib/api/http";
+import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError";
 
 interface UserFinance {
   totalSpent: number;
@@ -39,7 +40,6 @@ const DashboardTable = () => {
 
     (async () => {
       try {
-        // Backend có thể trả { data: [...] } hoặc { data: { result: [...] } }
         const payload = await api.get<
           UserFinance[] | { result: UserFinance[] }
         >("/api/v1/dashboard/overview/user-finance", {
@@ -48,12 +48,13 @@ const DashboardTable = () => {
 
         const list: UserFinance[] = Array.isArray(payload)
           ? payload
-          : (payload as any)?.result ?? [];
+          : ((payload as any)?.result ?? []);
 
         setUsers(Array.isArray(list) ? list : []);
       } catch (error) {
-        console.error("Error fetching user finance data:", error);
-        setUsers([]); // fail-soft
+        // Sử dụng helper để chỉ log khi không phải CanceledError
+        logIfNotCanceled(error, "Error fetching user finance data:");
+        setUsers([]);
       } finally {
         setLoading(false);
       }

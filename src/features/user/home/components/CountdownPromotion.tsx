@@ -1,104 +1,117 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Box, Typography, Grid, Paper, Stack } from "@mui/material";
-import BoltIcon from "@mui/icons-material/Bolt";
+import React, { useState, useEffect } from "react";
+import { Box, Typography } from "@mui/material";
+import { motion } from "framer-motion";
 
-const CountdownPromotion = ({ deadline }: { deadline: string }) => {
+interface CountdownPromotionProps {
+  deadline: string;
+  compact?: boolean; // Thêm prop compact
+}
+
+export default function CountdownPromotion({
+  deadline,
+  compact = false,
+}: CountdownPromotionProps) {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
     minutes: 0,
     seconds: 0,
   });
-  const [hasMounted, setHasMounted] = useState(false);
-
-  const calculateTimeLeft = () => {
-    const difference = +new Date(deadline) - +new Date();
-    if (difference > 0) {
-      return {
-        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((difference / 1000 / 60) % 60),
-        seconds: Math.floor((difference / 1000) % 60),
-      };
-    }
-    return { days: 0, hours: 0, minutes: 0, seconds: 0 };
-  };
 
   useEffect(() => {
-    setHasMounted(true);
-    const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft());
-    }, 1000);
+    const calculateTimeLeft = () => {
+      const difference = new Date(deadline).getTime() - new Date().getTime();
+
+      if (difference > 0) {
+        setTimeLeft({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((difference / 1000 / 60) % 60),
+          seconds: Math.floor((difference / 1000) % 60),
+        });
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      }
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
     return () => clearInterval(timer);
   }, [deadline]);
 
-  const renderTimeBox = (value: number, label: string) => (
-    <Paper
-      elevation={3}
+  // Compact mode - chỉ hiển thị giờ:phút:giây
+  if (compact) {
+    return (
+      <Box
+        component="span"
+        sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}
+      >
+        <Typography
+          component="span"
+          variant="body2"
+          fontWeight={700}
+          color="#f25c05"
+        >
+          {String(timeLeft.hours).padStart(2, "0")}:
+          {String(timeLeft.minutes).padStart(2, "0")}:
+          {String(timeLeft.seconds).padStart(2, "0")}
+        </Typography>
+      </Box>
+    );
+  }
+
+  // Full mode - hiển thị đầy đủ
+  return (
+    <Box
       sx={{
-        px: 2,
-        py: 1,
-        mx: 0.5,
-        backgroundColor: "#2563eb",
-        color: "white",
-        borderRadius: 2,
-        textAlign: "center",
-        minWidth: 50,
-        transition: "all 0.3s ease",
-        animation: "pulse 1s ease-in-out infinite",
-        "@keyframes pulse": {
-          "0%": { transform: "scale(1)" },
-          "50%": { transform: "scale(1.1)" },
-          "100%": { transform: "scale(1)" },
-        },
+        display: "flex",
+        justifyContent: "center",
+        gap: 2,
+        my: 3,
       }}
     >
-      <Typography variant="h5" fontWeight="bold">
-        {String(value).padStart(2, "0")}
-      </Typography>
-      <Typography fontSize={12}>{label}</Typography>
-    </Paper>
-  );
-
-  if (!hasMounted) return null;
-
-  return (
-    <Box textAlign="center" py={4}>
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="center"
-        spacing={1}
-        mb={1}
-      >
-        <BoltIcon sx={{ color: "#fff8e1", fontSize: 28 }} />
-        <Typography
-          variant="h5"
-          fontWeight={900}
-          sx={{
-            color: "#fff8e1",
-            textTransform: "uppercase",
-            letterSpacing: 1,
-            fontSize: { xs: 18, md: 22 },
-            background: "linear-gradient(135deg, #ffb700 0%, #d35300 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-          }}
-        >
-          THỜI GIAN CHỈ CÒN
-        </Typography>
-      </Stack>
-
-      <Grid container justifyContent="center" mt={2}>
-        {renderTimeBox(timeLeft.days, "Days")}
-        {renderTimeBox(timeLeft.hours, "Hours")}
-        {renderTimeBox(timeLeft.minutes, "Minutes")}
-        {renderTimeBox(timeLeft.seconds, "Seconds")}
-      </Grid>
+      {[
+        { label: "Ngày", value: timeLeft.days },
+        { label: "Giờ", value: timeLeft.hours },
+        { label: "Phút", value: timeLeft.minutes },
+        { label: "Giây", value: timeLeft.seconds },
+      ].map((item) => (
+        <Box key={item.label} sx={{ textAlign: "center" }}>
+          <motion.div
+            key={item.value}
+            initial={{ scale: 1 }}
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{
+              duration: 0.5,
+              repeat: item.label === "Giây" ? Infinity : 0,
+            }}
+          >
+            <Box
+              sx={{
+                background: "linear-gradient(135deg, #f25c05, #ffb700)",
+                color: "#fff",
+                fontWeight: 900,
+                fontSize: { xs: "1.2rem", md: "1.5rem" },
+                minWidth: { xs: 50, md: 70 },
+                py: 1,
+                px: 1,
+                borderRadius: 2,
+                boxShadow: "0 4px 10px rgba(242, 92, 5, 0.3)",
+              }}
+            >
+              {String(item.value).padStart(2, "0")}
+            </Box>
+          </motion.div>
+          <Typography
+            variant="caption"
+            sx={{ mt: 0.5, color: "#666", fontWeight: 500 }}
+          >
+            {item.label}
+          </Typography>
+        </Box>
+      ))}
     </Box>
   );
-};
-
-export default CountdownPromotion;
+}

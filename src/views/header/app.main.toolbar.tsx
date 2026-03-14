@@ -16,7 +16,7 @@ import { FavoriteBorder, Search } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import useSWR, { mutate } from "swr";
-import { fetcherWithToken } from "@/utils/fetcherWithToken";
+import { fetcherWithToken } from "@/lib/utils/fetcherWithToken";
 import {
   WISHLIST_COUNT_KEY,
   CART_COUNT_KEY,

@@ -21,6 +21,7 @@ import { useEffect, useMemo, useState } from "react";
 import ReactApexChart from "@/components/wrapper/ApexChart";
 import { ApexOptions } from "apexcharts";
 import { api } from "@/lib/api/http";
+import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError";
 
 // Styled
 const TriangleImg = styled("img")({
@@ -86,15 +87,14 @@ const Trophy = () => {
 
     (async () => {
       try {
-        // http/api custom sẽ tự gắn Authorization nếu có token
         const data = await api.get<BestSellingProduct>(
           "/api/v1/dashboard/overview/best-selling-one",
-          { signal: controller.signal }
+          { signal: controller.signal },
         );
         setProduct(data ?? null);
       } catch (err) {
-        // Fail-soft, tránh vỡ UI
-        console.error("Lỗi khi load sản phẩm bán chạy:", err);
+        // Sử dụng helper để log nếu không phải CanceledError
+        logIfNotCanceled(err, "Lỗi khi load sản phẩm bán chạy:");
         setProduct(null);
       }
     })();

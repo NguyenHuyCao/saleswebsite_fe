@@ -23,6 +23,7 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ categories }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const router = useRouter();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -33,8 +34,15 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ categories }) => {
       const scrollLeft = el.scrollLeft;
       const scrollWidth = el.scrollWidth;
       const clientWidth = el.clientWidth;
+
+      // Kiểm tra hiển thị nút điều hướng
       setShowLeft(scrollLeft > 10);
       setShowRight(scrollLeft + clientWidth < scrollWidth - 10);
+
+      // Tính toán phần trăm cuộn
+      const maxScroll = scrollWidth - clientWidth;
+      const progress = maxScroll > 0 ? (scrollLeft / maxScroll) * 100 : 0;
+      setScrollProgress(progress);
     }
   };
 
@@ -70,6 +78,24 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ categories }) => {
     router.push(`/product?category=${slug}`);
   };
 
+  // Xử lý sự kiện wheel để ngăn cuộn dọc
+  const handleWheel = (e: React.WheelEvent) => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      const canScrollLeft = scrollLeft > 0;
+      const canScrollRight = scrollLeft + clientWidth < scrollWidth;
+
+      // Nếu có thể cuộn ngang theo hướng wheel
+      if ((e.deltaY > 0 && canScrollRight) || (e.deltaY < 0 && canScrollLeft)) {
+        e.preventDefault();
+        scrollRef.current.scrollBy({
+          left: e.deltaY,
+          behavior: "smooth",
+        });
+      }
+    }
+  };
+
   return (
     <Box sx={{ position: "relative", px: 2, py: 4, bgcolor: "#fff" }}>
       <Typography
@@ -77,6 +103,7 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ categories }) => {
         fontWeight="bold"
         textAlign="center"
         mb={3}
+        pt={3}
         sx={{ color: "#000" }}
       >
         Danh mục sản phẩm
@@ -105,9 +132,11 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ categories }) => {
       <Box sx={{ display: "flex", justifyContent: "center" }}>
         <Box
           ref={scrollRef}
+          onWheel={handleWheel}
           sx={{
             display: "flex",
             overflowX: "auto",
+            overflowY: "hidden",
             gap: 4,
             px: 6,
             scrollBehavior: "smooth",
@@ -190,8 +219,97 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ categories }) => {
           <ArrowForwardIosIcon fontSize="small" />
         </IconButton>
       )}
+
+      {/* Thanh pagination nhỏ xinh */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          mt: 3,
+          gap: 1,
+        }}
+      >
+        {/* Dot pagination */}
+        <Box
+          sx={{
+            display: "flex",
+            gap: 0.8,
+            alignItems: "center",
+          }}
+        >
+          {categories.map((_, index) => {
+            // Tính toán active dựa trên scrollProgress
+            const itemWidth = 100 / categories.length;
+            const startRange = index * itemWidth;
+            const endRange = (index + 1) * itemWidth;
+            const isActive =
+              scrollProgress >= startRange && scrollProgress <= endRange;
+
+            // Hoặc active cho item gần nhất
+            const nearestIndex = Math.round(
+              (scrollProgress / 100) * (categories.length - 1),
+            );
+            const isNearestActive = index === nearestIndex;
+
+            return (
+              <Box
+                key={index}
+                onClick={() => {
+                  // Scroll đến item tương ứng khi click vào dot
+                  if (scrollRef.current) {
+                    const itemElements = scrollRef.current.children;
+                    if (itemElements[index]) {
+                      (itemElements[index] as HTMLElement).scrollIntoView({
+                        behavior: "smooth",
+                        block: "nearest",
+                        inline: "center",
+                      });
+                    }
+                  }
+                }}
+                sx={{
+                  width: isNearestActive ? 24 : 8,
+                  height: 8,
+                  borderRadius: isNearestActive ? 4 : 4,
+                  bgcolor: isNearestActive ? "#f25c05" : "#ffb700",
+                  opacity: isNearestActive ? 1 : 0.5,
+                  transition: "all 0.3s ease",
+                  cursor: "pointer",
+                  "&:hover": {
+                    opacity: 1,
+                    bgcolor: "#f25c05",
+                    width: 16,
+                  },
+                }}
+              />
+            );
+          })}
+        </Box>
+
+        {/* Hoặc có thể dùng thanh progress bar thay thế */}
+        {/* <Box
+          sx={{
+            width: 200,
+            height: 4,
+            bgcolor: "#ffe0b2",
+            borderRadius: 2,
+            overflow: "hidden",
+          }}
+        >
+          <Box
+            sx={{
+              width: `${scrollProgress}%`,
+              height: "100%",
+              bgcolor: "#f25c05",
+              borderRadius: 2,
+              transition: "width 0.2s ease",
+            }}
+          />
+        </Box> */}
+      </Box>
     </Box>
   );
-};
+};;;;;;;
 
 export default CategoryCarousel;
