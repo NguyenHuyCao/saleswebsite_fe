@@ -1,117 +1,439 @@
 "use client";
 
-import React from "react";
-import { Box, Typography, Button } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Typography,
+  Button,
+  Chip,
+  Stack,
+  Container,
+  Paper,
+} from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, useInView } from "framer-motion";
+
+// Icons
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import FlashOnIcon from "@mui/icons-material/FlashOn";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
 export default function PromoBanner() {
   const router = useRouter();
+  const sectionRef = React.useRef<HTMLDivElement>(null);
+  const isInView = useInView(sectionRef, { once: true, amount: 0.3 });
+
+  // Countdown timer (giả sử còn 3 ngày)
+  const [timeLeft, setTimeLeft] = useState({
+    days: 3,
+    hours: 12,
+    minutes: 30,
+    seconds: 0,
+  });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev.seconds > 0) {
+          return { ...prev, seconds: prev.seconds - 1 };
+        } else if (prev.minutes > 0) {
+          return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
+        } else if (prev.hours > 0) {
+          return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 };
+        } else if (prev.days > 0) {
+          return {
+            ...prev,
+            days: prev.days - 1,
+            hours: 23,
+            minutes: 59,
+            seconds: 59,
+          };
+        }
+        return prev;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const containerVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut",
+      },
+    },
+  };
+
+  const textVariants = {
+    hidden: { opacity: 0, x: -30 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: { duration: 0.5, delay: 0.2 },
+    },
+  };
+
+  const imageVariants = {
+    hidden: { opacity: 0, x: 30, scale: 0.9 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      scale: 1,
+      transition: { duration: 0.6, delay: 0.3 },
+    },
+  };
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
-      transition={{ duration: 0.8 }}
-      viewport={{ once: true }}
+      ref={sectionRef}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
+      variants={containerVariants}
     >
-      <Box
-        sx={{
-          borderRadius: 2,
-          overflow: "hidden",
-          mb: 6,
-          bgcolor: "#000",
-          color: "white",
-        }}
-      >
-        <Grid container alignItems="stretch">
-          <Grid
-            size={{ xs: 12, md: 6 }}
-            sx={{
-              p: { xs: 4, md: 6 },
-              backgroundImage: "url(/images/banner/ima.jpeg)",
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              minHeight: { xs: 280, md: 400 },
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.3 }}
-              style={{
-                background: "rgba(0,0,0,0.55)",
-                borderRadius: 16,
-                padding: "24px 32px",
-                maxWidth: 360,
-                backdropFilter: "blur(4px)",
+      <Container maxWidth="xl" sx={{ mb: 6 }}>
+        <Paper
+          elevation={0}
+          sx={{
+            borderRadius: 4,
+            overflow: "hidden",
+            bgcolor: "#000",
+            position: "relative",
+            boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
+          }}
+        >
+          <Grid container>
+            {/* Left - Content */}
+            <Grid
+              size={{ xs: 12, md: 6 }}
+              sx={{
+                position: "relative",
+                minHeight: { xs: 400, md: 450 },
+                backgroundImage:
+                  "linear-gradient(135deg, #000 0%, #1a1a1a 100%)",
+                display: "flex",
+                alignItems: "center",
               }}
             >
-              <Typography
-                variant="body1"
+              {/* Background Pattern */}
+              <Box
                 sx={{
-                  bgcolor: "#ffb700",
-                  display: "inline-block",
-                  px: 2,
-                  py: 0.5,
-                  borderRadius: 1,
-                  fontWeight: 700,
-                  color: "#000",
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  opacity: 0.1,
+                  background:
+                    "radial-gradient(circle at 20% 50%, #fff 0%, transparent 50%)",
+                }}
+              />
+
+              <motion.div variants={textVariants} style={{ width: "100%" }}>
+                <Box
+                  sx={{
+                    p: { xs: 4, md: 6 },
+                    color: "#fff",
+                    position: "relative",
+                    zIndex: 2,
+                  }}
+                >
+                  {/* Badges */}
+                  <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
+                    <Chip
+                      icon={<FlashOnIcon />}
+                      label="FLASH SALE"
+                      size="small"
+                      sx={{
+                        bgcolor: "#f25c05",
+                        color: "#fff",
+                        fontWeight: 700,
+                      }}
+                    />
+                    <Chip
+                      icon={<LocalOfferIcon />}
+                      label="GIẢM 35%"
+                      size="small"
+                      sx={{
+                        bgcolor: "#ffb700",
+                        color: "#000",
+                        fontWeight: 700,
+                      }}
+                    />
+                  </Stack>
+
+                  {/* Title */}
+                  <Typography
+                    variant="h3"
+                    fontWeight={900}
+                    sx={{
+                      mb: 1,
+                      fontSize: { xs: "2rem", md: "2.5rem" },
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    KHUYẾN MÃI
+                  </Typography>
+                  <Typography
+                    variant="h4"
+                    sx={{
+                      mb: 2,
+                      color: "#ffb700",
+                      fontWeight: 700,
+                      fontSize: { xs: "1.5rem", md: "2rem" },
+                    }}
+                  >
+                    Pin DEWALT Chính Hãng
+                  </Typography>
+
+                  {/* Price */}
+                  <Stack
+                    direction="row"
+                    alignItems="baseline"
+                    spacing={2}
+                    sx={{ mb: 3 }}
+                  >
+                    <Typography
+                      variant="h3"
+                      sx={{
+                        color: "#ffb700",
+                        fontWeight: 900,
+                        fontSize: { xs: "2rem", md: "2.5rem" },
+                      }}
+                    >
+                      1.550.000₫
+                    </Typography>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        color: "#999",
+                        textDecoration: "line-through",
+                      }}
+                    >
+                      2.380.000₫
+                    </Typography>
+                  </Stack>
+
+                  {/* Countdown Timer */}
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      bgcolor: "rgba(255,255,255,0.1)",
+                      backdropFilter: "blur(8px)",
+                      borderRadius: 3,
+                      p: 2,
+                      mb: 3,
+                      maxWidth: 400,
+                    }}
+                  >
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      spacing={1}
+                      sx={{ mb: 1 }}
+                    >
+                      <AccessTimeIcon sx={{ color: "#ffb700", fontSize: 18 }} />
+                      <Typography variant="body2" sx={{ color: "#fff" }}>
+                        Kết thúc sau:
+                      </Typography>
+                    </Stack>
+
+                    <Stack direction="row" spacing={2}>
+                      {[
+                        { value: timeLeft.days, label: "Ngày" },
+                        { value: timeLeft.hours, label: "Giờ" },
+                        { value: timeLeft.minutes, label: "Phút" },
+                        { value: timeLeft.seconds, label: "Giây" },
+                      ].map((item) => (
+                        <Box key={item.label} sx={{ textAlign: "center" }}>
+                          <Typography
+                            variant="h5"
+                            fontWeight={700}
+                            sx={{ color: "#ffb700" }}
+                          >
+                            {String(item.value).padStart(2, "0")}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: "#999" }}>
+                            {item.label}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Stack>
+                  </Paper>
+
+                  {/* Features */}
+                  <Stack direction="row" spacing={2} sx={{ mb: 4 }}>
+                    {[
+                      "Bảo hành 12 tháng",
+                      "Miễn phí ship",
+                      "Đổi trả 7 ngày",
+                    ].map((feature) => (
+                      <Chip
+                        key={feature}
+                        label={feature}
+                        size="small"
+                        sx={{
+                          bgcolor: "rgba(255,255,255,0.1)",
+                          color: "#fff",
+                          fontSize: "0.7rem",
+                        }}
+                      />
+                    ))}
+                  </Stack>
+
+                  {/* CTA Button */}
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Button
+                      variant="contained"
+                      size="large"
+                      onClick={() => router.push("/product?brand=dewalt")}
+                      endIcon={<ArrowForwardIcon />}
+                      sx={{
+                        bgcolor: "#ffb700",
+                        color: "#000",
+                        fontWeight: 700,
+                        px: 4,
+                        py: 1.5,
+                        borderRadius: 3,
+                        textTransform: "none",
+                        fontSize: "1.1rem",
+                        "&:hover": {
+                          bgcolor: "#f25c05",
+                          color: "#fff",
+                        },
+                      }}
+                    >
+                      Xem ngay - Số lượng có hạn
+                    </Button>
+                  </motion.div>
+                </Box>
+              </motion.div>
+            </Grid>
+
+            {/* Right - Image */}
+            <Grid
+              size={{ md: 6 }}
+              sx={{
+                position: "relative",
+                display: { xs: "none", md: "block" },
+                minHeight: 450,
+                overflow: "hidden",
+              }}
+            >
+              <motion.div
+                variants={imageVariants}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  position: "relative",
                 }}
               >
-                1.550.000Đ
-              </Typography>
-              <Typography
-                variant="h4"
-                fontWeight={900}
-                mt={2}
-                sx={{ color: "#fff" }}
-              >
-                Khuyến mãi
-              </Typography>
-              <Typography
-                variant="h5"
-                fontWeight={400}
-                sx={{ color: "#fff", mt: 0.5 }}
-              >
-                Pin DEWALT
-              </Typography>
-              <Button
-                variant="contained"
-                onClick={() => router.push("/product")}
-                sx={{
-                  mt: 3,
-                  bgcolor: "#fff",
-                  color: "#000",
-                  fontWeight: 600,
-                  textTransform: "none",
-                  px: 4,
-                  py: 1,
-                  borderRadius: 2,
-                  "&:hover": { bgcolor: "#ffb700" },
-                }}
-              >
-                Xem ngay
-              </Button>
-            </motion.div>
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundImage: "url(/images/banner/imagesbanner.jpeg)",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    transition: "transform 8s ease",
+                    "&:hover": {
+                      transform: "scale(1.05)",
+                    },
+                  }}
+                />
+
+                {/* Gradient Overlay */}
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background:
+                      "linear-gradient(90deg, rgba(0,0,0,0.3) 0%, transparent 100%)",
+                  }}
+                />
+
+                {/* Price Tag */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.8, type: "spring" }}
+                  style={{
+                    position: "absolute",
+                    top: 30,
+                    right: 30,
+                  }}
+                >
+                  <Paper
+                    elevation={3}
+                    sx={{
+                      bgcolor: "#f25c05",
+                      color: "#fff",
+                      p: 2,
+                      borderRadius: "50%",
+                      width: 100,
+                      height: 100,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      transform: "rotate(5deg)",
+                    }}
+                  >
+                    <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                      GIẢM
+                    </Typography>
+                    <Typography
+                      variant="h4"
+                      fontWeight={900}
+                      sx={{ lineHeight: 1 }}
+                    >
+                      35%
+                    </Typography>
+                  </Paper>
+                </motion.div>
+              </motion.div>
+            </Grid>
           </Grid>
 
-          <Grid
-            size={{ md: 6 }}
+          {/* Mobile Image (chỉ hiện trên mobile) */}
+          <Box
             sx={{
-              display: { xs: "none", md: "block" },
+              display: { xs: "block", md: "none" },
+              height: 200,
               backgroundImage: "url(/images/banner/imagesbanner.jpeg)",
               backgroundSize: "cover",
               backgroundPosition: "center",
-              minHeight: 400,
-              transition: "transform 0.4s ease",
-              "&:hover": { transform: "scale(1.01)" },
+              position: "relative",
             }}
-          />
-        </Grid>
-      </Box>
+          >
+            <Box
+              sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background:
+                  "linear-gradient(0deg, rgba(0,0,0,0.5) 0%, transparent 100%)",
+              }}
+            />
+          </Box>
+        </Paper>
+      </Container>
     </motion.div>
   );
 }

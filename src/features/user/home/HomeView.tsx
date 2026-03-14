@@ -62,7 +62,6 @@ export default function HomeView() {
       <Container>
         <WebsiteTrafficTracker />
         {vouchers?.length ? <VoucherCardList vouchers={vouchers} /> : null}
-
         {/* Flash Sale (client fetch) */}
         <FlashSaleShowcase promotions={flashPromotions} />
 

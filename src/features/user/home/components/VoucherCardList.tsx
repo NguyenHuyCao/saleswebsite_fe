@@ -1,140 +1,629 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   Box,
   Typography,
   Paper,
-  Divider,
   Button,
   Fade,
   useMediaQuery,
   useTheme,
+  Chip,
+  IconButton,
+  Container,
+  Stack,
 } from "@mui/material";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import type { Promotion } from "../types";
+import { motion, useInView } from "framer-motion";
 import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+
+// Icons
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import DiscountIcon from "@mui/icons-material/Discount";
+import BoltIcon from "@mui/icons-material/Bolt";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import PlayCircleIcon from "@mui/icons-material/PlayCircle";
+import PauseCircleIcon from "@mui/icons-material/PauseCircle";
+
+import type { Promotion } from "../types";
 
 type Props = { vouchers: Promotion[] };
 
-const Item = ({ children }: { children: React.ReactNode }) => (
-  <Paper
-    elevation={4}
-    sx={{
-      backgroundColor: "#fff8e1",
-      p: 2,
-      borderRadius: 3,
-      height: "100%",
-      display: "flex",
-      alignItems: "stretch",
-      overflow: "hidden",
-      boxShadow: "0 6px 14px rgba(0,0,0,0.1)",
-    }}
-  >
-    {children}
-  </Paper>
-);
+// Helper: Đếm ngược thời gian
+const CountdownTimer = ({ endDate }: { endDate: string }) => {
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const difference = new Date(endDate).getTime() - new Date().getTime();
+
+      if (difference > 0) {
+        setTimeLeft({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((difference / 1000 / 60) % 60),
+          seconds: Math.floor((difference / 1000) % 60),
+        });
+      }
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+    return () => clearInterval(timer);
+  }, [endDate]);
+
+  return (
+    <Box sx={{ display: "flex", gap: 0.5 }}>
+      {timeLeft.days > 0 && (
+        <Chip
+          label={`${timeLeft.days} ngày`}
+          size="small"
+          sx={{
+            height: 20,
+            fontSize: "0.6rem",
+            bgcolor: "#f25c05",
+            color: "#fff",
+          }}
+        />
+      )}
+      <Chip
+        label={`${String(timeLeft.hours).padStart(2, "0")}:${String(timeLeft.minutes).padStart(2, "0")}:${String(timeLeft.seconds).padStart(2, "0")}`}
+        size="small"
+        sx={{
+          height: 20,
+          fontSize: "0.6rem",
+          bgcolor: "#ffb700",
+          color: "#000",
+        }}
+      />
+    </Box>
+  );
+};
 
 export default function VoucherCardList({ vouchers }: Props) {
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+  const sliderRef = useRef<Slider>(null);
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  // Kiểm tra khi component vào viewport
+  const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
+
+  const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [currentSlide, setCurrentSlide] = useState<number>(0);
+  const [isAutoPlay, setIsAutoPlay] = useState<boolean>(true);
+  const [isPaused, setIsPaused] = useState<boolean>(false);
+
+  const autoPlayTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 30, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: "spring", stiffness: 100, damping: 15 },
+    },
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: i * 0.05,
+        duration: 0.4,
+        ease: "easeOut",
+      },
+    }),
+  };
 
   if (!vouchers?.length) return null;
 
+  const slidesToShow = isMobile ? 1 : isTablet ? 2 : 3;
+  const totalSlides = vouchers.length;
+  const totalPages = Math.ceil(totalSlides / slidesToShow);
+  const currentPage = Math.floor(currentSlide / slidesToShow) + 1;
+
+  // Auto-slide function
+  const goToNext = useCallback(() => {
+    if (sliderRef.current && !isPaused) {
+      const nextSlide = (currentSlide + slidesToShow) % totalSlides;
+      sliderRef.current.slickGoTo(nextSlide);
+    }
+  }, [currentSlide, slidesToShow, totalSlides, isPaused]);
+
+  // Auto-slide timer
+  useEffect(() => {
+    if (isAutoPlay && !isPaused) {
+      autoPlayTimerRef.current = setInterval(goToNext, 5000);
+    }
+    return () => {
+      if (autoPlayTimerRef.current) {
+        clearInterval(autoPlayTimerRef.current);
+      }
+    };
+  }, [isAutoPlay, isPaused, goToNext]);
+
+  // Pause auto-play khi hover vào slider
+  const handleMouseEnter = () => setIsPaused(true);
+  const handleMouseLeave = () => setIsPaused(false);
+
   const settings = {
     dots: false,
-    infinite: vouchers.length > (isMobile ? 1 : 3),
-    speed: 500,
-    slidesToShow: isMobile ? 1 : 3,
-    slidesToScroll: 1,
-    arrows: vouchers.length > (isMobile ? 1 : 3),
+    infinite: true,
+    speed: 600,
+    slidesToShow,
+    slidesToScroll: slidesToShow,
+    arrows: false,
+    beforeChange: (_: number, next: number) => setCurrentSlide(next),
+    responsive: [
+      { breakpoint: 600, settings: { slidesToShow: 1, slidesToScroll: 1 } },
+      { breakpoint: 960, settings: { slidesToShow: 2, slidesToScroll: 2 } },
+    ],
   };
 
-  const handleCopy = (code: string, index: number) => {
-    navigator.clipboard.writeText(code || "");
-    setCopiedIndex(index);
-    setTimeout(() => setCopiedIndex(null), 1600);
+  const handleCopy = (voucher: Promotion) => {
+    navigator.clipboard.writeText(voucher.code || "");
+    setCopiedId(voucher.id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const getVoucherType = (discount: number, maxDiscount: number) => {
+    if (discount >= 0.3)
+      return { label: "SIÊU HOT", color: "#f25c05", icon: <BoltIcon /> };
+    if (maxDiscount >= 1000000)
+      return {
+        label: "GIÁ TRỊ LỚN",
+        color: "#4caf50",
+        icon: <EmojiEventsIcon />,
+      };
+    return { label: "TIẾT KIỆM", color: "#2196f3", icon: <DiscountIcon /> };
   };
 
   return (
-    <Box sx={{ py: 3 }}>
-      <Slider {...settings}>
-        {vouchers.map((voucher, index) => (
-          <Box key={voucher.id ?? index} px={1}>
-            <Item>
-              <Box
-                sx={{
-                  bgcolor: "#ffb700",
-                  width: 70,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: 700,
-                  fontSize: 14,
-                  borderRadius: 2,
-                  px: 1,
-                  flexShrink: 0,
-                }}
-              >
-                {voucher.code || "CODE"}
-              </Box>
-
-              <Divider
-                orientation="vertical"
-                flexItem
-                sx={{ borderRight: "2px dashed #f25c05", mx: 1.5 }}
-              />
-
-              <Box flexGrow={1} display="flex" flexDirection="column">
-                <Typography fontSize={13.5} fontWeight={600} color="#d35400">
-                  🎁 Giảm {(voucher.discount! * 100).toFixed(0)}% – Tối đa{" "}
-                  {(voucher.maxDiscount ?? 0).toLocaleString()}₫
-                </Typography>
-                <Box display="flex" alignItems="center" gap={0.5} mt={0.5}>
-                  <InfoOutlinedIcon sx={{ fontSize: 14, color: "#d35400" }} />
-                  <Typography fontSize={12.5} fontWeight={500} color="#d35400">
-                    Áp dụng sản phẩm cụ thể
-                  </Typography>
-                </Box>
-                <Typography fontSize={12} color="#666" mt={0.5}>
-                  HSD:{" "}
-                  {voucher.endDate
-                    ? new Date(voucher.endDate).toLocaleDateString("vi-VN")
-                    : "—"}
-                </Typography>
-
-                <Box mt={1.5} display="flex" justifyContent="flex-end">
-                  <Button
-                    variant="contained"
-                    size="small"
-                    onClick={() => handleCopy(voucher.code || "", index)}
+    <motion.div
+      ref={sectionRef}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
+      variants={containerVariants}
+    >
+      <Box sx={{ py: { xs: 4, md: 6 }, bgcolor: "#fff", position: "relative" }}>
+        <Container maxWidth="xl">
+          {/* Header với controls */}
+          <motion.div variants={itemVariants}>
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              sx={{ mb: 4, flexWrap: "wrap", gap: 2 }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <motion.div
+                  whileHover={{ rotate: 10, scale: 1.1 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <Box
                     sx={{
-                      bgcolor: "#d35400",
-                      color: "#fff",
-                      fontSize: 11.5,
-                      px: 2,
-                      py: 0.5,
-                      borderRadius: 999,
-                      textTransform: "none",
-                      "&:hover": { bgcolor: "#e67e22" },
+                      bgcolor: "#f25c05",
+                      width: 48,
+                      height: 48,
+                      borderRadius: 3,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow: "0 6px 12px rgba(242,92,5,0.2)",
                     }}
                   >
-                    <Fade
-                      in={copiedIndex === index}
-                      timeout={200}
-                      unmountOnExit
-                    >
-                      <Box component="span">🎉 Đã sao chép</Box>
-                    </Fade>
-                    {copiedIndex !== index && <span>Sao chép mã</span>}
-                  </Button>
+                    <LocalOfferIcon sx={{ color: "#fff", fontSize: 28 }} />
+                  </Box>
+                </motion.div>
+                <Box>
+                  <Typography variant="h5" fontWeight={800} color="#333">
+                    Mã giảm giá hot
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {vouchers.length} ưu đãi đang chờ bạn
+                  </Typography>
                 </Box>
               </Box>
-            </Item>
-          </Box>
-        ))}
-      </Slider>
-    </Box>
+
+              {/* Auto-play Controls */}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                {/* Play/Pause Button */}
+                <motion.div
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <IconButton
+                    onClick={() => setIsAutoPlay(!isAutoPlay)}
+                    size="small"
+                    sx={{
+                      bgcolor: isAutoPlay ? "#f25c05" : "#f5f5f5",
+                      color: isAutoPlay ? "#fff" : "#999",
+                      "&:hover": {
+                        bgcolor: isAutoPlay ? "#e64a19" : "#e0e0e0",
+                      },
+                    }}
+                  >
+                    {isAutoPlay ? <PauseCircleIcon /> : <PlayCircleIcon />}
+                  </IconButton>
+                </motion.div>
+
+                {/* Auto-play Label */}
+                <Typography variant="caption" sx={{ color: "#666" }}>
+                  {isAutoPlay ? "Đang tự động" : "Đã dừng"}
+                </Typography>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                      <Box sx={{ display: "flex", gap: 0.5 }}>
+                        {Array.from({ length: totalPages }).map((_, i) => (
+                          <motion.div
+                            key={i}
+                            whileHover={{ scale: 1.2 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            <Box
+                              sx={{
+                                width: i === currentPage - 1 ? 24 : 6,
+                                height: 6,
+                                borderRadius: 3,
+                                bgcolor:
+                                  i === currentPage - 1 ? "#f25c05" : "#ffb700",
+                                opacity: i === currentPage - 1 ? 1 : 0.3,
+                                transition: "all 0.3s",
+                              }}
+                            />
+                          </motion.div>
+                        ))}
+                      </Box>
+                      <Typography variant="caption" sx={{ color: "#999" }}>
+                        {currentPage}/{totalPages}
+                      </Typography>
+                    </Box>
+                  </motion.div>
+                )}
+              </Box>
+            </Stack>
+          </motion.div>
+
+          {/* Slider Container */}
+          <motion.div variants={itemVariants}>
+            <Box
+              sx={{ position: "relative", px: { xs: 0, md: 4 } }}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+            >
+              {/* Navigation Buttons */}
+              {!isMobile && vouchers.length > slidesToShow && (
+                <>
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    <IconButton
+                      onClick={() => {
+                        sliderRef.current?.slickPrev();
+                        setIsPaused(true);
+                        setTimeout(() => setIsPaused(false), 5000);
+                      }}
+                      sx={{
+                        position: "absolute",
+                        left: -20,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        bgcolor: "#fff",
+                        boxShadow: 3,
+                        zIndex: 2,
+                        "&:hover": { bgcolor: "#ffb700", color: "#fff" },
+                      }}
+                    >
+                      <ChevronLeftIcon />
+                    </IconButton>
+                  </motion.div>
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    <IconButton
+                      onClick={() => {
+                        sliderRef.current?.slickNext();
+                        setIsPaused(true);
+                        setTimeout(() => setIsPaused(false), 5000);
+                      }}
+                      sx={{
+                        position: "absolute",
+                        right: -20,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        bgcolor: "#fff",
+                        boxShadow: 3,
+                        zIndex: 2,
+                        "&:hover": { bgcolor: "#ffb700", color: "#fff" },
+                      }}
+                    >
+                      <ChevronRightIcon />
+                    </IconButton>
+                  </motion.div>
+                </>
+              )}
+
+              {/* Slider */}
+              <Slider ref={sliderRef} {...settings}>
+                {vouchers.map((voucher, index) => {
+                  const type = getVoucherType(
+                    voucher.discount,
+                    voucher.maxDiscount,
+                  );
+                  const discountPercent = Math.round(voucher.discount * 100);
+                  const isExpiringSoon =
+                    new Date(voucher.endDate).getTime() - Date.now() <
+                    3 * 24 * 60 * 60 * 1000;
+
+                  return (
+                    <Box key={voucher.id} px={1}>
+                      <motion.div
+                        variants={cardVariants}
+                        initial="hidden"
+                        animate="visible"
+                        custom={index}
+                        whileHover={{ y: -8 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                      >
+                        <Paper
+                          elevation={3}
+                          sx={{
+                            borderRadius: 4,
+                            overflow: "hidden",
+                            background:
+                              "linear-gradient(135deg, #fff8e1, #fff)",
+                            border: "1px solid",
+                            borderColor: isExpiringSoon ? "#f25c05" : "#ffb700",
+                            position: "relative",
+                            transition: "all 0.3s ease",
+                            "&:hover": {
+                              boxShadow: "0 12px 28px rgba(242,92,5,0.2)",
+                            },
+                          }}
+                        >
+                          {/* Type Badge */}
+                          <Box
+                            sx={{
+                              position: "absolute",
+                              top: 12,
+                              right: 12,
+                              zIndex: 2,
+                            }}
+                          >
+                            <Chip
+                              icon={type.icon}
+                              label={type.label}
+                              size="small"
+                              sx={{
+                                bgcolor: type.color,
+                                color: "#fff",
+                                fontWeight: 700,
+                                fontSize: "0.65rem",
+                                height: 24,
+                              }}
+                            />
+                          </Box>
+
+                          {/* Content */}
+                          <Box sx={{ display: "flex", p: 2 }}>
+                            {/* Left - Code Section */}
+                            <Box
+                              sx={{
+                                width: 100,
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                borderRight: "2px dashed",
+                                borderColor: "#ffb700",
+                                pr: 2,
+                              }}
+                            >
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                MÃ
+                              </Typography>
+                              <Typography
+                                variant="h6"
+                                fontWeight={800}
+                                sx={{
+                                  color: "#f25c05",
+                                  letterSpacing: 1,
+                                  fontSize: "1.1rem",
+                                }}
+                              >
+                                {voucher.code || "CODE"}
+                              </Typography>
+                            </Box>
+
+                            {/* Right - Info Section */}
+                            <Box sx={{ flex: 1, pl: 2 }}>
+                              <Typography
+                                variant="h5"
+                                fontWeight={900}
+                                sx={{ color: "#f25c05", lineHeight: 1 }}
+                              >
+                                {discountPercent}%
+                                <Typography
+                                  component="span"
+                                  variant="body2"
+                                  sx={{ color: "#666", ml: 1 }}
+                                >
+                                  GIẢM
+                                </Typography>
+                              </Typography>
+
+                              <Typography
+                                variant="body2"
+                                fontWeight={600}
+                                sx={{ color: "#333", mb: 1 }}
+                              >
+                                Tối đa {voucher.maxDiscount.toLocaleString()}₫
+                              </Typography>
+
+                              <Stack
+                                direction="row"
+                                spacing={1}
+                                sx={{ mb: 1.5 }}
+                              >
+                                <Chip
+                                  icon={
+                                    <InfoOutlinedIcon sx={{ fontSize: 14 }} />
+                                  }
+                                  label="Áp dụng sản phẩm cụ thể"
+                                  size="small"
+                                  sx={{
+                                    bgcolor: "#f5f5f5",
+                                    fontSize: "0.6rem",
+                                    height: 22,
+                                  }}
+                                />
+                              </Stack>
+
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 1,
+                                  mb: 2,
+                                }}
+                              >
+                                <AccessTimeIcon
+                                  sx={{ fontSize: 16, color: "#999" }}
+                                />
+                                {isExpiringSoon ? (
+                                  <CountdownTimer endDate={voucher.endDate} />
+                                ) : (
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                  >
+                                    HSD:{" "}
+                                    {new Date(
+                                      voucher.endDate,
+                                    ).toLocaleDateString("vi-VN")}
+                                  </Typography>
+                                )}
+                              </Box>
+
+                              <Button
+                                fullWidth
+                                variant="contained"
+                                onClick={() => handleCopy(voucher)}
+                                sx={{
+                                  bgcolor:
+                                    copiedId === voucher.id
+                                      ? "#4caf50"
+                                      : "#f25c05",
+                                  color: "#fff",
+                                  textTransform: "none",
+                                  fontWeight: 600,
+                                  py: 1,
+                                  borderRadius: 2,
+                                  fontSize: "0.9rem",
+                                  "&:hover": {
+                                    bgcolor:
+                                      copiedId === voucher.id
+                                        ? "#45a049"
+                                        : "#e64a19",
+                                  },
+                                }}
+                                startIcon={
+                                  copiedId === voucher.id ? (
+                                    <CheckCircleIcon />
+                                  ) : (
+                                    <ContentCopyIcon />
+                                  )
+                                }
+                              >
+                                {copiedId === voucher.id
+                                  ? "Đã sao chép!"
+                                  : "Sao chép mã"}
+                              </Button>
+                            </Box>
+                          </Box>
+                        </Paper>
+                      </motion.div>
+                    </Box>
+                  );
+                })}
+              </Slider>
+            </Box>
+          </motion.div>
+
+          {/* Mobile Hint */}
+          {isMobile && vouchers.length > 1 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+            >
+              <Fade in timeout={1000}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    display: "block",
+                    textAlign: "center",
+                    mt: 3,
+                    color: "#999",
+                    fontStyle: "italic",
+                    animation: "slideHint 1.5s infinite",
+                    "@keyframes slideHint": {
+                      "0%": { transform: "translateX(0)" },
+                      "50%": { transform: "translateX(-10px)" },
+                      "100%": { transform: "translateX(0)" },
+                    },
+                  }}
+                >
+                  ← Vuốt để xem thêm mã giảm giá →
+                </Typography>
+              </Fade>
+            </motion.div>
+          )}
+        </Container>
+      </Box>
+    </motion.div>
   );
 }
