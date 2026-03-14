@@ -15,8 +15,8 @@ export default function ContactView() {
         <ContactFormSection />
         <ContactInfoMapSection />
         <QuickHelpSection />
+        <FinalCallToAction />
       </Container>
-      <FinalCallToAction />
     </>
   );
 }

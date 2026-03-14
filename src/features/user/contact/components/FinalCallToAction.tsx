@@ -6,10 +6,15 @@ import {
   Button,
   useMediaQuery,
   useTheme,
+  Stack,
+  Chip,
 } from "@mui/material";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import SupportAgentIcon from "@mui/icons-material/SupportAgent";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
 export default function FinalCallToAction() {
   const theme = useTheme();
@@ -23,16 +28,11 @@ export default function FinalCallToAction() {
 
   return (
     <Box
-      component={motion.div}
-      initial={{ opacity: 0, scale: 0.98 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.6 }}
-      viewport={{ once: true }}
       sx={{
         position: "relative",
         width: "100%",
-        height: isMobile ? 280 : 400,
-        mt: 8,
+        height: isMobile ? 350 : 450,
+        my: 8,
         overflow: "hidden",
         display: "flex",
         alignItems: "center",
@@ -48,77 +48,133 @@ export default function FinalCallToAction() {
         priority
       />
 
+      {/* Gradient Overlay */}
       <Box
-        component={motion.div}
-        initial={{ y: 40, opacity: 0 }}
-        whileInView={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.3, duration: 0.6 }}
-        viewport={{ once: true }}
         sx={{
-          position: "relative",
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(135deg, rgba(242,92,5,0.9) 0%, rgba(255,183,0,0.8) 100%)",
           zIndex: 2,
-          backgroundColor: "rgba(0, 0, 0, 0.65)",
-          borderRadius: 4,
-          p: { xs: 3, md: 5 },
-          maxWidth: 740,
-          textAlign: "center",
-          color: "white",
+        }}
+      />
+
+      {/* Content */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        viewport={{ once: true }}
+        style={{
+          position: "relative",
+          zIndex: 3,
+          width: "100%",
+          maxWidth: 800,
         }}
       >
-        <Typography variant="h5" fontWeight={700} mb={2}>
-          CHỌN ĐÚNG THƯƠNG HIỆU – TĂNG HIỆU QUẢ CÔNG VIỆC NGAY HÔM NAY
-        </Typography>
-        <Typography fontSize={16} mb={3}>
-          Đừng bỏ lỡ cơ hội nhận ưu đãi cực sốc & hỗ trợ tư vấn tận tâm từ đội
-          ngũ của chúng tôi
-        </Typography>
         <Box
-          display="flex"
-          gap={2}
-          justifyContent="center"
-          flexWrap="wrap"
-          mt={2}
+          sx={{
+            backgroundColor: "rgba(255,255,255,0.95)",
+            borderRadius: 4,
+            p: { xs: 3, md: 5 },
+            textAlign: "center",
+            boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
+          }}
         >
-          <Button
-            variant="contained"
-            size="large"
-            onClick={() => go("/contact")}
+          {/* Badge */}
+          <Chip
+            icon={<LocalOfferIcon />}
+            label="Ưu đãi đặc biệt"
             sx={{
               bgcolor: "#f25c05",
-              color: "white",
-              textTransform: "none",
-              fontWeight: "bold",
-              px: 3,
-              "&:hover": {
-                bgcolor: "#d14c02",
-                transform: "scale(1.05)",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-              },
+              color: "#fff",
+              fontWeight: 700,
+              mb: 2,
             }}
-          >
-            Liên hệ tư vấn
-          </Button>
-          <Button
-            variant="outlined"
-            size="large"
-            onClick={() => go("/product")}
+          />
+
+          <Typography
+            variant="h4"
+            fontWeight={900}
             sx={{
-              color: "white",
-              borderColor: "white",
-              textTransform: "none",
-              fontWeight: "bold",
-              px: 3,
-              "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.15)",
-                transform: "scale(1.05)",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-              },
+              fontSize: { xs: "1.5rem", md: "2rem" },
+              mb: 2,
+              color: "#333",
             }}
           >
-            Mua ngay – Ưu đãi cực sốc!
-          </Button>
+            CHỌN ĐÚNG THƯƠNG HIỆU – TĂNG HIỆU QUẢ CÔNG VIỆC
+          </Typography>
+
+          <Typography
+            variant="body1"
+            sx={{ mb: 3, color: "#666", maxWidth: 600, mx: "auto" }}
+          >
+            Đừng bỏ lỡ cơ hội nhận ưu đãi cực sốc & hỗ trợ tư vấn tận tâm từ đội
+            ngũ chuyên nghiệp của chúng tôi
+          </Typography>
+
+          {/* Promo Chips */}
+          <Stack
+            direction="row"
+            spacing={1}
+            justifyContent="center"
+            sx={{ mb: 3, flexWrap: "wrap", gap: 1 }}
+          >
+            <Chip label="Giảm 20% đơn đầu" size="small" />
+            <Chip label="Miễn phí vận chuyển" size="small" />
+            <Chip label="Bảo hành 12 tháng" size="small" />
+          </Stack>
+
+          {/* Buttons */}
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={2}
+            justifyContent="center"
+          >
+            <Button
+              variant="contained"
+              size="large"
+              onClick={() => go("/contact")}
+              endIcon={<SupportAgentIcon />}
+              sx={{
+                bgcolor: "#f25c05",
+                color: "#fff",
+                fontWeight: 700,
+                px: 4,
+                py: 1.5,
+                "&:hover": {
+                  bgcolor: "#e64a19",
+                  transform: "scale(1.05)",
+                },
+              }}
+            >
+              Tư vấn miễn phí
+            </Button>
+
+            <Button
+              variant="outlined"
+              size="large"
+              onClick={() => go("/product")}
+              endIcon={<ArrowForwardIcon />}
+              sx={{
+                borderColor: "#f25c05",
+                borderWidth: 2,
+                color: "#f25c05",
+                fontWeight: 700,
+                px: 4,
+                py: 1.5,
+                "&:hover": {
+                  borderColor: "#e64a19",
+                  bgcolor: "rgba(242,92,5,0.05)",
+                  transform: "scale(1.05)",
+                },
+              }}
+            >
+              Khám phá sản phẩm
+            </Button>
+          </Stack>
         </Box>
-      </Box>
+      </motion.div>
     </Box>
   );
 }
