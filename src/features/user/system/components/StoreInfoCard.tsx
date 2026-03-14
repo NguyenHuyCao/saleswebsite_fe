@@ -1,3 +1,4 @@
+// system/components/StoreInfoCard.tsx
 "use client";
 
 import {
@@ -25,6 +26,11 @@ type Props = {
 export default function StoreInfoCard({ store, onDirections }: Props) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  // Format hours from object to string
+  const formatHours = (hours: StoreInfo["hours"]) => {
+    return `Thứ 2 - Thứ 7: ${hours.monday.split(" - ")[0]} - ${hours.monday.split(" - ")[1]}`;
+  };
 
   return (
     <motion.div
@@ -57,12 +63,12 @@ export default function StoreInfoCard({ store, onDirections }: Props) {
 
         <Box display="flex" alignItems="center" mb={2}>
           <AccessTimeIcon sx={{ color: "#ffb700", mr: 2 }} />
-          <Typography>{store.hours}</Typography>
+          <Typography>{formatHours(store.hours)}</Typography>
         </Box>
 
         <Box display="flex" alignItems="center" mb={2}>
           <CheckCircleIcon sx={{ color: "green", mr: 2 }} />
-          <Typography fontWeight={600}>{store.status}</Typography>
+          <Typography fontWeight={600}>Còn hàng</Typography>
         </Box>
 
         <Button
