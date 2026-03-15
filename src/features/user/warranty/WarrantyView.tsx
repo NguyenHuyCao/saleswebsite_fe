@@ -1,25 +1,38 @@
 // warranty/WarrantyView.tsx
 import { Container } from "@mui/material";
-import dynamic from "next/dynamic";
 import PageViewTracker from "@/components/common/traffic/PageViewTracker";
 import WarrantyHeroSection from "./components/WarrantyHeroSection";
-import WarrantyConditionsCards from "./components/WarrantyConditionsCards";
-import WarrantyPageHero from "./components/WarrantyPageHero";
-import WarrantyConditions from "./components/WarrantyConditions";
-
+import WarrantyStats from "./components/WarrantyStats";
+import WarrantyPolicyTabs from "./components/WarrantyPolicyTabs";
+import WarrantyLookup from "./components/WarrantyLookup";
 import WarrantyRequestForm from "./components/WarrantyRequestForm";
+import WarrantyHistory from "./components/WarrantyHistory";
+import WarrantyFAQ from "./components/WarrantyFAQ";
 
 export default async function WarrantyView() {
-  // Nếu sau này cần preload config từ backend, fetch ở đây (server)
   return (
     <>
       <PageViewTracker />
+
+      {/* Hero Section */}
       <WarrantyHeroSection />
-      <Container>
-        <WarrantyConditionsCards />
-        <WarrantyPageHero />
-        <WarrantyConditions />
+
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        {/* Stats Overview */}
+        <WarrantyStats />
+
+        {/* Policy Tabs */}
+        <WarrantyPolicyTabs />
+
+        {/* Warranty Lookup & Request */}
+        <WarrantyLookup />
         <WarrantyRequestForm />
+
+        {/* Warranty History */}
+        <WarrantyHistory />
+
+        {/* FAQ */}
+        <WarrantyFAQ />
       </Container>
     </>
   );

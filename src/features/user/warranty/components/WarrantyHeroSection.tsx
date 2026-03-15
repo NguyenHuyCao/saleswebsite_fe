@@ -1,3 +1,4 @@
+// warranty/components/WarrantyHeroSection.tsx
 "use client";
 
 import {
@@ -7,10 +8,13 @@ import {
   useMediaQuery,
   useTheme,
   Container,
+  Chip,
+  Stack,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import Image from "next/image";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import VerifiedIcon from "@mui/icons-material/Verified";
 import { motion } from "framer-motion";
 
 export default function WarrantyHeroSection() {
@@ -19,107 +23,185 @@ export default function WarrantyHeroSection() {
 
   return (
     <Box
-      component={motion.section}
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8 }}
-      viewport={{ once: true }}
       sx={{
         position: "relative",
-        backgroundColor: "#e0f2ff",
-        px: { xs: 2, md: 6 },
-        py: { xs: 6, md: 10 },
+        background: "linear-gradient(135deg, #0d47a1 0%, #1976d2 100%)",
         overflow: "hidden",
-        borderRadius: 4,
       }}
     >
-      <Container>
-        <Grid container spacing={6} alignItems="center" justifyContent="center">
+      {/* Background Pattern */}
+      <Box
+        sx={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          opacity: 0.1,
+          background:
+            "radial-gradient(circle at 30% 50%, #fff 0%, transparent 50%)",
+        }}
+      />
+
+      <Container
+        maxWidth="xl"
+        sx={{ py: { xs: 6, md: 8 }, position: "relative" }}
+      >
+        <Grid container spacing={4} alignItems="center">
+          {/* Left Content */}
           <Grid size={{ xs: 12, md: 6 }}>
-            {/* ... giữ nguyên nội dung bên trái ... */}
-            <Box
-              component={motion.div}
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              viewport={{ once: true }}
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
             >
+              <Chip
+                icon={<VerifiedIcon />}
+                label="BẢO HÀNH CHÍNH HÃNG"
+                sx={{
+                  bgcolor: "#ffb700",
+                  color: "#000",
+                  fontWeight: 700,
+                  mb: 3,
+                }}
+              />
+
               <Typography
-                variant="h4"
-                fontWeight={700}
-                color="#0d47a1"
-                mb={2}
-                textAlign={{ xs: "center", md: "left" }}
+                variant="h2"
+                fontWeight={900}
+                sx={{
+                  color: "#fff",
+                  fontSize: { xs: "2rem", md: "3rem" },
+                  mb: 2,
+                  lineHeight: 1.2,
+                }}
               >
-                Bảo hành nhanh chóng – An tâm sử dụng
+                Bảo hành nhanh chóng
+                <Box
+                  component="span"
+                  sx={{ color: "#ffb700", display: "block" }}
+                >
+                  An tâm sử dụng
+                </Box>
               </Typography>
+
               <Typography
                 variant="h6"
-                fontWeight={500}
-                color="text.primary"
-                mb={3}
-                textAlign={{ xs: "center", md: "left" }}
+                sx={{
+                  color: "rgba(255,255,255,0.9)",
+                  mb: 3,
+                  fontWeight: 400,
+                }}
               >
                 Theo dõi bảo hành sản phẩm bạn đã mua – minh bạch, chính xác và
                 thuận tiện!
               </Typography>
-              <Typography
-                variant="body1"
-                color="text.secondary"
-                mb={4}
-                textAlign={{ xs: "center", md: "left" }}
+
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={2}
+                sx={{ mb: 4 }}
               >
-                Tất cả sản phẩm đều được bảo hành theo đơn hàng bạn đã đặt. Kiểm
-                tra tình trạng và gửi yêu cầu bảo hành chỉ với vài cú click.
-              </Typography>
-              <Box textAlign={{ xs: "center", md: "left" }}>
                 <Button
                   variant="contained"
-                  color="primary"
                   size="large"
+                  href="#warranty-lookup"
                   endIcon={<ArrowDownwardIcon />}
-                  href="#warranty-check"
                   sx={{
-                    textTransform: "none",
-                    fontWeight: 600,
+                    bgcolor: "#ffb700",
+                    color: "#000",
+                    fontWeight: 700,
                     px: 4,
                     py: 1.5,
-                    transition: "all 0.3s",
-                    ":hover": { transform: "translateY(-2px)", boxShadow: 4 },
+                    "&:hover": { bgcolor: "#f59e0b" },
                   }}
                 >
                   Tra cứu bảo hành
                 </Button>
-              </Box>
-            </Box>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  href="#warranty-request"
+                  sx={{
+                    borderColor: "#fff",
+                    color: "#fff",
+                    borderWidth: 2,
+                    "&:hover": {
+                      borderColor: "#ffb700",
+                      bgcolor: "rgba(255,255,255,0.1)",
+                    },
+                  }}
+                >
+                  Yêu cầu bảo hành
+                </Button>
+              </Stack>
+
+              {/* Quick Features */}
+              <Stack direction="row" spacing={3}>
+                <Box>
+                  <Typography variant="h4" fontWeight={800} color="#ffb700">
+                    12-36
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "rgba(255,255,255,0.8)" }}
+                  >
+                    Tháng bảo hành
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="h4" fontWeight={800} color="#ffb700">
+                    24/7
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "rgba(255,255,255,0.8)" }}
+                  >
+                    Hỗ trợ
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="h4" fontWeight={800} color="#ffb700">
+                    100%
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "rgba(255,255,255,0.8)" }}
+                  >
+                    Chính hãng
+                  </Typography>
+                </Box>
+              </Stack>
+            </motion.div>
           </Grid>
 
+          {/* Right Image */}
           <Grid size={{ xs: 12, md: 6 }}>
-            {/* ... giữ nguyên khối ảnh ... */}
-            <Box
-              component={motion.div}
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              viewport={{ once: true }}
-              sx={{
-                position: "relative",
-                width: "100%",
-                height: isMobile ? 240 : 360,
-                borderRadius: 2,
-                overflow: "hidden",
-                boxShadow: 3,
-              }}
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <Image
-                src="/images/warranty/Milwaukee-Linkedin-banner_2_.webp"
-                alt="Kỹ thuật viên đang kiểm tra sản phẩm"
-                fill
-                priority
-                sizes="(max-width: 768px) 100vw, 50vw"
-                style={{ objectFit: "cover" }}
-              />
-            </Box>
+              <Box
+                sx={{
+                  position: "relative",
+                  width: "100%",
+                  height: isMobile ? 250 : 400,
+                  borderRadius: 4,
+                  overflow: "hidden",
+                  boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
+                }}
+              >
+                <Image
+                  src="/images/warranty/Milwaukee-Linkedin-banner_2_.webp"
+                  alt="Kỹ thuật viên đang kiểm tra sản phẩm"
+                  fill
+                  priority
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  style={{ objectFit: "cover" }}
+                />
+              </Box>
+            </motion.div>
           </Grid>
         </Grid>
       </Container>

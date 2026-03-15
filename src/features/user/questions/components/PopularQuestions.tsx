@@ -10,6 +10,7 @@ import {
   ListItemIcon,
   Chip,
   Stack,
+  Box,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
@@ -59,6 +60,7 @@ export default function PopularQuestions() {
               key={idx}
               sx={{
                 px: 0,
+                py: 1.5,
                 borderBottom:
                   idx < popularQuestions.length - 1
                     ? "1px solid #f0f0f0"
@@ -68,17 +70,23 @@ export default function PopularQuestions() {
               <ListItemIcon sx={{ minWidth: 36 }}>
                 <QuestionAnswerIcon sx={{ color: "#ffb700", fontSize: 20 }} />
               </ListItemIcon>
-              <ListItemText
-                primary={item.q}
-                secondary={
-                  <Chip
-                    label={`${item.views} lượt xem`}
-                    size="small"
-                    sx={{ fontSize: "0.6rem", height: 18 }}
-                  />
-                }
-                primaryTypographyProps={{ fontSize: "0.9rem", fontWeight: 500 }}
-              />
+
+              {/* FIX: Không dùng secondary prop, tự render content */}
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
+                  {item.q}
+                </Typography>
+
+                <Chip
+                  label={`${item.views} lượt xem`}
+                  size="small"
+                  sx={{
+                    fontSize: "0.6rem",
+                    height: 18,
+                    bgcolor: "#f5f5f5",
+                  }}
+                />
+              </Box>
             </ListItem>
           ))}
         </List>
