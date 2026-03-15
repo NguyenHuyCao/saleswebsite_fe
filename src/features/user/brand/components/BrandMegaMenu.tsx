@@ -72,37 +72,45 @@ const BrandMegaMenu = ({ brands }: Props) => {
           width: 250,
         }}
       >
-        {brands.map((brand, index) => (
-          <Box
-            key={brand.id}
-            onMouseEnter={() => setHoveredBrandIndex(index)}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              px: 2,
-              py: 1.3,
-              cursor: "pointer",
-              bgcolor: hoveredBrandIndex === index ? "#f97316" : "transparent",
-              transition: "all 0.3s ease",
-              borderLeft:
-                hoveredBrandIndex === index
-                  ? "4px solid #ffb700"
-                  : "4px solid transparent",
-            }}
-          >
-            <Box display="flex" alignItems="center" gap={1}>
-              <Image
-                src={`${brand.logo}`}
-                alt={brand.name}
-                width={35}
-                height={35}
-              />
-              <Typography fontSize={14}>{brand.name}</Typography>
+        {brands
+          .filter((brand) =>
+            brand.category.some(
+              (cat) => cat.products && cat.products.length > 0,
+            ),
+          )
+          .map((brand, index) => (
+            <Box
+              key={brand.id}
+              onMouseEnter={() => setHoveredBrandIndex(index)}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                px: 2,
+                py: 1.3,
+                cursor: "pointer",
+                bgcolor:
+                  hoveredBrandIndex === index ? "#f97316" : "transparent",
+                transition: "all 0.3s ease",
+                borderLeft:
+                  hoveredBrandIndex === index
+                    ? "4px solid #ffb700"
+                    : "4px solid transparent",
+              }}
+            >
+              <Box display="flex" alignItems="center" gap={1}>
+                <Image
+                  src={brand.logo}
+                  alt={brand.name}
+                  width={35}
+                  height={35}
+                  style={{ objectFit: "contain" }}
+                />
+                <Typography fontSize={14}>{brand.name}</Typography>
+              </Box>
+              <Typography fontWeight="bold">›</Typography>
             </Box>
-            <Typography fontWeight="bold">›</Typography>
-          </Box>
-        ))}
+          ))}
       </Box>
 
       {/* CATEGORY & PRODUCT LIST */}
@@ -192,7 +200,7 @@ const BrandMegaMenu = ({ brands }: Props) => {
                     onClick={() => {
                       const brandSlug = brands[hoveredBrandIndex!].slug;
                       router.push(
-                        `/product?brand=${brandSlug}&category=${cat.slug}`
+                        `/product?brand=${brandSlug}&category=${cat.slug}`,
                       );
                     }}
                     sx={{

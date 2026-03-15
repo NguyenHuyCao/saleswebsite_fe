@@ -140,12 +140,13 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
         >
           <Button
             variant="contained"
+            startIcon={<AppsIcon />}
             sx={{
               bgcolor: "black",
               color: "white",
               textTransform: "none",
               fontWeight: "bold",
-              minWidth: 250,
+              minWidth: { xs: 200, md: 250 },
               px: 3,
               py: 1,
               whiteSpace: "nowrap",
@@ -158,6 +159,7 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
             DANH MỤC SẢN PHẨM
           </Button>
 
+          {/* Chỉ hiển thị khi có dữ liệu và showMegaMenu = true */}
           {brandsData.length > 0 && categoriesRawData.length > 0 && (
             <Fade in={showMegaMenu} timeout={300}>
               <Box
@@ -167,6 +169,8 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
                   top: "100%",
                   left: 0,
                   zIndex: 1000,
+                  minWidth: 300,
+                  maxWidth: 800,
                 }}
               >
                 <BrandMegaMenu
