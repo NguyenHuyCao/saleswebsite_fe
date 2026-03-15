@@ -1,4 +1,4 @@
-// src/features/news/types.ts
+// src/features/new/types.ts
 export interface NewsPost {
   id?: number;
   title: string;
@@ -9,8 +9,8 @@ export interface NewsPost {
   image: string;
   date: string;
   publishedAt?: string;
-  category?: string; // THÊM field này
-  categories?: string[]; // Hoặc nếu có nhiều category
+  category?: string;
+  categories?: string[];
   author?: string;
   authorAvatar?: string;
   views?: number;
@@ -24,4 +24,8 @@ export type MetaData = {
   pages: number;
   total: number;
 };
-export type ListNewsResponse = { result: NewsPost[]; meta?: MetaData | null };
+
+export type ListNewsResponse = {
+  result: NewsPost[];
+  meta?: MetaData | null;
+};

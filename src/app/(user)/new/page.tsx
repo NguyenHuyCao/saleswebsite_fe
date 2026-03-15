@@ -1,5 +1,5 @@
 import PageViewTracker from "@/components/common/traffic/PageViewTracker";
-import NewsListView from "@/features/user/news/NewsListView";
+import { NewsListView } from "@/features/user/news";
 import { Container } from "@mui/material";
 
 export default function NewPage() {

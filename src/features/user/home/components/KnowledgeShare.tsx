@@ -284,7 +284,7 @@ export default function KnowledgeShare() {
                   transition={{ type: "spring", stiffness: 300 }}
                 >
                   <Card
-                    onClick={() => router.push(`/news/${article.id}`)}
+                    onClick={() => router.push(`/new/${article.id}`)}
                     sx={{
                       height: "100%",
                       display: "flex",

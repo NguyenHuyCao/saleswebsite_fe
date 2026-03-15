@@ -1,4 +1,4 @@
-// features/user/news/NewsListView.tsx
+// features/user/new/NewsListView.tsx
 "use client";
 
 import React, { useMemo, useState } from "react";
@@ -50,10 +50,11 @@ const featuredPost = {
   title: "Top 10 máy cắt cỏ chạy xăng tốt nhất 2024",
   excerpt:
     "Khám phá những mẫu máy cắt cỏ chạy xăng được ưa chuộng nhất hiện nay, với đánh giá chi tiết về hiệu suất, độ bền và giá cả.",
-  image: "/images/news/featured.jpg",
+  image:
+    "/images/news/6670636fbeca91b81a58a6f9_Deere-company-tractor-banner.jpg",
   date: "15/03/2024",
   author: "Nguyễn Văn A",
-  authorAvatar: "/images/authors/author1.jpg",
+  authorAvatar: "/images/customer/customer1.jpeg",
   views: 1234,
   comments: 56,
   category: "Đánh giá sản phẩm",
@@ -263,7 +264,7 @@ export default function NewsListView() {
                         boxShadow: "0 20px 30px rgba(242,92,5,0.15)",
                       },
                     }}
-                    onClick={() => router.push(`/news/${featuredPost.slug}`)}
+                    onClick={() => router.push(`/new/${featuredPost.slug}`)}
                   >
                     <Grid container>
                       <Grid size={{ xs: 12, md: 6 }}>
@@ -423,7 +424,7 @@ export default function NewsListView() {
                           whileHover={cardHover}
                         >
                           <Paper
-                            onClick={() => router.push(`/news/${post.slug}`)}
+                            onClick={() => router.push(`/new/${post.slug}`)}
                             sx={{
                               p: 2,
                               borderRadius: 3,
@@ -681,7 +682,7 @@ export default function NewsListView() {
                                   bgcolor: "#fff8f0",
                                 },
                               }}
-                              onClick={() => router.push(`/news/${item.slug}`)}
+                              onClick={() => router.push(`/new/${item.slug}`)}
                             >
                               <Box
                                 sx={{
