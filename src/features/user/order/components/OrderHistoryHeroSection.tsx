@@ -1,3 +1,4 @@
+// order/components/OrderHistoryHeroSection.tsx
 "use client";
 
 import {
@@ -6,85 +7,225 @@ import {
   Button,
   useMediaQuery,
   useTheme,
+  Chip,
+  Stack,
+  Avatar,
+  Grid,
+  Paper,
 } from "@mui/material";
-import Image from "next/image";
 import { motion } from "framer-motion";
+import Image from "next/image";
+import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
+import ReceiptIcon from "@mui/icons-material/Receipt";
+import TimelineIcon from "@mui/icons-material/Timeline";
+import { useMyOrdersQuery } from "../queries";
 
 export default function OrderHistoryHeroSection() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const { data: orders = [] } = useMyOrdersQuery();
+
+  const totalOrders = orders.length;
+  const totalSpent = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
 
   return (
     <Box
-      component={motion.div}
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7 }}
       sx={{
-        bgcolor: "#e3f2fd",
-        px: { xs: 3, md: 6 },
-        py: { xs: 6, md: 10 },
-        borderRadius: 4,
-        display: "flex",
-        flexDirection: { xs: "column", md: "row" },
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 4,
-        overflow: "hidden",
+        position: "relative",
+        py: { xs: 4, md: 5 },
+        px: { xs: 2, md: 4 },
+        borderRadius: 3,
+        bgcolor: "#fafafa",
+        border: "1px solid #f0f0f0",
+        mb: 3,
       }}
     >
-      <Box flex={1}>
-        <Typography
-          variant={isMobile ? "h5" : "h4"}
-          fontWeight={700}
-          gutterBottom
-          color="#0d47a1"
-        >
-          Lịch sử đơn hàng của bạn
-        </Typography>
-        <Typography
-          variant="body1"
-          color="text.secondary"
-          mb={3}
-          maxWidth={500}
-        >
-          Theo dõi, xem chi tiết và xử lý đơn hàng một cách dễ dàng. Mọi thông
-          tin đều được cập nhật minh bạch và nhanh chóng.
-        </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          size="large"
-          sx={{ textTransform: "none", fontWeight: 600 }}
-          href="/product"
-        >
-          Tiếp tục mua sắm
-        </Button>
-      </Box>
+      <Grid container spacing={3} alignItems="center">
+        {/* Left Content - 7 phần */}
+        <Grid size={{ xs: 12, md: 7 }}>
+          {/* Top Badge */}
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            sx={{ mb: 2 }}
+          >
+            <Chip
+              icon={<ReceiptIcon sx={{ fontSize: 16 }} />}
+              label={`${totalOrders} đơn hàng`}
+              sx={{
+                bgcolor: "#f25c05",
+                color: "#fff",
+                fontWeight: 600,
+                height: 28,
+              }}
+            />
 
-      <Box
-        flex={1}
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        component={motion.div}
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.8 }}
-      >
-        <Image
-          src="/images/banner/istockphoto-1639694829-612x612.jpg"
-          alt="Order Illustration"
-          width={isMobile ? 240 : 320}
-          height={isMobile ? 160 : 220}
-          style={{
-            objectFit: "contain",
-            borderRadius: 8,
-            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-          }}
-          priority
-        />
-      </Box>
+            <Avatar
+              sx={{
+                bgcolor: "#ffb700",
+                width: 32,
+                height: 32,
+                display: { md: "none" }, // Chỉ hiện trên mobile
+              }}
+            >
+              <LocalShippingIcon sx={{ fontSize: 18, color: "#000" }} />
+            </Avatar>
+          </Stack>
+
+          {/* Title */}
+          <Typography
+            variant="h5"
+            fontWeight={700}
+            sx={{ mb: 2, color: "#333" }}
+          >
+            Lịch sử đơn hàng
+          </Typography>
+
+          {/* Stats Row */}
+          <Stack direction="row" spacing={4} sx={{ mb: 2 }}>
+            <Box>
+              <Typography variant="h4" fontWeight={700} color="#f25c05">
+                {totalOrders}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Tổng đơn
+              </Typography>
+            </Box>
+            <Box>
+              <Typography variant="h4" fontWeight={700} color="#f25c05">
+                {totalSpent.toLocaleString()}₫
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Tổng chi tiêu
+              </Typography>
+            </Box>
+          </Stack>
+
+          {/* Description */}
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ mb: 2, lineHeight: 1.5 }}
+          >
+            Theo dõi trạng thái đơn hàng và lịch sử mua sắm của bạn.
+          </Typography>
+
+          {/* Action Buttons */}
+          <Stack direction="row" spacing={1.5} sx={{ mb: 2 }}>
+            <Button
+              variant="contained"
+              size="small"
+              href="/product"
+              startIcon={<ShoppingBagIcon />}
+              sx={{
+                bgcolor: "#ffb700",
+                color: "#000",
+                fontWeight: 600,
+                textTransform: "none",
+                px: 3,
+                py: 1,
+              }}
+            >
+              Mua sắm tiếp
+            </Button>
+
+            <Button
+              variant="outlined"
+              size="small"
+              href="#order-list"
+              startIcon={<TimelineIcon />}
+              sx={{
+                borderColor: "#ffb700",
+                color: "#f25c05",
+                fontWeight: 600,
+                textTransform: "none",
+                px: 3,
+                py: 1,
+              }}
+            >
+              Xem đơn hàng
+            </Button>
+          </Stack>
+
+          {/* Footer */}
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={1}
+            sx={{ opacity: 0.6 }}
+          >
+            <LocalShippingIcon sx={{ fontSize: 16, color: "#999" }} />
+            <Typography variant="caption" color="text.secondary">
+              Giao hàng toàn quốc
+            </Typography>
+          </Stack>
+        </Grid>
+
+        {/* Right Content - 5 phần */}
+        <Grid size={{ xs: 12, md: 5 }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 2,
+            }}
+          >
+            {/* Illustration */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <Image
+                src="/images/banner/istockphoto-1639694829-612x612.jpg"
+                alt="Delivery"
+                width={180}
+                height={180}
+                style={{ objectFit: "contain" }}
+              />
+            </motion.div>
+
+            {/* Quick Stats */}
+            <Stack direction="row" spacing={2}>
+              <Paper
+                sx={{
+                  p: 1.5,
+                  textAlign: "center",
+                  bgcolor: "#fff",
+                  borderRadius: 2,
+                  minWidth: 80,
+                }}
+              >
+                <Typography variant="caption" color="text.secondary">
+                  Giao hàng
+                </Typography>
+                <Typography variant="body2" fontWeight={700} color="#f25c05">
+                  Nhanh
+                </Typography>
+              </Paper>
+              <Paper
+                sx={{
+                  p: 1.5,
+                  textAlign: "center",
+                  bgcolor: "#fff",
+                  borderRadius: 2,
+                  minWidth: 80,
+                }}
+              >
+                <Typography variant="caption" color="text.secondary">
+                  Bảo hành
+                </Typography>
+                <Typography variant="body2" fontWeight={700} color="#f25c05">
+                  12 tháng
+                </Typography>
+              </Paper>
+            </Stack>
+          </Box>
+        </Grid>
+      </Grid>
     </Box>
   );
 }

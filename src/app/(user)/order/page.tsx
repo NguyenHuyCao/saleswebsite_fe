@@ -6,9 +6,7 @@ export default function OrdersPage() {
   return (
     <>
       <PageViewTracker />
-      <Container sx={{ py: 4 }}>
-        <OrdersView />
-      </Container>
+      <OrdersView />
     </>
   );
 }

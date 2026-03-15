@@ -1,37 +1,100 @@
+// order/components/ShippingStatusChip.tsx
 "use client";
 
-import { Chip } from "@mui/material";
+import { Chip, Tooltip, Box } from "@mui/material";
 
-export default function ShippingStatusChip({ status }: { status: string }) {
-  const labelMap: Record<string, string> = {
-    PENDING: "Đang chờ",
-    WAITING_PAYMENT: "Đợi thanh toán",
-    CONFIRMED: "Đã xác nhận",
-    SHIPPING: "Đang vận chuyển",
-    DELIVERED: "Đã nhận hàng",
-    CANCELLED: "Lỗi đơn hàng",
-    FAILED: "Thất bại",
+interface ShippingStatusChipProps {
+  status: string;
+  showTooltip?: boolean;
+}
+
+export default function ShippingStatusChip({
+  status,
+  showTooltip = true,
+}: ShippingStatusChipProps) {
+  const getStatusInfo = (status: string) => {
+    switch (status) {
+      case "PENDING":
+        return {
+          label: "⏳ Chờ xác nhận",
+          color: "warning" as const,
+          tooltip: "Đơn hàng đang chờ được xác nhận",
+        };
+      case "WAITING_PAYMENT":
+        return {
+          label: "💰 Chờ thanh toán",
+          color: "warning" as const,
+          tooltip: "Vui lòng thanh toán để tiếp tục",
+        };
+      case "CONFIRMED":
+        return {
+          label: "✅ Đã xác nhận",
+          color: "info" as const,
+          tooltip: "Đơn hàng đã được xác nhận",
+        };
+      case "SHIPPING":
+        return {
+          label: "🚚 Đang vận chuyển",
+          color: "warning" as const,
+          tooltip: "Đơn hàng đang trên đường vận chuyển",
+        };
+      case "DELIVERED":
+        return {
+          label: "📦 Đã nhận hàng",
+          color: "success" as const,
+          tooltip: "Bạn đã nhận được hàng",
+        };
+      case "CANCELLED":
+        return {
+          label: "❌ Đã hủy",
+          color: "error" as const,
+          tooltip: "Đơn hàng đã bị hủy",
+        };
+      case "FAILED":
+        return {
+          label: "⚠️ Thất bại",
+          color: "error" as const,
+          tooltip: "Có lỗi xảy ra, vui lòng liên hệ hỗ trợ",
+        };
+      default:
+        return {
+          label: "❓ Không rõ",
+          color: "default" as const,
+          tooltip: "Trạng thái không xác định",
+        };
+    }
   };
 
-  const colorMap: Record<
-    string,
-    "info" | "success" | "warning" | "error" | "default"
-  > = {
-    PENDING: "warning",
-    WAITING_PAYMENT: "warning",
-    CONFIRMED: "info",
-    SHIPPING: "warning",
-    DELIVERED: "success",
-    CANCELLED: "error",
-    FAILED: "error",
-  };
+  const info = getStatusInfo(status);
 
-  return (
+  const chip = (
     <Chip
-      sx={{ width: 150 }}
-      label={labelMap[status] || "Không rõ"}
-      color={colorMap[status] || "default"}
+      label={info.label}
+      color={info.color}
       size="small"
+      sx={{
+        width: "100%",
+        maxWidth: { xs: "100%", sm: 130 },
+        fontWeight: 600,
+        fontSize: { xs: "0.65rem", sm: "0.7rem" },
+        height: { xs: 28, sm: 24 },
+        "& .MuiChip-label": {
+          px: { xs: 0.5, sm: 1 },
+          whiteSpace: "normal",
+          textOverflow: "ellipsis",
+          overflow: "hidden",
+        },
+      }}
     />
   );
+
+  if (showTooltip) {
+    return (
+      <Tooltip title={info.tooltip} arrow>
+        {chip}
+      </Tooltip>
+    );
+  }
+
+  return chip;
 }

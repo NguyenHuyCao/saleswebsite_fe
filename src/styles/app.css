@@ -6,7 +6,7 @@ body {
   width: 100vw;
   min-height: 100vh;
   overflow-x: hidden;
-  overflow-y: scroll;
+  /* overflow-y: scroll; */
 }
 
 #__next {
@@ -68,3 +68,24 @@ code[class*="language-"] {
     opacity: 0;
   }
 } */
+/* styles/globals.css */
+@media (max-width: 600px) {
+  .MuiAccordionSummary-content {
+    margin: 12px 0 !important;
+  }
+  .MuiGrid-container {
+    margin-left: -8px !important;
+    width: calc(100% + 8px) !important;
+  }
+
+  .MuiGrid-item {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+  /* Force stack trên mobile */
+  .order-summary-mobile {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+}
