@@ -1,6 +1,10 @@
 // questions/types.ts
 export type FaqQA = { q: string; a: string };
-export type FaqCategory = { category: string; questions: FaqQA[] };
+export type FaqCategory = {
+  category: string;
+  questions: FaqQA[];
+  icon?: string;
+};
 
 export type ContactPayload = {
   fullName: string;
