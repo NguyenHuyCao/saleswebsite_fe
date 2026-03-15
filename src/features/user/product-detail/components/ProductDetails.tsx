@@ -12,10 +12,23 @@ import {
   Typography,
   useMediaQuery,
   useTheme,
+  Chip,
+  Alert,
+  AlertTitle,
+  LinearProgress,
+  Grid,
 } from "@mui/material";
-import Grid from "@mui/material/Grid";
-import { ShoppingCart, Heart, Minus, Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import {
+  ShoppingCart,
+  Heart,
+  Minus,
+  Plus,
+  Truck,
+  Shield,
+  RotateCcw,
+  Clock,
+} from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, AppState } from "@/redux/store";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
@@ -24,9 +37,6 @@ import GlobalSnackbar from "@/components/alert/GlobalSnackbar";
 import { mutate } from "swr";
 import { CART_COUNT_KEY, WISHLIST_COUNT_KEY } from "@/constants/apiKeys";
 import { http } from "@/lib/api/http";
-
-// Nếu bạn dùng type toàn cục thì bỏ phần import type
-// import type { Product, Category } from "@/features/user/products/types";
 
 interface Props {
   product: Product;
@@ -38,7 +48,7 @@ export default function ProductDetails({ product, category }: Props) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isFavorite = useSelector((state: AppState) =>
-    selectIsProductInWishlist(product.id)(state)
+    selectIsProductInWishlist(product.id)(state),
   );
 
   const [quantity, setQuantity] = useState<number>(1);
@@ -48,10 +58,10 @@ export default function ProductDetails({ product, category }: Props) {
     message: "",
   });
 
-  // ✅ Chuẩn hoá các field có thể undefined
   const warranty = product.warrantyMonths ?? 0;
   const stockQty = product.stockQuantity ?? 0;
   const totalStock = product.totalStock ?? 0;
+  const inStock = product.inStock && stockQty > 0;
 
   useEffect(() => {
     dispatch(fetchWishlist());
@@ -122,6 +132,8 @@ export default function ProductDetails({ product, category }: Props) {
       ? Math.round(((totalStock - stockQty) / totalStock) * 100)
       : 0;
 
+  const soldCount = totalStock - stockQty;
+
   const handleQuantityChange = (value: number) => {
     if (!Number.isNaN(value) && value >= 1 && value <= stockQty) {
       setQuantity(value);
@@ -129,110 +141,185 @@ export default function ProductDetails({ product, category }: Props) {
   };
 
   return (
-    <Box component={Paper} elevation={1} p={3} borderRadius={3}>
-      <Typography variant="h5" fontWeight={700} gutterBottom>
+    <Box>
+      {/* Product Name */}
+      <Typography
+        variant="h5"
+        fontWeight={700}
+        gutterBottom
+        sx={{ wordBreak: "break-word" }}
+      >
         {product.name}
       </Typography>
 
-      <Typography variant="body2" color="text.secondary" mb={1.5}>
-        Thương hiệu:{" "}
-        <Box component="span" color="warning.main" fontWeight={500}>
-          {category?.name || "Không rõ"}
-        </Box>{" "}
-        | Loại: {product.fuelType || "--"} | Xuất xứ: {product.origin || "--"} |
+      {/* Category & Tags */}
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{ mb: 2, flexWrap: "wrap", gap: 1 }}
+      >
+        <Chip
+          label={category?.name || "Không rõ"}
+          size="small"
+          sx={{ bgcolor: "#f25c05", color: "#fff" }}
+        />
+        {product.status?.map((tag, idx) => (
+          <Chip
+            key={idx}
+            label={tag}
+            size="small"
+            sx={{
+              bgcolor: tag === "Mới" ? "#4caf50" : "#ffb700",
+              color: "#fff",
+            }}
+          />
+        ))}
+      </Stack>
+
+      {/* Basic Specs */}
+      <Typography variant="body2" color="text.secondary" mb={2}>
+        Loại: {product.fuelType || "--"} | Xuất xứ: {product.origin || "--"} |
         Công suất: {product.power || "--"}
       </Typography>
 
       <Divider sx={{ my: 2 }} />
 
-      <Typography variant="h4" fontWeight={700} color="error.main" gutterBottom>
-        {product.price > 0
-          ? `${product.price.toLocaleString()}₫`
-          : "Liên hệ báo giá"}
-      </Typography>
-      <Typography color="success.main" variant="body2" mb={2}>
-        Còn hàng: {stockQty} sản phẩm
-      </Typography>
+      {/* Price Section */}
+      <Box sx={{ display: "flex", alignItems: "baseline", gap: 2, mb: 2 }}>
+        <Typography variant="h4" fontWeight={700} color="error.main">
+          {product.price > 0
+            ? `${product.price.toLocaleString()}₫`
+            : "Liên hệ báo giá"}
+        </Typography>
+        {product.sale && product.originalPrice > product.price && (
+          <Typography
+            variant="body1"
+            sx={{ textDecoration: "line-through", color: "#999" }}
+          >
+            {product.originalPrice.toLocaleString()}₫
+          </Typography>
+        )}
+      </Box>
 
+      {/* Stock Status */}
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{ mb: 2, flexWrap: "wrap", gap: 1 }}
+      >
+        <Chip
+          icon={<Truck size={16} />}
+          label={inStock ? `Còn ${stockQty} sản phẩm` : "Hết hàng"}
+          color={inStock ? "success" : "error"}
+          size="small"
+        />
+        <Chip
+          icon={<Shield size={16} />}
+          label={`Bảo hành: ${warranty > 0 ? `${warranty} tháng` : "Không có"}`}
+          size="small"
+        />
+        <Chip
+          icon={<RotateCcw size={16} />}
+          label="Đổi trả 7 ngày"
+          size="small"
+        />
+      </Stack>
+
+      {/* Specifications Grid */}
       <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <Typography variant="body2">
-            <b>Loại nhiên liệu:</b> {product.fuelType || "--"}
-          </Typography>
-          <Typography variant="body2">
-            <b>Loại động cơ:</b> {product.engineType || "--"}
-          </Typography>
-          <Typography variant="body2">
-            <b>Dung tích bình:</b> {product.tankCapacity ?? 0}L
+        <Grid size={{ xs: 6 }}>
+          <Typography
+            variant="body2"
+            sx={{ bgcolor: "#f5f5f5", p: 1, borderRadius: 1 }}
+          >
+            <b>Nhiên liệu:</b> {product.fuelType || "--"}
           </Typography>
         </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <Typography variant="body2">
+        <Grid size={{ xs: 6 }}>
+          <Typography
+            variant="body2"
+            sx={{ bgcolor: "#f5f5f5", p: 1, borderRadius: 1 }}
+          >
+            <b>Động cơ:</b> {product.engineType || "--"}
+          </Typography>
+        </Grid>
+        <Grid size={{ xs: 6 }}>
+          <Typography
+            variant="body2"
+            sx={{ bgcolor: "#f5f5f5", p: 1, borderRadius: 1 }}
+          >
+            <b>Dung tích:</b> {product.tankCapacity ?? 0}L
+          </Typography>
+        </Grid>
+        <Grid size={{ xs: 6 }}>
+          <Typography
+            variant="body2"
+            sx={{ bgcolor: "#f5f5f5", p: 1, borderRadius: 1 }}
+          >
             <b>Kích thước:</b> {product.dimensions || "--"}
           </Typography>
-          <Typography variant="body2">
-            <b>Trọng lượng:</b> {product.weight ?? 0}g
+        </Grid>
+        <Grid size={{ xs: 6 }}>
+          <Typography
+            variant="body2"
+            sx={{ bgcolor: "#f5f5f5", p: 1, borderRadius: 1 }}
+          >
+            <b>Trọng lượng:</b> {product.weight ?? 0}kg
           </Typography>
-          <Typography variant="body2">
-            <b>Bảo hành:</b> {warranty > 0 ? `${warranty} tháng` : "Không có"}
+        </Grid>
+        <Grid size={{ xs: 6 }}>
+          <Typography
+            variant="body2"
+            sx={{ bgcolor: "#f5f5f5", p: 1, borderRadius: 1 }}
+          >
+            <b>Xuất xứ:</b> {product.origin || "--"}
           </Typography>
         </Grid>
       </Grid>
 
-      <Box
-        sx={{
-          bgcolor: "#ffc107",
-          p: 1.5,
-          borderRadius: 1,
-          position: "relative",
-          mb: 2,
-          overflow: "hidden",
-        }}
-      >
-        <Box
-          sx={{
-            height: 12,
-            bgcolor: "white",
-            borderRadius: 6,
-            overflow: "hidden",
-          }}
-        >
+      {/* Sales Progress */}
+      {totalStock > 0 && (
+        <Box sx={{ bgcolor: "#fff8e1", p: 1.5, borderRadius: 2, mb: 2 }}>
           <Box
+            sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}
+          >
+            <Typography variant="body2">Đã bán: {soldCount}</Typography>
+            <Typography variant="body2">Còn lại: {stockQty}</Typography>
+          </Box>
+          <LinearProgress
+            variant="determinate"
+            value={progressPercent}
             sx={{
-              width: `${progressPercent}%`,
-              height: "100%",
-              bgcolor: "#f44336",
-              backgroundImage:
-                "repeating-linear-gradient(45deg, #f44336 0, #f44336 10px, #ff9800 10px, #ff9800 20px)",
-              transition: "width 0.4s ease",
-              borderRadius: 6,
+              height: 8,
+              borderRadius: 4,
+              bgcolor: "#ffe0b2",
+              "& .MuiLinearProgress-bar": {
+                bgcolor: "#f25c05",
+              },
             }}
           />
         </Box>
-        <Typography variant="body2" fontWeight={600} mt={1}>
-          Đã bán {totalStock - stockQty}
-        </Typography>
-      </Box>
+      )}
 
-      <Stack direction="row" spacing={2} alignItems="center" mt={3}>
+      {/* Quantity Selector & Add to Cart */}
+      <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
         <Stack
           direction="row"
           alignItems="center"
-          spacing={0}
           sx={{
-            border: "1px solid #ccc",
+            border: "1px solid #e0e0e0",
             borderRadius: 2,
             overflow: "hidden",
-            height: 40,
+            height: 44,
           }}
         >
           <IconButton
             size="small"
-            sx={{ borderRadius: 0 }}
+            sx={{ borderRadius: 0, px: 1.5 }}
             disabled={quantity <= 1}
             onClick={() => handleQuantityChange(quantity - 1)}
           >
-            <Minus size={16} />
+            <Minus size={18} />
           </IconButton>
           <TextField
             size="small"
@@ -242,39 +329,72 @@ export default function ProductDetails({ product, category }: Props) {
               handleQuantityChange(Number.isNaN(val) ? 1 : val);
             }}
             sx={{
-              width: 50,
-              input: { textAlign: "center", py: 1 },
+              width: 60,
+              input: { textAlign: "center", py: 1.2 },
               "& fieldset": { border: "none" },
             }}
           />
           <IconButton
             size="small"
-            sx={{ borderRadius: 0 }}
+            sx={{ borderRadius: 0, px: 1.5 }}
             disabled={quantity >= stockQty}
             onClick={() => handleQuantityChange(quantity + 1)}
           >
-            <Plus size={16} />
+            <Plus size={18} />
           </IconButton>
         </Stack>
 
-        <Tooltip title="Thêm vào giỏ hàng">
-          <Button
-            variant="contained"
-            color="warning"
-            startIcon={<ShoppingCart size={18} />}
-            sx={{ borderRadius: 3, px: 3, py: 1.5, fontWeight: 600 }}
-            onClick={handleAddToCart}
-          >
-            Thêm vào giỏ
-          </Button>
+        <Tooltip
+          title={!inStock ? "Sản phẩm đã hết hàng" : "Thêm vào giỏ hàng"}
+        >
+          <span style={{ flex: 1 }}>
+            <Button
+              fullWidth
+              variant="contained"
+              color="warning"
+              startIcon={<ShoppingCart size={18} />}
+              sx={{
+                borderRadius: 2,
+                py: 1.5,
+                fontWeight: 600,
+                fontSize: "0.95rem",
+                textTransform: "none",
+              }}
+              onClick={handleAddToCart}
+              disabled={!inStock}
+            >
+              {inStock ? "Thêm vào giỏ" : "Hết hàng"}
+            </Button>
+          </span>
         </Tooltip>
 
         <Tooltip title={isFavorite ? "Bỏ yêu thích" : "Thêm yêu thích"}>
-          <IconButton onClick={toggleFavorite}>
-            <Heart fill={isFavorite ? "#f44336" : "none"} color="#f44336" />
+          <IconButton
+            onClick={toggleFavorite}
+            sx={{
+              border: "1px solid",
+              borderColor: isFavorite ? "#f25c05" : "#e0e0e0",
+              width: 44,
+              height: 44,
+              bgcolor: isFavorite ? "#fff8f0" : "transparent",
+              "&:hover": { bgcolor: "#fff8f0" },
+            }}
+          >
+            <Heart
+              fill={isFavorite ? "#f25c05" : "none"}
+              color={isFavorite ? "#f25c05" : "#999"}
+            />
           </IconButton>
         </Tooltip>
       </Stack>
+
+      {/* Bulk Price Notice */}
+      <Alert severity="info" sx={{ borderRadius: 2, mb: 2 }}>
+        <AlertTitle sx={{ fontWeight: 600 }}>
+          💼 Giá sỉ cho đơn hàng từ 5 sản phẩm
+        </AlertTitle>
+        Liên hệ hotline <strong>1900 6750</strong> để được báo giá tốt nhất.
+      </Alert>
 
       <GlobalSnackbar
         type={snackbar.type}

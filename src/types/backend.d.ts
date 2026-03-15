@@ -80,7 +80,7 @@ declare global {
     imageDetail2?: string;
     imageDetail3?: string;
     description?: string;
-
+    videoUrl?: string;
     price: number;
     pricePerUnit: number;
     originalPrice: number;

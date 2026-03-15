@@ -48,7 +48,7 @@ const UserReviewList = ({ productId }: Props) => {
     if (!getAccessToken()) return;
     try {
       const res = await http.get<ApiEnvelope<Review[]>>(
-        `/api/v1/reviews/user/${productId}`
+        `/api/v1/me/products/${productId}/reviews`,
       );
       setReviews(res.data?.data ?? []);
     } catch (err) {
