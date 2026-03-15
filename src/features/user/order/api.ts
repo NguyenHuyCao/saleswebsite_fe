@@ -8,7 +8,7 @@ import type { Order } from "./types";
  */
 export async function fetchMyOrders(): Promise<Order[]> {
   const data = await api.get<Order[] | { result: Order[] }>(
-    "/api/v1/history_orders"
+    "/api/v1/orders/me",
   );
   return Array.isArray(data) ? data : data?.result ?? [];
 }

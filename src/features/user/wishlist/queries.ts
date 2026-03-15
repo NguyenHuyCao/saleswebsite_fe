@@ -1,3 +1,4 @@
+// wishlist/queries.ts
 "use client";
 
 import useSWR, { mutate } from "swr";
@@ -68,12 +69,5 @@ export const useWishlist = () => {
 };
 
 export const bounceWishlistCounters = () => {
-  const { WISHLIST_COUNT_KEY } = require("@/constants/apiKeys");
   mutate(WISHLIST_QUERY_KEY);
-  mutate(WISHLIST_COUNT_KEY, undefined, { revalidate: true });
-};
-export const clearWishlistCache = () => {
-  const { WISHLIST_COUNT_KEY } = require("@/constants/apiKeys");
-  mutate(WISHLIST_QUERY_KEY, undefined, { revalidate: false });
-  mutate(WISHLIST_COUNT_KEY, undefined, { revalidate: false });
 };
