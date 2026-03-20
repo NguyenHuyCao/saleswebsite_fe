@@ -13,7 +13,7 @@ import KeyboardDoubleArrowDownIcon from "@mui/icons-material/KeyboardDoubleArrow
 
 const HeroContainer = styled(Box)(({ theme }) => ({
   position: "relative",
-  height: "65vh",
+  height: "80vh",
   backgroundImage:
     "url(/images/brands/6670636fbeca91b81a58a6f9_Deere-company-tractor-banner.jpg)",
   backgroundSize: "cover",
@@ -24,7 +24,7 @@ const HeroContainer = styled(Box)(({ theme }) => ({
   textAlign: "center",
   color: "white",
   padding: theme.spacing(4),
-  borderRadius: theme.spacing(1),
+  // borderRadius: theme.spacing(1),
   overflow: "hidden",
   [theme.breakpoints.down("sm")]: {
     height: "50vh",

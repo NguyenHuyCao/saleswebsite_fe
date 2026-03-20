@@ -43,6 +43,7 @@ const WishlistHeroSection = ({ onShare }: WishlistHeroSectionProps) => {
         backgroundPosition: "center",
         color: "#fff",
         mb: 4,
+        height: "80vh",
         // mt: 2,
       }}
     >

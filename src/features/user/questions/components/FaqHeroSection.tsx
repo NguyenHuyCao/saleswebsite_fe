@@ -270,7 +270,7 @@ export default function FaqHeroSection() {
               }}
             >
               <Image
-                src="/images/faq/faq-illustration.svg"
+                src="/images/about/May-cua-xich-chay-pin-STIHL-MSA-120.jpg"
                 alt="FAQ Illustration"
                 fill
                 style={{ objectFit: "contain" }}

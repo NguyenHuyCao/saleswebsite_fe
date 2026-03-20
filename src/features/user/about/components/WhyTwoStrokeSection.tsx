@@ -1,62 +1,118 @@
+// about/components/WhyTwoStrokeSection.tsx
 "use client";
 
-import { Box, Typography } from "@mui/material";
-import Grid from "@mui/material/Grid";
+import {
+  Box,
+  Typography,
+  Grid,
+  Chip,
+  Card,
+  CardContent,
+  CardHeader,
+  Avatar,
+} from "@mui/material";
 import { motion } from "framer-motion";
 import { whyTwoStroke } from "../constants/features";
 
 export default function WhyTwoStrokeSection() {
   return (
     <Box
+      id="why-two-stroke"
       px={{ xs: 2, md: 4 }}
       py={{ xs: 6, md: 8 }}
-      sx={{ textAlign: "center", backgroundColor: "#f9f9f9" }}
+      sx={{ bgcolor: "#f9f9f9" }}
     >
-      <Typography
-        variant="h5"
-        fontWeight="bold"
-        mb={6}
-        sx={{ fontSize: { xs: "1.4rem", md: "1.8rem" } }}
-      >
-        TẠI SAO LẠI LÀ{" "}
-        <Box component="span" sx={{ color: "#ffb700" }}>
-          MÁY 2 THÌ?
-        </Box>
-      </Typography>
+      <Box sx={{ textAlign: "center", mb: 6 }}>
+        <Chip
+          label="LỢI ÍCH NỔI BẬT"
+          sx={{ bgcolor: "#f25c05", color: "#fff", fontWeight: 700, mb: 2 }}
+        />
 
-      <Grid container spacing={4} justifyContent="center">
-        {whyTwoStroke.map(({ icon: Icon, title }, i) => (
-          <Grid size={{ xs:12, sm:6, md:4,}} key={i}>
+        <Typography
+          variant="h3"
+          fontWeight={800}
+          sx={{
+            fontSize: { xs: "2rem", md: "2.5rem" },
+            mb: 2,
+          }}
+        >
+          Tại sao chọn{" "}
+          <Box component="span" sx={{ color: "#ffb700" }}>
+            máy 2 thì?
+          </Box>
+        </Typography>
+
+        <Typography
+          variant="body1"
+          color="text.secondary"
+          sx={{ maxWidth: 700, mx: "auto" }}
+        >
+          Khám phá những ưu điểm vượt trội của dòng máy 2 thì - sự lựa chọn hàng
+          đầu cho công việc hiệu quả và tiết kiệm.
+        </Typography>
+      </Box>
+
+      <Grid container spacing={3} justifyContent="center">
+        {whyTwoStroke.map((feature, index) => (
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
             <motion.div
-              whileHover={{ scale: 1.03, rotate: [0, 3, -3, 0] }}
-              transition={{ duration: 0.5 }}
+              whileHover={{ y: -8 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              viewport={{ once: true }}
             >
-              <Box
+              <Card
                 sx={{
-                  bgcolor: "white",
-                  p: 4,
-                  borderRadius: 3,
-                  boxShadow: 3,
                   height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 2,
-                  transition: "all 0.3s ease",
-                  "& svg": {
-                    fontSize: 42,
-                    color: "#ffb700",
-                    transition: "transform 0.3s ease",
+                  borderRadius: 4,
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                  transition: "all 0.3s",
+                  "&:hover": {
+                    boxShadow: "0 12px 28px rgba(242,92,5,0.15)",
                   },
-                  "&:hover svg": { transform: "scale(1.15)" },
                 }}
               >
-                <Icon />
-                <Typography fontSize={16} fontWeight={500} color="text.primary">
-                  {title}
-                </Typography>
-              </Box>
+                <CardContent sx={{ p: 3 }}>
+                  <Box
+                    sx={{
+                      width: 60,
+                      height: 60,
+                      borderRadius: 3,
+                      bgcolor: feature.color + "20",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      mb: 2,
+                    }}
+                  >
+                    <feature.icon sx={{ fontSize: 30, color: feature.color }} />
+                  </Box>
+
+                  <Typography variant="h6" fontWeight={700} gutterBottom>
+                    {feature.title}
+                  </Typography>
+
+                  <Typography variant="body2" color="text.secondary" paragraph>
+                    {feature.description}
+                  </Typography>
+
+                  <Box
+                    sx={{
+                      display: "inline-block",
+                      bgcolor: feature.color,
+                      color: "#fff",
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 2,
+                      fontSize: "0.8rem",
+                      fontWeight: 700,
+                    }}
+                  >
+                    {feature.stats}
+                  </Box>
+                </CardContent>
+              </Card>
             </motion.div>
           </Grid>
         ))}

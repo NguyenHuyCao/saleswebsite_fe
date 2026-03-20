@@ -32,7 +32,7 @@ const news = [
     date: "23/08/2023",
     excerpt:
       "Năm mới đang đến gần, đây là thời điểm lý tưởng để nâng cấp dụng cụ cơ khí của bạn với những công nghệ mới nhất...",
-    image: "/images/new/images (2).jpeg",
+    image: "/images/news/images.jpeg",
     category: "Công nghệ mới",
     views: 1234,
     isNew: true,
@@ -43,7 +43,7 @@ const news = [
     date: "23/08/2023",
     excerpt:
       "Công nghệ pin đang thay đổi cách chúng ta sử dụng dụng cụ cơ khí. Dưới đây là top 5 máy mài pin đáng mua nhất...",
-    image: "/images/new/images (1).jpeg",
+    image: "/images/news/images.jpeg",
     category: "Đánh giá",
     views: 856,
     isNew: true,
@@ -54,7 +54,7 @@ const news = [
     date: "22/08/2023",
     excerpt:
       "Hòa vào xu hướng công nghiệp 4.0, các thương hiệu dụng cụ cơ khí đã cho ra mắt nhiều sản phẩm cải tiến...",
-    image: "/images/new/images.jpeg",
+    image: "/images/news/images.jpeg",
     category: "Thử nghiệm",
     views: 567,
     isNew: false,
@@ -65,7 +65,7 @@ const news = [
     date: "21/08/2023",
     excerpt:
       "Dụng cụ cầm tay là khoản đầu tư lâu dài. Hãy tham khảo những lời khuyên từ chuyên gia trước khi quyết định mua...",
-    image: "/images/new/z2818887202266_c1eb1e8b1e19c647d4fb8dc49f910cac.jpg",
+    image: "/images/news/z2818887202266_c1eb1e8b1e19c647d4fb8dc49f910cac.jpg",
     category: "Kinh nghiệm",
     views: 345,
     isNew: false,
