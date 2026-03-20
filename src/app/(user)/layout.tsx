@@ -9,10 +9,20 @@ import ClientLayoutWrapper from "@/components/fixed_elements/ClientLayoutWrapper
 import Providers from "@/components/redux/Providers";
 
 export const metadata: Metadata = {
-  title: "Cửa hàng Cường Hoa",
-  description: "Chào mừng bạn đến với cửa hàng Cường Hoa",
+  title: {
+    default: "Máy 2 Thì - Cửa hàng Cường Hoa",
+    template: "%s | Máy 2 Thì",
+  },
+  description:
+    "Cửa hàng Cường Hoa chuyên cung cấp máy móc 2 thì chính hãng: máy cắt cỏ, máy cưa xích, máy thổi lá. Bảo hành toàn quốc.",
+  keywords: ["máy 2 thì", "máy cắt cỏ", "máy cưa xích", "STIHL", "Husqvarna", "Cường Hoa"],
   icons: {
     icon: "/images/store/logo-removebg-preview.png",
+  },
+  openGraph: {
+    siteName: "Máy 2 Thì - Cửa hàng Cường Hoa",
+    type: "website",
+    locale: "vi_VN",
   },
 };
 

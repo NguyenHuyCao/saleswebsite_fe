@@ -5,9 +5,6 @@ import {
   Box,
   Typography,
   Grid,
-  Card,
-  CardMedia,
-  CardContent,
   Chip,
   Button,
   Container,
@@ -15,6 +12,7 @@ import {
   Divider,
   Stack,
 } from "@mui/material";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion, useInView } from "framer-motion";
 
@@ -187,15 +185,12 @@ export default function NewsSection() {
                   <Box
                     sx={{ position: "relative", height: { xs: 240, md: 300 } }}
                   >
-                    <Box
-                      component="img"
+                    <Image
                       src={featuredNews.image}
                       alt={featuredNews.title}
-                      sx={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
+                      fill
+                      style={{ objectFit: "cover" }}
+                      sizes="(max-width: 768px) 100vw, 60vw"
                     />
                     <Box
                       sx={{
@@ -288,6 +283,7 @@ export default function NewsSection() {
                     >
                       <Box
                         sx={{
+                          position: "relative",
                           width: 80,
                           height: 80,
                           borderRadius: 2,
@@ -295,15 +291,12 @@ export default function NewsSection() {
                           flexShrink: 0,
                         }}
                       >
-                        <Box
-                          component="img"
+                        <Image
                           src={item.image}
                           alt={item.title}
-                          sx={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
+                          fill
+                          style={{ objectFit: "cover" }}
+                          sizes="80px"
                         />
                       </Box>
 

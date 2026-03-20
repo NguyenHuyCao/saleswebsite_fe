@@ -27,15 +27,9 @@ import {
   usePlaceOrderMutation,
   useUserAddressQuery,
 } from "../queries";
+import { provinceNames, getDistricts } from "../constants/vietnamAddresses";
 
 type Props = { items: CartItem[]; onApplyVoucher: (code: string) => void };
-
-const provinces = ["Hồ Chí Minh", "Hà Nội", "Đà Nẵng"];
-const communesMap: Record<string, string[]> = {
-  "Hồ Chí Minh": ["Quận 1", "Quận 2", "Thủ Đức"],
-  "Hà Nội": ["Ba Đình", "Hoàn Kiếm"],
-  "Đà Nẵng": ["Hải Châu", "Sơn Trà"],
-};
 
 export default function CartSummary({ items, onApplyVoucher }: Props) {
   const router = useRouter();
@@ -300,7 +294,7 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
             }}
             sx={{ mb: 2 }}
           >
-            {provinces.map((p) => (
+            {provinceNames.map((p) => (
               <MenuItem key={p} value={p}>
                 {p}
               </MenuItem>
@@ -315,7 +309,7 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
             disabled={!selectedProvince}
             sx={{ mb: 2 }}
           >
-            {(communesMap[selectedProvince] || []).map((c) => (
+            {getDistricts(selectedProvince).map((c) => (
               <MenuItem key={c} value={c}>
                 {c}
               </MenuItem>
