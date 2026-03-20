@@ -9,15 +9,67 @@ import {
   Chip,
   Container,
   TextField,
-  InputAdornment,
   Paper,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Divider,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import SearchIcon from "@mui/icons-material/Search";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
+import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
+import ClickAwayListener from "@mui/material/ClickAwayListener";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { faqData } from "../constants/faqData";
 
-export default function FaqHeroSection() {
+interface Props {
+  searchTerm: string;
+  onSearchChange: (val: string) => void;
+}
+
+export default function FaqHeroSection({ searchTerm, onSearchChange }: Props) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+
+  const faqSuggestions = useMemo(() => {
+    if (!searchTerm.trim()) return [];
+    const term = searchTerm.toLowerCase();
+    return faqData
+      .flatMap((c) => c.questions)
+      .filter((q) => q.q.toLowerCase().includes(term))
+      .slice(0, 5)
+      .map((q) => q.q);
+  }, [searchTerm]);
+
+  const scrollToFaq = () => {
+    document.getElementById("faq-section")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleSearch = () => {
+    setOpen(false);
+    scrollToFaq();
+  };
+
+  const handleSuggestionClick = (question: string) => {
+    onSearchChange(question);
+    setOpen(false);
+    setTimeout(scrollToFaq, 100);
+  };
+
+  const handleProductSearch = () => {
+    if (searchTerm.trim()) {
+      router.push(`/product?search=${encodeURIComponent(searchTerm.trim())}`);
+    }
+    setOpen(false);
+  };
+
+  const showDropdown = open && searchTerm.trim().length > 0;
+
   return (
     <Box
       sx={{
@@ -126,116 +178,198 @@ export default function FaqHeroSection() {
               <Typography
                 variant="body1"
                 color="text.secondary"
-                sx={{
-                  mb: 4,
-                  fontSize: "1.1rem",
-                  maxWidth: 500,
-                }}
+                sx={{ mb: 4, fontSize: "1.1rem", maxWidth: 500 }}
               >
                 Tìm câu trả lời nhanh chóng với hàng trăm bài viết hướng dẫn
                 hoặc liên hệ trực tiếp với đội ngũ hỗ trợ của chúng tôi.
               </Typography>
 
-              {/* Search Bar */}
-              <Paper
-                elevation={2}
-                sx={{
-                  p: 0.5,
-                  pl: 2,
-                  display: "flex",
-                  alignItems: "center",
-                  maxWidth: 500,
-                  borderRadius: 4,
-                  mb: 4,
-                }}
-              >
-                <SearchIcon sx={{ color: "#999", mr: 1 }} />
-                <TextField
-                  fullWidth
-                  placeholder="Tìm kiếm câu hỏi thường gặp..."
-                  variant="standard"
-                  InputProps={{
-                    disableUnderline: true,
-                    sx: { fontSize: "0.95rem" },
-                  }}
-                />
-                <Button
-                  variant="contained"
-                  sx={{
-                    bgcolor: "#f25c05",
-                    color: "#fff",
-                    px: 4,
-                    py: 1.5,
-                    borderRadius: 3,
-                    "&:hover": { bgcolor: "#e64a19" },
-                  }}
-                >
-                  Tìm
-                </Button>
-              </Paper>
+              {/* Search Bar with Suggestion Dropdown */}
+              <ClickAwayListener onClickAway={() => setOpen(false)}>
+                <Box sx={{ position: "relative", maxWidth: 500, mb: 4 }}>
+                  <Paper
+                    elevation={2}
+                    sx={{
+                      p: 0.5,
+                      pl: 2,
+                      display: "flex",
+                      alignItems: "center",
+                      borderRadius: 4,
+                    }}
+                  >
+                    <SearchIcon sx={{ color: "#999", mr: 1 }} />
+                    <TextField
+                      fullWidth
+                      placeholder="Tìm kiếm câu hỏi thường gặp..."
+                      variant="standard"
+                      value={searchTerm}
+                      onChange={(e) => {
+                        onSearchChange(e.target.value);
+                        setOpen(true);
+                      }}
+                      onFocus={() => setOpen(true)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleSearch();
+                        if (e.key === "Escape") setOpen(false);
+                      }}
+                      slotProps={{
+                        input: {
+                          disableUnderline: true,
+                          sx: { fontSize: "0.95rem" },
+                        },
+                      }}
+                    />
+                    <Button
+                      variant="contained"
+                      onClick={handleSearch}
+                      sx={{
+                        bgcolor: "#f25c05",
+                        color: "#fff",
+                        px: 4,
+                        py: 1.5,
+                        borderRadius: 3,
+                        flexShrink: 0,
+                        "&:hover": { bgcolor: "#e64a19" },
+                      }}
+                    >
+                      Tìm
+                    </Button>
+                  </Paper>
+
+                  {/* Suggestion Dropdown */}
+                  {showDropdown && (
+                    <Paper
+                      elevation={4}
+                      sx={{
+                        position: "absolute",
+                        top: "calc(100% + 8px)",
+                        left: 0,
+                        right: 0,
+                        zIndex: 1300,
+                        borderRadius: 3,
+                        overflow: "hidden",
+                        maxHeight: 340,
+                        overflowY: "auto",
+                      }}
+                    >
+                      {/* FAQ Suggestions */}
+                      {faqSuggestions.length > 0 && (
+                        <>
+                          <Box sx={{ px: 2, py: 1, bgcolor: "#f9f9f9" }}>
+                            <Typography
+                              variant="caption"
+                              fontWeight={700}
+                              color="text.secondary"
+                              sx={{ textTransform: "uppercase", letterSpacing: 1 }}
+                            >
+                              Câu hỏi thường gặp
+                            </Typography>
+                          </Box>
+                          <List dense disablePadding>
+                            {faqSuggestions.map((q, i) => (
+                              <ListItemButton
+                                key={i}
+                                onClick={() => handleSuggestionClick(q)}
+                                sx={{
+                                  px: 2,
+                                  "&:hover": { bgcolor: "#fff8f0" },
+                                }}
+                              >
+                                <ListItemIcon sx={{ minWidth: 32 }}>
+                                  <QuestionAnswerIcon
+                                    sx={{ fontSize: 18, color: "#ffb700" }}
+                                  />
+                                </ListItemIcon>
+                                <ListItemText
+                                  primary={q}
+                                  slotProps={{
+                                    primary: { fontSize: "0.9rem" },
+                                  }}
+                                />
+                              </ListItemButton>
+                            ))}
+                          </List>
+                          <Divider />
+                        </>
+                      )}
+
+                      {/* Product Search Option */}
+                      <ListItemButton
+                        onClick={handleProductSearch}
+                        sx={{
+                          px: 2,
+                          py: 1.5,
+                          "&:hover": { bgcolor: "#fff3e0" },
+                        }}
+                      >
+                        <ListItemIcon sx={{ minWidth: 32 }}>
+                          <ShoppingBagIcon
+                            sx={{ fontSize: 18, color: "#f25c05" }}
+                          />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={
+                            <Typography fontSize="0.9rem">
+                              Tìm sản phẩm:{" "}
+                              <Box
+                                component="span"
+                                fontWeight={700}
+                                color="#f25c05"
+                              >
+                                &quot;{searchTerm}&quot;
+                              </Box>
+                            </Typography>
+                          }
+                        />
+                      </ListItemButton>
+
+                      {/* No FAQ results */}
+                      {faqSuggestions.length === 0 && (
+                        <Box sx={{ px: 2, py: 1.5 }}>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            fontSize="0.88rem"
+                          >
+                            Không tìm thấy câu hỏi phù hợp — thử tìm trong sản phẩm bên trên.
+                          </Typography>
+                        </Box>
+                      )}
+                    </Paper>
+                  )}
+                </Box>
+              </ClickAwayListener>
 
               {/* Quick Stats */}
               <Stack
                 direction="row"
                 spacing={{ xs: 2, sm: 4 }}
-                sx={{
-                  flexWrap: "wrap",
-                  gap: 2,
-                }}
+                sx={{ flexWrap: "wrap", gap: 2 }}
               >
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 2,
-                    minWidth: 100,
-                    bgcolor: "#fff",
-                    borderRadius: 3,
-                    textAlign: "center",
-                  }}
-                >
-                  <Typography variant="h4" fontWeight={800} color="#f25c05">
-                    50+
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Câu hỏi
-                  </Typography>
-                </Paper>
-
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 2,
-                    minWidth: 100,
-                    bgcolor: "#fff",
-                    borderRadius: 3,
-                    textAlign: "center",
-                  }}
-                >
-                  <Typography variant="h4" fontWeight={800} color="#f25c05">
-                    24/7
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Hỗ trợ
-                  </Typography>
-                </Paper>
-
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 2,
-                    minWidth: 100,
-                    bgcolor: "#fff",
-                    borderRadius: 3,
-                    textAlign: "center",
-                  }}
-                >
-                  <Typography variant="h4" fontWeight={800} color="#f25c05">
-                    15'
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Phản hồi
-                  </Typography>
-                </Paper>
+                {[
+                  { value: "50+", label: "Câu hỏi" },
+                  { value: "24/7", label: "Hỗ trợ" },
+                  { value: "15'", label: "Phản hồi" },
+                ].map(({ value, label }) => (
+                  <Paper
+                    key={label}
+                    elevation={0}
+                    sx={{
+                      p: 2,
+                      minWidth: 100,
+                      bgcolor: "#fff",
+                      borderRadius: 3,
+                      textAlign: "center",
+                    }}
+                  >
+                    <Typography variant="h4" fontWeight={800} color="#f25c05">
+                      {value}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {label}
+                    </Typography>
+                  </Paper>
+                ))}
               </Stack>
 
               {/* Trust Badge */}
@@ -271,7 +405,7 @@ export default function FaqHeroSection() {
             >
               <Image
                 src="/images/about/May-cua-xich-chay-pin-STIHL-MSA-120.jpg"
-                alt="FAQ Illustration"
+                alt="Trung tâm hỗ trợ Dola"
                 fill
                 style={{ objectFit: "contain" }}
                 priority
