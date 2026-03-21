@@ -69,7 +69,7 @@ const ReviewForm = ({ productId, onSuccess }: Props) => {
       formData.append("comment", comment.trim());
       images.forEach((img) => formData.append("imageReviews", img));
 
-      await http.put(`/api/v1/reviews/${productId}`, formData, {
+      await http.post(`/api/v1/products/${productId}/reviews`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

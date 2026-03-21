@@ -43,8 +43,6 @@ import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
 import PersonIcon from "@mui/icons-material/Person";
 import PhoneIcon from "@mui/icons-material/Phone";
-import FacebookIcon from "@mui/icons-material/Facebook";
-import GoogleIcon from "@mui/icons-material/Google";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -506,36 +504,6 @@ export default function LoginView() {
                         )}
                       </Button>
 
-                      <Divider>
-                        <Chip label="Hoặc đăng nhập với" size="small" />
-                      </Divider>
-
-                      <Stack direction="row" spacing={2}>
-                        <Button
-                          fullWidth
-                          variant="outlined"
-                          startIcon={<FacebookIcon />}
-                          sx={{
-                            borderColor: "#1877f2",
-                            color: "#1877f2",
-                            "&:hover": { bgcolor: "#e7f0ff" },
-                          }}
-                        >
-                          Facebook
-                        </Button>
-                        <Button
-                          fullWidth
-                          variant="outlined"
-                          startIcon={<GoogleIcon />}
-                          sx={{
-                            borderColor: "#db4437",
-                            color: "#db4437",
-                            "&:hover": { bgcolor: "#fee8e7" },
-                          }}
-                        >
-                          Google
-                        </Button>
-                      </Stack>
                     </Stack>
                   </form>
                 ) : (

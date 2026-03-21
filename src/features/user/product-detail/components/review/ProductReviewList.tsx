@@ -85,8 +85,7 @@ const ProductReviewList = ({ productId }: Props) => {
       const list: Review[] = data?.result || [];
       setReviews(list);
       setPage(1);
-    } catch (e) {
-      console.error("Fetch review error:", e);
+    } catch {
       setReviews([]);
     } finally {
       setLoading(false);
@@ -99,12 +98,10 @@ const ProductReviewList = ({ productId }: Props) => {
 
   const toggleApproval = async (id: number) => {
     try {
-      await http.post(`/api/v1/reviews/${id}/approved`, null, {
-        headers: { "Content-Type": "application/json" },
-      });
+      await http.patch(`/api/v1/reviews/${id}/approve`);
       fetchReviews();
-    } catch (e) {
-      console.error("Toggle approval error:", e);
+    } catch {
+      // silently fail
     }
   };
 

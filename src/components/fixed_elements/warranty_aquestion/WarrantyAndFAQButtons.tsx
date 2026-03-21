@@ -82,7 +82,7 @@ const WarrantyAndFAQButtons = () => {
       <Box
         sx={{
           position: "fixed",
-          bottom: isMobile ? 76 : 41,
+          bottom: isMobile ? 76 : 90,
           right: isMobile ? 10 : 28,
           display: "flex",
           flexDirection: "column",

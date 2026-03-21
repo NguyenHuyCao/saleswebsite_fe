@@ -11,7 +11,8 @@ import {
 } from "@mui/material";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-// import type { Product, Category } from "@/product/types";
+import Image from "next/image";
+import type { Product, Category } from "@/features/user/products/types";
 
 interface Props {
   product: Product;
@@ -29,7 +30,7 @@ export default function ProductTabs({ product, category }: Props) {
 
   const suggestions = useMemo(
     () =>
-      category?.products.filter((p) => p.slug !== product.slug).slice(0, 4) ||
+      category?.products?.filter((p) => p.slug !== product.slug).slice(0, 4) ||
       [],
     [category, product.slug]
   );
@@ -106,18 +107,25 @@ export default function ProductTabs({ product, category }: Props) {
         }}
       >
         <Box
-          component="img"
-          src={item.imageAvt || "/images/product/default.jpg"}
-          alt={item.name}
           sx={{
+            position: "relative",
             width: 60,
             height: 60,
-            objectFit: "cover",
             borderRadius: 1,
             mr: 2,
             border: "1px solid #eee",
+            overflow: "hidden",
+            flexShrink: 0,
           }}
-        />
+        >
+          <Image
+            src={item.imageAvt || "/images/product/default.jpg"}
+            alt={item.name}
+            fill
+            style={{ objectFit: "cover" }}
+            sizes="60px"
+          />
+        </Box>
         <Box>
           <Typography variant="body2" noWrap fontWeight={500}>
             {item.name}

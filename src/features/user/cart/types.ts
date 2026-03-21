@@ -18,7 +18,7 @@ export type VoucherValidateResponse = {
 
 export type PlaceOrderPayload = {
   shippingAddress: string;
-  paymentMethod: "COD" | "MOMO";
+  paymentMethod: "COD" | "MOMO" | "VNPAY";
   shippingNote?: string;
   shippingAmount: number;
   promotionCodeByProductId?: Record<number, string>;

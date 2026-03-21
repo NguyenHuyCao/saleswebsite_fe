@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find 'E:\\\\Development Website\\\\Java\\\\MySelf\\\\saleswebsite_be' -type f -path */controller/* -name *.java)",
+      "Bash(find 'E:\\\\Development Website\\\\Java\\\\MySelf\\\\saleswebsite_be\\\\src\\\\main\\\\java\\\\com\\\\huycao\\\\saleswebsite' -type f -name *.java)",
+      "Bash(grep -r \"SecurityUtil\\\\|SecurityContext\\\\|Authentication\" 'E:\\\\Development Website\\\\Java\\\\MySelf\\\\saleswebsite_be\\\\src\\\\main\\\\java\\\\com\\\\huycao\\\\saleswebsite\\\\common\\\\security' --include=*.java)",
+      "Bash(find 'E:\\\\Development Website\\\\Java\\\\MySelf\\\\saleswebsite_be' -type f -name *Redis*Config* -o -type f -name *RedisConfig*)",
+      "Read(//d e:/Development Website/Java/MySelf/**)",
+      "Bash(redis-cli KEYS \"rl:checkout:user:*\")"
+    ]
+  }
+}

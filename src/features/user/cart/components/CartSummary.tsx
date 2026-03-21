@@ -54,7 +54,7 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
   const [selectedProvince, setSelectedProvince] = useState("");
   const [selectedCommune, setSelectedCommune] = useState("");
   const [detailAddress, setDetailAddress] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"COD" | "MOMO">("COD");
+  const [paymentMethod, setPaymentMethod] = useState<"COD" | "MOMO" | "VNPAY">("COD");
   const [shippingType, setShippingType] = useState<"standard" | "express">(
     "standard"
   );
@@ -110,8 +110,17 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
         message: "Đặt hàng thành công!",
       });
       setTimeout(() => {
-        if (data?.paymentUrl) window.location.href = data.paymentUrl;
-        else router.push("/");
+        if (data?.paymentUrl && (paymentMethod === "MOMO" || paymentMethod === "VNPAY")) {
+          const query = new URLSearchParams({
+            orderId: String(data.orderId),
+            method: paymentMethod,
+            amount: String(total),
+            paymentUrl: data.paymentUrl,
+          });
+          router.push(`/payment/pending?${query.toString()}`);
+        } else {
+          router.push("/order");
+        }
       }, 1200);
     } catch (e: any) {
       setSnackbar({
@@ -209,6 +218,11 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
             value="MOMO"
             control={<Radio />}
             label="Ví điện tử MoMo"
+          />
+          <FormControlLabel
+            value="VNPAY"
+            control={<Radio />}
+            label="Thanh toán qua VNPay"
           />
         </RadioGroup>
       </Box>
