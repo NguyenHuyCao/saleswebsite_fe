@@ -21,10 +21,9 @@ import {
   Rating,
   Divider,
   Container,
-  Alert,
-  Snackbar,
   Tooltip,
 } from "@mui/material";
+import { useToast } from "@/lib/toast/ToastContext";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Icons
@@ -117,6 +116,7 @@ const validateForm = (form: any) => {
 };
 
 export default function CustomerReviewsSlider() {
+  const { showToast } = useToast();
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const [form, setForm] = useState({
@@ -127,10 +127,6 @@ export default function CustomerReviewsSlider() {
   });
   const [errors, setErrors] = useState<any>({});
   const [loading, setLoading] = useState(false);
-  const [alert, setAlert] = useState<{
-    type: "success" | "error";
-    message: string;
-  } | null>(null);
 
   // Auto-slide states
   const [isAutoPlay, setIsAutoPlay] = useState(true);
@@ -177,21 +173,18 @@ export default function CustomerReviewsSlider() {
     const formErrors = validateForm(form);
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
-      setAlert({ type: "error", message: "Vui lòng điền đầy đủ thông tin" });
+      showToast("Vui lòng điền đầy đủ thông tin", "error");
       return;
     }
 
     setLoading(true);
     try {
       await api.post("/api/v1/contacts", { ...form, subject: "Tư vấn" });
-      setAlert({ type: "success", message: "Gửi liên hệ thành công!" });
+      showToast("Gửi liên hệ thành công!", "success", "Liên hệ");
       setForm({ fullName: "", email: "", phone: "", messageContent: "" });
       setErrors({});
     } catch (err: any) {
-      setAlert({
-        type: "error",
-        message: err?.message || "Gửi liên hệ thất bại.",
-      });
+      showToast(err?.message || "Gửi liên hệ thất bại.", "error");
     } finally {
       setLoading(false);
     }
@@ -240,20 +233,6 @@ export default function CustomerReviewsSlider() {
   return (
     <Box sx={{ py: { xs: 4, md: 6 }, bgcolor: "#fff" }}>
       <Container maxWidth="xl">
-        <Snackbar
-          open={!!alert}
-          autoHideDuration={4000}
-          onClose={() => setAlert(null)}
-          anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        >
-          <Alert
-            severity={alert?.type || "success"}
-            sx={{ borderRadius: 2, boxShadow: 3 }}
-          >
-            {alert?.message}
-          </Alert>
-        </Snackbar>
-
         <Grid container spacing={4} alignItems="stretch">
           {/* LEFT: REVIEWS SECTION */}
           <Grid size={{ xs: 12, md: 6 }}>

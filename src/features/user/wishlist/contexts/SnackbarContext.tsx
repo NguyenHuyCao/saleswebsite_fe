@@ -1,8 +1,8 @@
 // wishlist/contexts/SnackbarContext.tsx
 "use client";
 
-import React, { createContext, useState, useCallback } from "react";
-import { Snackbar, Alert } from "@mui/material";
+import React, { createContext, useCallback } from "react";
+import { useToast } from "@/lib/toast/ToastContext";
 
 export interface SnackbarContextType {
   showSuccess: (message: string) => void;
@@ -20,54 +20,16 @@ export const SnackbarProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState("");
-  const [severity, setSeverity] = useState<
-    "success" | "error" | "info" | "warning"
-  >("info");
+  const { showToast } = useToast();
 
-  const showMessage = useCallback((msg: string, sev: typeof severity) => {
-    setMessage(msg);
-    setSeverity(sev);
-    setOpen(true);
-  }, []);
-
-  const showSuccess = useCallback(
-    (msg: string) => showMessage(msg, "success"),
-    [showMessage],
-  );
-  const showError = useCallback(
-    (msg: string) => showMessage(msg, "error"),
-    [showMessage],
-  );
-  const showInfo = useCallback(
-    (msg: string) => showMessage(msg, "info"),
-    [showMessage],
-  );
-  const showWarning = useCallback(
-    (msg: string) => showMessage(msg, "warning"),
-    [showMessage],
-  );
-
-  const handleClose = () => {
-    setOpen(false);
-  };
+  const showSuccess = useCallback((msg: string) => showToast(msg, "success"), [showToast]);
+  const showError = useCallback((msg: string) => showToast(msg, "error"), [showToast]);
+  const showInfo = useCallback((msg: string) => showToast(msg, "info"), [showToast]);
+  const showWarning = useCallback((msg: string) => showToast(msg, "warning"), [showToast]);
 
   return (
-    <SnackbarContext.Provider
-      value={{ showSuccess, showError, showInfo, showWarning }}
-    >
+    <SnackbarContext.Provider value={{ showSuccess, showError, showInfo, showWarning }}>
       {children}
-      <Snackbar
-        open={open}
-        autoHideDuration={4000}
-        onClose={handleClose}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert onClose={handleClose} severity={severity} sx={{ width: "100%" }}>
-          {message}
-        </Alert>
-      </Snackbar>
     </SnackbarContext.Provider>
   );
 };

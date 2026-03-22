@@ -1,258 +1,320 @@
 "use client";
 
-import { useState, SyntheticEvent, ReactNode, Fragment } from "react";
+import { useState, useEffect, SyntheticEvent, Fragment } from "react";
 import {
   Box,
-  Chip,
-  Button,
   IconButton,
-  useMediaQuery,
-  Menu as MuiMenu,
-  MenuItem as MuiMenuItem,
-  Avatar as MuiAvatar,
   Typography,
-  styled,
-  Theme,
+  Popover,
+  Divider,
+  Button,
+  Badge,
 } from "@mui/material";
-import PerfectScrollbar from "react-perfect-scrollbar";
-import BellOutline from "mdi-material-ui/BellOutline";
-import Image from "next/image";
+import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
+import { useSocket } from "@/lib/socket/SocketContext";
+import { formatDistanceToNow } from "date-fns";
+import { vi } from "date-fns/locale";
 
-// Styled components
-const Menu = styled(MuiMenu)(({ theme }) => ({
-  "& .MuiMenu-paper": {
-    width: 380,
-    overflow: "hidden",
-    marginTop: theme.spacing(4),
-    [theme.breakpoints.down("sm")]: {
-      width: "100%",
-    },
-  },
-  "& .MuiMenu-list": {
-    padding: 0,
-  },
-}));
-
-const MenuItem = styled(MuiMenuItem)(({ theme }) => ({
-  paddingTop: theme.spacing(3),
-  paddingBottom: theme.spacing(3),
-  borderBottom: `1px solid ${theme.palette.divider}`,
-}));
-
-const Avatar = styled(MuiAvatar)({
-  width: "2.375rem",
-  height: "2.375rem",
-  fontSize: "1.125rem",
-});
-
-const MenuItemTitle = styled(Typography)(({ theme }) => ({
-  fontWeight: 600,
-  flex: "1 1 100%",
-  overflow: "hidden",
-  fontSize: "0.875rem",
-  whiteSpace: "nowrap",
-  textOverflow: "ellipsis",
-  marginBottom: theme.spacing(0.75),
-}));
-
-const MenuItemSubtitle = styled(Typography)({
-  flex: "1 1 100%",
-  overflow: "hidden",
-  whiteSpace: "nowrap",
-  textOverflow: "ellipsis",
-});
-
-const ScrollWrapper = ({
-  children,
-  hidden,
-}: {
-  children: ReactNode;
-  hidden: boolean;
-}) => {
-  const styles = {
-    maxHeight: 349,
-    "& .MuiMenuItem-root:last-of-type": { border: 0 },
-  };
-
-  return hidden ? (
-    <Box sx={{ ...styles, overflowY: "auto", overflowX: "hidden" }}>
-      {children}
-    </Box>
-  ) : (
-    <PerfectScrollbar
-      options={{ wheelPropagation: false, suppressScrollX: true }}
-    >
-      <Box sx={styles}>{children}</Box>
-    </PerfectScrollbar>
-  );
+const TYPE_CONFIG = {
+  ORDER:     { label: "ĐH", color: "#fff", bg: "#f25c05" },
+  PAYMENT:   { label: "TT", color: "#fff", bg: "#ffb700" },
+  PROMOTION: { label: "KM", color: "#fff", bg: "#2e7d32" },
+  SYSTEM:    { label: "HT", color: "#fff", bg: "#555"    },
 };
 
-// Sample mock notifications (can replace with API data later)
-const notifications = [
-  {
-    id: 1,
-    avatar: "/images/avatars/4.png",
-    title: "Congratulation Flora! 🎉",
-    subtitle: "Won the monthly best seller badge",
-    time: "Today",
-  },
-  {
-    id: 2,
-    avatarText: "VU",
-    title: "New user registered.",
-    subtitle: "5 hours ago",
-    time: "Yesterday",
-    bgColor: "primary.main",
-  },
-  {
-    id: 3,
-    avatar: "/images/avatars/5.png",
-    title: "New message received 👋🏻",
-    subtitle: "You have 10 unread messages",
-    time: "11 Aug",
-  },
-  {
-    id: 4,
-    image: "/images/misc/paypal.png",
-    title: "Paypal",
-    subtitle: "Received Payment",
-    time: "25 May",
-  },
-  {
-    id: 5,
-    avatar: "/images/avatars/3.png",
-    title: "Revised Order 📦",
-    subtitle: "New order revised from john",
-    time: "19 Mar",
-  },
-  {
-    id: 6,
-    image: "/images/misc/chart.png",
-    title: "Finance report has been generated",
-    subtitle: "25 hrs ago",
-    time: "27 Dec",
-  },
-];
+const getTypeConfig = (type: string) => {
+  if (!type) return { label: "N", color: "#fff", bg: "#888" };
+  if (type.startsWith("ORDER"))     return TYPE_CONFIG.ORDER;
+  if (type.startsWith("PAYMENT"))   return TYPE_CONFIG.PAYMENT;
+  if (type.startsWith("PROMOTION")) return TYPE_CONFIG.PROMOTION;
+  return TYPE_CONFIG.SYSTEM;
+};
 
 const NotificationDropdown = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const hidden = useMediaQuery((theme: Theme) => theme.breakpoints.down("lg"));
   const open = Boolean(anchorEl);
+  const { notifications, unreadCount, markRead, markAllRead, refresh } = useSocket();
 
-  const handleOpen = (event: SyntheticEvent) => {
-    setAnchorEl(event.currentTarget as HTMLElement);
+  const handleOpen = (e: SyntheticEvent) => {
+    setAnchorEl(e.currentTarget as HTMLElement);
+    refresh();
   };
 
   const handleClose = () => {
+    // Blur active element trước khi close để ngăn browser scroll trigger vào view
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
     setAnchorEl(null);
   };
+
+  const handleMarkRead = (id: number) => {
+    markRead(id);
+  };
+
+  const handleMarkAll = () => {
+    markAllRead();
+    handleClose();
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const handleScroll = () => handleClose();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [open]);
 
   return (
     <Fragment>
       <IconButton
-        color="inherit"
-        aria-haspopup="true"
         onClick={handleOpen}
-        aria-controls="customized-menu"
-        aria-expanded={open ? "true" : undefined}
-        aria-label="Open notifications"
+        aria-label="Thông báo"
+        sx={{ color: "inherit", p: 0.5 }}
       >
-        <BellOutline />
-      </IconButton>
-      <Menu
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleClose}
-        disableScrollLock
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        transformOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <MenuItem disableRipple>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              width: "100%",
-            }}
-          >
-            <Typography sx={{ fontWeight: 600 }}>Notifications</Typography>
-            <Chip
-              size="small"
-              label="8 New"
-              color="primary"
-              sx={{
-                height: 20,
-                fontSize: "0.75rem",
-                fontWeight: 500,
-                borderRadius: "10px",
-              }}
-            />
-          </Box>
-        </MenuItem>
-
-        <ScrollWrapper hidden={hidden}>
-          {notifications.map((noti) => (
-            <MenuItem key={noti.id} onClick={handleClose}>
-              <Box
-                sx={{ width: "100%", display: "flex", alignItems: "center" }}
-              >
-                {noti.image ? (
-                  <Image
-                    src={noti.image}
-                    width={38}
-                    height={38}
-                    alt={noti.title}
-                    sizes="38px"
-                    loading="lazy"
-                  />
-                ) : noti.avatar ? (
-                  <Avatar alt={noti.title} src={noti.avatar} />
-                ) : (
-                  <Avatar
-                    sx={{
-                      backgroundColor: noti.bgColor || "grey.500",
-                      color: "common.white",
-                    }}
-                  >
-                    {noti.avatarText}
-                  </Avatar>
-                )}
-                <Box
-                  sx={{
-                    mx: 4,
-                    flex: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    overflow: "hidden",
-                  }}
-                >
-                  <MenuItemTitle>{noti.title}</MenuItemTitle>
-                  <MenuItemSubtitle variant="body2">
-                    {noti.subtitle}
-                  </MenuItemSubtitle>
-                </Box>
-                <Typography variant="caption" sx={{ color: "text.disabled" }}>
-                  {noti.time}
-                </Typography>
-              </Box>
-            </MenuItem>
-          ))}
-        </ScrollWrapper>
-
-        <MenuItem
-          disableRipple
+        <Badge
+          badgeContent={unreadCount}
+          max={99}
           sx={{
-            py: 3.5,
-            borderBottom: 0,
-            borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+            "& .MuiBadge-badge": {
+              bgcolor: "#f25c05",
+              color: "#fff",
+              fontSize: "0.6rem",
+              minWidth: 16,
+              height: 16,
+              p: "0 4px",
+            },
           }}
         >
-          <Button fullWidth variant="contained" onClick={handleClose}>
-            Read All Notifications
+          <NotificationsNoneIcon sx={{ fontSize: 22 }} />
+        </Badge>
+      </IconButton>
+
+      <Popover
+        open={open}
+        anchorEl={anchorEl}
+        onClose={handleClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+        disableRestoreFocus
+        slotProps={{
+          paper: {
+            sx: {
+              mt: 1,
+              width: 360,
+              borderRadius: 2,
+              border: "2px solid #ffb700",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+              overflow: "hidden",
+              bgcolor: "#fff",
+              color: "#111",
+            },
+          },
+        }}
+      >
+        {/* Header */}
+        <Box
+          sx={{
+            px: 2,
+            py: 1.5,
+            bgcolor: "#000",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <NotificationsNoneIcon sx={{ color: "#ffb700", fontSize: 20 }} />
+            <Typography
+              sx={{ color: "#ffb700", fontWeight: 700, fontSize: "0.95rem" }}
+            >
+              Thông báo
+            </Typography>
+          </Box>
+          {unreadCount > 0 && (
+            <Box
+              sx={{
+                bgcolor: "#f25c05",
+                color: "#fff",
+                borderRadius: "12px",
+                px: 1,
+                py: 0.1,
+                fontSize: "0.72rem",
+                fontWeight: 700,
+              }}
+            >
+              {unreadCount} mới
+            </Box>
+          )}
+        </Box>
+
+        <Divider sx={{ borderColor: "#ffb700" }} />
+
+        {/* List */}
+        {notifications.length === 0 ? (
+          <Box
+            sx={{
+              py: 6,
+              textAlign: "center",
+              bgcolor: "#fafafa",
+            }}
+          >
+            <NotificationsNoneIcon
+              sx={{ fontSize: 40, color: "#ccc", mb: 1 }}
+            />
+            <Typography
+              variant="body2"
+              sx={{ color: "#999", fontSize: "0.85rem" }}
+            >
+              Không có thông báo nào
+            </Typography>
+          </Box>
+        ) : (
+          <Box
+            onWheel={(e) => e.stopPropagation()}
+            sx={{
+              maxHeight: 360,
+              overflowY: "auto",
+              overflowX: "hidden",
+              overscrollBehavior: "contain",
+              bgcolor: "#fff",
+              // Custom scrollbar
+              "&::-webkit-scrollbar": { width: 4 },
+              "&::-webkit-scrollbar-track": { bgcolor: "#f5f5f5" },
+              "&::-webkit-scrollbar-thumb": {
+                bgcolor: "#ffb700",
+                borderRadius: 2,
+              },
+              "&::-webkit-scrollbar-thumb:hover": { bgcolor: "#f25c05" },
+            }}
+          >
+            {notifications.map((noti, idx) => {
+              const cfg = getTypeConfig(noti.type);
+              return (
+                <Box key={noti.id}>
+                  <Box
+                    onClick={() => handleMarkRead(noti.id)}
+                    sx={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: 1.5,
+                      px: 2,
+                      py: 1.5,
+                      cursor: "pointer",
+                      bgcolor: noti.read ? "#fff" : "#fffbf0",
+                      borderLeft: noti.read
+                        ? "3px solid transparent"
+                        : "3px solid #ffb700",
+                      transition: "background 0.15s",
+                      "&:hover": { bgcolor: "#fff8e1" },
+                    }}
+                  >
+                    {/* Avatar */}
+                    <Box
+                      sx={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: "50%",
+                        bgcolor: cfg.bg,
+                        color: cfg.color,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontWeight: 700,
+                        fontSize: "0.72rem",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {cfg.label}
+                    </Box>
+
+                    {/* Content */}
+                    <Box sx={{ flex: 1, overflow: "hidden" }}>
+                      <Typography
+                        sx={{
+                          fontSize: "0.83rem",
+                          fontWeight: noti.read ? 500 : 700,
+                          color: "#111",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {noti.title}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: "0.78rem",
+                          color: "#555",
+                          mt: 0.3,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {noti.content}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: "0.7rem",
+                          color: "#aaa",
+                          mt: 0.4,
+                        }}
+                      >
+                        {formatDistanceToNow(new Date(noti.createdAt), {
+                          addSuffix: true,
+                          locale: vi,
+                        })}
+                      </Typography>
+                    </Box>
+
+                    {/* Unread dot */}
+                    {!noti.read && (
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: "50%",
+                          bgcolor: "#f25c05",
+                          flexShrink: 0,
+                          mt: 0.5,
+                        }}
+                      />
+                    )}
+                  </Box>
+                  {idx < notifications.length - 1 && (
+                    <Divider sx={{ borderColor: "#f5f5f5" }} />
+                  )}
+                </Box>
+              );
+            })}
+          </Box>
+        )}
+
+        {/* Footer */}
+        <Divider sx={{ borderColor: "#eee" }} />
+        <Box sx={{ px: 2, py: 1.5, bgcolor: "#fafafa" }}>
+          <Button
+            fullWidth
+            disabled={unreadCount === 0}
+            onClick={handleMarkAll}
+            sx={{
+              bgcolor: unreadCount > 0 ? "#000" : "#e0e0e0",
+              color: unreadCount > 0 ? "#ffb700" : "#aaa",
+              fontWeight: 700,
+              fontSize: "0.8rem",
+              borderRadius: 1,
+              textTransform: "none",
+              py: 0.8,
+              "&:hover": {
+                bgcolor: unreadCount > 0 ? "#f25c05" : "#e0e0e0",
+                color: unreadCount > 0 ? "#fff" : "#aaa",
+              },
+            }}
+          >
+            Đánh dấu tất cả đã đọc
           </Button>
-        </MenuItem>
-      </Menu>
+        </Box>
+      </Popover>
     </Fragment>
   );
 };

@@ -1,9 +1,9 @@
 "use client";
 
-import { Snackbar, Alert } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useToast, ToastSeverity } from "@/lib/toast/ToastContext";
 
-export type SnackType = "success" | "error";
+export type SnackType = "success" | "error" | "info" | "warning";
 
 export default function GlobalSnackbar({
   type,
@@ -16,20 +16,15 @@ export default function GlobalSnackbar({
   open: boolean;
   onClose: () => void;
 }) {
-  const [duration, setDuration] = useState(4000);
+  const { showToast } = useToast();
 
-  useEffect(() => setDuration(type === "error" ? 6000 : 4000), [type]);
+  useEffect(() => {
+    if (open && message) {
+      showToast(message, type as ToastSeverity);
+      onClose();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
-  return (
-    <Snackbar
-      open={open}
-      onClose={onClose}
-      anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      autoHideDuration={duration}
-    >
-      <Alert onClose={onClose} severity={type} sx={{ width: "100%" }}>
-        {message}
-      </Alert>
-    </Snackbar>
-  );
+  return null;
 }

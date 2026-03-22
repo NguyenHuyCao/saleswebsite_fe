@@ -11,9 +11,8 @@ import {
   Button,
   Divider,
   Chip,
-  Snackbar,
-  Alert,
 } from "@mui/material";
+import { useToast } from "@/lib/toast/ToastContext";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { AppState } from "@/redux/store";
@@ -27,26 +26,14 @@ import type { Promotion } from "../types";
 function ProductsOfPromotion({ promoId }: { promoId: number }) {
   const { data: products = [] } = usePromotionProducts(promoId);
   const { mutateAsync: doDelete } = useDeleteProductFromPromotion();
-  const [snack, setSnack] = useState<{
-    open: boolean;
-    msg: string;
-    type: "success" | "error";
-  }>({ open: false, msg: "", type: "success" });
+  const { showToast } = useToast();
 
   const handleDelete = async (pid: number) => {
     try {
       await doDelete({ promotionId: promoId, productId: pid });
-      setSnack({
-        open: true,
-        type: "success",
-        msg: "Đã xoá sản phẩm khỏi khuyến mãi",
-      });
+      showToast("Đã xoá sản phẩm khỏi khuyến mãi", "success");
     } catch (e: any) {
-      setSnack({
-        open: true,
-        type: "error",
-        msg: e?.message || "Xoá thất bại",
-      });
+      showToast(e?.message || "Xoá thất bại", "error");
     }
   };
 
@@ -85,16 +72,6 @@ function ProductsOfPromotion({ promoId }: { promoId: number }) {
         )}
       </Grid>
 
-      <Snackbar
-        open={snack.open}
-        autoHideDuration={3000}
-        onClose={() => setSnack((s) => ({ ...s, open: false }))}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      >
-        <Alert severity={snack.type} sx={{ width: "100%" }}>
-          {snack.msg}
-        </Alert>
-      </Snackbar>
     </>
   );
 }

@@ -10,11 +10,11 @@ import {
   Typography,
   Box,
   IconButton,
-  Snackbar,
   CircularProgress,
 } from "@mui/material";
 import { useState } from "react";
 import { http, toApiError } from "@/lib/api/http";
+import { useToast } from "@/lib/toast/ToastContext";
 import { getAccessToken } from "@/lib/api/token";
 import CloseIcon from "@mui/icons-material/Close";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,12 +25,12 @@ interface Props {
 }
 
 const ReviewForm = ({ productId, onSuccess }: Props) => {
+  const { showToast } = useToast();
   const [rating, setRating] = useState<number | null>(0);
   const [comment, setComment] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -77,8 +77,7 @@ const ReviewForm = ({ productId, onSuccess }: Props) => {
       setImages([]);
       setRating(0);
       setError(null);
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
+      showToast("Đánh giá của bạn đã được gửi thành công!", "success", "Đánh giá");
       onSuccess();
     } catch (err) {
       setError(toApiError(err).message || "Không thể gửi đánh giá.");
@@ -229,16 +228,6 @@ const ReviewForm = ({ productId, onSuccess }: Props) => {
         </Stack>
       </Paper>
 
-      <Snackbar
-        open={success}
-        autoHideDuration={3000}
-        onClose={() => setSuccess(false)}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      >
-        <Alert severity="success" sx={{ width: "100%" }}>
-          Đánh giá của bạn đã được gửi thành công!
-        </Alert>
-      </Snackbar>
     </>
   );
 };

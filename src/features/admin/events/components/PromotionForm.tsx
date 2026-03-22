@@ -13,9 +13,8 @@ import {
   AccordionSummary,
   AccordionDetails,
   FormGroup,
-  Snackbar,
-  Alert,
 } from "@mui/material";
+import { useToast } from "@/lib/toast/ToastContext";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
@@ -38,15 +37,7 @@ export default function PromotionForm({ mode, id }: Props) {
     mode === "edit" ? Number(id) : 0
   );
 
-  const [snack, setSnack] = useState<{
-    open: boolean;
-    msg: string;
-    type: "success" | "error";
-  }>({
-    open: false,
-    msg: "",
-    type: "success",
-  });
+  const { showToast } = useToast();
 
   // form state
   const [name, setName] = useState("");
@@ -112,11 +103,7 @@ export default function PromotionForm({ mode, id }: Props) {
   const handleSubmit = async () => {
     try {
       await doUpsert(payload);
-      setSnack({
-        open: true,
-        type: "success",
-        msg: mode === "edit" ? "Cập nhật thành công" : "Tạo mới thành công",
-      });
+      showToast(mode === "edit" ? "Cập nhật thành công" : "Tạo mới thành công", "success");
       if (mode === "edit") setTimeout(() => router.push("/admin/events"), 1200);
       else {
         setName("");
@@ -127,7 +114,7 @@ export default function PromotionForm({ mode, id }: Props) {
         setProductIds([]);
       }
     } catch (e: any) {
-      setSnack({ open: true, type: "error", msg: e?.message || "Thất bại" });
+      showToast(e?.message || "Thất bại", "error");
     }
   };
 
@@ -252,16 +239,6 @@ export default function PromotionForm({ mode, id }: Props) {
         </Grid>
       </Paper>
 
-      <Snackbar
-        open={snack.open}
-        autoHideDuration={4000}
-        onClose={() => setSnack((s) => ({ ...s, open: false }))}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      >
-        <Alert severity={snack.type} sx={{ width: "100%" }}>
-          {snack.msg}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 }

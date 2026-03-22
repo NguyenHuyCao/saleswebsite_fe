@@ -20,9 +20,8 @@ import {
   Card,
   CardHeader,
   CardContent,
-  Snackbar,
-  Alert,
 } from "@mui/material";
+import { useToast } from "@/lib/toast/ToastContext";
 import Image from "next/image";
 import { useMemo, useState, ChangeEvent } from "react";
 import { useSelector } from "react-redux";
@@ -52,12 +51,7 @@ export default function WarrantyManagementPage() {
   const [status, setStatus] = useState<WarrantyStatus | string>("");
   const [note, setNote] = useState("");
 
-  // snackbar
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    type: "success" as "success" | "error",
-    message: "",
-  });
+  const { showToast } = useToast();
 
   // global search
   const keyword = useSelector((s: AppState) =>
@@ -111,18 +105,10 @@ export default function WarrantyManagementPage() {
         status,
         resolutionNote: note,
       });
-      setSnackbar({
-        open: true,
-        type: "success",
-        message: "Cập nhật thành công",
-      });
+      showToast("Cập nhật thành công", "success");
       closeEdit();
     } catch (e: any) {
-      setSnackbar({
-        open: true,
-        type: "error",
-        message: e?.message || "Cập nhật yêu cầu bảo hành thất bại",
-      });
+      showToast(e?.message || "Cập nhật yêu cầu bảo hành thất bại", "error");
       closeEdit();
     }
   };
@@ -255,20 +241,6 @@ export default function WarrantyManagementPage() {
           </DialogActions>
         </Dialog>
 
-        <Snackbar
-          open={snackbar.open}
-          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-          anchorOrigin={{ vertical: "top", horizontal: "center" }}
-          autoHideDuration={snackbar.type === "error" ? 6000 : 4000}
-        >
-          <Alert
-            severity={snackbar.type}
-            onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-            sx={{ width: "100%" }}
-          >
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
       </CardContent>
     </Card>
   );

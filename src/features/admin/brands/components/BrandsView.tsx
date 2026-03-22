@@ -13,8 +13,6 @@ import {
   TableRow,
   Button,
   TablePagination,
-  Snackbar,
-  Alert as MuiAlert,
   Typography,
   Paper,
 } from "@mui/material";
@@ -27,8 +25,8 @@ import type { Brand } from "../types";
 // Reuse your existing modals
 import ModalFormBrandCreate from "@/model/brand/ModalFormBrandCreate";
 import ModalFormBrandEdit from "@/model/brand/ModalFormBrandEdit";
+import { useToast } from "@/lib/toast/ToastContext";
 
-const Alert = MuiAlert as React.ElementType;
 const DEFAULT_ROWS = 5;
 
 export default function BrandsView() {
@@ -45,13 +43,7 @@ export default function BrandsView() {
   const [openEdit, setOpenEdit] = useState(false);
   const [editing, setEditing] = useState<Brand | null>(null);
 
-  // snackbar
-  const [snack, setSnack] = useState<{
-    open: boolean;
-    type: "success" | "error";
-    msg: string;
-  }>({ open: false, type: "success", msg: "" });
-
+  const { showToast } = useToast();
   const { mutateAsync: doCreate } = useCreateBrand(1, 1000);
   const { mutateAsync: doUpdate } = useUpdateBrand(1, 1000);
 
@@ -97,20 +89,11 @@ export default function BrandsView() {
       if (v.logoFile) fd.append("logo", v.logoFile);
 
       await doCreate(fd);
-
-      setSnack({
-        open: true,
-        type: "success",
-        msg: "Thêm thương hiệu thành công",
-      });
+      showToast("Thêm thương hiệu thành công", "success");
       setOpenCreate(false);
       setPage(0);
     } catch (e: any) {
-      setSnack({
-        open: true,
-        type: "error",
-        msg: e?.message || "Lỗi khi thêm thương hiệu",
-      });
+      showToast(e?.message || "Lỗi khi thêm thương hiệu", "error");
     }
   };
 
@@ -129,19 +112,10 @@ export default function BrandsView() {
       if (v.logoFile) fd.append("logo", v.logoFile);
 
       await doUpdate({ id: editing.id, fd });
-
-      setSnack({
-        open: true,
-        type: "success",
-        msg: "Cập nhật thương hiệu thành công",
-      });
+      showToast("Cập nhật thương hiệu thành công", "success");
       setOpenEdit(false);
     } catch (e: any) {
-      setSnack({
-        open: true,
-        type: "error",
-        msg: e?.message || "Lỗi khi cập nhật thương hiệu",
-      });
+      showToast(e?.message || "Lỗi khi cập nhật thương hiệu", "error");
     }
   };
 
@@ -268,17 +242,6 @@ export default function BrandsView() {
         initialData={editing}
       />
 
-      <Snackbar
-        open={snack.open}
-        autoHideDuration={4000}
-        onClose={() => setSnack((s) => ({ ...s, open: false }))}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        key={`${snack.type}-${snack.msg}`}
-      >
-        <Alert severity={snack.type} sx={{ width: "100%" }}>
-          {snack.msg}
-        </Alert>
-      </Snackbar>
     </Card>
   );
 }

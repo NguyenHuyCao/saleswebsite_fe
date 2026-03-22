@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { setAccessToken } from "@/lib/api/token";
 import { QK } from "@/lib/api/cacheKeys";
+import { useToast } from "@/lib/toast/ToastContext";
 
 /**
  * Page này nhận token từ BE sau khi OAuth2 thành công:
@@ -19,6 +20,7 @@ export default function OAuth2CallbackView() {
   const searchParams = useSearchParams();
   const qc = useQueryClient();
   const called = useRef(false);
+  const { showToast } = useToast();
 
   const token = searchParams.get("token");
   const next = searchParams.get("next") || "/";
@@ -37,11 +39,16 @@ export default function OAuth2CallbackView() {
     window.dispatchEvent(new Event("login"));
     qc.invalidateQueries({ queryKey: QK.me }).then(() => {
       // Lấy user từ cache sau khi refetch để lưu localStorage
-      const user = qc.getQueryData(QK.me);
+      const user = qc.getQueryData(QK.me) as any;
       if (user) localStorage.setItem("user", JSON.stringify(user));
+      showToast(
+        `Chào mừng ${user?.name || user?.username || "bạn"} đã đăng nhập!`,
+        "success",
+        "Đăng nhập thành công"
+      );
       // Đảm bảo next là relative path (tránh open redirect)
       const safePath = next.startsWith("/") ? next : "/";
-      router.replace(safePath);
+      setTimeout(() => router.replace(safePath), 300);
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import {
-  Box, Tab, Tabs, Typography, Paper, Snackbar, Alert, Fade,
+  Box, Tab, Tabs, Typography, Paper, Fade,
   Stack, TextField, Button, InputAdornment, IconButton,
   FormControl, InputLabel, Select, MenuItem, Container,
   Checkbox, FormControlLabel, Link, Divider, Chip,
@@ -24,6 +24,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
 import { useLogin, useRegister } from "../queries";
+import { useToast } from "@/lib/toast/ToastContext";
 
 const BE_URL = process.env.NEXT_PUBLIC_BE_URL ?? "http://localhost:8080";
 
@@ -55,28 +56,19 @@ const validatePhone = (v: string) => phoneRegex.test(v);
 const validatePassword = (v: string) => passwordRegex.test(v);
 
 export default function LoginView() {
-  const [tab, setTab]       = useState(0);
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean; severity: "success" | "error" | "info"; message: string;
-  }>({ open: false, severity: "success", message: "" });
-
+  const [tab, setTab] = useState(0);
   const router = useRouter();
   const sp     = useSearchParams();
-
-  const showMessage = useCallback(
-    (severity: "success" | "error" | "info", message: string) =>
-      setSnackbar({ open: true, severity, message }),
-    [],
-  );
+  const { showToast } = useToast();
 
   // Thông báo từ OAuth callback hoặc verify-email
   useEffect(() => {
     const err      = sp.get("error");
     const verified = sp.get("verified");
-    if (err === "oauth_failed")   showMessage("error", "Đăng nhập qua mạng xã hội thất bại. Thử lại.");
-    if (err === "oauth_no_email") showMessage("error", "Không lấy được email từ tài khoản mạng xã hội.");
-    if (verified === "true")      showMessage("success", "Email đã xác thực thành công! Hãy đăng nhập.");
-  }, [sp, showMessage]);
+    if (err === "oauth_failed")   showToast("Đăng nhập qua mạng xã hội thất bại. Thử lại.", "error");
+    if (err === "oauth_no_email") showToast("Không lấy được email từ tài khoản mạng xã hội.", "error");
+    if (verified === "true")      showToast("Email đã xác thực thành công! Hãy đăng nhập.", "success");
+  }, [sp]);
 
   // ── Login state ────────────────────────────────────────────────────────
   const [email, setEmail]         = useState("");
@@ -177,14 +169,24 @@ export default function LoginView() {
       // Thông báo TopBar cập nhật trạng thái đăng nhập
       window.dispatchEvent(new Event("login"));
 
+      const dest =
+        res.user.profileComplete === false ? "/profile-complete" : "/";
       if (res.user.emailVerified === false) {
-        showMessage("info", "Đăng nhập thành công! Vui lòng xác thực email để sử dụng đầy đủ tính năng.");
+        showToast(
+          "Vui lòng xác thực email để sử dụng đầy đủ tính năng.",
+          "info",
+          "Đăng nhập thành công",
+        );
       } else {
-        showMessage("success", "Đăng nhập thành công!");
+        showToast(
+          `Chào mừng bạn trở lại, ${res.user.name || res.user.username || res.user.email}!`,
+          "success",
+          "Đăng nhập thành công",
+        );
       }
-      setTimeout(() => router.push(res.user.profileComplete === false ? "/profile-complete" : "/"), 800);
+      setTimeout(() => router.push(dest), 300);
     } catch (err: any) {
-      showMessage("error", err?.message || "Email hoặc mật khẩu không đúng");
+      showToast(err?.message || "Email hoặc mật khẩu không đúng", "error");
     }
   };
 
@@ -192,7 +194,7 @@ export default function LoginView() {
     e.preventDefault();
     if (activeStep === 0) { if (validateStep1()) setActiveStep(1); return; }
     if (!validateStep2()) return;
-    if (!agreeTerms) { showMessage("error", "Vui lòng đồng ý với điều khoản sử dụng"); return; }
+    if (!agreeTerms) { showToast("Vui lòng đồng ý với điều khoản sử dụng", "error"); return; }
 
     try {
       await doRegister({
@@ -205,7 +207,7 @@ export default function LoginView() {
       });
       setRegisterSuccess(true);
     } catch (err: any) {
-      showMessage("error", err?.message || "Đăng ký thất bại. Vui lòng thử lại.");
+      showToast(err?.message || "Đăng ký thất bại. Vui lòng thử lại.", "error");
     }
   };
 
@@ -480,13 +482,6 @@ export default function LoginView() {
         </Grid>
       </Grid>
 
-      <Snackbar open={snackbar.open} autoHideDuration={5000}
-        onClose={() => setSnackbar((p) => ({ ...p, open: false }))}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}>
-        <Alert severity={snackbar.severity} onClose={() => setSnackbar((p) => ({ ...p, open: false }))} sx={{ width: "100%" }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Container>
   );
 }

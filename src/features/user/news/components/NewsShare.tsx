@@ -7,11 +7,9 @@ import {
   IconButton,
   Stack,
   Tooltip,
-  Snackbar,
-  Alert,
   Paper,
 } from "@mui/material";
-import { useState } from "react";
+import { useToast } from "@/lib/toast/ToastContext";
 import ShareIcon from "@mui/icons-material/Share";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import TelegramIcon from "@mui/icons-material/Telegram";
@@ -24,12 +22,12 @@ interface Props {
 }
 
 export default function NewsShare({ post }: Props) {
-  const [snackbar, setSnackbar] = useState({ open: false, message: "" });
+  const { showToast } = useToast();
   const url = typeof window !== "undefined" ? window.location.href : "";
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(url);
-    setSnackbar({ open: true, message: "Đã sao chép link bài viết!" });
+    showToast("Đã sao chép link bài viết!", "success", "Chia sẻ");
   };
 
   const shareOnFacebook = () => {
@@ -124,13 +122,6 @@ export default function NewsShare({ post }: Props) {
         </Stack>
       </Stack>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={2000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert severity="success">{snackbar.message}</Alert>
-      </Snackbar>
     </Paper>
   );
 }

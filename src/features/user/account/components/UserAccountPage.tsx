@@ -13,8 +13,6 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
-  Snackbar,
-  Alert,
   Avatar,
   Stack,
   Chip,
@@ -32,6 +30,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Gender, UserProfile } from "../types";
 import { useUpdateUser, useUserProfile, useUserStats } from "../queries";
 import { useMeQuery } from "@/features/user/auth/queries";
+import { useToast } from "@/lib/toast/ToastContext";
 import {
   Person,
   Email,
@@ -73,6 +72,7 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export default function UserAccountPage() {
+  const { showToast } = useToast();
   const [tabValue, setTabValue] = useState(0);
   const [editing, setEditing] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -99,12 +99,6 @@ export default function UserAccountPage() {
     avatar: "",
     createdAt: "",
   });
-
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    severity: "success" | "error";
-  }>({ open: false, message: "", severity: "success" });
 
   const formRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -162,18 +156,10 @@ export default function UserAccountPage() {
         JSON.stringify({ ...localUser, ...formData }),
       );
 
-      setSnackbar({
-        open: true,
-        message: "Cập nhật thông tin thành công!",
-        severity: "success",
-      });
+      showToast("Thông tin tài khoản đã được cập nhật.", "success", "Cập nhật thành công");
       setEditing(false);
     } catch (err: any) {
-      setSnackbar({
-        open: true,
-        message: err?.message || "Lỗi kết nối máy chủ!",
-        severity: "error",
-      });
+      showToast(err?.message || "Lỗi kết nối máy chủ!", "error");
     }
   };
 
@@ -181,21 +167,6 @@ export default function UserAccountPage() {
 
   return (
     <Box ref={formRef} px={{ xs: 2, sm: 4 }} py={4}>
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      >
-        <Alert
-          severity={snackbar.severity}
-          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-
       <Grid container spacing={4}>
         {/* Left Column - Profile Summary */}
         <Grid size={{ xs: 12, md: 4 }}>

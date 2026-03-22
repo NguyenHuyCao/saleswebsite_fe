@@ -1,9 +1,9 @@
 "use client";
 
-import { Button, CircularProgress, Snackbar, Alert, Box } from "@mui/material";
-import { useState } from "react";
+import { Button, CircularProgress, Box } from "@mui/material";
 import { usePlaceOrder } from "../queries";
 import type { PlaceOrderPayload } from "../types";
+import { useToast } from "@/lib/toast/ToastContext";
 
 export default function ConfirmButton({
   getPayload,
@@ -14,33 +14,16 @@ export default function ConfirmButton({
   disabled?: boolean;
   onSuccess?: (orderId: string | number) => void;
 }) {
-  const [toast, setToast] = useState<{
-    open: boolean;
-    msg: string;
-    type: "success" | "error";
-  }>({
-    open: false,
-    msg: "",
-    type: "success",
-  });
-
+  const { showToast } = useToast();
   const { mutateAsync, isPending } = usePlaceOrder();
 
   const handleConfirm = async () => {
     try {
       const res = await mutateAsync(getPayload());
-      setToast({
-        open: true,
-        msg: res?.message || "Đặt hàng thành công!",
-        type: "success",
-      });
+      showToast(res?.message || "Đặt hàng thành công!", "success", "Đặt hàng");
       onSuccess?.(res.orderId);
     } catch (e: any) {
-      setToast({
-        open: true,
-        msg: e?.message || "Đặt hàng thất bại",
-        type: "error",
-      });
+      showToast(e?.message || "Đặt hàng thất bại", "error");
     }
   };
 
@@ -62,15 +45,6 @@ export default function ConfirmButton({
         )}
       </Button>
 
-      <Snackbar
-        open={toast.open}
-        autoHideDuration={3000}
-        onClose={() => setToast((s) => ({ ...s, open: false }))}
-      >
-        <Alert severity={toast.type} sx={{ width: "100%" }}>
-          {toast.msg}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 }

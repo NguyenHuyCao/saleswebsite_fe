@@ -1,18 +1,14 @@
 "use client";
 
-import { Snackbar, Alert as MuiAlert, AlertColor } from "@mui/material";
-import React, { SyntheticEvent, forwardRef } from "react";
-
-// Định nghĩa Alert chuẩn để dùng trong Snackbar
-const Alert = forwardRef<HTMLDivElement, any>(function Alert(props, ref) {
-  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
-});
+import { useEffect } from "react";
+import { useToast, ToastSeverity } from "@/lib/toast/ToastContext";
+import type { AlertColor } from "@mui/material";
 
 interface AlertSnackbarProps {
   open: boolean;
   message: string;
   type?: AlertColor;
-  onClose: (event?: SyntheticEvent | Event, reason?: string) => void;
+  onClose: (event?: React.SyntheticEvent | Event, reason?: string) => void;
 }
 
 const AlertSnackbar = ({
@@ -21,18 +17,17 @@ const AlertSnackbar = ({
   type = "success",
   onClose,
 }: AlertSnackbarProps) => {
-  return (
-    <Snackbar
-      open={open}
-      autoHideDuration={4000}
-      onClose={onClose}
-      anchorOrigin={{ vertical: "top", horizontal: "center" }}
-    >
-      <Alert onClose={onClose} severity={type} sx={{ width: "100%" }}>
-        {message}
-      </Alert>
-    </Snackbar>
-  );
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    if (open && message) {
+      showToast(message, type as ToastSeverity);
+      onClose();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  return null;
 };
 
 export default AlertSnackbar;

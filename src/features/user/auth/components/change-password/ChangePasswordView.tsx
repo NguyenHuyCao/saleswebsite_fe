@@ -6,7 +6,6 @@ import {
   Paper,
   TextField,
   Button,
-  Snackbar,
   InputAdornment,
   IconButton,
   CircularProgress,
@@ -19,7 +18,8 @@ import {
   Alert,
   Fade,
 } from "@mui/material";
-import MuiAlert, { AlertColor } from "@mui/material/Alert";
+import { AlertColor } from "@mui/material/Alert";
+import { useToast } from "@/lib/toast/ToastContext";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -32,35 +32,6 @@ import { motion } from "framer-motion";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { useChangePasswordMe } from "../../queries";
 import { useRouter } from "next/navigation";
-
-const AlertSnackbar = ({
-  open,
-  message,
-  severity,
-  onClose,
-}: {
-  open: boolean;
-  message: string;
-  severity: AlertColor;
-  onClose: () => void;
-}) => (
-  <Snackbar
-    open={open}
-    autoHideDuration={4000}
-    onClose={onClose}
-    anchorOrigin={{ vertical: "top", horizontal: "center" }}
-  >
-    <MuiAlert
-      elevation={6}
-      variant="filled"
-      severity={severity}
-      onClose={onClose}
-      sx={{ fontSize: 14, borderRadius: 2 }}
-    >
-      {message}
-    </MuiAlert>
-  </Snackbar>
-);
 
 // Password strength checker
 const checkPasswordStrength = (
@@ -108,6 +79,7 @@ const checkPasswordStrength = (
 
 export default function ChangePasswordView() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [form, setForm] = useState({
     currentPassword: "",
     newPassword: "",
@@ -123,11 +95,6 @@ export default function ChangePasswordView() {
     new: false,
     confirm: false,
   });
-  const [snack, setSnack] = useState<{
-    open: boolean;
-    message: string;
-    severity: AlertColor;
-  }>({ open: false, message: "", severity: "success" });
 
   const currentInputRef = useRef<HTMLInputElement>(null);
   const { mutateAsync, isPending } = useChangePasswordMe();
@@ -199,11 +166,7 @@ export default function ChangePasswordView() {
     setTouched({ current: true, new: true, confirm: true });
 
     if (!canSubmit) {
-      setSnack({
-        open: true,
-        message: "Vui lòng kiểm tra lại thông tin và đảm bảo mật khẩu đủ mạnh",
-        severity: "warning",
-      });
+      showToast("Vui lòng kiểm tra lại thông tin và đảm bảo mật khẩu đủ mạnh", "warning");
       return;
     }
 
@@ -214,25 +177,15 @@ export default function ChangePasswordView() {
         confirmPassword: form.confirmPassword,
       });
 
-      setSnack({
-        open: true,
-        message: "Đổi mật khẩu thành công! Vui lòng đăng nhập lại.",
-        severity: "success",
-      });
-
+      showToast("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.", "success", "Đổi mật khẩu");
       setForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setTouched({ current: false, new: false, confirm: false });
 
-      // Redirect to login after success
       setTimeout(() => {
         router.push("/login");
       }, 2000);
     } catch (err: any) {
-      setSnack({
-        open: true,
-        message: err?.message || "Lỗi kết nối tới máy chủ!",
-        severity: "error",
-      });
+      showToast(err?.message || "Lỗi kết nối tới máy chủ!", "error");
     }
   };
 
@@ -516,12 +469,6 @@ export default function ChangePasswordView() {
         </Stack>
       </Paper>
 
-      <AlertSnackbar
-        open={snack.open}
-        message={snack.message}
-        severity={snack.severity}
-        onClose={() => setSnack((prev) => ({ ...prev, open: false }))}
-      />
     </Box>
   );
 }

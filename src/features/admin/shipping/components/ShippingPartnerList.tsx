@@ -14,8 +14,6 @@ import {
   TableContainer,
   TablePagination,
   Button,
-  Snackbar,
-  Alert as MuiAlert,
   Typography,
   Box,
 } from "@mui/material";
@@ -29,8 +27,8 @@ import {
 import type { ShippingPartner, CreateShippingPartner } from "../types";
 import ModalShippingCreate from "./modals/ModalShippingCreate";
 import ModalShippingEdit from "./modals/ModalShippingEdit";
+import { useToast } from "@/lib/toast/ToastContext";
 
-const Alert = MuiAlert as React.ElementType;
 const DEFAULT_ROWS = 5;
 
 export default function ShippingPartnerList() {
@@ -45,11 +43,7 @@ export default function ShippingPartnerList() {
   const [openEdit, setOpenEdit] = useState(false);
   const [selected, setSelected] = useState<ShippingPartner | null>(null);
 
-  const [snack, setSnack] = useState<{
-    open: boolean;
-    type: "success" | "error";
-    msg: string;
-  }>({ open: false, type: "success", msg: "" });
+  const { showToast } = useToast();
 
   const keyword = useSelector((s: AppState) =>
     s.search.keyword.trim().toLowerCase()
@@ -71,11 +65,11 @@ export default function ShippingPartnerList() {
   const handleCreate = async (data: CreateShippingPartner) => {
     try {
       await createMut(data);
-      setSnack({ open: true, type: "success", msg: "Thêm đơn vị thành công" });
+      showToast("Thêm đơn vị thành công", "success");
       setOpenCreate(false);
       setPage(0);
     } catch (e: any) {
-      setSnack({ open: true, type: "error", msg: e?.message || "Thất bại" });
+      showToast(e?.message || "Thất bại", "error");
     }
   };
 
@@ -87,11 +81,11 @@ export default function ShippingPartnerList() {
     if (!selected) return;
     try {
       await updateMut({ id: selected.id, payload: data });
-      setSnack({ open: true, type: "success", msg: "Cập nhật thành công" });
+      showToast("Cập nhật thành công", "success");
       setOpenEdit(false);
       setSelected(null);
     } catch (e: any) {
-      setSnack({ open: true, type: "error", msg: e?.message || "Thất bại" });
+      showToast(e?.message || "Thất bại", "error");
     }
   };
 
@@ -202,17 +196,6 @@ export default function ShippingPartnerList() {
         />
       )}
 
-      <Snackbar
-        open={snack.open}
-        autoHideDuration={4000}
-        onClose={() => setSnack((s) => ({ ...s, open: false }))}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        key={`${snack.type}-${snack.msg}`}
-      >
-        <Alert severity={snack.type} sx={{ width: "100%" }}>
-          {snack.msg}
-        </Alert>
-      </Snackbar>
     </Card>
   );
 }

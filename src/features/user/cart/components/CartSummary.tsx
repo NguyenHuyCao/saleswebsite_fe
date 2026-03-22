@@ -14,11 +14,10 @@ import {
   Modal,
   MenuItem,
   CircularProgress,
-  Snackbar,
-  Alert,
 } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { mutate as swrMutate } from "swr";
 import { CART_COUNT_KEY, ORDERS_COUNT_KEY } from "@/constants/apiKeys";
 import type { CartItem } from "../types";
@@ -27,6 +26,8 @@ import {
   usePlaceOrderMutation,
   useUserAddressQuery,
 } from "../queries";
+import { useToast } from "@/lib/toast/ToastContext";
+import { useSocket } from "@/lib/socket/SocketContext";
 import { provinceNames, getDistricts } from "../constants/vietnamAddresses";
 
 type Props = { items: CartItem[]; onApplyVoucher: (code: string) => void };
@@ -61,14 +62,9 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
   const [orderNote, setOrderNote] = useState("");
   const [voucherCode, setVoucherCode] = useState("");
 
-  type SnackbarType = "success" | "error" | "info" | "warning";
-  type SnackbarState = { open: boolean; message: string; type: SnackbarType };
-  const [snackbar, setSnackbar] = useState<SnackbarState>({
-    open: false,
-    type: "success",
-    message: "",
-  });
-
+  const { showToast } = useToast();
+  const qc = useQueryClient();
+  const { refresh: refreshNotifications } = useSocket();
   const { mutateAsync: clearCart, isPending: clearing } =
     useClearCartMutation();
   const { mutateAsync: place, isPending } = usePlaceOrderMutation();
@@ -85,11 +81,8 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
 
   const handlePlaceOrder = async () => {
     if (!userAddress) {
-      return setSnackbar({
-        open: true,
-        type: "error",
-        message: "Vui lòng nhập địa chỉ giao hàng.",
-      });
+      showToast("Vui lòng nhập địa chỉ giao hàng.", "error");
+      return;
     }
     try {
       const promotionMap = voucherCode
@@ -102,13 +95,21 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
         shippingAmount: shippingFee,
         promotionCodeByProductId: promotionMap,
       });
+      // Invalidate React Query cache để orders page và cart hiển thị dữ liệu mới ngay
+      qc.invalidateQueries({ queryKey: ["orders", "me"] });
+      qc.invalidateQueries({ queryKey: ["cart"] });
+      // Cập nhật SWR count badges (cart về 0, orders tăng thêm 1)
       swrMutate(ORDERS_COUNT_KEY);
       swrMutate(CART_COUNT_KEY);
-      setSnackbar({
-        open: true,
-        type: "success",
-        message: "Đặt hàng thành công!",
-      });
+      // Refresh notification badge ngay
+      refreshNotifications();
+      showToast(
+        paymentMethod === "COD"
+          ? "Đơn hàng đã được đặt! Chúng tôi sẽ liên hệ xác nhận sớm nhất."
+          : "Đơn hàng đã được tạo! Đang chuyển đến trang thanh toán...",
+        "success",
+        "Đặt hàng thành công"
+      );
       setTimeout(() => {
         if (data?.paymentUrl && (paymentMethod === "MOMO" || paymentMethod === "VNPAY")) {
           const query = new URLSearchParams({
@@ -123,11 +124,7 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
         }
       }, 1200);
     } catch (e: any) {
-      setSnackbar({
-        open: true,
-        type: "error",
-        message: e?.message || "Đặt hàng thất bại",
-      });
+      showToast(e?.message || "Đặt hàng thất bại", "error");
     }
   };
 
@@ -145,18 +142,10 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
     try {
       await clearCart();
       swrMutate(CART_COUNT_KEY);
-      setSnackbar({
-        open: true,
-        type: "success",
-        message: "Đã xoá toàn bộ giỏ hàng.",
-      });
+      showToast("Đã xoá toàn bộ giỏ hàng.", "success", "Giỏ hàng");
       setTimeout(() => router.push("/"), 1000);
     } catch (e: any) {
-      setSnackbar({
-        open: true,
-        type: "error",
-        message: e?.message || "Xoá giỏ hàng thất bại.",
-      });
+      showToast(e?.message || "Xoá giỏ hàng thất bại.", "error");
     }
   };
 
@@ -345,20 +334,6 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
         </Box>
       </Modal>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={snackbar.type === "error" ? 6000 : 4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      >
-        <Alert
-          severity={snackbar.type}
-          sx={{ width: "100%" }}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Paper>
   );
 }

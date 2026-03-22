@@ -6,10 +6,8 @@ import {
   IconButton,
   Stack,
   Tooltip,
-  Snackbar,
-  Alert,
 } from "@mui/material";
-import { useState } from "react";
+import { useToast } from "@/lib/toast/ToastContext";
 import ShareIcon from "@mui/icons-material/Share";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import TelegramIcon from "@mui/icons-material/Telegram";
@@ -22,12 +20,12 @@ interface Props {
 }
 
 export default function ProductShare({ product }: Props) {
-  const [snackbar, setSnackbar] = useState({ open: false, message: "" });
+  const { showToast } = useToast();
   const productUrl = `${window.location.origin}/product/detail?name=${product.slug}`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(productUrl);
-    setSnackbar({ open: true, message: "Đã sao chép link sản phẩm!" });
+    showToast("Đã sao chép link sản phẩm!", "success", "Chia sẻ");
   };
 
   const shareOnFacebook = () => {
@@ -126,15 +124,6 @@ export default function ProductShare({ product }: Props) {
           </Tooltip>
         </Stack>
 
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={2000}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-        >
-          <Alert severity="success" sx={{ width: "100%" }}>
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
       </Box>
     </motion.div>
   );

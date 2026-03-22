@@ -5,7 +5,7 @@ import { Container, Box } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import "dayjs/locale/vi";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Dayjs } from "dayjs"; // THÊM IMPORT
 import PageViewTracker from "@/components/common/traffic/PageViewTracker";
 import OrderHistoryHeroSection from "./components/OrderHistoryHeroSection";
@@ -24,19 +24,6 @@ export default function OrdersView() {
     end: null,
   });
 
-  // Thêm vào đầu component để debug
-  useEffect(() => {
-    const allElements = document.querySelectorAll("*");
-    allElements.forEach((el) => {
-      const width = el.getBoundingClientRect().width;
-      const parentWidth =
-        el.parentElement?.getBoundingClientRect().width || window.innerWidth;
-      if (width > parentWidth + 1) {
-        // +1 để bỏ qua sai số
-        (el as HTMLElement).style.outline = "2px solid red"; // Đánh dấu đỏ
-      }
-    });
-  }, []);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="vi">

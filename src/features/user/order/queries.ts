@@ -13,5 +13,7 @@ export function useMyOrdersQuery() {
   return useQuery<Order[], Error>({
     queryKey: ordersKeys.me,
     queryFn: fetchMyOrders,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 }

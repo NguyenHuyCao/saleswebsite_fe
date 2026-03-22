@@ -14,8 +14,6 @@ import {
   TableContainer,
   TablePagination,
   Button,
-  Snackbar,
-  Alert as MuiAlert,
   Typography,
   Box,
 } from "@mui/material";
@@ -34,8 +32,8 @@ import type { Category } from "../types";
 import ModalCreateCategory from "@/model/category/ModalCreateCategory";
 import ModalEditCategory from "@/model/category/ModalEditCategory";
 import ConfirmDeleteCategory from "@/model/category/ConfirmDeleteCategory";
+import { useToast } from "@/lib/toast/ToastContext";
 
-const Alert = MuiAlert as React.ElementType;
 const DEFAULT_ROWS = 5;
 
 const imgURL = (img?: string | null) =>
@@ -59,13 +57,7 @@ export default function CategoriesView() {
   const [editing, setEditing] = useState<Category | null>(null);
   const [deleting, setDeleting] = useState<Category | null>(null);
 
-  // snackbar
-  const [snack, setSnack] = useState<{
-    open: boolean;
-    type: "success" | "error";
-    msg: string;
-  }>({ open: false, type: "success", msg: "" });
-
+  const { showToast } = useToast();
   const { mutateAsync: doCreate } = useCreateCategory(1, 1000);
   const { mutateAsync: doUpdate } = useUpdateCategory(1, 1000);
   const { mutateAsync: doDelete } = useDeleteCategory(1, 1000);
@@ -102,19 +94,11 @@ export default function CategoriesView() {
       fd.append("name", name);
       if (imageFile) fd.append("image", imageFile);
       await doCreate(fd);
-      setSnack({
-        open: true,
-        type: "success",
-        msg: "Thêm danh mục thành công",
-      });
+      showToast("Thêm danh mục thành công", "success");
       setOpenCreate(false);
       setPage(0);
     } catch (e: any) {
-      setSnack({
-        open: true,
-        type: "error",
-        msg: e?.message || "Lỗi khi thêm danh mục",
-      });
+      showToast(e?.message || "Lỗi khi thêm danh mục", "error");
     }
   };
 
@@ -125,18 +109,10 @@ export default function CategoriesView() {
       fd.append("name", name);
       if (imageFile) fd.append("image", imageFile);
       await doUpdate({ id: editing.id, fd });
-      setSnack({
-        open: true,
-        type: "success",
-        msg: "Cập nhật danh mục thành công",
-      });
+      showToast("Cập nhật danh mục thành công", "success");
       setOpenEdit(false);
     } catch (e: any) {
-      setSnack({
-        open: true,
-        type: "error",
-        msg: e?.message || "Lỗi khi cập nhật danh mục",
-      });
+      showToast(e?.message || "Lỗi khi cập nhật danh mục", "error");
     }
   };
 
@@ -144,14 +120,10 @@ export default function CategoriesView() {
     if (!deleting) return;
     try {
       await doDelete(deleting.id);
-      setSnack({ open: true, type: "success", msg: "Xóa danh mục thành công" });
+      showToast("Xóa danh mục thành công", "success");
       setOpenDelete(false);
     } catch (e: any) {
-      setSnack({
-        open: true,
-        type: "error",
-        msg: e?.message || "Lỗi khi xóa danh mục",
-      });
+      showToast(e?.message || "Lỗi khi xóa danh mục", "error");
     }
   };
 
@@ -283,17 +255,6 @@ export default function CategoriesView() {
         onConfirm={handleConfirmDelete}
       />
 
-      <Snackbar
-        open={snack.open}
-        autoHideDuration={4000}
-        onClose={() => setSnack((s) => ({ ...s, open: false }))}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        key={`${snack.type}-${snack.msg}`}
-      >
-        <Alert severity={snack.type} sx={{ width: "100%" }}>
-          {snack.msg}
-        </Alert>
-      </Snackbar>
     </Card>
   );
 }

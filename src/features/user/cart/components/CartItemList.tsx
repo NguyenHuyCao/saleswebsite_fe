@@ -16,8 +16,6 @@ import {
   Stack,
   Divider,
   Paper,
-  Snackbar,
-  Alert,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
@@ -28,6 +26,8 @@ import { mutate as swrMutate } from "swr";
 import { CART_COUNT_KEY } from "@/constants/apiKeys";
 import type { CartItem } from "../types";
 import { useDeleteItemMutation, useUpdateQtyMutation } from "../queries";
+import { useSocket } from "@/lib/socket/SocketContext";
+import { useToast } from "@/lib/toast/ToastContext";
 
 type Props = { items: CartItem[]; onItemsChange?: (items: CartItem[]) => void };
 
@@ -39,13 +39,10 @@ export default function CartItemList({
   const MotionPaper = motion(Paper);
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [items, setItems] = useState<CartItem[]>(initialItems);
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string }>({
-    open: false,
-    message: "",
-  });
-
+  const { showToast } = useToast();
   const { mutateAsync: updateQty } = useUpdateQtyMutation();
   const { mutateAsync: deleteItem } = useDeleteItemMutation();
+  const { refresh: refreshNotifications } = useSocket();
 
   useEffect(() => setItems(initialItems), [initialItems]);
   useEffect(() => onItemsChange?.(items), [items, onItemsChange]);
@@ -72,8 +69,9 @@ export default function CartItemList({
   const handleDeleteItem = async (productId: number) => {
     await deleteItem(productId);
     setItems((prev) => prev.filter((i) => i.productId !== productId));
-    setSnackbar({ open: true, message: "Đã xoá sản phẩm khỏi giỏ hàng." });
-    swrMutate(CART_COUNT_KEY, undefined, { revalidate: true }); // giữ nguyên hành vi cũ của bạn
+    showToast("Đã xoá sản phẩm khỏi giỏ hàng.", "info", "Giỏ hàng");
+    swrMutate(CART_COUNT_KEY, undefined, { revalidate: true });
+    refreshNotifications();
   };
 
   // …(phần render giữ nguyên như bạn gửi)
@@ -275,16 +273,6 @@ export default function CartItemList({
         </Stack>
       )}
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar({ open: false, message: "" })}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      >
-        <Alert severity="success" sx={{ width: "100%" }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 }

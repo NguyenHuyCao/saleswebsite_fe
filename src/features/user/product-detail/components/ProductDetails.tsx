@@ -29,14 +29,17 @@ import {
   Clock,
 } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, AppState } from "@/redux/store";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
 import { selectIsProductInWishlist } from "@/redux/selectors/wishlistSelectors";
 import GlobalSnackbar from "@/components/alert/GlobalSnackbar";
+import { useToast } from "@/lib/toast/ToastContext";
 import { mutate } from "swr";
 import { CART_COUNT_KEY, WISHLIST_COUNT_KEY } from "@/constants/apiKeys";
 import { http } from "@/lib/api/http";
+import { useSocket } from "@/lib/socket/SocketContext";
 
 interface Props {
   product: Product;
@@ -45,12 +48,15 @@ interface Props {
 
 export default function ProductDetails({ product, category }: Props) {
   const dispatch = useDispatch<AppDispatch>();
+  const qc = useQueryClient();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isFavorite = useSelector((state: AppState) =>
     selectIsProductInWishlist(product.id)(state),
   );
 
+  const { showToast } = useToast();
+  const { refresh: refreshNotifications } = useSocket();
   const [quantity, setQuantity] = useState<number>(1);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -83,12 +89,10 @@ export default function ProductDetails({ product, category }: Props) {
     try {
       await http.post("/api/v1/carts", { quantity, productId: product.id });
       mutate(CART_COUNT_KEY, undefined, { revalidate: true });
+      qc.invalidateQueries({ queryKey: ["cart"] });
+      refreshNotifications();
       setQuantity(1);
-      setSnackbar({
-        open: true,
-        type: "success",
-        message: "Đã thêm vào giỏ hàng!",
-      });
+      showToast(`Đã thêm ${quantity > 1 ? `${quantity}x ` : ""}${product.name} vào giỏ hàng!`, "success", "Thêm vào giỏ hàng");
     } catch (e: any) {
       setSnackbar({
         open: true,
@@ -118,6 +122,11 @@ export default function ProductDetails({ product, category }: Props) {
       });
       dispatch(fetchWishlist());
       mutate(WISHLIST_COUNT_KEY, undefined, { revalidate: true });
+      if (isFavorite) {
+        showToast(`Đã xóa ${product.name} khỏi yêu thích.`, "info", "Yêu thích");
+      } else {
+        showToast(`Đã thêm ${product.name} vào yêu thích!`, "success", "Yêu thích");
+      }
     } catch (e: any) {
       setSnackbar({
         open: true,

@@ -16,6 +16,8 @@ import {
 } from "@mui/material";
 import LocalPhoneOutlinedIcon from "@mui/icons-material/LocalPhoneOutlined";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import NotificationDropdown from "@/@core/layouts/components/shared-components/NotificationDropdown";
+import { useToast } from "@/lib/toast/ToastContext";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -36,6 +38,7 @@ const greetings = [
 
 const TopBar = () => {
   const router = useRouter();
+  const { showToast } = useToast();
   const [index, setIndex] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isClient, setIsClient] = useState(false);
@@ -92,6 +95,7 @@ const TopBar = () => {
       setOpen(false);
       // thông báo các nơi khác trong app
       window.dispatchEvent(new Event("logout"));
+      showToast("Hẹn gặp lại bạn!", "info", "Đã đăng xuất");
 
       // Invalidate các counters phụ thuộc auth
       mutate(CART_COUNT_KEY);
@@ -240,6 +244,12 @@ const TopBar = () => {
                 </Button>
               </Box>
             ))
+          )}
+
+          {isClient && isLoggedIn && (
+            <Box sx={{ color: "black" }}>
+              <NotificationDropdown />
+            </Box>
           )}
 
           <Typography sx={{ fontSize: "14px", fontWeight: 700, mx: 0.5 }}>
