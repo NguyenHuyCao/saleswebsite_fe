@@ -31,6 +31,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import type { Gender, UserProfile } from "../types";
 import { useUpdateUser, useUserProfile, useUserStats } from "../queries";
+import { useMeQuery } from "@/features/user/auth/queries";
 import {
   Person,
   Email,
@@ -71,25 +72,17 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-function getLocalUserId(): number | null {
-  try {
-    const u = JSON.parse(localStorage.getItem("user") || "{}");
-    return Number(u?.id) || null;
-  } catch {
-    return null;
-  }
-}
-
 export default function UserAccountPage() {
-  const [userId, setUserId] = useState<number | null>(null);
   const [tabValue, setTabValue] = useState(0);
   const [editing, setEditing] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
-  useEffect(() => setUserId(getLocalUserId), []);
+  // Lấy userId từ /auth/account — đảm bảo luôn có data kể cả sau OAuth login
+  const { data: me } = useMeQuery();
+  const userId = me?.id ?? undefined;
 
-  const { data, isLoading } = useUserProfile(userId ?? undefined);
+  const { data, isLoading } = useUserProfile(userId);
   const { data: userStats } = useUserStats(userId ?? undefined);
   const { mutateAsync: mutateUpdate, isPending } = useUpdateUser(
     userId ?? undefined,

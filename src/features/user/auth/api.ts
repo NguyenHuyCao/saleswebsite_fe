@@ -1,42 +1,39 @@
-import { api } from "@/lib/api/http";
+import { api, http } from "@/lib/api/http";
 import { clearAccessToken, setAccessToken } from "@/lib/api/token";
 import type {
+  ForgotPasswordPayload,
   LoginPayload,
   LoginResponse,
+  ProfileCompletePayload,
   RegisterPayload,
+  ResetPasswordPayload,
   UserAccount,
   ChangePasswordInput,
 } from "./types";
 
-// me
+// ── Profile ───────────────────────────────────────────────────────────────
+
 export async function fetchMe(): Promise<UserAccount> {
   return api.get<UserAccount>("/api/v1/auth/account");
 }
-export async function updateMe(
-  payload: Partial<UserAccount>
-): Promise<UserAccount> {
-  return api.put<UserAccount, Partial<UserAccount>>(
-    "/api/v1/users/me",
-    payload
-  );
-}
-export async function changePasswordMe(
-  payload: ChangePasswordInput
-): Promise<void> {
-  const body = {
-    currentPassword: payload.currentPassword,
-    newPassword: payload.newPassword,
-    confirmPassword: payload.confirmPassword,
-  };
-  await api.post<void, typeof body>("/api/v1/users/change_password", body);
+
+export async function updateMe(payload: Partial<UserAccount>): Promise<UserAccount> {
+  return api.put<UserAccount, Partial<UserAccount>>("/api/v1/users/me", payload);
 }
 
-// auth
+export async function changePasswordMe(payload: ChangePasswordInput): Promise<void> {
+  await http.post("/api/v1/users/change_password", payload);
+}
+
+/** Hoàn thiện hồ sơ cho OAuth users (thêm phone, address, gender). */
+export async function completeProfile(payload: ProfileCompletePayload): Promise<UserAccount> {
+  return api.post<UserAccount, ProfileCompletePayload>("/api/v1/users/me/complete-profile", payload);
+}
+
+// ── Auth ─────────────────────────────────────────────────────────────────
+
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
-  const res = await api.post<LoginResponse, LoginPayload>(
-    "/api/v1/auth/login",
-    payload
-  );
+  const res = await api.post<LoginResponse, LoginPayload>("/api/v1/auth/login", payload);
   setAccessToken(res.accessToken);
   if (typeof window !== "undefined")
     localStorage.setItem("user", JSON.stringify(res.user));
@@ -45,16 +42,37 @@ export async function login(payload: LoginPayload): Promise<LoginResponse> {
 
 export async function logout(): Promise<void> {
   try {
-    await api.post<void, unknown>("/api/v1/auth/logout", {});
+    await http.post("/api/v1/auth/logout");
   } finally {
     clearAccessToken();
+    if (typeof window !== "undefined") localStorage.removeItem("user");
   }
 }
 
 /**
- * Lưu ý: nếu BE yêu cầu quyền tạo user, có thể cần mở /auth/register.
- * UI vẫn gọi /users và hiển thị message phù hợp khi 403.
+ * Đăng ký tài khoản mới — gọi PUBLIC endpoint /auth/register.
+ * Sau khi đăng ký, BE gửi email xác thực; FE hiển thị thông báo.
  */
-export async function registerUser(payload: RegisterPayload): Promise<any> {
-  return api.post<any, RegisterPayload>("/api/v1/users", payload);
+export async function registerUser(payload: RegisterPayload): Promise<void> {
+  await http.post("/api/v1/auth/register", payload);
+}
+
+// ── Email verification ────────────────────────────────────────────────────
+
+export async function verifyEmail(token: string): Promise<{ message: string }> {
+  return api.get<{ message: string }>(`/api/v1/auth/verify-email?token=${encodeURIComponent(token)}`);
+}
+
+export async function resendVerification(): Promise<void> {
+  await http.post("/api/v1/auth/resend-verification");
+}
+
+// ── Forgot / Reset password ───────────────────────────────────────────────
+
+export async function forgotPassword(payload: ForgotPasswordPayload): Promise<void> {
+  await http.post("/api/v1/auth/forgot-password", payload);
+}
+
+export async function resetPassword(payload: ResetPasswordPayload): Promise<void> {
+  await http.post("/api/v1/auth/reset-password", payload);
 }

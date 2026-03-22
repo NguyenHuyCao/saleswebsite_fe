@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "additionalDirectories": [
+      "E:\\Development Website\\Java\\MySelf\\saleswebsite_be\\src\\main\\java\\com\\huycao\\saleswebsite\\domain\\model\\entity\\user",
+      "E:\\Development Website\\Java\\MySelf\\saleswebsite_be\\src\\main\\java\\com\\huycao\\saleswebsite\\features\\auth\\dto\\response",
+      "E:\\Development Website\\Java\\MySelf\\saleswebsite_be\\src\\main\\java\\com\\huycao\\saleswebsite\\features\\auth\\dto\\request",
+      "E:\\Development Website\\Java\\MySelf\\saleswebsite_be\\src\\main\\java\\com\\huycao\\saleswebsite\\features\\auth\\infra",
+      "E:\\Development Website\\Java\\MySelf\\saleswebsite_be\\src\\main\\java\\com\\huycao\\saleswebsite\\features\\auth\\app",
+      "E:\\Development Website\\Java\\MySelf\\saleswebsite_be\\src\\main\\java\\com\\huycao\\saleswebsite\\features\\auth\\web",
+      "E:\\Development Website\\Java\\MySelf\\saleswebsite_be\\src\\main\\java\\com\\huycao\\saleswebsite\\config",
+      "E:\\Development Website\\Java\\MySelf\\saleswebsite_be\\src\\main\\java\\com\\huycao\\saleswebsite\\features\\email\\app",
+      "E:\\Development Website\\Java\\MySelf\\saleswebsite_be\\src\\main\\resources\\templates\\mail",
+      "E:\\Development Website\\Java\\MySelf\\saleswebsite_be\\src\\main\\java\\com\\huycao\\saleswebsite\\common\\security\\oauth2",
+      "E:\\Development Website\\Java\\MySelf\\saleswebsite_be"
+    ]
+  }
+}
