@@ -33,14 +33,6 @@ export default function OrdersView() {
         el.parentElement?.getBoundingClientRect().width || window.innerWidth;
       if (width > parentWidth + 1) {
         // +1 để bỏ qua sai số
-        console.log(
-          "Overflow element:",
-          el,
-          "Width:",
-          width,
-          "Parent width:",
-          parentWidth,
-        );
         (el as HTMLElement).style.outline = "2px solid red"; // Đánh dấu đỏ
       }
     });

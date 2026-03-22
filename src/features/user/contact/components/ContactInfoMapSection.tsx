@@ -22,6 +22,7 @@ import FacebookIcon from "@mui/icons-material/Facebook";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import TwitterIcon from "@mui/icons-material/Twitter";
 import InstagramIcon from "@mui/icons-material/Instagram";
+import Image from "next/image";
 
 const contactInfo = [
   {
@@ -224,7 +225,7 @@ export default function ContactInfoMapSection() {
                     justifyContent: "center",
                   }}
                 >
-                  <img
+                  <Image
                     src="/images/qr-code.png"
                     alt="QR Code"
                     width={50}

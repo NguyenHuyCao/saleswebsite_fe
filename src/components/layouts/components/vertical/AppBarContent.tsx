@@ -1,7 +1,5 @@
 "use client";
 import Box from "@mui/material/Box";
-import { Theme } from "@mui/material/styles";
-import useMediaQuery from "@mui/material/useMediaQuery";
 import { Settings } from "src/@core/context/settingsContext";
 
 import ModeToggler from "src/@core/layouts/components/shared-components/ModeToggler";
@@ -20,10 +18,6 @@ interface Props {
 const AppBarContent = (props: Props) => {
   const { hidden, settings, saveSettings, toggleNavVisibility } = props;
 
-  const hiddenSm = useMediaQuery((theme: Theme) =>
-    theme.breakpoints.down("sm")
-  );
-  console.log(hiddenSm);
 
   return (
     <Container maxWidth="xl">

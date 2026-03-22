@@ -12,6 +12,7 @@ import {
 import { motion } from "framer-motion";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import YouTubeIcon from "@mui/icons-material/YouTube";
+import Image from "next/image";
 import { useState } from "react";
 
 interface Props {
@@ -78,19 +79,15 @@ export default function ProductVideo({
         >
           {!isPlaying ? (
             <>
-              <img
+              <Image
+                fill
                 src={
                   videoId
                     ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
                     : "/images/video-placeholder.jpg"
                 }
                 alt="Video thumbnail"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  opacity: 0.8,
-                }}
+                style={{ objectFit: "cover", opacity: 0.8 }}
               />
               <Box
                 sx={{

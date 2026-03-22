@@ -54,7 +54,6 @@ export default function HomeView() {
     };
   }, []);
 
-  console.log("vouchers", vouchers);
 
   return (
     <>

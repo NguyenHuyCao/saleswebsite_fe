@@ -27,6 +27,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 
 interface Props {
@@ -310,14 +311,15 @@ export default function ProductCompare({ product }: Props) {
                 <Box />
                 {compareList.map((p) => (
                   <Box key={p.id} sx={{ textAlign: "center" }}>
-                    <img
+                    <Image
                       src={p.imageAvt}
                       alt={p.name}
+                      width={80}
+                      height={80}
                       style={{
-                        width: 80,
-                        height: 80,
                         objectFit: "cover",
                         borderRadius: 8,
+                        display: "block",
                         margin: "0 auto 8px",
                       }}
                     />

@@ -53,7 +53,6 @@ const BrandMegaMenu = ({ brands }: Props) => {
     );
   };
 
-  console.log("brands", brands);
 
   return (
     <Box
