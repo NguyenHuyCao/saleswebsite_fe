@@ -1,11 +1,7 @@
 "use client";
-// ** React Imports
-import { useState, SyntheticEvent, Fragment } from "react";
 
-// ** Next Import
+import { useState, SyntheticEvent, Fragment, useEffect } from "react";
 import { useRouter } from "next/navigation";
-
-// ** MUI Imports
 import Box from "@mui/material/Box";
 import Menu from "@mui/material/Menu";
 import Badge from "@mui/material/Badge";
@@ -14,17 +10,23 @@ import Divider from "@mui/material/Divider";
 import MenuItem from "@mui/material/MenuItem";
 import { styled } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
+import CircularProgress from "@mui/material/CircularProgress";
 
-// ** Icons Imports
 import CogOutline from "mdi-material-ui/CogOutline";
-import CurrencyUsd from "mdi-material-ui/CurrencyUsd";
-import EmailOutline from "mdi-material-ui/EmailOutline";
 import LogoutVariant from "mdi-material-ui/LogoutVariant";
 import AccountOutline from "mdi-material-ui/AccountOutline";
-import MessageOutline from "mdi-material-ui/MessageOutline";
-import HelpCircleOutline from "mdi-material-ui/HelpCircleOutline";
 
-// ** Styled Components
+import { api } from "@/lib/api/http";
+import { clearAccessToken } from "@/lib/api/token";
+
+interface UserInfo {
+  id: number;
+  username: string;
+  email: string;
+  picture: string | null;
+  provider: string;
+}
+
 const BadgeContentSpan = styled("span")(({ theme }) => ({
   width: 8,
   height: 8,
@@ -34,22 +36,42 @@ const BadgeContentSpan = styled("span")(({ theme }) => ({
 }));
 
 const UserDropdown = () => {
-  // ** States
   const [anchorEl, setAnchorEl] = useState<Element | null>(null);
-
-  // ** Hooks
+  const [user, setUser] = useState<UserInfo | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    api.get<UserInfo>("/api/v1/users/me")
+      .then(setUser)
+      .catch(() => {/* silent fail – will show default avatar */});
+  }, []);
 
   const handleDropdownOpen = (event: SyntheticEvent) => {
     setAnchorEl(event.currentTarget);
   };
 
   const handleDropdownClose = (url?: string) => {
-    if (url) {
-      router.push(url);
-    }
+    if (url) router.push(url);
     setAnchorEl(null);
   };
+
+  const handleLogout = async () => {
+    setAnchorEl(null);
+    setLoggingOut(true);
+    try {
+      await api.post("/api/v1/auth/logout");
+    } catch {
+      // ignore logout API errors
+    } finally {
+      clearAccessToken();
+      router.push("/pages/login");
+    }
+  };
+
+  const avatarSrc = user?.picture || "/images/avatars/1.png";
+  const displayName = user?.username || "Admin";
+  const displayRole = user?.provider === "LOCAL" ? "Admin" : user?.provider ?? "Admin";
 
   const styles = {
     py: 2,
@@ -59,10 +81,7 @@ const UserDropdown = () => {
     alignItems: "center",
     color: "text.primary",
     textDecoration: "none",
-    "& svg": {
-      fontSize: "1.375rem",
-      color: "text.secondary",
-    },
+    "& svg": { fontSize: "1.375rem", color: "text.secondary" },
   };
 
   return (
@@ -75,12 +94,13 @@ const UserDropdown = () => {
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
         <Avatar
-          alt="John Doe"
+          alt={displayName}
           onClick={handleDropdownOpen}
           sx={{ width: 40, height: 40 }}
-          src="/images/avatars/1.png"
+          src={avatarSrc}
         />
       </Badge>
+
       <Menu
         disableScrollLock={true}
         anchorEl={anchorEl}
@@ -98,80 +118,49 @@ const UserDropdown = () => {
               anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
             >
               <Avatar
-                alt="John Doe"
-                src="/images/avatars/1.png"
+                alt={displayName}
+                src={avatarSrc}
                 sx={{ width: "2.5rem", height: "2.5rem" }}
               />
             </Badge>
-            <Box
-              sx={{
-                display: "flex",
-                marginLeft: 3,
-                alignItems: "flex-start",
-                flexDirection: "column",
-              }}
-            >
-              <Typography sx={{ fontWeight: 600 }}>John Doe</Typography>
-              <Typography
-                variant="body2"
-                sx={{ fontSize: "0.8rem", color: "text.disabled" }}
-              >
-                Admin
+            <Box sx={{ display: "flex", marginLeft: 3, alignItems: "flex-start", flexDirection: "column" }}>
+              <Typography sx={{ fontWeight: 600 }}>{displayName}</Typography>
+              <Typography variant="body2" sx={{ fontSize: "0.8rem", color: "text.disabled" }}>
+                {displayRole}
               </Typography>
             </Box>
           </Box>
         </Box>
+
         <Divider sx={{ mt: 0, mb: 1 }} />
-        <MenuItem sx={{ p: 0 }} onClick={() => handleDropdownClose()}>
+
+        <MenuItem sx={{ p: 0 }} onClick={() => handleDropdownClose("/admin/profile")}>
           <Box sx={styles}>
             <AccountOutline sx={{ marginRight: 2 }} />
-            Profile
+            Hồ sơ của tôi
           </Box>
         </MenuItem>
-        <MenuItem sx={{ p: 0 }} onClick={() => handleDropdownClose()}>
-          <Box sx={styles}>
-            <EmailOutline sx={{ marginRight: 2 }} />
-            Inbox
-          </Box>
-        </MenuItem>
-        <MenuItem sx={{ p: 0 }} onClick={() => handleDropdownClose()}>
-          <Box sx={styles}>
-            <MessageOutline sx={{ marginRight: 2 }} />
-            Chat
-          </Box>
-        </MenuItem>
-        <Divider />
-        <MenuItem sx={{ p: 0 }} onClick={() => handleDropdownClose()}>
+
+        <MenuItem
+          sx={{ p: 0 }}
+          onClick={() => user && handleDropdownClose(`/admin/account-settings?userId=${user.id}`)}
+        >
           <Box sx={styles}>
             <CogOutline sx={{ marginRight: 2 }} />
-            Settings
+            Cài đặt tài khoản
           </Box>
         </MenuItem>
-        <MenuItem sx={{ p: 0 }} onClick={() => handleDropdownClose()}>
-          <Box sx={styles}>
-            <CurrencyUsd sx={{ marginRight: 2 }} />
-            Pricing
-          </Box>
-        </MenuItem>
-        <MenuItem sx={{ p: 0 }} onClick={() => handleDropdownClose()}>
-          <Box sx={styles}>
-            <HelpCircleOutline sx={{ marginRight: 2 }} />
-            FAQ
-          </Box>
-        </MenuItem>
+
         <Divider />
-        <MenuItem
-          sx={{ py: 2 }}
-          onClick={() => handleDropdownClose("/pages/login")}
-        >
-          <LogoutVariant
-            sx={{
-              marginRight: 2,
-              fontSize: "1.375rem",
-              color: "text.secondary",
-            }}
-          />
-          Logout
+
+        <MenuItem sx={{ py: 2 }} onClick={handleLogout} disabled={loggingOut}>
+          {loggingOut
+            ? <CircularProgress size={18} sx={{ mx: "auto" }} />
+            : <>
+                <LogoutVariant sx={{ marginRight: 2, fontSize: "1.375rem", color: "text.secondary" }} />
+                Đăng xuất
+              </>
+          }
         </MenuItem>
       </Menu>
     </Fragment>
