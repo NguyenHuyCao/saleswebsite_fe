@@ -25,6 +25,20 @@ export interface NotificationItem {
   metadataJson?: string;
 }
 
+export interface SupportSocketMessage {
+  role: string;
+  content: string;
+  requestId?: number;
+  sessionId?: string;
+  ts: number;
+}
+
+/** Payload of the `support:resolved` socket event sent by BE when admin closes a session */
+export interface SupportResolvedEvent {
+  requestId: number;
+  ts: number;
+}
+
 interface SocketContextValue {
   notifications: NotificationItem[];
   unreadCount: number;
@@ -32,6 +46,14 @@ interface SocketContextValue {
   markAllRead: () => void;
   connected: boolean;
   refresh: () => void;
+  /** Real-time support messages delivered directly via socket (not via notification system) */
+  supportSocketMsgs: SupportSocketMessage[];
+  /** Direct socket events for session closure (faster than SUPPORT_RESOLVED notification) */
+  supportResolvedEvents: SupportResolvedEvent[];
+  /** Count of unread customer→admin messages received via direct socket (role="user") */
+  unreadSupportMsgCount: number;
+  /** Call when admin opens the support drawer to reset the unread badge */
+  clearSupportUnread: () => void;
 }
 
 const SocketContext = createContext<SocketContextValue>({
@@ -41,6 +63,10 @@ const SocketContext = createContext<SocketContextValue>({
   markAllRead: () => {},
   connected: false,
   refresh: () => {},
+  supportSocketMsgs: [],
+  supportResolvedEvents: [],
+  unreadSupportMsgCount: 0,
+  clearSupportUnread: () => {},
 });
 
 const SOCKET_URL =
@@ -59,6 +85,9 @@ async function fetchUnread(): Promise<NotificationItem[]> {
 export function SocketProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [connected, setConnected] = useState(false);
+  const [supportSocketMsgs, setSupportSocketMsgs] = useState<SupportSocketMessage[]>([]);
+  const [supportResolvedEvents, setSupportResolvedEvents] = useState<SupportResolvedEvent[]>([]);
+  const [unreadSupportMsgCount, setUnreadSupportMsgCount] = useState(0);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const socketRef = useRef<any>(null);
 
@@ -123,6 +152,28 @@ export function SocketProvider({ children }: { children: ReactNode }) {
           });
         }
       });
+
+      // Direct real-time support messages (bypasses notification system for instant delivery)
+      // role="admin" → delivered to customer widget; role="user" → delivered to admin panel
+      socket.on("support:message", (msg: SupportSocketMessage) => {
+        if (msg && msg.role) {
+          setSupportSocketMsgs((prev) => [...prev, { ...msg, ts: msg.ts || Date.now() }]);
+          if (msg.role === "user") {
+            setUnreadSupportMsgCount((c) => c + 1);
+          }
+        }
+      });
+
+      // Direct session-closure event — faster than SUPPORT_RESOLVED notification
+      socket.on("support:resolved", (evt: SupportResolvedEvent) => {
+        console.log("[Socket] support:resolved requestId=", evt?.requestId);
+        if (evt && evt.requestId) {
+          setSupportResolvedEvents((prev) => [
+            ...prev,
+            { requestId: evt.requestId, ts: evt.ts || Date.now() },
+          ]);
+        }
+      });
     }
 
     function disconnect() {
@@ -144,6 +195,16 @@ export function SocketProvider({ children }: { children: ReactNode }) {
       disconnect();
     };
   }, [refresh]);
+
+  // Clear real-time support state when disconnected
+  useEffect(() => {
+    if (!connected) {
+      setSupportSocketMsgs([]);
+      setSupportResolvedEvents([]);
+    }
+  }, [connected]);
+
+  const clearSupportUnread = useCallback(() => setUnreadSupportMsgCount(0), []);
 
   const markRead = (id: number) => {
     // Optimistic update
@@ -172,7 +233,18 @@ export function SocketProvider({ children }: { children: ReactNode }) {
 
   return (
     <SocketContext.Provider
-      value={{ notifications, unreadCount, markRead, markAllRead, connected, refresh }}
+      value={{
+        notifications,
+        unreadCount,
+        markRead,
+        markAllRead,
+        connected,
+        refresh,
+        supportSocketMsgs,
+        supportResolvedEvents,
+        unreadSupportMsgCount,
+        clearSupportUnread,
+      }}
     >
       {children}
     </SocketContext.Provider>

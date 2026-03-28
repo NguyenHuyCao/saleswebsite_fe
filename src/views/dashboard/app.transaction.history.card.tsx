@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   Avatar,
   AvatarGroup,
+  Badge,
   Box,
   Button,
   Grid,
@@ -15,6 +16,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import HeadsetMicIcon from "@mui/icons-material/HeadsetMic";
 import MainCard from "@/components/dashboard/MainCard";
 import PaidOutlinedIcon from "@mui/icons-material/PaidOutlined";
 import Image from "next/image";
@@ -37,7 +39,15 @@ const formatCurrency = (value: number) =>
     value || 0,
   );
 
-const TransactionHistoryCard = () => {
+interface Props {
+  onOpenSupport?: () => void;
+  pendingSupportCount?: number;
+}
+
+const TransactionHistoryCard = ({
+  onOpenSupport,
+  pendingSupportCount = 0,
+}: Props) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   useEffect(() => {
@@ -115,13 +125,16 @@ const TransactionHistoryCard = () => {
       </MainCard>
 
       <MainCard sx={{ mt: 2, border: "none", boxShadow: "none" }}>
-        <Stack sx={{ gap: 3 }}>
+        <Stack sx={{ gap: 2.5 }}>
           <Grid container justifyContent="space-between" alignItems="center">
             <Grid>
-              <Stack>
-                <Typography variant="h5" noWrap>
-                  Hỗ trợ & Trò chuyện
-                </Typography>
+              <Stack spacing={0.3}>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <HeadsetMicIcon color="primary" fontSize="small" />
+                  <Typography variant="h5" noWrap>
+                    Hỗ trợ & Trò chuyện
+                  </Typography>
+                </Stack>
                 <Typography variant="caption" color="secondary" noWrap>
                   Thường phản hồi trong vòng 5 phút
                 </Typography>
@@ -145,13 +158,36 @@ const TransactionHistoryCard = () => {
               </AvatarGroup>
             </Grid>
           </Grid>
-          <Button
-            size="small"
-            variant="contained"
-            sx={{ textTransform: "capitalize" }}
+          <Badge
+            badgeContent={pendingSupportCount}
+            color="error"
+            sx={{
+              width: "100%",
+              "& .MuiBadge-badge": { top: 8, right: 8, fontSize: 11 },
+            }}
           >
-            Cần hỗ trợ?
-          </Button>
+            <Button
+              fullWidth
+              variant="contained"
+              startIcon={<HeadsetMicIcon />}
+              onClick={() => onOpenSupport?.()}
+              sx={{
+                textTransform: "none",
+                fontWeight: 600,
+                py: 1,
+                background: "linear-gradient(135deg, #1976d2, #1565c0)",
+                boxShadow: "0 4px 12px rgba(25,118,210,0.35)",
+                "&:hover": {
+                  background: "linear-gradient(135deg, #1565c0, #0d47a1)",
+                  boxShadow: "0 6px 16px rgba(25,118,210,0.45)",
+                },
+              }}
+            >
+              {pendingSupportCount > 0
+                ? `Mở hộp thư hỗ trợ (${pendingSupportCount} mới)`
+                : "Mở hộp thư hỗ trợ"}
+            </Button>
+          </Badge>
         </Stack>
       </MainCard>
     </Box>

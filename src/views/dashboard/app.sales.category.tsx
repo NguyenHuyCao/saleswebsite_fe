@@ -160,7 +160,6 @@ const SalesByCategories = () => {
         open={openModal}
         onClose={() => setOpenModal(false)}
         closeAfterTransition
-        hideBackdrop
         disableScrollLock
       >
         <Fade in={openModal}>

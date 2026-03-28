@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { Grid, Box } from "@mui/material";
+import { Badge, Box, Grid, IconButton, Tooltip } from "@mui/material";
+import HeadsetMicIcon from "@mui/icons-material/HeadsetMic";
 import ApexChartWrapper from "@/styles/libs/react-apexcharts";
 import Trophy from "@/views/dashboard/app.trophy";
 import StatisticsCard from "@/views/dashboard/app.statistics.card";
@@ -25,6 +26,8 @@ import TransactionHistoryCard from "@/views/dashboard/app.transaction.history.ca
 import UserRatingPage from "@/views/dashboard/app.user.rating";
 import SalesByCategories from "@/views/dashboard/app.sales.category";
 import TopSellingAndLowRevenue from "@/views/dashboard/app.top.salling.and.low.revenue";
+import SupportDrawer from "@/views/dashboard/support/SupportDrawer";
+import { useSocket } from "@/lib/socket/SocketContext";
 import { useSelector, useDispatch } from "react-redux";
 import { AppState } from "@/redux/store";
 import { setScrollTrigger } from "@/redux/slices/searchSlice";
@@ -50,6 +53,36 @@ type SalesItem = { this: number; performance: number };
 const DashboardPage = () => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
+  const [supportOpen, setSupportOpen] = useState(false);
+  const [pendingSupportCount, setPendingSupportCount] = useState(0);
+  const { notifications, unreadSupportMsgCount, clearSupportUnread } = useSocket();
+
+  // Total badge = PENDING sessions + unread customer messages (driven by direct socket path for real-time)
+  const supportBadgeCount = pendingSupportCount + unreadSupportMsgCount;
+
+  const fetchPendingCount = useCallback(async () => {
+    try {
+      const res = await api.get<{ count: number }>("/api/v1/admin/support/pending-count");
+      setPendingSupportCount(res?.count ?? 0);
+    } catch {}
+  }, []);
+
+  // Load on mount
+  useEffect(() => { fetchPendingCount(); }, [fetchPendingCount]);
+
+  // Refresh DB-based pending count when escalation/resolve events arrive
+  useEffect(() => {
+    const hasSupport = notifications.some(
+      (n) => (n.type === "SUPPORT_ESCALATED" || n.type === "SUPPORT_RESOLVED") && !n.read
+    );
+    if (hasSupport) fetchPendingCount();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notifications]);
+
+  const handleOpenSupport = () => {
+    setSupportOpen(true);
+    clearSupportUnread();
+  };
 
   const dispatch = useDispatch();
   const keyword = useSelector((state: AppState) =>
@@ -71,17 +104,28 @@ const DashboardPage = () => {
   const [sales, setSales] = useState<SummaryByPeriod<SalesItem> | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<Period>("week");
 
+  const refTotalProfit   = useRef<HTMLDivElement | null>(null);
+  const refRevenue       = useRef<HTMLDivElement | null>(null);
+  const refVisitor       = useRef<HTMLDivElement | null>(null);
+  const refRefund        = useRef<HTMLDivElement | null>(null);
+  const refIncomeChart   = useRef<HTMLDivElement | null>(null);
+  const refReportChart   = useRef<HTMLDivElement | null>(null);
+  const refOrders        = useRef<HTMLDivElement | null>(null);
+  const refTransactions  = useRef<HTMLDivElement | null>(null);
+  const refTopSelling    = useRef<HTMLDivElement | null>(null);
+  const refUserRating    = useRef<HTMLDivElement | null>(null);
+
   const sectionRefs: Record<string, React.RefObject<HTMLDivElement | null>> = {
-    "Tổng lợi nhuận": useRef<HTMLDivElement | null>(null),
-    "Doanh thu": useRef<HTMLDivElement | null>(null),
-    "Lượt truy cập": useRef<HTMLDivElement | null>(null),
-    "Hoàn tiền": useRef<HTMLDivElement | null>(null),
-    "Báo cáo thu nhập": useRef<HTMLDivElement | null>(null),
-    "Báo cáo": useRef<HTMLDivElement | null>(null),
-    "Đơn hàng": useRef<HTMLDivElement | null>(null),
-    "Lịch sử giao dịch": useRef<HTMLDivElement | null>(null),
-    "Sản phẩm bán chạy": useRef<HTMLDivElement | null>(null),
-    "Đánh giá người dùng": useRef<HTMLDivElement | null>(null),
+    "Tổng lợi nhuận":    refTotalProfit,
+    "Doanh thu":         refRevenue,
+    "Lượt truy cập":     refVisitor,
+    "Hoàn tiền":         refRefund,
+    "Báo cáo thu nhập":  refIncomeChart,
+    "Báo cáo":           refReportChart,
+    "Đơn hàng":          refOrders,
+    "Lịch sử giao dịch": refTransactions,
+    "Sản phẩm bán chạy": refTopSelling,
+    "Đánh giá người dùng": refUserRating,
   };
 
   useEffect(() => {
@@ -157,7 +201,7 @@ const DashboardPage = () => {
             <Grid size={{ xs: 12, md: 6 }}>
               <Grid container spacing={6}>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <Box ref={sectionRefs["Tổng lợi nhuận"]}>
+                  <Box ref={refTotalProfit}>
                     <CardStatisticsVerticalComponent
                       stats={`${(
                         profit?.[selectedPeriod]?.current || 0
@@ -179,7 +223,7 @@ const DashboardPage = () => {
                   </Box>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <Box ref={sectionRefs["Hoàn tiền"]}>
+                  <Box ref={refRefund}>
                     <CardStatisticsVerticalComponent
                       stats={`${(
                         refund?.[selectedPeriod]?.current || 0
@@ -195,7 +239,7 @@ const DashboardPage = () => {
                   </Box>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <Box ref={sectionRefs["Lượt truy cập"]}>
+                  <Box ref={refVisitor}>
                     <CardStatisticsVerticalComponent
                       stats={`${(
                         visitor?.[selectedPeriod]?.this || 0
@@ -214,7 +258,7 @@ const DashboardPage = () => {
                   </Box>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <Box ref={sectionRefs["Doanh thu"]}>
+                  <Box ref={refRevenue}>
                     <CardStatisticsVerticalComponent
                       stats={`${(
                         sales?.[selectedPeriod]?.this || 0
@@ -240,7 +284,7 @@ const DashboardPage = () => {
           </Grid>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
-          <Box ref={sectionRefs["Sản phẩm bán chạy"]}>
+          <Box ref={refTopSelling}>
             <SalesByCategories />
           </Box>
         </Grid>
@@ -248,28 +292,31 @@ const DashboardPage = () => {
           <TopSellingAndLowRevenue />
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
-          <Box ref={sectionRefs["Đánh giá người dùng"]}>
+          <Box ref={refUserRating}>
             <UserRatingPage />
           </Box>
         </Grid>
         <Grid size={{ xs: 12, md: 8 }}>
-          <Box ref={sectionRefs["Báo cáo thu nhập"]}>
+          <Box ref={refIncomeChart}>
             <IncomeAreaChart />
           </Box>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
-          <Box ref={sectionRefs["Báo cáo"]}>
+          <Box ref={refReportChart}>
             <ReportAreaChart />
           </Box>
         </Grid>
         <Grid size={{ xs: 12, md: 8 }}>
-          <Box ref={sectionRefs["Đơn hàng"]}>
+          <Box ref={refOrders}>
             <OrderTable />
           </Box>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
-          <Box ref={sectionRefs["Lịch sử giao dịch"]}>
-            <TransactionHistoryCard />
+          <Box ref={refTransactions}>
+            <TransactionHistoryCard
+              onOpenSupport={handleOpenSupport}
+              pendingSupportCount={supportBadgeCount}
+            />
           </Box>
         </Grid>
         <Grid size={{ xs: 12, md: 8 }}>
@@ -279,6 +326,36 @@ const DashboardPage = () => {
           <DashboardTable />
         </Grid>
       </Grid>
+
+      {/* ── Support FAB ── */}
+      <Tooltip title="Hỗ trợ & Trò chuyện" placement="left">
+        <Box
+          sx={{
+            position: "fixed",
+            bottom: 88,
+            right: 24,
+            zIndex: 1200,
+          }}
+        >
+          <Badge badgeContent={supportBadgeCount} color="error" overlap="circular">
+            <IconButton
+              onClick={handleOpenSupport}
+              sx={{
+                width: 48,
+                height: 48,
+                bgcolor: "primary.main",
+                color: "#fff",
+                boxShadow: "0 4px 14px rgba(0,0,0,0.2)",
+                "&:hover": { bgcolor: "primary.dark" },
+              }}
+            >
+              <HeadsetMicIcon />
+            </IconButton>
+          </Badge>
+        </Box>
+      </Tooltip>
+
+      <SupportDrawer open={supportOpen} onClose={() => setSupportOpen(false)} onCountChange={fetchPendingCount} />
     </ApexChartWrapper>
   );
 };

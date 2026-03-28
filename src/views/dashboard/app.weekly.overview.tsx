@@ -168,11 +168,9 @@ useEffect(() => {
       labels: {
         offsetX: -17,
         formatter: (value: number) =>
-          `$${
-            value >= 1_000_000
-              ? `${(value / 1_000_000).toFixed(0)}M`
-              : (value / 1_000).toFixed(0)
-          }k`,
+          value >= 1_000_000
+            ? `${(value / 1_000_000).toFixed(1)}M₫`
+            : `${(value / 1_000).toFixed(0)}k₫`,
       },
     },
   };

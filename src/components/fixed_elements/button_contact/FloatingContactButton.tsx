@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Box, Zoom, Tooltip, useMediaQuery, useTheme } from "@mui/material";
 import { useMemo } from "react";
 
-const FloatingContactButtons = () => {
+const FloatingContactButtons = ({ hidden = false }: { hidden?: boolean }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
@@ -49,6 +49,10 @@ const FloatingContactButtons = () => {
           flexDirection: "column",
           gap: isMobile ? 1.2 : 2,
           zIndex: 9999,
+          opacity: hidden ? 0 : 1,
+          transform: hidden ? "scale(0.85) translateY(8px)" : "scale(1) translateY(0)",
+          pointerEvents: hidden ? "none" : "auto",
+          transition: "opacity 0.25s ease, transform 0.25s ease",
         }}
       >
         {buttons.map((item, index) => (

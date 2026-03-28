@@ -102,7 +102,7 @@ const UserRatingPage = () => {
           const rating = Number(
             (Array.isArray(row) ? row[1] : row?.rating) ?? 0,
           );
-          const count = Number((Array.isArray(row) ? row[2] : row?.count) ?? 0);
+          const count = Number((Array.isArray(row) ? row[2] : row?.cnt) ?? 0);
           if (rating >= 1 && rating <= 5) ratingMap[5 - rating] += count;
         });
 

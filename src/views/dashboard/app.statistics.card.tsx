@@ -35,10 +35,10 @@ interface SummaryBlock {
     revenue: number;
   };
   growthRate: {
-    orders: { growthRate: number };
-    users: { growthRate: number };
-    products: { growthRate: number };
-    revenue: { growthRate: number };
+    orders: number;
+    users: number;
+    products: number;
+    revenue: number;
   };
 }
 
@@ -60,30 +60,15 @@ interface DataType {
 const DEFAULT_SUMMARY: SummaryRes = {
   week: {
     current: { orders: 0, users: 0, products: 0, revenue: 0 },
-    growthRate: {
-      orders: { growthRate: 0 },
-      users: { growthRate: 0 },
-      products: { growthRate: 0 },
-      revenue: { growthRate: 0 },
-    },
+    growthRate: { orders: 0, users: 0, products: 0, revenue: 0 },
   },
   month: {
     current: { orders: 0, users: 0, products: 0, revenue: 0 },
-    growthRate: {
-      orders: { growthRate: 0 },
-      users: { growthRate: 0 },
-      products: { growthRate: 0 },
-      revenue: { growthRate: 0 },
-    },
+    growthRate: { orders: 0, users: 0, products: 0, revenue: 0 },
   },
   year: {
     current: { orders: 0, users: 0, products: 0, revenue: 0 },
-    growthRate: {
-      orders: { growthRate: 0 },
-      users: { growthRate: 0 },
-      products: { growthRate: 0 },
-      revenue: { growthRate: 0 },
-    },
+    growthRate: { orders: 0, users: 0, products: 0, revenue: 0 },
   },
 };
 
@@ -158,28 +143,28 @@ const StatisticsCard = () => {
           {
             title: "Đơn hàng",
             value: Number(current.orders ?? 0),
-            growth: Number(growth.orders?.growthRate ?? 0),
+            growth: Number(growth.orders ?? 0),
             color: theme.palette.primary.main,
             icon: <TrendingUp sx={{ fontSize: "1.75rem" }} />,
           },
           {
             title: "Khách hàng",
             value: Number(current.users ?? 0),
-            growth: Number(growth.users?.growthRate ?? 0),
+            growth: Number(growth.users ?? 0),
             color: theme.palette.success.main,
             icon: <AccountOutline sx={{ fontSize: "1.75rem" }} />,
           },
           {
-            title: "Sản phẩm 2 thì",
+            title: "Sản phẩm mới",
             value: Number(current.products ?? 0),
-            growth: Number(growth.products?.growthRate ?? 0),
+            growth: Number(growth.products ?? 0),
             color: theme.palette.warning.main,
             icon: <CellphoneLink sx={{ fontSize: "1.75rem" }} />,
           },
           {
             title: "Doanh thu",
             value: Number(current.revenue ?? 0),
-            growth: Number(growth.revenue?.growthRate ?? 0),
+            growth: Number(growth.revenue ?? 0),
             color: theme.palette.info.main,
             icon: <CurrencyUsd sx={{ fontSize: "1.75rem" }} />,
             unit: "₫",

@@ -25,7 +25,7 @@ type ButtonItem = {
   showOnlyOnScroll?: boolean;
 };
 
-const WarrantyAndFAQButtons = () => {
+const WarrantyAndFAQButtons = ({ hidden = false }: { hidden?: boolean }) => {
   const router = useRouter();
   const [visible, setVisible] = useState(false);
   const theme = useTheme();
@@ -90,6 +90,10 @@ const WarrantyAndFAQButtons = () => {
           gap: isMobile ? 1.5 : 1.2,
           zIndex: 9999,
           animation: "fadeInUp 0.8s ease-in-out",
+          opacity: hidden ? 0 : 1,
+          transform: hidden ? "scale(0.85) translateY(8px)" : "scale(1) translateY(0)",
+          pointerEvents: hidden ? "none" : "auto",
+          transition: "opacity 0.25s ease, transform 0.25s ease",
         }}
       >
         {buttons.map((btn, index) => {

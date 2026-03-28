@@ -31,7 +31,7 @@ export const http: AxiosInstance =
   axios.create({
     baseURL,
     withCredentials: true,
-    timeout: 15000,
+    timeout: 30000,
     headers: { "Content-Type": "application/json", "Accept-Language": "vi" },
   });
 if (!g.__APP_HTTP__) g.__APP_HTTP__ = http;
