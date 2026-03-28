@@ -17,6 +17,7 @@ import {
   CurrencyUsd,
   BriefcaseVariantOutline,
   HelpCircleOutline,
+  TrendingUp,
 } from "mdi-material-ui";
 import IncomeAreaChart from "@/views/dashboard/app.incom.area.chart";
 import OrderTable from "@/views/dashboard/app.order.table";
@@ -27,37 +28,49 @@ import UserRatingPage from "@/views/dashboard/app.user.rating";
 import SalesByCategories from "@/views/dashboard/app.sales.category";
 import TopSellingAndLowRevenue from "@/views/dashboard/app.top.salling.and.low.revenue";
 import SupportDrawer from "@/views/dashboard/support/SupportDrawer";
+import DateRangeBar, { DateRange } from "@/views/dashboard/app.date.range.bar";
+import LowStockAlert from "@/views/dashboard/app.low.stock.alert";
 import { useSocket } from "@/lib/socket/SocketContext";
 import { useSelector, useDispatch } from "react-redux";
 import { AppState } from "@/redux/store";
 import { setScrollTrigger } from "@/redux/slices/searchSlice";
-
-// ✅ dùng http/api custom
 import { api } from "@/lib/api/http";
-import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError"; // Import helper
+import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError";
+import dayjs from "dayjs";
 
-/* ------------ Types cho payload ------------- */
-type Period = "week" | "month" | "year";
+/* ------------ Types ------------- */
+interface RangeSummary {
+  startDate: string;
+  endDate: string;
+  orders: number;
+  ordersGrowth: number;
+  revenue: number;
+  revenueGrowth: number;
+  profit: number;
+  profitGrowth: number;
+  refund: number;
+  refundGrowth: number;
+  visitors: number;
+  visitorsGrowth: number;
+  conversionRate: number;
+  convRateGrowth: number;
+}
 
-type SummaryByPeriod<T> = {
-  week: T;
-  month: T;
-  year: T;
+const DEFAULT_RANGE: DateRange = {
+  start: dayjs().subtract(6, "day").format("YYYY-MM-DD"),
+  end: dayjs().format("YYYY-MM-DD"),
 };
 
-type ProfitItem = { current: number; growth: number };
-type RefundItem = { current: number };
-type VisitorItem = { this: number; performance: number };
-type SalesItem = { this: number; performance: number };
-
+/* ------------------------------------------------------------------ */
 const DashboardPage = () => {
   const theme = useTheme();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
+
+  /* ── Support drawer ── */
   const [supportOpen, setSupportOpen] = useState(false);
   const [pendingSupportCount, setPendingSupportCount] = useState(0);
   const { notifications, unreadSupportMsgCount, clearSupportUnread } = useSocket();
-
-  // Total badge = PENDING sessions + unread customer messages (driven by direct socket path for real-time)
   const supportBadgeCount = pendingSupportCount + unreadSupportMsgCount;
 
   const fetchPendingCount = useCallback(async () => {
@@ -67,10 +80,8 @@ const DashboardPage = () => {
     } catch {}
   }, []);
 
-  // Load on mount
   useEffect(() => { fetchPendingCount(); }, [fetchPendingCount]);
 
-  // Refresh DB-based pending count when escalation/resolve events arrive
   useEffect(() => {
     const hasSupport = notifications.some(
       (n) => (n.type === "SUPPORT_ESCALATED" || n.type === "SUPPORT_RESOLVED") && !n.read
@@ -84,205 +95,173 @@ const DashboardPage = () => {
     clearSupportUnread();
   };
 
+  /* ── Search scroll ── */
   const dispatch = useDispatch();
-  const keyword = useSelector((state: AppState) =>
-    state.search.keyword.trim().toLowerCase(),
-  );
-  const scrollTrigger = useSelector(
-    (state: AppState) => state.search.scrollTrigger,
-  );
+  const keyword = useSelector((state: AppState) => state.search.keyword.trim().toLowerCase());
+  const scrollTrigger = useSelector((state: AppState) => state.search.scrollTrigger);
 
-  const [profit, setProfit] = useState<SummaryByPeriod<ProfitItem> | null>(
-    null,
-  );
-  const [refund, setRefund] = useState<SummaryByPeriod<RefundItem> | null>(
-    null,
-  );
-  const [visitor, setVisitor] = useState<SummaryByPeriod<VisitorItem> | null>(
-    null,
-  );
-  const [sales, setSales] = useState<SummaryByPeriod<SalesItem> | null>(null);
-  const [selectedPeriod, setSelectedPeriod] = useState<Period>("week");
+  /* ── Range summary ── */
+  const [dateRange, setDateRange] = useState<DateRange>(DEFAULT_RANGE);
+  const [rangeData, setRangeData] = useState<RangeSummary | null>(null);
 
-  const refTotalProfit   = useRef<HTMLDivElement | null>(null);
-  const refRevenue       = useRef<HTMLDivElement | null>(null);
-  const refVisitor       = useRef<HTMLDivElement | null>(null);
-  const refRefund        = useRef<HTMLDivElement | null>(null);
-  const refIncomeChart   = useRef<HTMLDivElement | null>(null);
-  const refReportChart   = useRef<HTMLDivElement | null>(null);
-  const refOrders        = useRef<HTMLDivElement | null>(null);
-  const refTransactions  = useRef<HTMLDivElement | null>(null);
-  const refTopSelling    = useRef<HTMLDivElement | null>(null);
-  const refUserRating    = useRef<HTMLDivElement | null>(null);
+  const fetchRangeSummary = useCallback(async (range: DateRange) => {
+    try {
+      const data = await api.get<RangeSummary>(
+        `/api/v1/dashboard/overview/range-summary?start=${range.start}&end=${range.end}`
+      );
+      setRangeData(data);
+    } catch (error) {
+      logIfNotCanceled(error, "fetchRangeSummary error:");
+    }
+  }, []);
+
+  useEffect(() => { fetchRangeSummary(dateRange); }, [dateRange, fetchRangeSummary]);
+
+  /* ── Section refs (Rules of Hooks — all top-level) ── */
+  const refTotalProfit  = useRef<HTMLDivElement | null>(null);
+  const refRevenue      = useRef<HTMLDivElement | null>(null);
+  const refVisitor      = useRef<HTMLDivElement | null>(null);
+  const refRefund       = useRef<HTMLDivElement | null>(null);
+  const refConvRate     = useRef<HTMLDivElement | null>(null);
+  const refIncomeChart  = useRef<HTMLDivElement | null>(null);
+  const refReportChart  = useRef<HTMLDivElement | null>(null);
+  const refOrders       = useRef<HTMLDivElement | null>(null);
+  const refTransactions = useRef<HTMLDivElement | null>(null);
+  const refTopSelling   = useRef<HTMLDivElement | null>(null);
+  const refUserRating   = useRef<HTMLDivElement | null>(null);
 
   const sectionRefs: Record<string, React.RefObject<HTMLDivElement | null>> = {
-    "Tổng lợi nhuận":    refTotalProfit,
-    "Doanh thu":         refRevenue,
-    "Lượt truy cập":     refVisitor,
-    "Hoàn tiền":         refRefund,
-    "Báo cáo thu nhập":  refIncomeChart,
-    "Báo cáo":           refReportChart,
-    "Đơn hàng":          refOrders,
-    "Lịch sử giao dịch": refTransactions,
-    "Sản phẩm bán chạy": refTopSelling,
+    "Tổng lợi nhuận":      refTotalProfit,
+    "Doanh thu":           refRevenue,
+    "Lượt truy cập":       refVisitor,
+    "Hoàn tiền":           refRefund,
+    "Tỷ lệ chuyển đổi":   refConvRate,
+    "Báo cáo thu nhập":    refIncomeChart,
+    "Báo cáo":             refReportChart,
+    "Đơn hàng":            refOrders,
+    "Lịch sử giao dịch":   refTransactions,
+    "Sản phẩm bán chạy":   refTopSelling,
     "Đánh giá người dùng": refUserRating,
   };
 
   useEffect(() => {
     if (!keyword || !scrollTrigger) return;
     const closestMatch = Object.keys(sectionRefs).find((title) =>
-      title.toLowerCase().includes(keyword),
+      title.toLowerCase().includes(keyword)
     );
     const ref = closestMatch ? sectionRefs[closestMatch] : null;
     if (ref?.current) {
       ref.current.scrollIntoView({ behavior: "smooth", block: "center" });
     }
     dispatch(setScrollTrigger(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyword, scrollTrigger, dispatch]);
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    (async () => {
-      try {
-        const [profitData, refundData, visitorData, salesData] =
-          await Promise.all([
-            api.get<SummaryByPeriod<ProfitItem>>(
-              "/api/v1/dashboard/overview/profit-summary",
-              { signal: controller.signal },
-            ),
-            api.get<SummaryByPeriod<RefundItem>>(
-              "/api/v1/dashboard/overview/total-refund",
-              { signal: controller.signal },
-            ),
-            api.get<SummaryByPeriod<VisitorItem>>(
-              "/api/v1/dashboard/overview/visitor-statistics",
-              { signal: controller.signal },
-            ),
-            api.get<SummaryByPeriod<SalesItem>>(
-              "/api/v1/dashboard/overview/sales-statistics",
-              { signal: controller.signal },
-            ),
-          ]);
-
-        setProfit(profitData);
-        setRefund(refundData);
-        setVisitor(visitorData);
-        setSales(salesData);
-      } catch (error) {
-        logIfNotCanceled(error, "Fetch dashboard data error:");
-        setProfit(null);
-        setRefund(null);
-        setVisitor(null);
-        setSales(null);
-      }
-    })();
-
-    return () => controller.abort();
-  }, []);
-
+  /* ---------------------------------------------------------------- */
   return (
     <ApexChartWrapper>
+      {/* ── Low stock alert ── */}
+      <LowStockAlert />
+
       <Grid container spacing={6}>
+        {/* ── Row 1: Trophy + Statistics ── */}
         <Grid size={{ xs: 12, md: 4 }}>
           <Trophy />
         </Grid>
         <Grid size={{ xs: 12, md: 8 }}>
           <StatisticsCard />
         </Grid>
+
+        {/* ── Row 2: WeeklyOverview + TotalEarning ── */}
         <Grid size={{ xs: 12, md: 4 }}>
           <WeeklyOverview />
         </Grid>
         <Grid size={{ xs: 12, md: 8 }}>
-          <Grid container spacing={6}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TotalEarning />
+          <TotalEarning />
+        </Grid>
+
+        {/* ── Row 3: DateRangeBar — full width ── */}
+        <Grid size={{ xs: 12 }}>
+          <DateRangeBar onChange={setDateRange} />
+        </Grid>
+
+        {/* ── Row 4: 5 stat cards — 5 equal columns on desktop ──
+              columns={10}: xs→1/row, sm→2/row, md→5/row           */}
+        <Grid size={{ xs: 12 }}>
+          <Grid container spacing={3} columns={{ xs: 2, sm: 4, md: 10 }}>
+            <Grid size={{ xs: 2, sm: 2, md: 2 }}>
+              <Box ref={refTotalProfit}>
+                <CardStatisticsVerticalComponent
+                  stats={(rangeData?.profit ?? 0).toLocaleString("vi-VN")}
+                  icon={<Poll />}
+                  color="success"
+                  trendNumber={`${Math.abs(rangeData?.profitGrowth ?? 0).toFixed(2)}%`}
+                  trend={(rangeData?.profitGrowth ?? 0) >= 0 ? "positive" : "negative"}
+                  title="Tổng lợi nhuận"
+                  subtitle="Kỳ so sánh trước"
+                />
+              </Box>
             </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Grid container spacing={6}>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <Box ref={refTotalProfit}>
-                    <CardStatisticsVerticalComponent
-                      stats={`${(
-                        profit?.[selectedPeriod]?.current || 0
-                      ).toLocaleString("vi-VN")}`}
-                      icon={<Poll />}
-                      color="success"
-                      trendNumber={`${Math.abs(
-                        profit?.[selectedPeriod]?.growth || 0,
-                      ).toFixed(2)}%`}
-                      trend={
-                        (profit?.[selectedPeriod]?.growth || 0) >= 0
-                          ? "positive"
-                          : "negative"
-                      }
-                      title="Tổng lợi nhuận"
-                      subtitle="Tổng lợi nhuận trong kỳ"
-                      onPeriodChange={setSelectedPeriod}
-                    />
-                  </Box>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <Box ref={refRefund}>
-                    <CardStatisticsVerticalComponent
-                      stats={`${(
-                        refund?.[selectedPeriod]?.current || 0
-                      ).toLocaleString("vi-VN")}`}
-                      icon={<CurrencyUsd />}
-                      color="secondary"
-                      trend="negative"
-                      trendNumber=""
-                      title="Hoàn tiền"
-                      subtitle="Tổng hoàn tiền trong kỳ"
-                      onPeriodChange={setSelectedPeriod}
-                    />
-                  </Box>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <Box ref={refVisitor}>
-                    <CardStatisticsVerticalComponent
-                      stats={`${(
-                        visitor?.[selectedPeriod]?.this || 0
-                      ).toLocaleString("vi-VN")}`}
-                      icon={<BriefcaseVariantOutline />}
-                      color="primary"
-                      trend="positive"
-                      trendNumber={`${
-                        visitor?.[selectedPeriod]?.performance?.toFixed(2) ||
-                        "0.00"
-                      }%`}
-                      title="Lượt truy cập"
-                      subtitle="So với kỳ trước"
-                      onPeriodChange={setSelectedPeriod}
-                    />
-                  </Box>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <Box ref={refRevenue}>
-                    <CardStatisticsVerticalComponent
-                      stats={`${(
-                        sales?.[selectedPeriod]?.this || 0
-                      ).toLocaleString("vi-VN")}`}
-                      icon={<HelpCircleOutline />}
-                      color="warning"
-                      trend={
-                        (sales?.[selectedPeriod]?.performance || 0) >= 0
-                          ? "positive"
-                          : "negative"
-                      }
-                      trendNumber={`${Math.abs(
-                        sales?.[selectedPeriod]?.performance || 0,
-                      ).toFixed(2)}%`}
-                      title="Doanh thu"
-                      subtitle="So với kỳ trước"
-                      onPeriodChange={setSelectedPeriod}
-                    />
-                  </Box>
-                </Grid>
-              </Grid>
+
+            <Grid size={{ xs: 2, sm: 2, md: 2 }}>
+              <Box ref={refRefund}>
+                <CardStatisticsVerticalComponent
+                  stats={(rangeData?.refund ?? 0).toLocaleString("vi-VN")}
+                  icon={<CurrencyUsd />}
+                  color="secondary"
+                  trendNumber={`${Math.abs(rangeData?.refundGrowth ?? 0).toFixed(2)}%`}
+                  trend={(rangeData?.refundGrowth ?? 0) <= 0 ? "positive" : "negative"}
+                  title="Hoàn tiền"
+                  subtitle="Tổng hoàn tiền trong kỳ"
+                />
+              </Box>
+            </Grid>
+
+            <Grid size={{ xs: 2, sm: 2, md: 2 }}>
+              <Box ref={refVisitor}>
+                <CardStatisticsVerticalComponent
+                  stats={(rangeData?.visitors ?? 0).toLocaleString("vi-VN")}
+                  icon={<BriefcaseVariantOutline />}
+                  color="primary"
+                  trendNumber={`${Math.abs(rangeData?.visitorsGrowth ?? 0).toFixed(2)}%`}
+                  trend={(rangeData?.visitorsGrowth ?? 0) >= 0 ? "positive" : "negative"}
+                  title="Lượt truy cập"
+                  subtitle="So với kỳ trước"
+                />
+              </Box>
+            </Grid>
+
+            <Grid size={{ xs: 2, sm: 2, md: 2 }}>
+              <Box ref={refRevenue}>
+                <CardStatisticsVerticalComponent
+                  stats={(rangeData?.revenue ?? 0).toLocaleString("vi-VN")}
+                  icon={<HelpCircleOutline />}
+                  color="warning"
+                  trendNumber={`${Math.abs(rangeData?.revenueGrowth ?? 0).toFixed(2)}%`}
+                  trend={(rangeData?.revenueGrowth ?? 0) >= 0 ? "positive" : "negative"}
+                  title="Doanh thu"
+                  subtitle="So với kỳ trước"
+                />
+              </Box>
+            </Grid>
+
+            <Grid size={{ xs: 2, sm: 2, md: 2 }}>
+              <Box ref={refConvRate}>
+                <CardStatisticsVerticalComponent
+                  stats={`${(rangeData?.conversionRate ?? 0).toFixed(2)}%`}
+                  icon={<TrendingUp />}
+                  color="info"
+                  trendNumber={`${Math.abs(rangeData?.convRateGrowth ?? 0).toFixed(2)}%`}
+                  trend={(rangeData?.convRateGrowth ?? 0) >= 0 ? "positive" : "negative"}
+                  title="Tỷ lệ chuyển đổi"
+                  subtitle="Khách → Đơn hàng"
+                />
+              </Box>
             </Grid>
           </Grid>
         </Grid>
+
+        {/* ── Row 5: SalesByCategories + TopSelling ── */}
         <Grid size={{ xs: 12, md: 4 }}>
           <Box ref={refTopSelling}>
             <SalesByCategories />
@@ -291,6 +270,8 @@ const DashboardPage = () => {
         <Grid size={{ xs: 12, md: 8 }}>
           <TopSellingAndLowRevenue />
         </Grid>
+
+        {/* ── Row 6: UserRating + IncomeChart ── */}
         <Grid size={{ xs: 12, md: 4 }}>
           <Box ref={refUserRating}>
             <UserRatingPage />
@@ -301,6 +282,8 @@ const DashboardPage = () => {
             <IncomeAreaChart />
           </Box>
         </Grid>
+
+        {/* ── Row 7: ReportChart + OrderTable ── */}
         <Grid size={{ xs: 12, md: 4 }}>
           <Box ref={refReportChart}>
             <ReportAreaChart />
@@ -311,6 +294,8 @@ const DashboardPage = () => {
             <OrderTable />
           </Box>
         </Grid>
+
+        {/* ── Row 8: TransactionHistory + SaleReport ── */}
         <Grid size={{ xs: 12, md: 4 }}>
           <Box ref={refTransactions}>
             <TransactionHistoryCard
@@ -322,6 +307,8 @@ const DashboardPage = () => {
         <Grid size={{ xs: 12, md: 8 }}>
           <SaleReportCard />
         </Grid>
+
+        {/* ── Row 9: Full-width user table ── */}
         <Grid size={{ xs: 12 }}>
           <DashboardTable />
         </Grid>
@@ -329,14 +316,7 @@ const DashboardPage = () => {
 
       {/* ── Support FAB ── */}
       <Tooltip title="Hỗ trợ & Trò chuyện" placement="left">
-        <Box
-          sx={{
-            position: "fixed",
-            bottom: 88,
-            right: 24,
-            zIndex: 1200,
-          }}
-        >
+        <Box sx={{ position: "fixed", bottom: 88, right: 24, zIndex: 1200 }}>
           <Badge badgeContent={supportBadgeCount} color="error" overlap="circular">
             <IconButton
               onClick={handleOpenSupport}
@@ -355,7 +335,11 @@ const DashboardPage = () => {
         </Box>
       </Tooltip>
 
-      <SupportDrawer open={supportOpen} onClose={() => setSupportOpen(false)} onCountChange={fetchPendingCount} />
+      <SupportDrawer
+        open={supportOpen}
+        onClose={() => setSupportOpen(false)}
+        onCountChange={fetchPendingCount}
+      />
     </ApexChartWrapper>
   );
 };
