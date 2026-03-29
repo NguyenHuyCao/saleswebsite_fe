@@ -1,3 +1,5 @@
+export type ContactStatus = "NEW" | "READ" | "REPLIED" | "CLOSED";
+
 export interface Contact {
   id: number;
   fullName: string;
@@ -5,8 +7,8 @@ export interface Contact {
   phone: string;
   subject: string;
   messageContent: string;
+  status: ContactStatus;
   createdAt: string;
-  createdBy: string;
 }
 
 export interface ApiMeta {
@@ -16,7 +18,6 @@ export interface ApiMeta {
   total: number;
 }
 
-/** payload thực sự BE trả trong field data */
 export interface ContactsList {
   result: Contact[];
   meta?: ApiMeta;
