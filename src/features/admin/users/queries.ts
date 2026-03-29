@@ -3,17 +3,18 @@ import {
   apiListUsers,
   apiGetUser,
   apiUpdateUser,
+  apiToggleActive,
+  apiDeleteUser,
   apiChangePassword,
 } from "./api";
 import type { User } from "./types";
-import { ChangePasswordInput } from "@/features/user/auth";
+import type { ChangePasswordInput } from "@/features/user/auth";
 
 export const QK = {
   users: ["admin", "users"] as const,
   user: (id: string | number) => ["admin", "users", String(id)] as const,
 };
 
-/** Danh sách người dùng */
 export function useUsers() {
   return useQuery<User[]>({
     queryKey: QK.users,
@@ -21,7 +22,6 @@ export function useUsers() {
   });
 }
 
-/** Chi tiết 1 user */
 export function useUser(id?: string | number | null) {
   return useQuery<User>({
     queryKey: id ? QK.user(id) : ["_disabled", "user"],
@@ -30,7 +30,6 @@ export function useUser(id?: string | number | null) {
   });
 }
 
-/** Cập nhật thông tin user */
 export function useUpdateUser(userId: string | number) {
   const qc = useQueryClient();
   return useMutation({
@@ -44,7 +43,23 @@ export function useUpdateUser(userId: string | number) {
   });
 }
 
-/** Đổi mật khẩu user */
+export function useToggleActive() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, active }: { id: number; active: boolean }) =>
+      apiToggleActive(id, active),
+    onSuccess: () => qc.invalidateQueries({ queryKey: QK.users }),
+  });
+}
+
+export function useDeleteUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => apiDeleteUser(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: QK.users }),
+  });
+}
+
 export function useChangePassword(userId: string | number) {
   return useMutation<void, Error, ChangePasswordInput>({
     mutationFn: (p) =>
@@ -55,4 +70,3 @@ export function useChangePassword(userId: string | number) {
       }),
   });
 }
-
