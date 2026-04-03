@@ -6,7 +6,6 @@ import {
   Box,
   Typography,
   Paper,
-  Fade,
   useMediaQuery,
   useTheme,
   Chip,
@@ -21,6 +20,7 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
 import { api } from "@/lib/api/http";
+import { mapProduct } from "@/lib/utils/productMapper";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
@@ -31,41 +31,7 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 
 // IMPORT type Promotion từ file types thay vì định nghĩa lại
 import type { Promotion } from "../types";
-
-// Product type (giữ nguyên)
-type Product = {
-  id: number;
-  name: string;
-  slug: string;
-  imageAvt: string;
-  imageDetail1?: string;
-  imageDetail2?: string;
-  imageDetail3?: string;
-  description?: string;
-  price: number;
-  pricePerUnit: number;
-  originalPrice: number;
-  sale: boolean;
-  inStock: boolean;
-  label: string;
-  stockQuantity: number;
-  totalStock: number;
-  power?: string;
-  fuelType?: string;
-  engineType?: string;
-  weight?: number;
-  dimensions?: string;
-  tankCapacity?: number;
-  origin?: string;
-  warrantyMonths?: number;
-  createdAt: string;
-  createdBy?: string;
-  updatedAt?: string | null;
-  updatedBy?: string | null;
-  rating?: number;
-  status: string[];
-  favorite?: boolean;
-};
+import type { Product } from "@/features/user/products/types";
 
 const sliderStyles = `
   .flash-sale-slider .slick-track {
@@ -80,59 +46,9 @@ const sliderStyles = `
     height: 100%;
   }
 `;
-// Mapper chuẩn hoá Product (giữ nguyên)
-function mapProduct(item: any, nowMs: number): Product {
-  const createdAtMs = new Date(item.createdAt).getTime();
-  const isNew = (nowMs - createdAtMs) / (1000 * 60 * 60 * 24) <= 30;
-  const sold = (item.totalStock ?? 0) - (item.stockQuantity ?? 0);
-  const isHot = sold > 10;
-
-  const currentPrice = item?.pricePerUnit ?? item?.price ?? 0;
-  const originalPrice = item?.price ?? currentPrice;
-
-  const status: string[] = [];
-  if (isNew) status.push("Mới");
-  if (isHot) status.push("Bán chạy");
-  if ((item.stockQuantity ?? 0) === 0)
-    status.splice(0, status.length, "Hết hàng");
-
-  return {
-    id: item.id,
-    name: item.name,
-    slug: item.slug,
-    imageAvt: item.imageAvt,
-    imageDetail1: item.imageDetail1 || "",
-    imageDetail2: item.imageDetail2 || "",
-    imageDetail3: item.imageDetail3 || "",
-    description: item.description || "",
-    price: currentPrice,
-    pricePerUnit: currentPrice,
-    originalPrice,
-    sale: currentPrice < originalPrice,
-    inStock: (item.stockQuantity ?? 0) > 0,
-    label: (item.stockQuantity ?? 0) > 0 ? "Thêm vào giỏ" : "Hết hàng",
-    stockQuantity: item.stockQuantity ?? 0,
-    totalStock: item.totalStock ?? 0,
-    power: item.power || "N/A",
-    fuelType: item.fuelType || "N/A",
-    engineType: item.engineType || "N/A",
-    weight: item.weight || 0,
-    dimensions: item.dimensions || "",
-    tankCapacity: item.tankCapacity || 0,
-    origin: item.origin || "Không rõ",
-    warrantyMonths: item.warrantyMonths || 0,
-    createdAt: item.createdAt,
-    createdBy: item.createdBy || "",
-    updatedAt: item.updatedAt || null,
-    updatedBy: item.updatedBy || null,
-    rating: item.rating || 0,
-    status,
-    favorite: item.wishListUser === true,
-  };
-}
-
-// Fetcher (giữ nguyên)
-const fetcher = async (path: string): Promise<Product[]> => {
+// Fetcher applies the promotion discount so each product card shows the correct sale price.
+// [path, discountPct] used as SWR key so SWR re-fetches when promotion changes.
+const fetcher = async ([path, discountPct]: [string, number]): Promise<Product[]> => {
   try {
     const payload = await api.get<any>(path);
     const raw: any[] = Array.isArray(payload)
@@ -140,7 +56,7 @@ const fetcher = async (path: string): Promise<Product[]> => {
       : (payload?.result ?? payload?.items ?? payload?.data ?? []);
 
     const nowMs = Date.now();
-    return raw.map((item: any) => mapProduct(item, nowMs));
+    return raw.map((item: any) => mapProduct(item, nowMs, discountPct));
   } catch {
     return [];
   }
@@ -164,7 +80,7 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
   const [currentSlide, setCurrentSlide] = useState(0);
   const [sliderReady, setSliderReady] = useState(false);
 
-  const swrKey = `/api/v1/promotions/${promotion.id}/products`;
+  const swrKey = [`/api/v1/promotions/${promotion.id}/products`, promotion.discount] as const;
   const { data: products = [] } = useSWR(swrKey, fetcher);
 
   // Tính toán số slide
@@ -225,8 +141,10 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
     sliderRef.current?.slickGoTo(pageIndex * slidesToShow);
   };
 
-  // Tính phần trăm giảm giá
-  const discountPercent = Math.round(promotion.discount * 100);
+  // Normalise: backend may return 0-1 fraction or 0-100 integer
+  const discountPercent = promotion.discount > 1
+    ? Math.round(promotion.discount)
+    : Math.round(promotion.discount * 100);
 
   // Phần còn lại của component giữ nguyên...
   // (tôi sẽ viết tiếp phần return để bạn dễ copy)
@@ -377,21 +295,15 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
             {products.map((product, index) => (
               <Box key={product.id} px={1}>
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  transition={{
+                    duration: 0.25,
+                    delay: Math.min(index * 0.04, 0.2),
+                    ease: "easeOut",
+                  }}
                 >
-                  <ProductCard
-                    product={{
-                      ...product,
-                      originalPrice: product.price,
-                      price: Math.round(
-                        product.price * (1 - promotion.discount),
-                      ),
-                      sale: true,
-                    }}
-                    mutateKey={swrKey}
-                  />
+                  <ProductCard product={product} mutateKey={swrKey[0]} />
                 </motion.div>
               </Box>
             ))}
@@ -399,30 +311,18 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
 
           {/* Hint kéo tay cho mobile */}
           {isMobile && products.length > slidesToShow && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1 }}
+            <Typography
+              variant="caption"
+              sx={{
+                display: "block",
+                textAlign: "center",
+                mt: 2,
+                color: "#bbb",
+                fontStyle: "italic",
+              }}
             >
-              <Typography
-                variant="caption"
-                sx={{
-                  display: "block",
-                  textAlign: "center",
-                  mt: 2,
-                  color: "#ffb700",
-                  fontStyle: "italic",
-                  animation: "slideHint 1.5s infinite",
-                  "@keyframes slideHint": {
-                    "0%": { transform: "translateX(0)" },
-                    "50%": { transform: "translateX(-8px)" },
-                    "100%": { transform: "translateX(0)" },
-                  },
-                }}
-              >
-                ← Kéo để xem thêm →
-              </Typography>
-            </motion.div>
+              Vuốt để xem thêm →
+            </Typography>
           )}
         </Box>
 
@@ -493,29 +393,6 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
                         }}
                       />
 
-                      {/* Hiệu ứng glow cho dot active */}
-                      {isActive && (
-                        <motion.div
-                          initial={{ scale: 0.8, opacity: 0.2 }}
-                          animate={{ scale: 1.2, opacity: 0 }}
-                          transition={{
-                            duration: 1.5,
-                            repeat: Infinity,
-                            repeatType: "loop",
-                          }}
-                          style={{
-                            position: "absolute",
-                            top: "50%",
-                            left: "50%",
-                            transform: "translate(-50%, -50%)",
-                            width: 40,
-                            height: 40,
-                            borderRadius: "50%",
-                            background: "#f25c05",
-                            zIndex: -1,
-                          }}
-                        />
-                      )}
                     </Box>
                   );
                 })}

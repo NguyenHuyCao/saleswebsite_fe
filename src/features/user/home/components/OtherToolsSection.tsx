@@ -6,7 +6,6 @@ import {
   Typography,
   Button,
   Grid,
-  Fade,
   useMediaQuery,
   useTheme,
   Chip,
@@ -59,34 +58,13 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({ categories }) => 
   }, [dispatch]);
 
   useEffect(() => {
-    const now = new Date();
-    const updated = categoriesWithProducts.map((cat) => ({
-      ...cat,
-      products: cat.products.map((item) => {
-        const createdAt = new Date(item.createdAt);
-        const isNew =
-          (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
-        const isInStock = item.inStock === true && item.stockQuantity > 0;
-
-        return {
-          ...item,
-          status:
-            item.stockQuantity === 0 ? ["Hết hàng"] : isNew ? ["Mới"] : [],
-          sale: item.price !== item.pricePerUnit,
-          inStock: isInStock,
-          label: isInStock ? "Thêm vào giỏ" : "Hết hàng",
-        };
-      }),
-    }));
-
-    if (!deepEqual(updated, categoryProducts)) {
-      setCategoryProducts(updated);
-      // Reset active index nếu vượt quá độ dài mới
-      if (activeIndex >= updated.length) {
+    if (!deepEqual(categoriesWithProducts, categoryProducts)) {
+      setCategoryProducts(categoriesWithProducts);
+      if (activeIndex >= categoriesWithProducts.length) {
         setActiveIndex(0);
       }
     }
-  }, [categoriesWithProducts, categoryProducts, activeIndex]);
+  }, [categoriesWithProducts]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Check scroll buttons visibility
   const checkScroll = () => {
@@ -180,8 +158,8 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({ categories }) => 
           >
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
               <motion.div
-                whileHover={{ rotate: 10, scale: 1.1 }}
-                transition={{ type: "spring", stiffness: 300 }}
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
               >
                 <Box
                   sx={{
@@ -361,26 +339,18 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({ categories }) => 
 
             {/* Mobile hint */}
             {isMobile && categoryProducts.length > 3 && (
-              <Fade in timeout={1000}>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    display: "block",
-                    textAlign: "center",
-                    mt: 1,
-                    color: "#999",
-                    fontStyle: "italic",
-                    animation: "slideHint 1.5s infinite",
-                    "@keyframes slideHint": {
-                      "0%": { transform: "translateX(0)" },
-                      "50%": { transform: "translateX(-5px)" },
-                      "100%": { transform: "translateX(0)" },
-                    },
-                  }}
-                >
-                  ← Vuốt để xem thêm danh mục →
-                </Typography>
-              </Fade>
+              <Typography
+                variant="caption"
+                sx={{
+                  display: "block",
+                  textAlign: "center",
+                  mt: 1,
+                  color: "#bbb",
+                  fontStyle: "italic",
+                }}
+              >
+                Vuốt để xem thêm →
+              </Typography>
             )}
           </Box>
         </motion.div>
@@ -408,10 +378,13 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({ categories }) => 
                       }}
                     >
                       <motion.div
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: idx * 0.05 }}
-                        whileHover={{ y: -8 }}
+                        transition={{
+                          duration: 0.25,
+                          delay: Math.min(idx * 0.04, 0.2),
+                          ease: "easeOut",
+                        }}
                       >
                         <ProductCard
                           product={product}

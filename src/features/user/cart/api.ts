@@ -13,16 +13,19 @@ export async function getCart(): Promise<CartItem[]> {
 
 export async function updateCartItemQuantity(
   productId: number,
-  quantity: number
+  quantity: number,
+  variantId?: number | null
 ) {
-  await api.put<void, { productId: number; quantity: number }>(
+  await api.put<void, { productId: number; quantity: number; variantId?: number | null }>(
     "/api/v1/carts",
-    { productId, quantity }
+    { productId, quantity, variantId: variantId ?? undefined }
   );
 }
 
-export async function deleteCartItem(productId: number) {
-  await api.delete<void>("/api/v1/carts", { params: { productId } });
+export async function deleteCartItem(productId: number, variantId?: number | null) {
+  await api.delete<void>("/api/v1/carts", {
+    params: { productId, ...(variantId != null ? { variantId } : {}) },
+  });
 }
 
 export async function clearUserCart() {

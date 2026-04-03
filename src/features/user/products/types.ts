@@ -1,4 +1,15 @@
 // src/features/user/products/types.ts
+
+export type ProductVariant = {
+  id: number;
+  size: string | null;
+  color: string | null;
+  sku: string | null;
+  stockQuantity: number;
+  priceOverride: number | null;
+  active: boolean;
+};
+
 export type Product = {
   id: number;
   name: string;
@@ -13,6 +24,7 @@ export type Product = {
   pricePerUnit: number;
   originalPrice: number;
   sale: boolean;
+  discountPercent?: number; // 0-100, only set when product has an active promotion discount
 
   inStock: boolean;
   label: string;
@@ -35,6 +47,10 @@ export type Product = {
   rating?: number;
   status: string[]; // BẮT BUỘC, dùng cho tag “Mới”, “Hết hàng”
   favorite?: boolean;
+
+  productType?: “MACHINE” | “CLOTHING” | “ACCESSORY” | “OTHER”;
+  material?: string;
+  variants?: ProductVariant[];
 };
 
 export type Category = {

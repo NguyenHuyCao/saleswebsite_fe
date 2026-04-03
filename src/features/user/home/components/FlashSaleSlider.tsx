@@ -7,16 +7,17 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import ProductCard from "@/features/user/products/components/ProductCard";
 import type { Product } from "@/features/user/products/types";
 import { api, toApiError } from "@/lib/api/http";
-import type { Promotion } from "../types";   // <- dùng type chung, KHÔNG tự định nghĩa lại
+import { mapProduct } from "@/lib/utils/productMapper";
+import type { Promotion } from "../types";
 
 type PromotionDetail = Promotion & { products?: any[] };
 
 type Props = {
   promotion: Promotion;
-  allPromotions?: Promotion[]; // để linh hoạt, không bắt buộc
+  allPromotions?: Promotion[];
 };
 
-export default function FlashSaleSlider({ promotion, allPromotions = [] }: Props) {
+export default function FlashSaleSlider({ promotion }: Props) {
   const [items, setItems] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,50 +34,14 @@ export default function FlashSaleSlider({ promotion, allPromotions = [] }: Props
       try {
         const detail = await api.get<PromotionDetail>(`/api/v1/promotions/${promotion.id}`);
 
-        const now = new Date();
-        const mapped: Product[] =
-          (detail.products || []).map((item: any) => {
-            const createdAt = new Date(item.createdAt);
-            const isNew = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <= 30;
+        // Use the promotion's discount to compute sale price for each product card.
+        // detail.discount may be 0-1 (fraction) or 0-100 (percent) — mapProduct normalises it.
+        const discountPct = detail.discount ?? 0;
+        const nowMs = Date.now();
 
-            const price = item.pricePerUnit ?? item.price ?? 0;
-            const originalPrice = item.price ?? price;
-            const inStock = !!(item.active === true && item.stockQuantity > 0);
-
-            return {
-              id: item.id,
-              name: item.name,
-              slug: item.slug,
-              imageAvt: item.imageAvt,
-              imageDetail1: item.imageDetail1 || "",
-              imageDetail2: item.imageDetail2 || "",
-              imageDetail3: item.imageDetail3 || "",
-              description: item.description,
-              price,
-              pricePerUnit: price,
-              originalPrice,
-              sale: originalPrice > price,
-              inStock,
-              label: inStock ? "Thêm vào giỏ" : "Hết hàng",
-              stockQuantity: item.stockQuantity ?? 0,
-              totalStock: item.totalStock ?? 0,
-              power: item.power || "",
-              fuelType: item.fuelType || "",
-              engineType: item.engineType || "",
-              weight: item.weight || 0,
-              dimensions: item.dimensions || "",
-              tankCapacity: item.tankCapacity || 0,
-              origin: item.origin || "",
-              warrantyMonths: item.warrantyMonths || 0,
-              createdAt: item.createdAt,
-              createdBy: item.createdBy || "",
-              updatedAt: item.updatedAt || null,
-              updatedBy: item.updatedBy || "",
-              rating: item.rating || 0,
-              status: (item.stockQuantity ?? 0) === 0 ? ["Hết hàng"] : isNew ? ["Mới"] : [],
-              favorite: item.wishListUser === true,
-            } as Product;
-          }) ?? [];
+        const mapped: Product[] = (detail.products || []).map((item: any) =>
+          mapProduct(item, nowMs, discountPct)
+        );
 
         if (mounted) setItems(mapped);
       } catch (e) {

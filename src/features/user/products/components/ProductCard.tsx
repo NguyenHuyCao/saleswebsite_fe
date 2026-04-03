@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -17,15 +17,14 @@ import {
   Chip,
   Skeleton,
   Zoom,
-  Fade,
+  CircularProgress,
 } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import ErrorIcon from "@mui/icons-material/Error";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import GlobalSnackbar from "@/components/alert/GlobalSnackbar";
@@ -34,20 +33,13 @@ import { CART_COUNT_KEY, WISHLIST_COUNT_KEY } from "@/constants/apiKeys";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
 import type { AppDispatch, AppState } from "@/redux/store";
-import { api, http } from "@/lib/api/http";
+import { http } from "@/lib/api/http";
 import type { Product } from "@/features/user/products/types";
-
-// Types
-type PromoResp =
-  | { discount?: number }
-  | { result?: { discount?: number } }
-  | null
-  | undefined;
 
 interface ProductCardProps {
   product: Product;
   mutateKey?: string;
-  hideWishlistButton?: boolean; // THÊM PROP NÀY
+  hideWishlistButton?: boolean;
   onWishlistToggle?: (isFavorite: boolean) => void;
   priority?: boolean;
 }
@@ -109,53 +101,18 @@ const ProductCard: React.FC<ProductCardProps> = ({
     message: "",
     type: "success" as "success" | "error",
   });
-  const [discountPercent, setDiscountPercent] = useState<number | null>(null);
   const [busyCart, setBusyCart] = useState(false);
   const [busyFav, setBusyFav] = useState(false);
   const [showAddedAnimation, setShowAddedAnimation] = useState(false);
 
-  // Memoized values
-  const finalPrice = useMemo(() => product.price || 0, [product.price]);
-  const originalPrice = useMemo(
-    () => product.originalPrice || 0,
-    [product.originalPrice],
-  );
-  const hasDiscount = useMemo(
-    () => product.sale && originalPrice > finalPrice,
-    [product.sale, originalPrice, finalPrice],
-  );
-  const discountPercentage = useMemo(() => {
-    if (!hasDiscount) return null;
-    return Math.round(((originalPrice - finalPrice) / originalPrice) * 100);
-  }, [hasDiscount, originalPrice, finalPrice]);
+  // Price & discount — derived directly from product data (set by mapper, no extra API call)
+  const hasDiscount = product.sale && (product.discountPercent ?? 0) > 0;
+  const finalPrice = product.price;
+  const originalPrice = product.originalPrice;
 
-  // Normalize discount percent
-  const normalizePct = useCallback(
-    (val: number) => (val > 1 ? val / 100 : val),
-    [],
-  );
-
-  // Check promotion
-  useEffect(() => {
-    const checkPromotion = async () => {
-      try {
-        const payload = await api.get<PromoResp | { result: PromoResp }>(
-          `/api/v1/promotions/product?productId=${product.id}`,
-        );
-        const data = (payload as any)?.result ?? payload;
-        const raw = (data as any)?.discount;
-        if (typeof raw === "number") {
-          setDiscountPercent(normalizePct(raw));
-        }
-      } catch {
-        // Silent fail
-      }
-    };
-
-    if (product.sale) {
-      checkPromotion();
-    }
-  }, [product.id, product.sale, normalizePct]);
+  // MACHINE = direct add-to-cart; others require variant selection on detail page
+  const isMachine =
+    !product.productType || product.productType === "MACHINE";
 
   // Auth check
   const ensureLoggedIn = useCallback(() => {
@@ -168,10 +125,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
     setDialogOpen(true);
   }, []);
 
-  // Add to cart handler
+  // Navigate to product detail
+  const handleCardClick = useCallback(() => {
+    router.push(`/product/detail?name=${product.slug}`);
+  }, [router, product.slug]);
+
+  // Add to cart handler (machine products only)
   const handleAddToCart = useCallback(
     async (e: React.MouseEvent) => {
       e.stopPropagation();
+      if (!isMachine) {
+        // Non-machine: navigate to detail page to pick variant
+        router.push(`/product/detail?name=${product.slug}`);
+        return;
+      }
       if (!ensureLoggedIn()) return requireLogin("cart");
       if (busyCart) return;
 
@@ -201,7 +168,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         setBusyCart(false);
       }
     },
-    [product.id, ensureLoggedIn, requireLogin, busyCart],
+    [product.id, product.slug, isMachine, ensureLoggedIn, requireLogin, busyCart, router],
   );
 
   // Toggle favorite handler
@@ -255,26 +222,26 @@ const ProductCard: React.FC<ProductCardProps> = ({
     ],
   );
 
-  // Navigate to product detail
-  const handleCardClick = useCallback(() => {
-    router.push(`/product/detail?name=${product.slug}`);
-  }, [router, product.slug]);
-
-  // Get button label
+  // Button state
   const buttonLabel = useMemo(() => {
     if (!product.inStock) return "Hết hàng";
+    if (!isMachine) return "Xem chi tiết";
     if (busyCart) return "Đang thêm...";
     return "Thêm vào giỏ";
-  }, [product.inStock, busyCart]);
+  }, [product.inStock, isMachine, busyCart]);
+
+  const buttonIcon = useMemo(() => {
+    if (!isMachine) return <VisibilityIcon />;
+    if (busyCart) return <CircularProgress size={16} sx={{ color: "inherit" }} />;
+    if (showAddedAnimation) return <CheckCircleIcon />;
+    return <AddShoppingCartIcon />;
+  }, [isMachine, busyCart, showAddedAnimation]);
 
   return (
     <>
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
         whileHover={{ y: -4 }}
-        transition={{ duration: 0.2 }}
+        transition={{ duration: 0.18, ease: "easeOut" }}
       >
         <Paper
           onClick={handleCardClick}
@@ -298,7 +265,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             },
           }}
         >
-          {/* Wishlist Button - Conditional Render */}
+          {/* Wishlist Button */}
           {!hideWishlistButton && (
             <Tooltip
               title={isFavorite ? "Bỏ yêu thích" : "Thêm vào yêu thích"}
@@ -356,11 +323,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
               bgcolor: "#f7f7f7",
             }}
           >
-            {/* Sale Badge */}
+            {/* Discount Badge — only shown when discount is known from promotion context */}
             {hasDiscount && (
-              <Zoom in={true} style={{ transitionDelay: "100ms" }}>
+              <Zoom in style={{ transitionDelay: "100ms" }}>
                 <Chip
-                  label={`-${discountPercentage}%`}
+                  label={`-${product.discountPercent}%`}
                   size="small"
                   sx={{
                     position: "absolute",
@@ -377,26 +344,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
               </Zoom>
             )}
 
-            {/* Status Badge (if any) */}
-            {product.status?.length > 0 && !hideWishlistButton && (
-              <Chip
-                label={product.status[0]}
-                size="small"
-                sx={{
-                  position: "absolute",
-                  top: 8,
-                  left: hasDiscount ? 50 : 8,
-                  zIndex: 2,
-                  bgcolor:
-                    product.status[0] === "Bán chạy" ? "#ffb700" : "#4caf50",
-                  color: "#fff",
-                  fontWeight: 600,
-                  fontSize: "0.7rem",
-                  height: 22,
-                }}
-              />
-            )}
-
             {/* Image */}
             <Image
               src={product.imageAvt}
@@ -406,10 +353,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
               priority={priority}
               style={{
                 objectFit: "cover",
-                transition: "transform 0.5s",
+                transition: "transform 0.3s ease",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "scale(1.05)";
+                e.currentTarget.style.transform = "scale(1.04)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "scale(1)";
@@ -419,7 +366,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
           {/* Product Info */}
           <Stack spacing={1} sx={{ flex: 1 }}>
-            {/* Tags */}
+            {/* Status Tags */}
             <Stack direction="row" spacing={0.5} flexWrap="wrap">
               {product.status.slice(0, 2).map((tag, i) => (
                 <Box
@@ -431,7 +378,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     py: 0.3,
                     borderRadius: 0.8,
                     color: "#fff",
-                    bgcolor: tag === "Bán chạy" ? "#ffb700" : "#f25c05",
+                    bgcolor:
+                      tag === "Bán chạy"
+                        ? "#ffb700"
+                        : tag === "Hết hàng"
+                          ? "#9e9e9e"
+                          : "#f25c05",
                     display: "inline-block",
                   }}
                 >
@@ -496,26 +448,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
             )}
           </Stack>
 
-          {/* Add to Cart Button */}
+          {/* Action Button */}
           <Button
             fullWidth
             variant={product.inStock ? "contained" : "outlined"}
             disabled={!product.inStock || busyCart}
             onClick={handleAddToCart}
-            startIcon={
-              busyCart ? (
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                >
-                  <ShoppingCartIcon />
-                </motion.div>
-              ) : showAddedAnimation ? (
-                <CheckCircleIcon />
-              ) : (
-                <AddShoppingCartIcon />
-              )
-            }
+            startIcon={buttonIcon}
             sx={{
               mt: 1.2,
               textTransform: "none",
@@ -582,7 +521,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
       />
     </>
   );
-};;
+};
 
-// Memoize component để tránh re-render không cần thiết
 export default React.memo(ProductCard);

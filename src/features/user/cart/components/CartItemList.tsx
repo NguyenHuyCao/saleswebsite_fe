@@ -2,6 +2,7 @@
 
 import {
   Box,
+  Chip,
   Typography,
   Table,
   TableHead,
@@ -31,6 +32,10 @@ import { useToast } from "@/lib/toast/ToastContext";
 
 type Props = { items: CartItem[]; onItemsChange?: (items: CartItem[]) => void };
 
+/** Unique key for an item — product + optional variant */
+const itemKey = (i: CartItem) =>
+  i.variantId ? `${i.productId}-${i.variantId}` : String(i.productId);
+
 export default function CartItemList({
   items: initialItems,
   onItemsChange,
@@ -47,36 +52,33 @@ export default function CartItemList({
   useEffect(() => setItems(initialItems), [initialItems]);
   useEffect(() => onItemsChange?.(items), [items, onItemsChange]);
 
-  const handleQuantityChange = async (
-    productId: number,
-    newQuantity: number
-  ) => {
+  const handleQuantityChange = async (item: CartItem, newQuantity: number) => {
     if (newQuantity < 1) return;
-    await updateQty({ productId, quantity: newQuantity });
+    await updateQty({ productId: item.productId, quantity: newQuantity, variantId: item.variantId });
     setItems((prev) =>
       prev.map((i) =>
-        i.productId === productId
-          ? {
-              ...i,
-              quantity: newQuantity,
-              totalPrice: newQuantity * i.unitPrice,
-            }
+        itemKey(i) === itemKey(item)
+          ? { ...i, quantity: newQuantity, totalPrice: newQuantity * i.unitPrice }
           : i
       )
     );
   };
 
-  const handleDeleteItem = async (productId: number) => {
-    await deleteItem(productId);
-    setItems((prev) => prev.filter((i) => i.productId !== productId));
+  const handleDeleteItem = async (item: CartItem) => {
+    await deleteItem({ productId: item.productId, variantId: item.variantId });
+    setItems((prev) => prev.filter((i) => itemKey(i) !== itemKey(item)));
     showToast("Đã xoá sản phẩm khỏi giỏ hàng.", "info", "Giỏ hàng");
     swrMutate(CART_COUNT_KEY, undefined, { revalidate: true });
     refreshNotifications();
   };
 
-  // …(phần render giữ nguyên như bạn gửi)
-  // do dài, mình giữ nguyên toàn bộ JSX bạn đã có – chỉ thay 2 handler ở trên.
-  // === COPY NGUYÊN khối return của bạn, không đổi giao diện ===
+  const VariantChips = ({ item }: { item: CartItem }) => (
+    <>
+      {item.size && <Chip label={`Size: ${item.size}`} size="small" sx={{ mr: 0.5 }} />}
+      {item.color && <Chip label={item.color} size="small" variant="outlined" />}
+    </>
+  );
+
   return (
     <Box>
       <Typography variant="h6" fontWeight={600} mb={3}>
@@ -88,7 +90,7 @@ export default function CartItemList({
           <TableHead>
             <TableRow>
               <TableCell>Ảnh</TableCell>
-              <TableCell>Tên</TableCell>
+              <TableCell>Tên / Biến thể</TableCell>
               <TableCell>Số lượng</TableCell>
               <TableCell>Đơn giá</TableCell>
               <TableCell>Sale</TableCell>
@@ -99,7 +101,7 @@ export default function CartItemList({
           <TableBody>
             {items.map((item) => (
               <TableRow
-                key={item.productId}
+                key={itemKey(item)}
                 component={motion.tr}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -107,7 +109,7 @@ export default function CartItemList({
               >
                 <TableCell>
                   <Avatar
-                    src={`/images/products/${item.productImage}`}
+                    src={item.productImage}
                     alt={item.productName}
                     variant="rounded"
                     sx={{ width: 56, height: 56 }}
@@ -115,15 +117,14 @@ export default function CartItemList({
                 </TableCell>
                 <TableCell>
                   <Typography fontWeight={600}>{item.productName}</Typography>
+                  <Box mt={0.5}><VariantChips item={item} /></Box>
                 </TableCell>
                 <TableCell>
                   <Box display="flex" alignItems="center" gap={1}>
                     <IconButton
                       size="small"
                       color="primary"
-                      onClick={() =>
-                        handleQuantityChange(item.productId, item.quantity - 1)
-                      }
+                      onClick={() => handleQuantityChange(item, item.quantity - 1)}
                       disabled={item.quantity <= 1}
                     >
                       <RemoveIcon fontSize="small" />
@@ -138,9 +139,7 @@ export default function CartItemList({
                     <IconButton
                       size="small"
                       color="primary"
-                      onClick={() =>
-                        handleQuantityChange(item.productId, item.quantity + 1)
-                      }
+                      onClick={() => handleQuantityChange(item, item.quantity + 1)}
                     >
                       <AddIcon fontSize="small" />
                     </IconButton>
@@ -157,14 +156,9 @@ export default function CartItemList({
                     </Typography>
                   ) : null}
                 </TableCell>
+                <TableCell>{item.totalPrice.toLocaleString("vi-VN")}₫</TableCell>
                 <TableCell>
-                  {item.totalPrice.toLocaleString("vi-VN")}₫
-                </TableCell>
-                <TableCell>
-                  <IconButton
-                    color="error"
-                    onClick={() => handleDeleteItem(item.productId)}
-                  >
+                  <IconButton color="error" onClick={() => handleDeleteItem(item)}>
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>
@@ -176,7 +170,7 @@ export default function CartItemList({
         <Stack spacing={2}>
           {items.map((item) => (
             <MotionPaper
-              key={item.productId}
+              key={itemKey(item)}
               variant="outlined"
               sx={{ p: 2 }}
               initial={{ opacity: 0, y: 12 }}
@@ -185,16 +179,14 @@ export default function CartItemList({
             >
               <Stack direction="row" spacing={2}>
                 <Avatar
-                  src={`/images/products/${item.productImage}`}
+                  src={item.productImage}
                   alt={item.productName}
                   variant="rounded"
                   sx={{ width: 64, height: 64 }}
                 />
                 <Box>
                   <Typography fontWeight={600}>{item.productName}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {item.productDescription}
-                  </Typography>
+                  <Box mt={0.5}><VariantChips item={item} /></Box>
                 </Box>
               </Stack>
 
@@ -206,9 +198,7 @@ export default function CartItemList({
                   <IconButton
                     size="small"
                     color="primary"
-                    onClick={() =>
-                      handleQuantityChange(item.productId, item.quantity - 1)
-                    }
+                    onClick={() => handleQuantityChange(item, item.quantity - 1)}
                     disabled={item.quantity <= 1}
                   >
                     <RemoveIcon fontSize="small" />
@@ -223,9 +213,7 @@ export default function CartItemList({
                   <IconButton
                     size="small"
                     color="primary"
-                    onClick={() =>
-                      handleQuantityChange(item.productId, item.quantity + 1)
-                    }
+                    onClick={() => handleQuantityChange(item, item.quantity + 1)}
                   >
                     <AddIcon fontSize="small" />
                   </IconButton>
@@ -234,17 +222,13 @@ export default function CartItemList({
 
               <Box display="flex" justifyContent="space-between">
                 <Typography>Đơn giá:</Typography>
-                <Typography>
-                  {item.unitPrice.toLocaleString("vi-VN")}₫
-                </Typography>
+                <Typography>{item.unitPrice.toLocaleString("vi-VN")}₫</Typography>
               </Box>
 
               <Box display="flex" justifyContent="space-between" mt={1}>
                 <Typography>Sale:</Typography>
                 <Box textAlign="right">
-                  <Typography>
-                    {Math.round((item.discount ?? 0) * 100)}%
-                  </Typography>
+                  <Typography>{Math.round((item.discount ?? 0) * 100)}%</Typography>
                   {item.maxDiscount ? (
                     <Typography fontSize={12} color="text.secondary">
                       Tối đa: {item.maxDiscount.toLocaleString()}₫
@@ -261,10 +245,7 @@ export default function CartItemList({
               </Box>
 
               <Box mt={2} textAlign="right">
-                <IconButton
-                  color="error"
-                  onClick={() => handleDeleteItem(item.productId)}
-                >
+                <IconButton color="error" onClick={() => handleDeleteItem(item)}>
                   <DeleteIcon />
                 </IconButton>
               </Box>
@@ -272,7 +253,6 @@ export default function CartItemList({
           ))}
         </Stack>
       )}
-
     </Box>
   );
 }

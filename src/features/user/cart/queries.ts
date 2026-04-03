@@ -38,10 +38,12 @@ export const useUpdateQtyMutation = () => {
     mutationFn: ({
       productId,
       quantity,
+      variantId,
     }: {
       productId: number;
       quantity: number;
-    }) => updateCartItemQuantity(productId, quantity),
+      variantId?: number | null;
+    }) => updateCartItemQuantity(productId, quantity, variantId),
     onSuccess: () => qc.invalidateQueries({ queryKey: cartKeys.root }),
   });
 };
@@ -49,7 +51,8 @@ export const useUpdateQtyMutation = () => {
 export const useDeleteItemMutation = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (productId: number) => deleteCartItem(productId),
+    mutationFn: ({ productId, variantId }: { productId: number; variantId?: number | null }) =>
+      deleteCartItem(productId, variantId),
     onSuccess: () => qc.invalidateQueries({ queryKey: cartKeys.root }),
   });
 };

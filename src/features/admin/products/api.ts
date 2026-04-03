@@ -1,11 +1,10 @@
 // src/features/admin/products/api.ts
 import { api, http } from "@/lib/api/http";
-import type { ApiResp, Paged, Product, SimpleOption } from "./types";
+import type { ApiResp, Paged, Product, ProductType, ProductVariant, SimpleOption } from "./types";
 
 // ======= Products =======
 
 export async function apiListProducts(): Promise<Paged<Product>> {
-  // BE trả envelope { data: { result, meta } } -> unwrap ra { result, meta }
   return api.get<Paged<Product>>("/api/v1/products", {
     params: { page: 1, size: 1000 },
   });
@@ -16,8 +15,11 @@ export async function apiGetProduct(slug: string): Promise<Product> {
 }
 
 export async function apiToggleActive(slug: string): Promise<void> {
-  // endpoint này thường chỉ trả message/status, không có data -> dùng http thuần
   await http.put(`/api/v1/products/${slug}/toggle-active`);
+}
+
+export async function apiDeleteProduct(id: number): Promise<void> {
+  await http.delete(`/api/v1/products/${id}`);
 }
 
 // ======= Catalog options =======
@@ -44,6 +46,10 @@ export async function apiCreateStep1(payload: {
   origin: string;
   category: { id: number | null };
   brand: { id: number | null };
+  productType?: ProductType;
+  size?: string | null;
+  color?: string | null;
+  material?: string | null;
 }): Promise<{ slug: string }> {
   return api.post<{ slug: string }, typeof payload>(
     "/api/v1/products/step1",
@@ -92,16 +98,13 @@ export async function apiCreateStep4(
     imageDetail3?: File | null;
   }
 ): Promise<void> {
-  // upload FormData -> không unwrap
   const fd = new FormData();
   if (files.imageAvt) fd.append("imageAvt", files.imageAvt);
   [files.imageDetail1, files.imageDetail2, files.imageDetail3].forEach(
     (f) => f && fd.append("imageDetails", f)
   );
   await http.post(`/api/v1/products/step4/${slug}`, fd, {
-    headers: {
-      /* KHÔNG đặt Content-Type cho FormData */
-    },
+    headers: { "Content-Type": undefined }, // let browser set multipart boundary
   });
 }
 
@@ -115,6 +118,10 @@ export async function apiUpdateStep1(
     origin: string;
     category: { id: number | null };
     brand: { id: number | null };
+    productType?: ProductType;
+    size?: string | null;
+    color?: string | null;
+    material?: string | null;
   }
 ): Promise<{ slug: string }> {
   return api.put<{ slug: string }, typeof payload>(
@@ -149,6 +156,36 @@ export async function apiUpdateStep3(
   await http.put(`/api/v1/products/step3/${slug}`, payload);
 }
 
+// ======= Variants =======
+
+export async function apiListVariants(productId: number): Promise<ProductVariant[]> {
+  return api.get<ProductVariant[]>(`/api/v1/products/${productId}/variants`);
+}
+
+export async function apiCreateVariant(
+  productId: number,
+  payload: Omit<ProductVariant, "id">
+): Promise<ProductVariant> {
+  return api.post<ProductVariant, Omit<ProductVariant, "id">>(
+    `/api/v1/products/${productId}/variants`,
+    payload
+  );
+}
+
+export async function apiUpdateVariant(
+  variantId: number,
+  payload: Omit<ProductVariant, "id">
+): Promise<ProductVariant> {
+  return api.put<ProductVariant, Omit<ProductVariant, "id">>(
+    `/api/v1/products/variants/${variantId}`,
+    payload
+  );
+}
+
+export async function apiDeleteVariant(variantId: number): Promise<void> {
+  await http.delete(`/api/v1/products/variants/${variantId}`);
+}
+
 export async function apiUpdateStep4(
   slug: string,
   files: {
@@ -163,5 +200,7 @@ export async function apiUpdateStep4(
   [files.imageDetail1, files.imageDetail2, files.imageDetail3].forEach(
     (f) => f instanceof File && fd.append("imageDetails", f)
   );
-  await http.put(`/api/v1/products/step4/${slug}`, fd);
+  await http.put(`/api/v1/products/step4/${slug}`, fd, {
+    headers: { "Content-Type": undefined }, // let browser set multipart boundary
+  });
 }

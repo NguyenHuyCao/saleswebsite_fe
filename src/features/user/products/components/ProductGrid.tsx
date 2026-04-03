@@ -1,7 +1,7 @@
 // components/product/ProductGrid.tsx
 "use client";
 
-import { Grid, Box, Typography, Fade } from "@mui/material";
+import { Grid, Box, Typography } from "@mui/material";
 import ProductCard from "./ProductCard";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -38,17 +38,19 @@ export default function ProductGrid({ products }: { products: any[] }) {
             justifyContent="center"
           >
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
+              exit={{ opacity: 0 }}
+              transition={{
+                duration: 0.25,
+                delay: Math.min(index * 0.04, 0.2),
+                ease: "easeOut",
+              }}
               style={{ width: "100%" }}
             >
-              <Fade in timeout={300 + index * 50}>
-                <Box sx={{ width: "100%", maxWidth: 260, mx: "auto" }}>
-                  <ProductCard product={product} />
-                </Box>
-              </Fade>
+              <Box sx={{ width: "100%", maxWidth: 260, mx: "auto" }}>
+                <ProductCard product={product} />
+              </Box>
             </motion.div>
           </Grid>
         ))}

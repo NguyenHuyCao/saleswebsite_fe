@@ -1,10 +1,11 @@
 // src/features/admin/products/queries.ts
 import { useEffect, useState } from "react";
-import type { Product, Paged, SimpleOption } from "./types";
+import type { Product, Paged, ProductVariant, SimpleOption } from "./types";
 import {
   apiListProducts,
   apiGetProduct,
   apiToggleActive,
+  apiDeleteProduct,
   apiCategories,
   apiBrands,
   apiCreateStep1,
@@ -15,6 +16,10 @@ import {
   apiUpdateStep2,
   apiUpdateStep3,
   apiUpdateStep4,
+  apiListVariants,
+  apiCreateVariant,
+  apiUpdateVariant,
+  apiDeleteVariant,
 } from "./api";
 
 // fetch list
@@ -86,9 +91,28 @@ export const Catalog = {
   },
 };
 
+// variant hook
+export function useVariants(productId: number | null | undefined) {
+  const [data, setData] = useState<ProductVariant[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const load = async () => {
+    if (!productId) return;
+    setLoading(true);
+    try { setData(await apiListVariants(productId)); }
+    catch { setData([]); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { load(); }, [productId]);
+
+  return { data, loading, refetch: load };
+}
+
 // mutations
 export const Mutations = {
   toggleActive: apiToggleActive,
+  deleteProduct: apiDeleteProduct,
   create: {
     step1: apiCreateStep1,
     step2: apiCreateStep2,
@@ -100,5 +124,11 @@ export const Mutations = {
     step2: apiUpdateStep2,
     step3: apiUpdateStep3,
     step4: apiUpdateStep4,
+  },
+  variants: {
+    list: apiListVariants,
+    create: apiCreateVariant,
+    update: apiUpdateVariant,
+    delete: apiDeleteVariant,
   },
 };

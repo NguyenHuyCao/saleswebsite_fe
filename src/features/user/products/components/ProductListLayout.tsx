@@ -21,7 +21,8 @@ import ProductFilterPanel from "./ProductFilterPanel";
 import ProductSearchBar from "./ProductSearchBar";
 import ProductGrid from "./ProductGrid";
 import { ProductGridSkeleton } from "./ProductSkeleton";
-import type { Brand, Category, Product } from "../types";
+import { mapProduct } from "@/lib/utils/productMapper";
+import type { Brand, Category } from "../types";
 
 // Định nghĩa interface cho API response
 interface ApiResponse {
@@ -30,48 +31,6 @@ interface ApiResponse {
   rows?: any[];
   data?: any[];
 }
-
-const mapProduct = (item: any, nowMs: number): Product => {
-  const isNew =
-    (nowMs - new Date(item.createdAt).getTime()) / (1000 * 60 * 60 * 24) <= 30;
-  const currentPrice = item.pricePerUnit ?? item.price ?? 0;
-  const originalPrice = item.price ?? currentPrice;
-
-  return {
-    id: item.id,
-    name: item.name,
-    slug: item.slug,
-    imageAvt: item.imageAvt,
-    imageDetail1: item.imageDetail1 || "",
-    imageDetail2: item.imageDetail2 || "",
-    imageDetail3: item.imageDetail3 || "",
-    description: item.description || "",
-    price: currentPrice,
-    pricePerUnit: currentPrice,
-    originalPrice,
-    sale: currentPrice < originalPrice,
-    inStock: (item.stockQuantity ?? 0) > 0,
-    label: (item.stockQuantity ?? 0) > 0 ? "Thêm vào giỏ hàng" : "Hết hàng",
-    stockQuantity: item.stockQuantity ?? 0,
-    totalStock: item.totalStock ?? 0,
-    power: item.power || "N/A",
-    fuelType: item.fuelType || "N/A",
-    engineType: item.engineType || "N/A",
-    weight: item.weight || 0,
-    dimensions: item.dimensions || "",
-    tankCapacity: item.tankCapacity || 0,
-    origin: item.origin || "Không rõ",
-    warrantyMonths: item.warrantyMonths || 0,
-    createdAt: item.createdAt,
-    createdBy: item.createdBy || "",
-    updatedAt: item.updatedAt || null,
-    updatedBy: item.updatedBy || "",
-    rating: item.rating || 0,
-    status:
-      (item.stockQuantity ?? 0) === 0 ? ["Hết hàng"] : isNew ? ["Mới"] : [],
-    favorite: item.wishListUser === true,
-  };
-};
 
 export default function ProductListLayout({
   categories,

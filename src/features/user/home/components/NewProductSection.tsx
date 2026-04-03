@@ -183,8 +183,8 @@ export default function NewProductSection({ products }: Props) {
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                 <motion.div
-                  whileHover={{ rotate: 10, scale: 1.1 }}
-                  transition={{ type: "spring", stiffness: 300 }}
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
                 >
                   <Box
                     sx={{
@@ -224,8 +224,8 @@ export default function NewProductSection({ products }: Props) {
                       {Array.from({ length: totalPages }).map((_, i) => (
                         <motion.div
                           key={i}
-                          whileHover={{ scale: 1.2 }}
-                          whileTap={{ scale: 0.9 }}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
                         >
                           <Box
                             onClick={() => goToPage(i)}
@@ -338,8 +338,6 @@ export default function NewProductSection({ products }: Props) {
                       initial="hidden"
                       animate="visible"
                       custom={index}
-                      whileHover={{ y: -8 }}
-                      transition={{ type: "spring", stiffness: 300 }}
                     >
                       <ProductCard
                         product={product}
@@ -359,17 +357,11 @@ export default function NewProductSection({ products }: Props) {
                       display: "block",
                       textAlign: "center",
                       mt: 3,
-                      color: "#999",
+                      color: "#bbb",
                       fontStyle: "italic",
-                      animation: "slideHint 1.5s infinite",
-                      "@keyframes slideHint": {
-                        "0%": { transform: "translateX(0)" },
-                        "50%": { transform: "translateX(-10px)" },
-                        "100%": { transform: "translateX(0)" },
-                      },
                     }}
                   >
-                    ← Vuốt để xem thêm sản phẩm →
+                    Vuốt để xem thêm →
                   </Typography>
                 </Fade>
               )}

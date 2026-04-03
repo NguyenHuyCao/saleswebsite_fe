@@ -8,6 +8,11 @@ export type CartItem = {
   totalPrice: number;
   discount?: number; // 0..1
   maxDiscount?: number;
+  promotionName?: string;
+  // Variant info (null for MACHINE products)
+  variantId?: number | null;
+  size?: string | null;
+  color?: string | null;
 };
 
 export type VoucherValidateResponse = {
