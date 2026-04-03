@@ -16,6 +16,8 @@ import {
   Button,
   Typography,
   Box,
+  Chip,
+  Tooltip,
 } from "@mui/material";
 import Image from "next/image";
 import { useSelector } from "react-redux";
@@ -28,13 +30,12 @@ import {
 } from "../queries";
 import type { Category } from "../types";
 
-// Reuse your existing modals (giữ nguyên đường dẫn model bạn đã có)
 import ModalCreateCategory from "@/model/category/ModalCreateCategory";
 import ModalEditCategory from "@/model/category/ModalEditCategory";
 import ConfirmDeleteCategory from "@/model/category/ConfirmDeleteCategory";
 import { useToast } from "@/lib/toast/ToastContext";
 
-const DEFAULT_ROWS = 5;
+const DEFAULT_ROWS = 10;
 
 const imgURL = (img?: string | null) =>
   img?.startsWith("http")
@@ -50,7 +51,6 @@ export default function CategoriesView() {
   const { data, isLoading, isError } = useCategories(1, 1000);
   const all = (data?.result ?? []) as Category[];
 
-  // modals
   const [openCreate, setOpenCreate] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
@@ -62,22 +62,21 @@ export default function CategoriesView() {
   const { mutateAsync: doUpdate } = useUpdateCategory(1, 1000);
   const { mutateAsync: doDelete } = useDeleteCategory(1, 1000);
 
-  // global search
-  const keyword = useSelector((s: AppState) =>
-    s.search.keyword.trim().toLowerCase()
-  );
+  const keyword = useSelector((s: AppState) => s.search.keyword.trim().toLowerCase());
 
   const filtered = useMemo(() => {
     if (!keyword) return all;
     return all.filter((c) => {
       const createdDate = new Date(c.createdAt).toLocaleDateString("vi-VN");
       return (
-        c.name.toLowerCase().includes(keyword) || createdDate.includes(keyword)
+        c.name.toLowerCase().includes(keyword) ||
+        (c.description ?? "").toLowerCase().includes(keyword) ||
+        (c.slug ?? "").toLowerCase().includes(keyword) ||
+        createdDate.includes(keyword)
       );
     });
   }, [all, keyword]);
 
-  // handlers
   const openEditModal = (c: Category) => {
     setEditing(c);
     setOpenEdit(true);
@@ -88,10 +87,11 @@ export default function CategoriesView() {
     setOpenDelete(true);
   };
 
-  const handleCreate = async (name: string, imageFile?: File) => {
+  const handleCreate = async (name: string, description: string, imageFile?: File) => {
     try {
       const fd = new FormData();
       fd.append("name", name);
+      if (description) fd.append("description", description);
       if (imageFile) fd.append("image", imageFile);
       await doCreate(fd);
       showToast("Thêm danh mục thành công", "success");
@@ -102,11 +102,13 @@ export default function CategoriesView() {
     }
   };
 
-  const handleUpdate = async (name: string, imageFile?: File) => {
+  const handleUpdate = async (name: string, description: string, active: boolean, imageFile?: File) => {
     if (!editing) return;
     try {
       const fd = new FormData();
       fd.append("name", name);
+      fd.append("description", description);
+      fd.append("active", String(active));
       if (imageFile) fd.append("image", imageFile);
       await doUpdate({ id: editing.id, fd });
       showToast("Cập nhật danh mục thành công", "success");
@@ -137,7 +139,7 @@ export default function CategoriesView() {
     <Card>
       <CardHeader
         title="Danh mục sản phẩm"
-        titleTypographyProps={{ variant: "h6" }}
+        titleTypographyProps={{ variant: "h5" }}
         action={
           <Button variant="contained" onClick={() => setOpenCreate(true)}>
             Thêm danh mục
@@ -147,14 +149,17 @@ export default function CategoriesView() {
       <CardContent>
         <Paper sx={{ width: "100%", overflow: "hidden" }}>
           <TableContainer>
-            <Table stickyHeader>
+            <Table stickyHeader size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>Ảnh đại diện</TableCell>
+                  <TableCell width={50}>ID</TableCell>
+                  <TableCell width={90}>Ảnh</TableCell>
                   <TableCell>Tên danh mục</TableCell>
+                  <TableCell>Slug</TableCell>
+                  <TableCell align="center">Sản phẩm</TableCell>
+                  <TableCell align="center">Trạng thái</TableCell>
                   <TableCell>Ngày tạo</TableCell>
-                  <TableCell>Cập nhật gần nhất</TableCell>
+                  <TableCell>Cập nhật</TableCell>
                   <TableCell align="center">Hành động</TableCell>
                 </TableRow>
               </TableHead>
@@ -162,8 +167,10 @@ export default function CategoriesView() {
               <TableBody>
                 {isLoading || isError ? (
                   <TableRow>
-                    <TableCell colSpan={6} align="center">
-                      {isLoading ? "Đang tải..." : "Không thể tải dữ liệu"}
+                    <TableCell colSpan={9} align="center">
+                      <Typography py={2}>
+                        {isLoading ? "Đang tải..." : "Không thể tải dữ liệu"}
+                      </Typography>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -172,41 +179,75 @@ export default function CategoriesView() {
                     .map((c) => (
                       <TableRow key={c.id} hover>
                         <TableCell>{c.id}</TableCell>
+
                         <TableCell>
                           <Image
                             src={imgURL(c.image ?? undefined)}
                             alt={c.name}
-                            width={80}
-                            height={80}
-                            style={{
-                              borderRadius: 8,
-                              objectFit: "cover",
-                              border: "1px solid #eee",
-                            }}
+                            width={64}
+                            height={64}
+                            style={{ borderRadius: 6, objectFit: "cover", border: "1px solid #eee" }}
                           />
                         </TableCell>
-                        <TableCell>{c.name}</TableCell>
+
+                        <TableCell>
+                          <Box>
+                            <Typography fontSize={13} fontWeight={600}>{c.name}</Typography>
+                            {c.description && (
+                              <Tooltip title={c.description} arrow>
+                                <Typography
+                                  fontSize={11}
+                                  color="text.secondary"
+                                  sx={{
+                                    maxWidth: 200,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                    cursor: "default",
+                                  }}
+                                >
+                                  {c.description}
+                                </Typography>
+                              </Tooltip>
+                            )}
+                          </Box>
+                        </TableCell>
+
+                        <TableCell>
+                          <Typography fontSize={11} color="text.secondary" fontFamily="monospace">
+                            {c.slug ?? "—"}
+                          </Typography>
+                        </TableCell>
+
+                        <TableCell align="center">
+                          <Chip
+                            label={c.productCount ?? 0}
+                            size="small"
+                            sx={{ bgcolor: "#fff8e1", color: "#f25c05", fontWeight: 600, height: 20, fontSize: 11 }}
+                          />
+                        </TableCell>
+
+                        <TableCell align="center">
+                          <Chip
+                            label={c.active !== false ? "Hiển thị" : "Ẩn"}
+                            size="small"
+                            color={c.active !== false ? "success" : "default"}
+                          />
+                        </TableCell>
+
                         <TableCell>
                           {new Date(c.createdAt).toLocaleDateString("vi-VN")}
                         </TableCell>
                         <TableCell>
-                          {c.updatedAt
-                            ? new Date(c.updatedAt).toLocaleDateString("vi-VN")
-                            : "-"}
+                          {c.updatedAt ? new Date(c.updatedAt).toLocaleDateString("vi-VN") : "—"}
                         </TableCell>
+
                         <TableCell align="center">
                           <Box display="flex" gap={1} justifyContent="center">
-                            <Button
-                              variant="outlined"
-                              onClick={() => openEditModal(c)}
-                            >
+                            <Button variant="outlined" size="small" onClick={() => openEditModal(c)}>
                               Cập nhật
                             </Button>
-                            <Button
-                              color="error"
-                              variant="outlined"
-                              onClick={() => openDeleteModal(c)}
-                            >
+                            <Button color="error" variant="outlined" size="small" onClick={() => openDeleteModal(c)}>
                               Xóa
                             </Button>
                           </Box>
@@ -227,12 +268,11 @@ export default function CategoriesView() {
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
             labelRowsPerPage="Hiển thị"
-            SelectProps={{ MenuProps: { disableScrollLock: true } }}
+            slotProps={{ select: { MenuProps: { disableScrollLock: true } } }}
           />
         </Paper>
       </CardContent>
 
-      {/* Modals (xài lại modal bạn có sẵn trong thư mục model) */}
       <ModalCreateCategory
         open={openCreate}
         onClose={() => setOpenCreate(false)}
@@ -245,6 +285,8 @@ export default function CategoriesView() {
           onClose={() => setOpenEdit(false)}
           onSubmit={handleUpdate}
           initialName={editing.name}
+          initialDescription={editing.description ?? ""}
+          initialActive={editing.active ?? true}
           initialImageUrl={imgURL(editing.image ?? undefined)}
         />
       )}
@@ -254,7 +296,6 @@ export default function CategoriesView() {
         onCancel={() => setOpenDelete(false)}
         onConfirm={handleConfirmDelete}
       />
-
     </Card>
   );
 }

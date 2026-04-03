@@ -14,21 +14,19 @@ import Image from "next/image";
 interface ModalCreateCategoryProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (name: string, imageFile?: File) => void;
+  onSubmit: (name: string, description: string, imageFile?: File) => void;
 }
 
-const ModalCreateCategory = ({
-  open,
-  onClose,
-  onSubmit,
-}: ModalCreateCategoryProps) => {
+const ModalCreateCategory = ({ open, onClose, onSubmit }: ModalCreateCategoryProps) => {
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>("");
 
   useEffect(() => {
     if (!open) {
       setName("");
+      setDescription("");
       setImageFile(null);
       setPreview("");
     }
@@ -44,63 +42,62 @@ const ModalCreateCategory = ({
 
   const handleSubmit = () => {
     if (!name.trim()) return;
-    onSubmit(name, imageFile || undefined);
+    onSubmit(name, description, imageFile || undefined);
     onClose();
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth disableScrollLock={true}>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth disableScrollLock>
       <DialogTitle>Thêm danh mục mới</DialogTitle>
       <DialogContent>
         <TextField
           autoFocus
           margin="dense"
-          label="Tên danh mục"
-          type="text"
+          label="Tên danh mục *"
           fullWidth
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
 
+        <TextField
+          margin="dense"
+          label="Mô tả danh mục"
+          fullWidth
+          multiline
+          rows={3}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Mô tả ngắn về danh mục (tuỳ chọn)"
+          sx={{ mt: 1.5 }}
+        />
+
         <Box mt={2}>
           <Typography variant="subtitle2" fontWeight={600} mb={1}>
-            Logo danh mục
+            Ảnh đại diện *
           </Typography>
           <Box
             sx={{
               border: "1px dashed #ddd",
-              borderRadius: "8px",
+              borderRadius: 2,
               p: 2,
               textAlign: "center",
+              cursor: "pointer",
+              "&:hover": { borderColor: "#1976d2" },
             }}
+            component="label"
           >
-            <Box component="label">
-              <Button
-                variant="outlined"
-                startIcon={<CloudUploadIcon />}
-                component="span"
-              >
-                Tải lên ảnh
-                <input
-                  type="file"
-                  hidden
-                  accept="image/*"
-                  onChange={handleImageChange}
-                />
-              </Button>
-            </Box>
+            <Button variant="outlined" startIcon={<CloudUploadIcon />} component="span" size="small">
+              Tải lên ảnh
+            </Button>
+            <input type="file" hidden accept="image/*" onChange={handleImageChange} />
             {preview && (
-              <Box mt={2}>
+              <Box mt={1.5} display="flex" justifyContent="center">
                 <Image
                   src={preview}
                   alt="Xem trước"
                   width={120}
                   height={120}
-                  style={{
-                    objectFit: "contain",
-                    border: "1px solid #eee",
-                    borderRadius: 4,
-                  }}
+                  style={{ objectFit: "contain", border: "1px solid #eee", borderRadius: 4 }}
                 />
               </Box>
             )}
@@ -109,11 +106,7 @@ const ModalCreateCategory = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Hủy</Button>
-        <Button
-          variant="contained"
-          onClick={handleSubmit}
-          disabled={!name.trim()}
-        >
+        <Button variant="contained" onClick={handleSubmit} disabled={!name.trim()}>
           Lưu
         </Button>
       </DialogActions>
