@@ -15,31 +15,49 @@ import {
   Chip,
   Button,
   Stack,
+  Tooltip,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import HistoryIcon from "@mui/icons-material/History";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import { getUserWarrantyRequests } from "../api";
+import { getUserWarrantyRequests, type WarrantyClaimResponse } from "../api";
+
+const statusLabel: Record<string, string> = {
+  PENDING: "Chờ xử lý",
+  APPROVED: "Đã duyệt",
+  REJECTED: "Từ chối",
+  CANCELLED: "Đã huỷ",
+};
+
+const statusColor = (
+  status: string
+): "default" | "warning" | "success" | "error" | "info" => {
+  switch (status) {
+    case "PENDING":   return "warning";
+    case "APPROVED":  return "success";
+    case "REJECTED":  return "error";
+    case "CANCELLED": return "default";
+    default:          return "info";
+  }
+};
+
+const fmtDate = (iso?: string) => {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("vi-VN");
+};
 
 export default function WarrantyHistory() {
-  const [requests, setRequests] = useState<any>([]);
+  const [requests, setRequests] = useState<WarrantyClaimResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchRequests = async () => {
-      try {
-        const data = await getUserWarrantyRequests();
-        setRequests(data);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchRequests();
+    getUserWarrantyRequests()
+      .then(setRequests)
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
 
-  if (!requests.length) return null;
+  if (loading || !requests.length) return null;
 
   return (
     <motion.div
@@ -57,40 +75,62 @@ export default function WarrantyHistory() {
         </Stack>
 
         <TableContainer component={Paper} sx={{ borderRadius: 3 }}>
-          <Table>
+          <Table size="small">
             <TableHead sx={{ bgcolor: "#f5f5f5" }}>
               <TableRow>
                 <TableCell>Mã yêu cầu</TableCell>
-                <TableCell>Ngày gửi</TableCell>
+                <TableCell>Mã đơn hàng</TableCell>
                 <TableCell>Sản phẩm</TableCell>
-                <TableCell>Trạng thái</TableCell>
+                <TableCell>Ngày gửi</TableCell>
+                <TableCell align="center">Trạng thái</TableCell>
+                <TableCell>Phản hồi</TableCell>
                 <TableCell align="right">Chi tiết</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {requests.map((req: any) => (
+              {requests.map((req) => (
                 <TableRow key={req.id} hover>
-                  <TableCell>#{req.code}</TableCell>
-                  <TableCell>{req.createdAt}</TableCell>
-                  <TableCell>{req.productName}</TableCell>
-                  <TableCell>
+                  <TableCell sx={{ fontWeight: 600, fontFamily: "monospace" }}>
+                    {req.claimCode ?? `#${req.id}`}
+                  </TableCell>
+                  <TableCell sx={{ fontFamily: "monospace", fontSize: 12 }}>
+                    {req.orderCode ?? "—"}
+                  </TableCell>
+                  <TableCell>{req.productName ?? "—"}</TableCell>
+                  <TableCell>{fmtDate(req.submittedAt ?? req.createdAt)}</TableCell>
+                  <TableCell align="center">
                     <Chip
-                      label={req.status}
+                      label={statusLabel[req.status] ?? req.status}
                       size="small"
-                      color={
-                        req.status === "Hoàn thành"
-                          ? "success"
-                          : req.status === "Đang xử lý"
-                            ? "warning"
-                            : "default"
-                      }
+                      color={statusColor(req.status)}
                     />
+                  </TableCell>
+                  <TableCell>
+                    {req.resolutionNote ? (
+                      <Tooltip title={req.resolutionNote} arrow>
+                        <Typography
+                          fontSize={12}
+                          color="text.secondary"
+                          sx={{
+                            maxWidth: 180,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            cursor: "default",
+                          }}
+                        >
+                          {req.resolutionNote}
+                        </Typography>
+                      </Tooltip>
+                    ) : (
+                      <Typography fontSize={12} color="text.disabled">—</Typography>
+                    )}
                   </TableCell>
                   <TableCell align="right">
                     <Button
                       size="small"
                       startIcon={<VisibilityIcon />}
-                      onClick={() => window.open(`/warranty/${req.id}`)}
+                      href={`/warranty/${req.id}`}
                     >
                       Xem
                     </Button>

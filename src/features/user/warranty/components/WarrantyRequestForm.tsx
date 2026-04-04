@@ -193,20 +193,25 @@ export default function WarrantyRequestForm() {
     setLoading(true);
     try {
       const body = new FormData();
-      body.append("orderId", formData.orderCode);
+      // orderCode: mã đơn hàng (ORD-YYYYMMDD-XXXXX)
+      body.append("orderCode", formData.orderCode);
+      // email: dùng contactInfo (user nhập email tài khoản)
       body.append("email", formData.contactInfo);
+      // productId: ID sản phẩm (selectedProduct giờ lưu productId)
       body.append("productId", formData.selectedProduct);
       body.append("issueDesc", formData.errorDescription);
 
       const file = fileInputRef.current?.files?.[0];
-      if (file) body.append("imageUrl", file);
+      if (file) body.append("image", file);
 
       const result = await submitWarrantyClaim(body);
 
       setAlert({
         open: true,
         type: "success",
-        message: result.message || "Đã gửi yêu cầu bảo hành thành công!",
+        message: result.claimCode
+          ? `Đã gửi yêu cầu ${result.claimCode} thành công!`
+          : "Đã gửi yêu cầu bảo hành thành công!",
       });
 
       // Reset form
@@ -275,7 +280,7 @@ export default function WarrantyRequestForm() {
                   fullWidth
                   value={formData.orderCode}
                   onChange={(e) => handleChange("orderCode", e.target.value)}
-                  placeholder="VD: DH-2024-001"
+                  placeholder="VD: ORD-20240315-00001"
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
@@ -314,9 +319,10 @@ export default function WarrantyRequestForm() {
                   }
                 >
                   {orderProducts.map((p) => (
-                    <MenuItem key={p.productDetailId} value={p.productDetailId}>
+                    // value = productId (số nguyên) — BE nhận productId để tìm OrderDetail
+                    <MenuItem key={p.productId} value={String(p.productId)}>
                       {p.productName} (SL: {p.quantity}) -{" "}
-                      {p.price?.toLocaleString()}₫
+                      {p.unitPrice?.toLocaleString()}₫
                     </MenuItem>
                   ))}
                 </TextField>
