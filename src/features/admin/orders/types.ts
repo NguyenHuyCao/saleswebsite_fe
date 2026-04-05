@@ -1,6 +1,7 @@
 // List item (bảng danh sách)
 export interface OrderListItem {
   orderId: number;
+  orderCode: string;
   status: string;
   shippingAddress: string;
   paymentMethod: string;

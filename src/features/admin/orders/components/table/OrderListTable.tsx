@@ -29,7 +29,7 @@ interface Column {
 }
 
 const columns: Column[] = [
-  { id: "orderId", label: "Mã đơn", minWidth: 80 },
+  { id: "orderCode", label: "Mã đơn", minWidth: 150 },
   { id: "email", label: "Email", minWidth: 160 },
   { id: "phone", label: "SĐT", minWidth: 120 },
   { id: "status", label: "Trạng thái", minWidth: 100, align: "center" },
@@ -56,6 +56,7 @@ export default function OrderListTable() {
     if (!keyword) return rows;
     return rows.filter((order) => {
       const fields = [
+        order.orderCode ?? "",
         String(order.orderId),
         order.user.email,
         order.user.phone,
@@ -108,7 +109,9 @@ export default function OrderListTable() {
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((order) => (
                     <TableRow key={order.orderId} hover>
-                      <TableCell>{order.orderId}</TableCell>
+                      <TableCell sx={{ fontFamily: "monospace", fontSize: 13 }}>
+                        {order.orderCode ?? `#${order.orderId}`}
+                      </TableCell>
                       <TableCell>{order.user.email}</TableCell>
                       <TableCell>{order.user.phone}</TableCell>
                       <TableCell align="center">{order.status}</TableCell>

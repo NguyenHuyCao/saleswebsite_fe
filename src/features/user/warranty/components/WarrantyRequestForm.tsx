@@ -39,13 +39,9 @@ const validateStep = (step: number, data: any, products: any[]) => {
   switch (step) {
     case 0:
       if (!data.orderCode) return "Vui lòng nhập mã đơn hàng";
-      if (!data.contactInfo) return "Vui lòng nhập email hoặc số điện thoại";
-      if (
-        !/^[^\s@]+@[^\s@]+\.[^\s@]+$|(03|05|07|08|09|01[2|6|8|9])+([0-9]{8})\b/.test(
-          data.contactInfo,
-        )
-      ) {
-        return "Email hoặc số điện thoại không hợp lệ";
+      if (!data.contactInfo) return "Vui lòng nhập email tài khoản";
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.contactInfo)) {
+        return "Email không đúng định dạng";
       }
       break;
     case 1:
@@ -285,11 +281,12 @@ export default function WarrantyRequestForm() {
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
-                  label="Email hoặc SĐT *"
+                  label="Email tài khoản đã đặt hàng *"
                   fullWidth
+                  type="email"
                   value={formData.contactInfo}
                   onChange={(e) => handleChange("contactInfo", e.target.value)}
-                  placeholder="example@gmail.com hoặc 0909123456"
+                  placeholder="example@gmail.com"
                 />
               </Grid>
             </Grid>

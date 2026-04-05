@@ -63,7 +63,11 @@ export default function WarrantyManagementPage() {
     return claims.filter((c) => {
       const k = keyword;
       return (
+        (c.claimCode || "").toLowerCase().includes(k) ||
+        (c.orderCode || "").toLowerCase().includes(k) ||
+        (c.productName || "").toLowerCase().includes(k) ||
         (c.userName || "").toLowerCase().includes(k) ||
+        (c.userEmail || "").toLowerCase().includes(k) ||
         (c.issueDesc || "").toLowerCase().includes(k) ||
         (c.status || "").toLowerCase().includes(k)
       );
@@ -136,7 +140,9 @@ export default function WarrantyManagementPage() {
             <Table stickyHeader>
               <TableHead>
                 <TableRow>
-                  <TableCell>ID</TableCell>
+                  <TableCell>Mã yêu cầu</TableCell>
+                  <TableCell>Mã đơn hàng</TableCell>
+                  <TableCell>Sản phẩm</TableCell>
                   <TableCell>Người dùng</TableCell>
                   <TableCell>Mô tả lỗi</TableCell>
                   <TableCell>Trạng thái</TableCell>
@@ -147,18 +153,28 @@ export default function WarrantyManagementPage() {
               <TableBody>
                 {visible.map((claim) => (
                   <TableRow key={claim.id} hover>
-                    <TableCell>{claim.id}</TableCell>
-                    <TableCell>{claim.userName}</TableCell>
+                    <TableCell sx={{ fontFamily: "monospace", fontSize: 12 }}>
+                      {claim.claimCode ?? `#${claim.id}`}
+                    </TableCell>
+                    <TableCell sx={{ fontFamily: "monospace", fontSize: 12 }}>
+                      {claim.orderCode ?? "—"}
+                    </TableCell>
+                    <TableCell>{claim.productName ?? "—"}</TableCell>
+                    <TableCell>{claim.userName ?? claim.userEmail ?? "—"}</TableCell>
                     <TableCell>{claim.issueDesc}</TableCell>
                     <TableCell>{claim.status}</TableCell>
                     <TableCell>
-                      <Image
-                        src={claim.imageUrl}
-                        alt="Ảnh lỗi"
-                        width={60}
-                        height={60}
-                        style={{ objectFit: "contain" }}
-                      />
+                      {claim.imageUrl ? (
+                        <Image
+                          src={claim.imageUrl}
+                          alt="Ảnh lỗi"
+                          width={60}
+                          height={60}
+                          style={{ objectFit: "contain" }}
+                        />
+                      ) : (
+                        "—"
+                      )}
                     </TableCell>
                     <TableCell align="center">
                       <Button
@@ -173,7 +189,7 @@ export default function WarrantyManagementPage() {
 
                 {visible.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} align="center">
+                    <TableCell colSpan={8} align="center">
                       {isLoading
                         ? "Đang tải..."
                         : filtered.length === 0
