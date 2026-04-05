@@ -144,7 +144,7 @@ export default function FlashSaleShowcase({
                     bottom: -20,
                     left: "10%",
                     width: "80%",
-                    height: 1,
+                    height: "1px",
                     background:
                       "linear-gradient(90deg, transparent, #ffb700, transparent)",
                   },

@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  closePromotionEarly,
   deleteProductFromPromotion,
+  deletePromotion,
   fetchBrandsWithProducts,
   fetchPromotionById,
   fetchPromotionProducts,
@@ -36,6 +38,7 @@ export function usePromotionProducts(id: number) {
   return useQuery<Product[]>({
     queryKey: QK.promoProducts(id),
     queryFn: () => fetchPromotionProducts(id),
+    enabled: id > 0,
   });
 }
 
@@ -67,6 +70,22 @@ export function useUpsertPromotion(id?: string | number) {
   return useMutation({
     mutationFn: (payload: any) =>
       upsertPromotion(id ? "PUT" : "POST", payload, id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: QK.promotions }),
+  });
+}
+
+export function useClosePromotion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => closePromotionEarly(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: QK.promotions }),
+  });
+}
+
+export function useDeletePromotion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => deletePromotion(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: QK.promotions }),
   });
 }

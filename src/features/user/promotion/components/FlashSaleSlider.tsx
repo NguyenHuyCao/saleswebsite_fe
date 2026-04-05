@@ -102,7 +102,14 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
     }
   }, []);
 
-  const isExpired = Date.now() > new Date(promotion.endDate).getTime();
+  // So sánh theo ngày tại múi giờ VN (UTC+7) để tránh bị mất 7 tiếng sớm
+  const isExpired = (() => {
+    if (!promotion.endDate) return false;
+    // endDate dạng "YYYY-MM-DD" → coi là hết hiệu lực khi qua ngày đó tại VN
+    const [y, m, d] = promotion.endDate.split("-").map(Number);
+    const endMs = new Date(y, m - 1, d, 23, 59, 59, 999).getTime(); // local midnight+1s
+    return Date.now() > endMs;
+  })();
   if (isExpired) return null;
 
   const settings = {
@@ -474,6 +481,6 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
       </Box>
     </>
   );
-};;;;;;
+};
 
 export default FlashSaleSlider;

@@ -14,7 +14,10 @@ import {
   Modal,
   MenuItem,
   CircularProgress,
+  Alert,
+  Chip,
 } from "@mui/material";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -29,14 +32,31 @@ import {
 import { useToast } from "@/lib/toast/ToastContext";
 import { useSocket } from "@/lib/socket/SocketContext";
 import { provinceNames, getDistricts } from "../constants/vietnamAddresses";
+import { api } from "@/lib/api/http";
 
 type Props = { items: CartItem[]; onApplyVoucher: (code: string) => void };
+
+type QuoteLine = {
+  productId: number;
+  productName: string;
+  baseUnitPrice: number;
+  finalUnitPrice: number;
+  quantity: number;
+  lineSubtotal: number;
+  applied?: { name: string; discount: number; requiresCode: boolean } | null;
+};
+
+type QuoteResult = {
+  lines: QuoteLine[];
+  totalBase: number;
+  totalDiscount: number;
+  totalPayable: number;
+};
 
 export default function CartSummary({ items, onApplyVoucher }: Props) {
   const router = useRouter();
   const [userId, setUserId] = useState<number | null>(null);
 
-  // lấy userId từ localStorage (client)
   useEffect(() => {
     try {
       const u = localStorage.getItem("user");
@@ -44,7 +64,6 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
     } catch {}
   }, []);
 
-  // query địa chỉ hiện tại
   const { data: fetchedAddress } = useUserAddressQuery(userId ?? undefined);
   const [userAddress, setUserAddress] = useState("");
   useEffect(() => {
@@ -56,17 +75,18 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
   const [selectedCommune, setSelectedCommune] = useState("");
   const [detailAddress, setDetailAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "MOMO" | "VNPAY">("COD");
-  const [shippingType, setShippingType] = useState<"standard" | "express">(
-    "standard"
-  );
+  const [shippingType, setShippingType] = useState<"standard" | "express">("standard");
   const [orderNote, setOrderNote] = useState("");
   const [voucherCode, setVoucherCode] = useState("");
+  const [appliedCode, setAppliedCode] = useState<string | null>(null);
+  const [quoteResult, setQuoteResult] = useState<QuoteResult | null>(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [voucherMsg, setVoucherMsg] = useState<{ text: string; type: "success" | "error" | "info" } | null>(null);
 
   const { showToast } = useToast();
   const qc = useQueryClient();
   const { refresh: refreshNotifications } = useSocket();
-  const { mutateAsync: clearCart, isPending: clearing } =
-    useClearCartMutation();
+  const { mutateAsync: clearCart, isPending: clearing } = useClearCartMutation();
   const { mutateAsync: place, isPending } = usePlaceOrderMutation();
 
   const subtotal = useMemo(
@@ -74,10 +94,58 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
     [items]
   );
   const shippingFee = shippingType === "express" ? 30000 : 0;
-  const total = subtotal + shippingFee;
 
-  const handleApplyVoucher = () =>
-    voucherCode.trim() && onApplyVoucher(voucherCode.trim());
+  // Tổng sau khi áp mã (hoặc subtotal nếu chưa áp)
+  const discountedSubtotal = quoteResult ? quoteResult.totalPayable : subtotal;
+  const totalDiscount = quoteResult ? quoteResult.totalDiscount : 0;
+  const total = discountedSubtotal + shippingFee;
+
+  const handleApplyVoucher = async () => {
+    const code = voucherCode.trim().toUpperCase();
+    if (!code) return;
+
+    setQuoteLoading(true);
+    setVoucherMsg(null);
+    try {
+      const result = await api.post<QuoteResult, any>("/api/v1/promotions/quote", {
+        code,
+        items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+      });
+
+      const appliedLines = (result.lines ?? []).filter((l: QuoteLine) => l.applied?.requiresCode);
+
+      if (result.totalDiscount <= 0 || appliedLines.length === 0) {
+        setVoucherMsg({
+          text: "Mã hợp lệ nhưng không áp dụng được cho sản phẩm nào trong giỏ hàng.",
+          type: "info",
+        });
+        setAppliedCode(null);
+        setQuoteResult(null);
+      } else {
+        setQuoteResult(result);
+        setAppliedCode(code);
+        setVoucherMsg({
+          text: `Áp dụng thành công! Tiết kiệm ${result.totalDiscount.toLocaleString("vi-VN")}₫ cho ${appliedLines.length} sản phẩm.`,
+          type: "success",
+        });
+        onApplyVoucher(code);
+      }
+    } catch (e: any) {
+      setVoucherMsg({ text: e?.message || "Mã không hợp lệ hoặc đã hết hạn", type: "error" });
+      setAppliedCode(null);
+      setQuoteResult(null);
+    } finally {
+      setQuoteLoading(false);
+    }
+  };
+
+  const handleRemoveVoucher = () => {
+    setAppliedCode(null);
+    setQuoteResult(null);
+    setVoucherCode("");
+    setVoucherMsg(null);
+    onApplyVoucher("");
+  };
 
   const handlePlaceOrder = async () => {
     if (!userAddress) {
@@ -85,8 +153,8 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
       return;
     }
     try {
-      const promotionMap = voucherCode
-        ? Object.fromEntries(items.map((i) => [i.productId, voucherCode]))
+      const promotionMap = appliedCode
+        ? Object.fromEntries(items.map((i) => [i.productId, appliedCode]))
         : {};
       const data = await place({
         shippingAddress: userAddress,
@@ -95,13 +163,10 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
         shippingAmount: shippingFee,
         promotionCodeByProductId: promotionMap,
       });
-      // Invalidate React Query cache để orders page và cart hiển thị dữ liệu mới ngay
       qc.invalidateQueries({ queryKey: ["orders", "me"] });
       qc.invalidateQueries({ queryKey: ["cart"] });
-      // Cập nhật SWR count badges (cart về 0, orders tăng thêm 1)
       swrMutate(ORDERS_COUNT_KEY);
       swrMutate(CART_COUNT_KEY);
-      // Refresh notification badge ngay
       refreshNotifications();
       showToast(
         paymentMethod === "COD"
@@ -158,9 +223,49 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
 
       <Box display="flex" justifyContent="space-between" mb={1}>
         <Typography>Thành tiền:</Typography>
-        <Typography fontWeight={600}>
-          {subtotal.toLocaleString("vi-VN")}₫
-        </Typography>
+        <Typography fontWeight={600}>{subtotal.toLocaleString("vi-VN")}₫</Typography>
+      </Box>
+
+      {/* Voucher */}
+      <Box mb={2}>
+        <Typography mb={1}>Mã giảm giá:</Typography>
+        {appliedCode ? (
+          <Box display="flex" alignItems="center" gap={1}>
+            <Chip
+              icon={<CheckCircleOutlineIcon />}
+              label={appliedCode}
+              color="success"
+              onDelete={handleRemoveVoucher}
+            />
+            <Typography variant="body2" color="success.main" fontWeight={600}>
+              -{totalDiscount.toLocaleString("vi-VN")}₫
+            </Typography>
+          </Box>
+        ) : (
+          <Stack direction="row" spacing={1}>
+            <TextField
+              placeholder="Nhập mã giảm giá"
+              size="small"
+              value={voucherCode}
+              onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+              onKeyDown={(e) => e.key === "Enter" && handleApplyVoucher()}
+              sx={{ flex: 1 }}
+              inputProps={{ style: { textTransform: "uppercase" } }}
+            />
+            <Button
+              variant="contained"
+              onClick={handleApplyVoucher}
+              disabled={quoteLoading || !voucherCode.trim()}
+            >
+              {quoteLoading ? <CircularProgress size={18} /> : "Áp dụng"}
+            </Button>
+          </Stack>
+        )}
+        {voucherMsg && (
+          <Alert severity={voucherMsg.type} sx={{ mt: 1 }} onClose={() => setVoucherMsg(null)}>
+            {voucherMsg.text}
+          </Alert>
+        )}
       </Box>
 
       <Box mb={2}>
@@ -169,16 +274,8 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
           value={shippingType}
           onChange={(e) => setShippingType(e.target.value as any)}
         >
-          <FormControlLabel
-            value="standard"
-            control={<Radio />}
-            label="Tiêu chuẩn (Miễn phí)"
-          />
-          <FormControlLabel
-            value="express"
-            control={<Radio />}
-            label="Giao nhanh (30.000₫)"
-          />
+          <FormControlLabel value="standard" control={<Radio />} label="Tiêu chuẩn (Miễn phí)" />
+          <FormControlLabel value="express" control={<Radio />} label="Giao nhanh (30.000₫)" />
         </RadioGroup>
       </Box>
 
@@ -198,21 +295,9 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
           value={paymentMethod}
           onChange={(e) => setPaymentMethod(e.target.value as any)}
         >
-          <FormControlLabel
-            value="COD"
-            control={<Radio />}
-            label="Thanh toán khi nhận hàng"
-          />
-          <FormControlLabel
-            value="MOMO"
-            control={<Radio />}
-            label="Ví điện tử MoMo"
-          />
-          <FormControlLabel
-            value="VNPAY"
-            control={<Radio />}
-            label="Thanh toán qua VNPay"
-          />
+          <FormControlLabel value="COD" control={<Radio />} label="Thanh toán khi nhận hàng" />
+          <FormControlLabel value="MOMO" control={<Radio />} label="Ví điện tử MoMo" />
+          <FormControlLabel value="VNPAY" control={<Radio />} label="Thanh toán qua VNPay" />
         </RadioGroup>
       </Box>
 
@@ -227,21 +312,22 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
         sx={{ mb: 2 }}
       />
 
-      <Stack direction="row" spacing={1} mb={2}>
-        <TextField
-          placeholder="Nhập mã giảm giá"
-          size="small"
-          value={voucherCode}
-          onChange={(e) => setVoucherCode(e.target.value)}
-          sx={{ flex: 1 }}
-        />
-        <Button variant="contained" onClick={handleApplyVoucher}>
-          Áp dụng
-        </Button>
-      </Stack>
-
       <Divider sx={{ my: 2 }} />
 
+      {totalDiscount > 0 && (
+        <Box display="flex" justifyContent="space-between" mb={1}>
+          <Typography color="success.main">Tiết kiệm:</Typography>
+          <Typography color="success.main" fontWeight={600}>
+            -{totalDiscount.toLocaleString("vi-VN")}₫
+          </Typography>
+        </Box>
+      )}
+      {shippingFee > 0 && (
+        <Box display="flex" justifyContent="space-between" mb={1}>
+          <Typography>Phí vận chuyển:</Typography>
+          <Typography>{shippingFee.toLocaleString("vi-VN")}₫</Typography>
+        </Box>
+      )}
       <Box display="flex" justifyContent="space-between" mb={2}>
         <Typography fontWeight={600}>Tổng cộng:</Typography>
         <Typography fontWeight={700} color="primary">
@@ -250,12 +336,7 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
       </Box>
 
       <Stack spacing={1}>
-        <Button
-          variant="outlined"
-          color="error"
-          onClick={handleClearCart}
-          disabled={clearing}
-        >
+        <Button variant="outlined" color="error" onClick={handleClearCart} disabled={clearing}>
           Xoá tất cả
         </Button>
         <Button
@@ -272,68 +353,37 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
       <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
         <Box
           sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
+            position: "absolute", top: "50%", left: "50%",
             transform: "translate(-50%, -50%)",
-            bgcolor: "background.paper",
-            boxShadow: 24,
-            p: 4,
-            width: { xs: "90%", sm: 400 },
-            borderRadius: 2,
+            bgcolor: "background.paper", boxShadow: 24, p: 4,
+            width: { xs: "90%", sm: 400 }, borderRadius: 2,
           }}
         >
-          <Typography variant="h6" mb={2}>
-            Cập nhật địa chỉ
-          </Typography>
+          <Typography variant="h6" mb={2}>Cập nhật địa chỉ</Typography>
           <TextField
-            select
-            fullWidth
-            label="Tỉnh"
-            value={selectedProvince}
-            onChange={(e) => {
-              setSelectedProvince(e.target.value);
-              setSelectedCommune("");
-            }}
+            select fullWidth label="Tỉnh" value={selectedProvince}
+            onChange={(e) => { setSelectedProvince(e.target.value); setSelectedCommune(""); }}
             sx={{ mb: 2 }}
           >
-            {provinceNames.map((p) => (
-              <MenuItem key={p} value={p}>
-                {p}
-              </MenuItem>
-            ))}
+            {provinceNames.map((p) => <MenuItem key={p} value={p}>{p}</MenuItem>)}
           </TextField>
           <TextField
-            select
-            fullWidth
-            label="Xã/Quận"
-            value={selectedCommune}
+            select fullWidth label="Xã/Quận" value={selectedCommune}
             onChange={(e) => setSelectedCommune(e.target.value)}
-            disabled={!selectedProvince}
-            sx={{ mb: 2 }}
+            disabled={!selectedProvince} sx={{ mb: 2 }}
           >
-            {getDistricts(selectedProvince).map((c) => (
-              <MenuItem key={c} value={c}>
-                {c}
-              </MenuItem>
-            ))}
+            {getDistricts(selectedProvince).map((c) => <MenuItem key={c} value={c}>{c}</MenuItem>)}
           </TextField>
           <TextField
-            label="Địa chỉ chi tiết"
-            fullWidth
-            value={detailAddress}
-            onChange={(e) => setDetailAddress(e.target.value)}
-            sx={{ mb: 2 }}
+            label="Địa chỉ chi tiết" fullWidth value={detailAddress}
+            onChange={(e) => setDetailAddress(e.target.value)} sx={{ mb: 2 }}
           />
           <Stack direction="row" justifyContent="flex-end" spacing={1}>
             <Button onClick={() => setModalOpen(false)}>Huỷ</Button>
-            <Button variant="contained" onClick={handleReplaceAddress}>
-              Thay thế
-            </Button>
+            <Button variant="contained" onClick={handleReplaceAddress}>Thay thế</Button>
           </Stack>
         </Box>
       </Modal>
-
     </Paper>
   );
 }

@@ -22,6 +22,7 @@ import "slick-carousel/slick/slick-theme.css";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, AppState } from "@/redux/store";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
+import { mapProduct } from "@/lib/utils/productMapper";
 import { motion } from "framer-motion";
 
 // Icons
@@ -63,53 +64,11 @@ export default function RelatedProductsSlick({ category }: Props) {
       setLoading(true);
       try {
         if (category?.products?.length) {
-          const now = new Date();
-          const mapped = category.products.map((item: any): Product => {
-            const createdAt = new Date(item.createdAt);
-            const isNew =
-              (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24) <=
-              30;
-            const cp = item.pricePerUnit ?? item.price ?? 0;
-            const op = item.price ?? cp;
-
-            return {
-              id: item.id,
-              name: item.name,
-              slug: item.slug,
-              imageAvt: item.imageAvt,
-              imageDetail1: item.imageDetail1 || "",
-              imageDetail2: item.imageDetail2 || "",
-              imageDetail3: item.imageDetail3 || "",
-              price: cp,
-              pricePerUnit: cp,
-              originalPrice: op,
-              sale: cp < op,
-              inStock: item.active === true && (item.stockQuantity ?? 0) > 0,
-              label: item.active ? "Thêm vào giỏ" : "Hết hàng",
-              stockQuantity: item.stockQuantity ?? 0,
-              totalStock: item.totalStock ?? 0,
-              power: item.power || "",
-              fuelType: item.fuelType || "",
-              engineType: item.engineType || "",
-              weight: item.weight || 0,
-              dimensions: item.dimensions || "",
-              tankCapacity: item.tankCapacity ?? 0,
-              origin: item.origin || "",
-              warrantyMonths: item.warrantyMonths ?? 0,
-              createdAt: item.createdAt,
-              createdBy: item.createdBy || "",
-              updatedAt: item.updatedAt || null,
-              updatedBy: item.updatedBy || "",
-              rating: item.rating || 0,
-              status:
-                (item.stockQuantity ?? 0) === 0
-                  ? ["Hết hàng"]
-                  : isNew
-                    ? ["Mới"]
-                    : [],
-              favorite: favoriteIdSet.has(item.id),
-              description: item.description || "",
-            };
+          const nowMs = Date.now();
+          const mapped = category.products.map((item: any) => {
+            const p = mapProduct(item, nowMs);
+            // Ghi đè favorite từ wishlist redux
+            return { ...p, favorite: favoriteIdSet.has(item.id) };
           });
           setProducts(mapped);
         } else {

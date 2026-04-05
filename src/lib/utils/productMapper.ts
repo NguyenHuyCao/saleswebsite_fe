@@ -14,11 +14,15 @@ function normalizeDiscountPct(val: number): number {
 /**
  * Map a raw API product item to the typed Product shape.
  *
+ * Nguồn ưu tiên cho khuyến mãi:
+ *  1. item.discountPercent + item.salePrice  — backend đã tính sẵn (product list, product detail)
+ *  2. discountPct tham số truyền vào         — FlashSaleSlider tự cung cấp
+ *  3. Không có KM                            — giá gốc
+ *
  * @param item        Raw API response object
  * @param nowMs       Current timestamp (ms) — used to detect "new" products (≤30 days old)
- * @param discountPct Optional promotion discount (0–1 fraction OR 0–100 percent).
- *                    When supplied, `sale`, `price`, `originalPrice`, and `discountPercent`
- *                    are computed from the base price; otherwise the product has no active discount.
+ * @param discountPct Optional override discount (0–1 fraction OR 0–100 percent) — chỉ dùng
+ *                    khi backend chưa trả về discountPercent (VD: FlashSaleSlider fetch riêng).
  */
 export function mapProduct(
   item: any,
@@ -35,8 +39,16 @@ export function mapProduct(
   let sale = false;
   let discountPercent: number | undefined;
 
-  if (discountPct !== undefined && discountPct > 0) {
-    const pct = normalizeDiscountPct(discountPct); // normalised to 0-100
+  // Ưu tiên 1: backend đã tính sẵn discountPercent + salePrice
+  if ((item.discountPercent ?? 0) > 0 && (item.salePrice ?? 0) > 0) {
+    discountPercent = Math.round(item.discountPercent);
+    price = item.salePrice;
+    originalPrice = basePrice;
+    sale = true;
+  }
+  // Ưu tiên 2: discountPct truyền vào từ ngoài (FlashSaleSlider)
+  else if (discountPct !== undefined && discountPct > 0) {
+    const pct = normalizeDiscountPct(discountPct);
     discountPercent = Math.round(pct);
     price = Math.round(basePrice * (1 - pct / 100));
     originalPrice = basePrice;
