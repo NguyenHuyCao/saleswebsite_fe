@@ -324,7 +324,7 @@ const DashboardPage = () => {
                 width: 48,
                 height: 48,
                 bgcolor: "primary.main",
-                color: "#fff",
+                color: "primary.contrastText",
                 boxShadow: "0 4px 14px rgba(0,0,0,0.2)",
                 "&:hover": { bgcolor: "primary.dark" },
               }}

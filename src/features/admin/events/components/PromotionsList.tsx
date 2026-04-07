@@ -69,7 +69,7 @@ function ProductsOfPromotion({ promoId }: { promoId: number }) {
               display="flex"
               justifyContent="space-between"
               alignItems="center"
-              bgcolor="#f9f9f9"
+              bgcolor="action.hover"
               p={1.5}
               borderRadius={2}
             >

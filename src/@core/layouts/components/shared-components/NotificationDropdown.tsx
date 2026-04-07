@@ -9,7 +9,9 @@ import {
   Divider,
   Button,
   Badge,
+  alpha,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import { useSocket } from "@/lib/socket/SocketContext";
 import { formatDistanceToNow } from "date-fns";
@@ -19,7 +21,7 @@ const TYPE_CONFIG = {
   ORDER:     { label: "ĐH", color: "#fff", bg: "#f25c05" },
   PAYMENT:   { label: "TT", color: "#fff", bg: "#ffb700" },
   PROMOTION: { label: "KM", color: "#fff", bg: "#2e7d32" },
-  SYSTEM:    { label: "HT", color: "#fff", bg: "#555"    },
+  SYSTEM:    { label: "HT", color: "#fff", bg: "#6c5dd3" },
 };
 
 const getTypeConfig = (type: string) => {
@@ -31,6 +33,9 @@ const getTypeConfig = (type: string) => {
 };
 
 const NotificationDropdown = () => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
+
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const { notifications, unreadCount, markRead, markAllRead, refresh } = useSocket();
@@ -41,16 +46,13 @@ const NotificationDropdown = () => {
   };
 
   const handleClose = () => {
-    // Blur active element trước khi close để ngăn browser scroll trigger vào view
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
     setAnchorEl(null);
   };
 
-  const handleMarkRead = (id: number) => {
-    markRead(id);
-  };
+  const handleMarkRead = (id: number) => markRead(id);
 
   const handleMarkAll = () => {
     markAllRead();
@@ -64,6 +66,18 @@ const NotificationDropdown = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [open]);
 
+  // Màu nền header: tối chủ đạo, hài hoà với cả hai mode
+  const headerBg = isDark ? "#1a1625" : "#18181b";
+
+  // Màu nền item chưa đọc
+  const unreadBg  = isDark
+    ? alpha(theme.palette.primary.main, 0.12)
+    : alpha(theme.palette.primary.main, 0.06);
+  const unreadHover = isDark
+    ? alpha(theme.palette.primary.main, 0.18)
+    : alpha(theme.palette.primary.main, 0.1);
+  const readHover   = theme.palette.action.hover;
+
   return (
     <Fragment>
       <IconButton
@@ -76,7 +90,7 @@ const NotificationDropdown = () => {
           max={99}
           sx={{
             "& .MuiBadge-badge": {
-              bgcolor: "#f25c05",
+              bgcolor: "secondary.main",
               color: "#fff",
               fontSize: "0.6rem",
               minWidth: 16,
@@ -102,11 +116,13 @@ const NotificationDropdown = () => {
               mt: 1,
               width: 360,
               borderRadius: 2,
-              border: "2px solid #ffb700",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+              border: "2px solid",
+              borderColor: "primary.main",
+              boxShadow: isDark
+                ? "0 8px 32px rgba(0,0,0,0.5)"
+                : "0 8px 32px rgba(0,0,0,0.18)",
               overflow: "hidden",
-              bgcolor: "#fff",
-              color: "#111",
+              bgcolor: "background.paper",
             },
           },
         }}
@@ -116,24 +132,22 @@ const NotificationDropdown = () => {
           sx={{
             px: 2,
             py: 1.5,
-            bgcolor: "#000",
+            bgcolor: headerBg,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <NotificationsNoneIcon sx={{ color: "#ffb700", fontSize: 20 }} />
-            <Typography
-              sx={{ color: "#ffb700", fontWeight: 700, fontSize: "0.95rem" }}
-            >
+            <NotificationsNoneIcon sx={{ color: "primary.main", fontSize: 20 }} />
+            <Typography sx={{ color: "primary.main", fontWeight: 700, fontSize: "0.95rem" }}>
               Thông báo
             </Typography>
           </Box>
           {unreadCount > 0 && (
             <Box
               sx={{
-                bgcolor: "#f25c05",
+                bgcolor: "secondary.main",
                 color: "#fff",
                 borderRadius: "12px",
                 px: 1,
@@ -147,7 +161,7 @@ const NotificationDropdown = () => {
           )}
         </Box>
 
-        <Divider sx={{ borderColor: "#ffb700" }} />
+        <Divider sx={{ borderColor: "primary.main" }} />
 
         {/* List */}
         {notifications.length === 0 ? (
@@ -155,16 +169,13 @@ const NotificationDropdown = () => {
             sx={{
               py: 6,
               textAlign: "center",
-              bgcolor: "#fafafa",
+              bgcolor: "background.default",
             }}
           >
             <NotificationsNoneIcon
-              sx={{ fontSize: 40, color: "#ccc", mb: 1 }}
+              sx={{ fontSize: 40, color: "text.disabled", mb: 1 }}
             />
-            <Typography
-              variant="body2"
-              sx={{ color: "#999", fontSize: "0.85rem" }}
-            >
+            <Typography variant="body2" sx={{ color: "text.disabled", fontSize: "0.85rem" }}>
               Không có thông báo nào
             </Typography>
           </Box>
@@ -176,15 +187,14 @@ const NotificationDropdown = () => {
               overflowY: "auto",
               overflowX: "hidden",
               overscrollBehavior: "contain",
-              bgcolor: "#fff",
-              // Custom scrollbar
+              bgcolor: "background.paper",
               "&::-webkit-scrollbar": { width: 4 },
-              "&::-webkit-scrollbar-track": { bgcolor: "#f5f5f5" },
+              "&::-webkit-scrollbar-track": { bgcolor: "action.hover" },
               "&::-webkit-scrollbar-thumb": {
-                bgcolor: "#ffb700",
+                bgcolor: "primary.main",
                 borderRadius: 2,
               },
-              "&::-webkit-scrollbar-thumb:hover": { bgcolor: "#f25c05" },
+              "&::-webkit-scrollbar-thumb:hover": { bgcolor: "secondary.main" },
             }}
           >
             {notifications.map((noti, idx) => {
@@ -200,12 +210,15 @@ const NotificationDropdown = () => {
                       px: 2,
                       py: 1.5,
                       cursor: "pointer",
-                      bgcolor: noti.read ? "#fff" : "#fffbf0",
+                      bgcolor: noti.read ? "background.paper" : unreadBg,
                       borderLeft: noti.read
                         ? "3px solid transparent"
-                        : "3px solid #ffb700",
+                        : "3px solid",
+                      borderLeftColor: noti.read ? "transparent" : "primary.main",
                       transition: "background 0.15s",
-                      "&:hover": { bgcolor: "#fff8e1" },
+                      "&:hover": {
+                        bgcolor: noti.read ? readHover : unreadHover,
+                      },
                     }}
                   >
                     {/* Avatar */}
@@ -233,7 +246,7 @@ const NotificationDropdown = () => {
                         sx={{
                           fontSize: "0.83rem",
                           fontWeight: noti.read ? 500 : 700,
-                          color: "#111",
+                          color: "text.primary",
                           whiteSpace: "nowrap",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
@@ -244,7 +257,7 @@ const NotificationDropdown = () => {
                       <Typography
                         sx={{
                           fontSize: "0.78rem",
-                          color: "#555",
+                          color: "text.secondary",
                           mt: 0.3,
                           whiteSpace: "nowrap",
                           overflow: "hidden",
@@ -253,13 +266,7 @@ const NotificationDropdown = () => {
                       >
                         {noti.content}
                       </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: "0.7rem",
-                          color: "#aaa",
-                          mt: 0.4,
-                        }}
-                      >
+                      <Typography sx={{ fontSize: "0.7rem", color: "text.disabled", mt: 0.4 }}>
                         {formatDistanceToNow(new Date(noti.createdAt), {
                           addSuffix: true,
                           locale: vi,
@@ -274,7 +281,7 @@ const NotificationDropdown = () => {
                           width: 8,
                           height: 8,
                           borderRadius: "50%",
-                          bgcolor: "#f25c05",
+                          bgcolor: "secondary.main",
                           flexShrink: 0,
                           mt: 0.5,
                         }}
@@ -282,7 +289,7 @@ const NotificationDropdown = () => {
                     )}
                   </Box>
                   {idx < notifications.length - 1 && (
-                    <Divider sx={{ borderColor: "#f5f5f5" }} />
+                    <Divider sx={{ borderColor: "divider" }} />
                   )}
                 </Box>
               );
@@ -291,23 +298,23 @@ const NotificationDropdown = () => {
         )}
 
         {/* Footer */}
-        <Divider sx={{ borderColor: "#eee" }} />
-        <Box sx={{ px: 2, py: 1.5, bgcolor: "#fafafa" }}>
+        <Divider sx={{ borderColor: "divider" }} />
+        <Box sx={{ px: 2, py: 1.5, bgcolor: "background.default" }}>
           <Button
             fullWidth
             disabled={unreadCount === 0}
             onClick={handleMarkAll}
             sx={{
-              bgcolor: unreadCount > 0 ? "#000" : "#e0e0e0",
-              color: unreadCount > 0 ? "#ffb700" : "#aaa",
+              bgcolor: unreadCount > 0 ? headerBg : "action.disabledBackground",
+              color: unreadCount > 0 ? "primary.main" : "text.disabled",
               fontWeight: 700,
               fontSize: "0.8rem",
               borderRadius: 1,
               textTransform: "none",
               py: 0.8,
               "&:hover": {
-                bgcolor: unreadCount > 0 ? "#f25c05" : "#e0e0e0",
-                color: unreadCount > 0 ? "#fff" : "#aaa",
+                bgcolor: unreadCount > 0 ? "secondary.main" : "action.disabledBackground",
+                color: unreadCount > 0 ? "#fff" : "text.disabled",
               },
             }}
           >

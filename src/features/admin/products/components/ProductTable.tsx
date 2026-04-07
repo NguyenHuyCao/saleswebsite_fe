@@ -53,10 +53,11 @@ const LightTooltip = styled(({ className, ...props }: any) => (
   <Tooltip {...props} classes={{ popper: className }} />
 ))(({ theme }) => ({
   "& .MuiTooltip-tooltip": {
-    backgroundColor: "#fff",
-    color: "rgba(0,0,0,.87)",
-    boxShadow: theme.shadows[1],
+    backgroundColor: theme.palette.background.paper,
+    color: theme.palette.text.primary,
+    boxShadow: theme.shadows[3],
     fontSize: 11,
+    border: `1px solid ${theme.palette.divider}`,
   },
 }));
 
@@ -83,7 +84,7 @@ function StatCard({
   return (
     <Card sx={{ flex: 1, minWidth: 160 }}>
       <CardContent sx={{ display: "flex", alignItems: "center", gap: 2, py: "16px !important" }}>
-        <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: `${color}20`, color, display: "flex" }}>
+        <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: "action.selected", color, display: "flex" }}>
           {icon}
         </Box>
         <Box>
@@ -252,10 +253,10 @@ export default function ProductTable() {
     <>
       {/* ── Stat cards ── */}
       <Box display="flex" gap={2} flexWrap="wrap" mb={3}>
-        <StatCard icon={<InventoryOutlinedIcon />}          label="Tổng sản phẩm"  value={stats.total}    color="#1976d2" />
-        <StatCard icon={<CheckCircleOutlineIcon />}         label="Đang hoạt động" value={stats.active}   color="#2e7d32" />
-        <StatCard icon={<DoNotDisturbAltOutlinedIcon />}    label="Ngừng hoạt động" value={stats.inactive} color="#757575" />
-        <StatCard icon={<WarningAmberOutlinedIcon />}       label="Sắp hết hàng (≤5)" value={stats.lowStock} color="#ed6c02" />
+        <StatCard icon={<InventoryOutlinedIcon />}          label="Tổng sản phẩm"     value={stats.total}    color="info.main" />
+        <StatCard icon={<CheckCircleOutlineIcon />}         label="Đang hoạt động"    value={stats.active}   color="success.main" />
+        <StatCard icon={<DoNotDisturbAltOutlinedIcon />}   label="Ngừng hoạt động"   value={stats.inactive} color="text.disabled" />
+        <StatCard icon={<WarningAmberOutlinedIcon />}      label="Sắp hết hàng (≤5)" value={stats.lowStock} color="warning.main" />
       </Box>
 
       <Card>

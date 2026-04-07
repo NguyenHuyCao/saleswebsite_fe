@@ -306,7 +306,7 @@ export default function OrderDetailTable() {
                             </div>
                           ))
                         ) : (
-                          <span style={{ color: "#888" }}>Không có</span>
+                          <span style={{ opacity: 0.4 }}>Không có</span>
                         )}
                       </TableCell>
                       <TableCell align="right">{item.quantity}</TableCell>

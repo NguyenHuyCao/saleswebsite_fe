@@ -130,7 +130,7 @@ const IncomeAreaChart = () => {
       showMark: false,
       area: true,
       id: "PageViews",
-      color: "#1976d2",
+      color: theme.palette.primary.main,
       visible: visibility["Lượt xem trang"],
     },
     {
@@ -139,7 +139,7 @@ const IncomeAreaChart = () => {
       showMark: false,
       area: true,
       id: "Sessions",
-      color: "#ff9800",
+      color: theme.palette.secondary.main,
       visible: visibility["Phiên truy cập"],
     },
   ];
