@@ -15,6 +15,9 @@ import {
   TablePagination,
   Typography,
   Paper,
+  Chip,
+  Box,
+  Tooltip,
 } from "@mui/material";
 import Image from "next/image";
 import { useSelector } from "react-redux";
@@ -22,23 +25,25 @@ import { AppState } from "@/redux/store";
 import { useBrands, useCreateBrand, useUpdateBrand } from "../queries";
 import type { Brand } from "../types";
 
-// Reuse your existing modals
 import ModalFormBrandCreate from "@/model/brand/ModalFormBrandCreate";
 import ModalFormBrandEdit from "@/model/brand/ModalFormBrandEdit";
 import { useToast } from "@/lib/toast/ToastContext";
 
-const DEFAULT_ROWS = 5;
+const DEFAULT_ROWS = 10;
+
+const logoSrc = (logo?: string | null) => {
+  if (!logo) return "/images/placeholder.png";
+  if (logo.startsWith("http")) return logo;
+  return `${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/${logo}`;
+};
 
 export default function BrandsView() {
-  // table state
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(DEFAULT_ROWS);
 
-  // data
   const { data, isLoading, isError } = useBrands(1, 1000);
   const all = (data?.result ?? []) as Brand[];
 
-  // modals + editing row
   const [openCreate, setOpenCreate] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [editing, setEditing] = useState<Brand | null>(null);
@@ -47,10 +52,7 @@ export default function BrandsView() {
   const { mutateAsync: doCreate } = useCreateBrand(1, 1000);
   const { mutateAsync: doUpdate } = useUpdateBrand(1, 1000);
 
-  // global search (optional)
-  const keyword = useSelector((s: AppState) =>
-    s.search.keyword.trim().toLowerCase()
-  );
+  const keyword = useSelector((s: AppState) => s.search.keyword.trim().toLowerCase());
 
   const filtered = useMemo(() => {
     if (!keyword) return all;
@@ -60,12 +62,13 @@ export default function BrandsView() {
         b.name.toLowerCase().includes(keyword) ||
         (b.website ?? "").toLowerCase().includes(keyword) ||
         (b.originCountry ?? "").toLowerCase().includes(keyword) ||
+        (b.year ?? "").includes(keyword) ||
+        (b.description ?? "").toLowerCase().includes(keyword) ||
         createdDate.includes(keyword)
       );
     });
   }, [all, keyword]);
 
-  // handlers
   const handleOpenEdit = (brand: Brand) => {
     setEditing(brand);
     setOpenEdit(true);
@@ -87,7 +90,6 @@ export default function BrandsView() {
       fd.append("year", v.year);
       fd.append("description", v.description);
       if (v.logoFile) fd.append("logo", v.logoFile);
-
       await doCreate(fd);
       showToast("Thêm thương hiệu thành công", "success");
       setOpenCreate(false);
@@ -102,6 +104,9 @@ export default function BrandsView() {
     logoFile?: File;
     website: string;
     originCountry: string;
+    year: string;
+    description: string;
+    active: boolean;
   }) => {
     if (!editing) return;
     try {
@@ -109,8 +114,10 @@ export default function BrandsView() {
       fd.append("name", v.name);
       fd.append("website", v.website);
       fd.append("originCountry", v.originCountry);
+      fd.append("year", v.year);
+      fd.append("description", v.description);
+      fd.append("active", String(v.active));
       if (v.logoFile) fd.append("logo", v.logoFile);
-
       await doUpdate({ id: editing.id, fd });
       showToast("Cập nhật thương hiệu thành công", "success");
       setOpenEdit(false);
@@ -139,26 +146,36 @@ export default function BrandsView() {
 
       <CardContent>
         <Paper>
-          <TableContainer sx={{ maxHeight: 440 }}>
-            <Table stickyHeader>
+          <TableContainer sx={{ maxHeight: 520 }}>
+            <Table stickyHeader size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>Tên thương hiệu</TableCell>
-                  <TableCell>Website</TableCell>
-                  <TableCell>Nguồn gốc</TableCell>
-                  <TableCell>Ngày tạo</TableCell>
-                  <TableCell>Cập nhật gần nhất</TableCell>
-                  <TableCell align="center">Hành động</TableCell>
+                  <TableCell sx={{ minWidth: 50 }}>ID</TableCell>
+                  <TableCell sx={{ minWidth: 200 }}>Thương hiệu</TableCell>
+                  <TableCell sx={{ minWidth: 80 }}>Năm thành lập</TableCell>
+                  <TableCell sx={{ minWidth: 140 }}>Website</TableCell>
+                  <TableCell sx={{ minWidth: 120 }}>Nguồn gốc</TableCell>
+                  <TableCell sx={{ minWidth: 80 }}>Sản phẩm</TableCell>
+                  <TableCell sx={{ minWidth: 100 }}>Trạng thái</TableCell>
+                  <TableCell sx={{ minWidth: 110 }}>Ngày tạo</TableCell>
+                  <TableCell align="center" sx={{ minWidth: 100 }}>Hành động</TableCell>
                 </TableRow>
               </TableHead>
 
               <TableBody>
                 {isLoading || isError ? (
                   <TableRow>
-                    <TableCell colSpan={7}>
-                      <Typography align="center">
+                    <TableCell colSpan={9}>
+                      <Typography align="center" py={2}>
                         {isLoading ? "Đang tải..." : "Không thể tải dữ liệu"}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : filtered.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9}>
+                      <Typography align="center" color="text.secondary" py={2}>
+                        Không tìm thấy thương hiệu nào
                       </Typography>
                     </TableCell>
                   </TableRow>
@@ -169,42 +186,79 @@ export default function BrandsView() {
                       <TableRow key={brand.id} hover>
                         <TableCell>{brand.id}</TableCell>
 
-                        <TableCell
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                          }}
-                        >
-                          <Image
-                            alt="Logo"
-                            src={"/images/favicon.png"}
-                            width={40}
-                            height={40}
-                          />
-                          <Typography fontSize={14}>{brand.name}</Typography>
+                        <TableCell>
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <Image
+                              alt={brand.name}
+                              src={logoSrc(brand.logo)}
+                              width={36}
+                              height={36}
+                              style={{ objectFit: "contain", borderRadius: 4, border: "1px solid rgba(0,0,0,0.08)" }}
+                              unoptimized
+                            />
+                            <Box>
+                              <Typography variant="body2" fontWeight={500} lineHeight={1.2}>
+                                {brand.name}
+                              </Typography>
+                              {brand.description && (
+                                <Tooltip title={brand.description} placement="bottom-start">
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    sx={{ display: "block", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                                  >
+                                    {brand.description}
+                                  </Typography>
+                                </Tooltip>
+                              )}
+                            </Box>
+                          </Box>
                         </TableCell>
 
-                        <TableCell>{brand.website}</TableCell>
-                        <TableCell>{brand.originCountry}</TableCell>
+                        <TableCell>{brand.year || "—"}</TableCell>
+
                         <TableCell>
-                          {new Date(brand.createdAt).toLocaleDateString(
-                            "vi-VN"
+                          {brand.website ? (
+                            <Typography
+                              variant="body2"
+                              component="a"
+                              href={brand.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              sx={{ color: "primary.main", textDecoration: "none", "&:hover": { textDecoration: "underline" } }}
+                            >
+                              {brand.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+                            </Typography>
+                          ) : (
+                            <Typography variant="body2" color="text.disabled">—</Typography>
                           )}
                         </TableCell>
+
+                        <TableCell>{brand.originCountry || "—"}</TableCell>
+
                         <TableCell>
-                          {brand.updatedAt
-                            ? new Date(brand.updatedAt).toLocaleDateString(
-                                "vi-VN"
-                              )
-                            : "-"}
+                          <Typography variant="body2" fontWeight={500}>
+                            {brand.productCount ?? "—"}
+                          </Typography>
+                        </TableCell>
+
+                        <TableCell>
+                          <Chip
+                            label={brand.active !== false ? "Hoạt động" : "Tắt"}
+                            color={brand.active !== false ? "success" : "default"}
+                            size="small"
+                            variant="outlined"
+                          />
+                        </TableCell>
+
+                        <TableCell>
+                          <Typography variant="body2">
+                            {new Date(brand.createdAt).toLocaleDateString("vi-VN")}
+                          </Typography>
                         </TableCell>
 
                         <TableCell align="center">
-                          <Button
-                            variant="outlined"
-                            onClick={() => handleOpenEdit(brand)}
-                          >
+                          <Button size="small" variant="outlined" onClick={() => handleOpenEdit(brand)}>
                             Cập nhật
                           </Button>
                         </TableCell>
@@ -229,7 +283,6 @@ export default function BrandsView() {
         </Paper>
       </CardContent>
 
-      {/* Modals */}
       <ModalFormBrandCreate
         open={openCreate}
         onClose={() => setOpenCreate(false)}
@@ -241,7 +294,6 @@ export default function BrandsView() {
         onSubmit={handleUpdate}
         initialData={editing}
       />
-
     </Card>
   );
 }

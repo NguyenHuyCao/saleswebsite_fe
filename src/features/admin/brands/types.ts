@@ -4,6 +4,11 @@ export interface Brand {
   logo: string;
   website?: string | null;
   originCountry?: string | null;
+  description?: string | null;
+  year?: string | null;
+  active?: boolean;
+  slug?: string | null;
+  productCount?: number;
   createdAt: string;
   updatedAt: string | null;
 }

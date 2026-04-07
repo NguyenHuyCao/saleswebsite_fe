@@ -62,21 +62,9 @@ export default function BrandListSection({ brands, loading = false }: Props) {
 
   const ITEMS_PER_PAGE = isMobile ? 4 : 6;
 
-  // Tính số lượng sản phẩm cho mỗi brand (từ category.products)
-  const brandsWithProductCount = useMemo(() => {
-    return brands.map((brand) => ({
-      ...brand,
-      productCount:
-        brand.category?.reduce(
-          (total, cat) => total + (cat.products?.length || 0),
-          0,
-        ) || 0,
-    }));
-  }, [brands]);
-
-  // Sắp xếp brands
+  // Sắp xếp brands (productCount is already provided by the API)
   const sortedBrands = useMemo(() => {
-    const sorted = [...brandsWithProductCount];
+    const sorted = [...brands];
     if (sortBy === "name") {
       sorted.sort((a, b) => a.name.localeCompare(b.name));
     } else {
@@ -85,7 +73,7 @@ export default function BrandListSection({ brands, loading = false }: Props) {
       );
     }
     return sorted;
-  }, [brandsWithProductCount, sortBy]);
+  }, [brands, sortBy]);
 
   // Tính toán số trang
   const totalPages = Math.ceil(sortedBrands.length / ITEMS_PER_PAGE);

@@ -1,34 +1,35 @@
 "use client";
 
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
-import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
-import { useEffect, useState } from "react";
-import { Box, Typography } from "@mui/material";
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Button,
+  TextField,
+  Box,
+  Typography,
+} from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 interface ModalCreateCategoryProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (name: string, imageFile?: File) => void;
+  onSubmit: (data: { name: string; description: string; imageFile?: File }) => void;
 }
 
-const ModalCreateCategory = ({
-  open,
-  onClose,
-  onSubmit,
-}: ModalCreateCategoryProps) => {
+const ModalCreateCategory = ({ open, onClose, onSubmit }: ModalCreateCategoryProps) => {
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>("");
 
   useEffect(() => {
     if (!open) {
       setName("");
+      setDescription("");
       setImageFile(null);
       setPreview("");
     }
@@ -44,76 +45,57 @@ const ModalCreateCategory = ({
 
   const handleSubmit = () => {
     if (!name.trim()) return;
-    onSubmit(name, imageFile || undefined);
+    onSubmit({ name, description, imageFile: imageFile || undefined });
     onClose();
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth disableScrollLock={true}>
-      <DialogTitle>Thêm danh mục mới</DialogTitle>
-      <DialogContent>
-        <TextField
-          autoFocus
-          margin="dense"
-          label="Tên danh mục"
-          type="text"
-          fullWidth
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
+    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth disableScrollLock>
+      <DialogTitle sx={{ borderBottom: "1px solid", borderColor: "divider", fontWeight: 600 }}>
+        Thêm danh mục mới
+      </DialogTitle>
+      <DialogContent sx={{ pt: 2.5 }}>
+        <Box mb={2.5}>
+          <Typography variant="subtitle2" fontWeight={600} mb={0.75}>Tên danh mục *</Typography>
+          <TextField
+            autoFocus fullWidth size="small"
+            placeholder="Nhập tên danh mục"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </Box>
 
-        <Box mt={2}>
-          <Typography variant="subtitle2" fontWeight={600} mb={1}>
-            Logo danh mục
-          </Typography>
-          <Box
-            sx={{
-              border: "1px dashed #ddd",
-              borderRadius: "8px",
-              p: 2,
-              textAlign: "center",
-            }}
-          >
-            <Box component="label">
-              <Button
-                variant="outlined"
-                startIcon={<CloudUploadIcon />}
-                component="span"
-              >
-                Tải lên ảnh
-                <input
-                  type="file"
-                  hidden
-                  accept="image/*"
-                  onChange={handleImageChange}
-                />
-              </Button>
-            </Box>
+        <Box mb={2.5}>
+          <Typography variant="subtitle2" fontWeight={600} mb={0.75}>Mô tả</Typography>
+          <TextField
+            fullWidth multiline rows={3} size="small"
+            placeholder="Mô tả ngắn về danh mục (không bắt buộc)"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </Box>
+
+        <Box>
+          <Typography variant="subtitle2" fontWeight={600} mb={0.75}>Hình ảnh danh mục</Typography>
+          <Box sx={{ border: "1px dashed", borderColor: "divider", borderRadius: 2, p: 2, textAlign: "center" }}>
+            <Button component="label" variant="outlined" startIcon={<CloudUploadIcon />} size="small">
+              Tải lên ảnh
+              <input type="file" hidden accept="image/*" onChange={handleImageChange} />
+            </Button>
             {preview && (
-              <Box mt={2}>
+              <Box mt={1.5}>
                 <Image
-                  src={preview}
-                  alt="Xem trước"
-                  width={120}
-                  height={120}
-                  style={{
-                    objectFit: "contain",
-                    border: "1px solid #eee",
-                    borderRadius: 4,
-                  }}
+                  src={preview} alt="Xem trước" width={100} height={100}
+                  style={{ objectFit: "contain", border: "1px solid rgba(0,0,0,0.12)", borderRadius: 4 }}
                 />
               </Box>
             )}
           </Box>
         </Box>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Hủy</Button>
-        <Button
-          variant="contained"
-          onClick={handleSubmit}
-          disabled={!name.trim()}
-        >
+      <DialogActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 3, py: 2 }}>
+        <Button onClick={onClose} color="inherit">Hủy</Button>
+        <Button variant="contained" onClick={handleSubmit} disabled={!name.trim()}>
           Lưu
         </Button>
       </DialogActions>

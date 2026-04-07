@@ -11,7 +11,8 @@ import {
   MenuItem,
   Box,
   Typography,
-  styled,
+  Switch,
+  FormControlLabel,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import Image from "next/image";
@@ -24,6 +25,9 @@ interface ModalEditProps {
     logoFile?: File;
     website: string;
     originCountry: string;
+    year: string;
+    description: string;
+    active: boolean;
   }) => void;
   initialData?: {
     id: number;
@@ -31,27 +35,23 @@ interface ModalEditProps {
     logo: string;
     website?: string | null;
     originCountry?: string | null;
+    description?: string | null;
+    year?: string | null;
+    active?: boolean;
     createdAt: string;
     updatedAt: string | null;
   } | null;
 }
-
-const StyledUploadButton = styled(Button)(({ theme }) => ({
-  padding: "8px 16px",
-  border: `1px solid ${theme.palette.divider}`,
-  backgroundColor: theme.palette.background.paper,
-  color: theme.palette.text.primary,
-  textTransform: "none",
-  "&:hover": {
-    backgroundColor: theme.palette.action.hover,
-  },
-}));
 
 const countries = [
   { value: "VN", label: "Việt Nam" },
   { value: "US", label: "Mỹ" },
   { value: "JP", label: "Nhật Bản" },
   { value: "KR", label: "Hàn Quốc" },
+  { value: "DE", label: "Đức" },
+  { value: "CN", label: "Trung Quốc" },
+  { value: "TW", label: "Đài Loan" },
+  { value: "OTHER", label: "Khác" },
 ];
 
 const ModalFormBrandEdit = ({
@@ -66,6 +66,9 @@ const ModalFormBrandEdit = ({
     logoFile: undefined as File | undefined,
     website: "",
     originCountry: "VN",
+    year: "",
+    description: "",
+    active: true,
   });
 
   const [preview, setPreview] = useState("");
@@ -78,24 +81,28 @@ const ModalFormBrandEdit = ({
         logoFile: undefined,
         website: initialData.website || "",
         originCountry: initialData.originCountry || "VN",
+        year: initialData.year || "",
+        description: initialData.description || "",
+        active: initialData.active !== false,
       });
-
-      // Nếu đường dẫn logo bắt đầu bằng http thì dùng làm preview
       setPreview(
         initialData.logo?.startsWith("http")
           ? initialData.logo
-          : `${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/${initialData.logo}`
+          : initialData.logo
+          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/${initialData.logo}`
+          : ""
       );
     }
-
     if (!open) {
-      // Reset khi đóng
       setFormData({
         name: "",
         logo: "",
         logoFile: undefined,
         website: "",
         originCountry: "VN",
+        year: "",
+        description: "",
+        active: true,
       });
       setPreview("");
     }
@@ -107,6 +114,9 @@ const ModalFormBrandEdit = ({
       logoFile: formData.logoFile,
       website: formData.website,
       originCountry: formData.originCountry,
+      year: formData.year,
+      description: formData.description,
+      active: formData.active,
     });
     onClose();
   };
@@ -120,143 +130,100 @@ const ModalFormBrandEdit = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle
-        sx={{
-          borderBottom: "1px solid #eee",
-          py: 2,
-          fontWeight: 600,
-          fontSize: "1.2rem",
-        }}
-      >
+    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth disableScrollLock>
+      <DialogTitle sx={{ borderBottom: "1px solid", borderColor: "divider", py: 2, fontWeight: 600, fontSize: "1.1rem" }}>
         Cập nhật thương hiệu
       </DialogTitle>
+
       <DialogContent sx={{ py: 3 }}>
-        <Box mb={3}>
-          <Typography variant="subtitle2" fontWeight={600} mb={1}>
-            Tên thương hiệu *
-          </Typography>
+        <Box mb={2.5}>
+          <Typography variant="subtitle2" fontWeight={600} mb={0.75}>Tên thương hiệu *</Typography>
           <TextField
-            fullWidth
-            size="small"
+            fullWidth size="small"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
           />
         </Box>
 
-        <Box mb={3}>
-          <Typography variant="subtitle2" fontWeight={600} mb={1}>
-            Website
-          </Typography>
+        <Box mb={2.5}>
+          <Typography variant="subtitle2" fontWeight={600} mb={0.75}>Năm thành lập</Typography>
           <TextField
-            fullWidth
-            size="small"
+            fullWidth size="small"
+            placeholder="VD: 2010"
+            value={formData.year}
+            onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+          />
+        </Box>
+
+        <Box mb={2.5}>
+          <Typography variant="subtitle2" fontWeight={600} mb={0.75}>Website</Typography>
+          <TextField
+            fullWidth size="small"
+            placeholder="https://example.com"
             value={formData.website}
-            onChange={(e) =>
-              setFormData({ ...formData, website: e.target.value })
-            }
-            sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
+            onChange={(e) => setFormData({ ...formData, website: e.target.value })}
           />
         </Box>
 
-        <Box mb={3}>
-          <Typography variant="subtitle2" fontWeight={600} mb={1}>
-            Quốc gia xuất xứ
-          </Typography>
+        <Box mb={2.5}>
+          <Typography variant="subtitle2" fontWeight={600} mb={0.75}>Quốc gia xuất xứ</Typography>
           <TextField
-            select
-            fullWidth
-            size="small"
+            select fullWidth size="small"
             value={formData.originCountry}
-            onChange={(e) =>
-              setFormData({ ...formData, originCountry: e.target.value })
-            }
-            sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
-            SelectProps={{
-              MenuProps: {
-                disableScrollLock: true,
-              },
-            }}
+            onChange={(e) => setFormData({ ...formData, originCountry: e.target.value })}
+            SelectProps={{ MenuProps: { disableScrollLock: true } }}
           >
-            {countries.map((country) => (
-              <MenuItem key={country.value} value={country.value}>
-                {country.label}
-              </MenuItem>
+            {countries.map((c) => (
+              <MenuItem key={c.value} value={c.value}>{c.label}</MenuItem>
             ))}
           </TextField>
         </Box>
 
+        <Box mb={2.5}>
+          <Typography variant="subtitle2" fontWeight={600} mb={0.75}>Mô tả thương hiệu</Typography>
+          <TextField
+            fullWidth multiline rows={3} size="small"
+            placeholder="Mô tả ngắn về thương hiệu"
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          />
+        </Box>
+
+        <Box mb={2.5}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={formData.active}
+                onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
+                color="success"
+              />
+            }
+            label={formData.active ? "Đang hoạt động" : "Đã tắt"}
+          />
+        </Box>
+
         <Box>
-          <Typography variant="subtitle2" fontWeight={600} mb={1}>
-            Logo thương hiệu
-          </Typography>
-          <Box
-            sx={{
-              border: "1px dashed #ddd",
-              borderRadius: "8px",
-              p: 2,
-              textAlign: "center",
-            }}
-          >
-            <Box component="label">
-              <StyledUploadButton startIcon={<CloudUploadIcon />}>
-                Tải lên logo mới
-                <input
-                  type="file"
-                  hidden
-                  accept="image/*"
-                  onChange={handleFileChange}
-                />
-              </StyledUploadButton>
-            </Box>
+          <Typography variant="subtitle2" fontWeight={600} mb={0.75}>Logo thương hiệu</Typography>
+          <Box sx={{ border: "1px dashed", borderColor: "divider", borderRadius: 2, p: 2, textAlign: "center" }}>
+            <Button component="label" variant="outlined" startIcon={<CloudUploadIcon />} size="small">
+              Tải lên logo mới
+              <input type="file" hidden accept="image/*" onChange={handleFileChange} />
+            </Button>
             {preview && (
-              <Box mt={2}>
+              <Box mt={1.5}>
                 <Image
-                  src={preview}
-                  alt="Logo preview"
-                  width={120}
-                  height={120}
-                  style={{
-                    objectFit: "contain",
-                    borderRadius: "4px",
-                    border: "1px solid #eee",
-                  }}
+                  src={preview} alt="Logo preview" width={100} height={100}
+                  style={{ objectFit: "contain", borderRadius: 4, border: "1px solid rgba(0,0,0,0.12)" }}
                 />
               </Box>
             )}
           </Box>
         </Box>
       </DialogContent>
-      <DialogActions
-        sx={{
-          borderTop: "1px solid #eee",
-          px: 3,
-          py: 2,
-        }}
-      >
-        <Button
-          onClick={onClose}
-          sx={{
-            color: "#666",
-            borderRadius: "6px",
-            px: 3,
-            py: 1,
-          }}
-        >
-          Hủy
-        </Button>
-        <Button
-          variant="contained"
-          onClick={handleSubmit}
-          disabled={!formData.name || !formData.originCountry}
-          sx={{
-            borderRadius: "6px",
-            px: 3,
-            py: 1,
-            textTransform: "none",
-          }}
-        >
+
+      <DialogActions sx={{ borderTop: "1px solid", borderColor: "divider", px: 3, py: 2 }}>
+        <Button onClick={onClose} color="inherit">Hủy</Button>
+        <Button variant="contained" onClick={handleSubmit} disabled={!formData.name || !formData.originCountry}>
           Lưu
         </Button>
       </DialogActions>

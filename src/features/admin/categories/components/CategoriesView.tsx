@@ -16,6 +16,8 @@ import {
   Button,
   Typography,
   Box,
+  Chip,
+  Tooltip,
 } from "@mui/material";
 import Image from "next/image";
 import { useSelector } from "react-redux";
@@ -28,13 +30,12 @@ import {
 } from "../queries";
 import type { Category } from "../types";
 
-// Reuse your existing modals (giữ nguyên đường dẫn model bạn đã có)
 import ModalCreateCategory from "@/model/category/ModalCreateCategory";
 import ModalEditCategory from "@/model/category/ModalEditCategory";
 import ConfirmDeleteCategory from "@/model/category/ConfirmDeleteCategory";
 import { useToast } from "@/lib/toast/ToastContext";
 
-const DEFAULT_ROWS = 5;
+const DEFAULT_ROWS = 10;
 
 const imgURL = (img?: string | null) =>
   img?.startsWith("http")
@@ -50,7 +51,6 @@ export default function CategoriesView() {
   const { data, isLoading, isError } = useCategories(1, 1000);
   const all = (data?.result ?? []) as Category[];
 
-  // modals
   const [openCreate, setOpenCreate] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
@@ -62,22 +62,21 @@ export default function CategoriesView() {
   const { mutateAsync: doUpdate } = useUpdateCategory(1, 1000);
   const { mutateAsync: doDelete } = useDeleteCategory(1, 1000);
 
-  // global search
-  const keyword = useSelector((s: AppState) =>
-    s.search.keyword.trim().toLowerCase()
-  );
+  const keyword = useSelector((s: AppState) => s.search.keyword.trim().toLowerCase());
 
   const filtered = useMemo(() => {
     if (!keyword) return all;
     return all.filter((c) => {
       const createdDate = new Date(c.createdAt).toLocaleDateString("vi-VN");
       return (
-        c.name.toLowerCase().includes(keyword) || createdDate.includes(keyword)
+        c.name.toLowerCase().includes(keyword) ||
+        (c.description ?? "").toLowerCase().includes(keyword) ||
+        (c.brandName ?? "").toLowerCase().includes(keyword) ||
+        createdDate.includes(keyword)
       );
     });
   }, [all, keyword]);
 
-  // handlers
   const openEditModal = (c: Category) => {
     setEditing(c);
     setOpenEdit(true);
@@ -88,11 +87,12 @@ export default function CategoriesView() {
     setOpenDelete(true);
   };
 
-  const handleCreate = async (name: string, imageFile?: File) => {
+  const handleCreate = async (v: { name: string; description: string; imageFile?: File }) => {
     try {
       const fd = new FormData();
-      fd.append("name", name);
-      if (imageFile) fd.append("image", imageFile);
+      fd.append("name", v.name);
+      if (v.description) fd.append("description", v.description);
+      if (v.imageFile) fd.append("image", v.imageFile);
       await doCreate(fd);
       showToast("Thêm danh mục thành công", "success");
       setOpenCreate(false);
@@ -102,12 +102,14 @@ export default function CategoriesView() {
     }
   };
 
-  const handleUpdate = async (name: string, imageFile?: File) => {
+  const handleUpdate = async (v: { name: string; description: string; active: boolean; imageFile?: File }) => {
     if (!editing) return;
     try {
       const fd = new FormData();
-      fd.append("name", name);
-      if (imageFile) fd.append("image", imageFile);
+      fd.append("name", v.name);
+      if (v.description) fd.append("description", v.description);
+      fd.append("active", String(v.active));
+      if (v.imageFile) fd.append("image", v.imageFile);
       await doUpdate({ id: editing.id, fd });
       showToast("Cập nhật danh mục thành công", "success");
       setOpenEdit(false);
@@ -137,7 +139,7 @@ export default function CategoriesView() {
     <Card>
       <CardHeader
         title="Danh mục sản phẩm"
-        titleTypographyProps={{ variant: "h6" }}
+        titleTypographyProps={{ variant: "h5" }}
         action={
           <Button variant="contained" onClick={() => setOpenCreate(true)}>
             Thêm danh mục
@@ -147,23 +149,31 @@ export default function CategoriesView() {
       <CardContent>
         <Paper sx={{ width: "100%", overflow: "hidden" }}>
           <TableContainer>
-            <Table stickyHeader>
+            <Table stickyHeader size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>Ảnh đại diện</TableCell>
-                  <TableCell>Tên danh mục</TableCell>
-                  <TableCell>Ngày tạo</TableCell>
-                  <TableCell>Cập nhật gần nhất</TableCell>
-                  <TableCell align="center">Hành động</TableCell>
+                  <TableCell sx={{ minWidth: 50 }}>ID</TableCell>
+                  <TableCell sx={{ minWidth: 80 }}>Ảnh</TableCell>
+                  <TableCell sx={{ minWidth: 180 }}>Tên danh mục</TableCell>
+                  <TableCell sx={{ minWidth: 120 }}>Thương hiệu</TableCell>
+                  <TableCell sx={{ minWidth: 80 }}>Sản phẩm</TableCell>
+                  <TableCell sx={{ minWidth: 100 }}>Trạng thái</TableCell>
+                  <TableCell sx={{ minWidth: 110 }}>Ngày tạo</TableCell>
+                  <TableCell align="center" sx={{ minWidth: 140 }}>Hành động</TableCell>
                 </TableRow>
               </TableHead>
 
               <TableBody>
                 {isLoading || isError ? (
                   <TableRow>
-                    <TableCell colSpan={6} align="center">
-                      {isLoading ? "Đang tải..." : "Không thể tải dữ liệu"}
+                    <TableCell colSpan={8} align="center">
+                      <Typography py={2}>{isLoading ? "Đang tải..." : "Không thể tải dữ liệu"}</Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : filtered.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} align="center">
+                      <Typography color="text.secondary" py={2}>Không tìm thấy danh mục nào</Typography>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -172,41 +182,70 @@ export default function CategoriesView() {
                     .map((c) => (
                       <TableRow key={c.id} hover>
                         <TableCell>{c.id}</TableCell>
+
                         <TableCell>
                           <Image
                             src={imgURL(c.image ?? undefined)}
                             alt={c.name}
-                            width={80}
-                            height={80}
-                            style={{
-                              borderRadius: 8,
-                              objectFit: "cover",
-                              border: "1px solid #eee",
-                            }}
+                            width={48}
+                            height={48}
+                            style={{ borderRadius: 6, objectFit: "cover", border: "1px solid rgba(0,0,0,0.08)" }}
+                            unoptimized
                           />
                         </TableCell>
-                        <TableCell>{c.name}</TableCell>
+
                         <TableCell>
-                          {new Date(c.createdAt).toLocaleDateString("vi-VN")}
+                          <Box>
+                            <Typography variant="body2" fontWeight={500}>{c.name}</Typography>
+                            {c.description && (
+                              <Tooltip title={c.description} placement="bottom-start">
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  sx={{ display: "block", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                                >
+                                  {c.description}
+                                </Typography>
+                              </Tooltip>
+                            )}
+                          </Box>
                         </TableCell>
+
                         <TableCell>
-                          {c.updatedAt
-                            ? new Date(c.updatedAt).toLocaleDateString("vi-VN")
-                            : "-"}
+                          {c.brandName ? (
+                            <Typography variant="body2">{c.brandName}</Typography>
+                          ) : (
+                            <Typography variant="body2" color="text.disabled">—</Typography>
+                          )}
                         </TableCell>
+
+                        <TableCell>
+                          <Typography variant="body2" fontWeight={500}>
+                            {c.productCount ?? "—"}
+                          </Typography>
+                        </TableCell>
+
+                        <TableCell>
+                          <Chip
+                            label={c.active !== false ? "Hiển thị" : "Ẩn"}
+                            color={c.active !== false ? "success" : "default"}
+                            size="small"
+                            variant="outlined"
+                          />
+                        </TableCell>
+
+                        <TableCell>
+                          <Typography variant="body2">
+                            {new Date(c.createdAt).toLocaleDateString("vi-VN")}
+                          </Typography>
+                        </TableCell>
+
                         <TableCell align="center">
                           <Box display="flex" gap={1} justifyContent="center">
-                            <Button
-                              variant="outlined"
-                              onClick={() => openEditModal(c)}
-                            >
+                            <Button size="small" variant="outlined" onClick={() => openEditModal(c)}>
                               Cập nhật
                             </Button>
-                            <Button
-                              color="error"
-                              variant="outlined"
-                              onClick={() => openDeleteModal(c)}
-                            >
+                            <Button size="small" color="error" variant="outlined" onClick={() => openDeleteModal(c)}>
                               Xóa
                             </Button>
                           </Box>
@@ -232,7 +271,6 @@ export default function CategoriesView() {
         </Paper>
       </CardContent>
 
-      {/* Modals (xài lại modal bạn có sẵn trong thư mục model) */}
       <ModalCreateCategory
         open={openCreate}
         onClose={() => setOpenCreate(false)}
@@ -245,6 +283,8 @@ export default function CategoriesView() {
           onClose={() => setOpenEdit(false)}
           onSubmit={handleUpdate}
           initialName={editing.name}
+          initialDescription={editing.description ?? ""}
+          initialActive={editing.active !== false}
           initialImageUrl={imgURL(editing.image ?? undefined)}
         />
       )}
@@ -254,7 +294,6 @@ export default function CategoriesView() {
         onCancel={() => setOpenDelete(false)}
         onConfirm={handleConfirmDelete}
       />
-
     </Card>
   );
 }

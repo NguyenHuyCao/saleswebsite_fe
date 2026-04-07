@@ -15,6 +15,8 @@ export type Brand = {
   description: string | null;
   year: number | string | null;
   slug: string;
+  active: boolean;
+  productCount: number;
   createdAt: string | null;
   updatedAt: string | null;
   category: CategoryRef[];
