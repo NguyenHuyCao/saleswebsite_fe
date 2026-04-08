@@ -168,7 +168,7 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
                   position: "absolute",
                   top: "100%",
                   left: 0,
-                  zIndex: 1000,
+                  zIndex: 1400,
                   minWidth: 300,
                   maxWidth: 800,
                 }}

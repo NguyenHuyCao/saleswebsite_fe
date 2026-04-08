@@ -1,4 +1,5 @@
-// src/features/new/data.ts
+// Dữ liệu mẫu đã được thay bằng API thật — file này không còn được dùng.
+// Giữ lại để không break import cũ.
 import type { NewsPost } from "./types";
 
 export const newsPosts: NewsPost[] = [

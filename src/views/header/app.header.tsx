@@ -16,6 +16,9 @@ const AppHeader = () => {
         flexGrow: 1,
         bgcolor: "#ffb700",
         pb: isMobile ? 0.5 : 0,
+        position: "sticky",
+        top: 0,
+        zIndex: 1300,
       }}
     >
       {/* Thanh trên cùng */}

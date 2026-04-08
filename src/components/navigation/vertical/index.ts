@@ -8,6 +8,7 @@ import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined
 import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
+import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 
 import { VerticalNavItemsType } from "src/@core/layouts/types";
 
@@ -67,6 +68,11 @@ const navigation = (): VerticalNavItemsType => {
       title: "Bảo hành",
       icon: LocalShippingOutlinedIcon,
       path: "/admin/warranties",
+    },
+    {
+      title: "Tin tức",
+      icon: ArticleOutlinedIcon,
+      path: "/admin/news",
     },
     {
       sectionTitle: "Điều hướng",

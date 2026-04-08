@@ -1,76 +1,46 @@
-// src/features/new/api.ts
-import { newsPosts } from "./data";
+// src/features/user/news/api.ts
+import { api } from "@/lib/api/http";
 import type { ListNewsResponse, NewsPost } from "./types";
 
-/** Mô phỏng API delay */
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-/** Danh sách tin có phân trang + keyword (server-side) */
+/** Danh sách bài viết đã xuất bản — có phân trang + lọc theo danh mục */
 export async function listNews(params?: {
   page?: number;
   size?: number;
   q?: string;
   category?: string;
 }): Promise<ListNewsResponse> {
-  await delay(500); // Mô phỏng loading
-
   const page = params?.page ?? 1;
   const size = params?.size ?? 12;
-  const q = params?.q?.toLowerCase() ?? "";
+  const q = params?.q ?? "";
   const category = params?.category ?? "";
 
-  // Filter theo keyword và category
-  let filtered = [...newsPosts];
-
-  if (q) {
-    filtered = filtered.filter(
-      (post) =>
-        post.title.toLowerCase().includes(q) ||
-        post.excerpt?.toLowerCase().includes(q) ||
-        post.content?.toLowerCase().includes(q),
-    );
-  }
-
-  if (category) {
-    filtered = filtered.filter(
-      (post) => post.category?.toLowerCase() === category.toLowerCase(),
-    );
-  }
-
-  // Phân trang
-  const start = (page - 1) * size;
-  const paginated = filtered.slice(start, start + size);
-
-  return {
-    result: paginated,
-    meta: {
+  const data = await api.get<ListNewsResponse>("/api/v1/news", {
+    params: {
       page,
-      pageSize: size,
-      pages: Math.ceil(filtered.length / size),
-      total: filtered.length,
+      size,
+      q: q || undefined,
+      category: category || undefined,
+      sort: "pinned,desc",
     },
-  };
+  });
+  return data ?? { result: [], meta: null };
 }
 
-/** Chi tiết theo slug */
+/** Chi tiết bài viết theo slug (tự động tăng lượt xem) */
 export async function getNewsBySlug(slug: string): Promise<NewsPost | null> {
-  await delay(300);
-  const post = newsPosts.find((p) => p.slug === slug);
-  return post || null;
+  try {
+    return await api.get<NewsPost>(`/api/v1/news/${slug}`);
+  } catch {
+    return null;
+  }
 }
 
-/** Lấy bài viết liên quan */
+/** Bài viết liên quan (cùng danh mục, loại trừ slug hiện tại) */
 export async function getRelatedNews(
   slug: string,
   category?: string,
-  limit: number = 3,
+  limit = 3,
 ): Promise<NewsPost[]> {
-  await delay(300);
-  let related = newsPosts.filter((p) => p.slug !== slug);
-
-  if (category) {
-    related = related.filter((p) => p.category === category);
-  }
-
-  return related.slice(0, limit);
+  const res = await listNews({ size: limit + 1, category });
+  return (res.result ?? []).filter((p) => p.slug !== slug).slice(0, limit);
 }

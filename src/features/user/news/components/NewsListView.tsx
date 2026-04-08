@@ -1,4 +1,4 @@
-// features/user/new/NewsListView.tsx
+// features/user/news/components/NewsListView.tsx
 "use client";
 
 import React, { useMemo, useState } from "react";
@@ -7,115 +7,92 @@ import {
   Typography,
   Paper,
   TextField,
-  InputAdornment,
   ListItemButton,
   ListItemText,
   Skeleton,
   Chip,
   Stack,
-  Avatar,
   Button,
   Pagination,
-  Breadcrumbs,
-  Link,
-  Divider,
   IconButton,
   Container,
   Fade,
-  Zoom,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { useRouter } from "next/navigation";
-import { motion, useInView } from "framer-motion";
+import { motion } from "framer-motion";
 import Image from "next/image";
 
-// Icons
 import SearchIcon from "@mui/icons-material/Search";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import CommentIcon from "@mui/icons-material/Comment";
 import ShareIcon from "@mui/icons-material/Share";
-import BookmarkIcon from "@mui/icons-material/Bookmark";
-import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import EmailIcon from "@mui/icons-material/Email";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 
-import { categories, newsPosts as seedPosts } from "../data";
 import { useNewsList } from "../queries";
 
-// Featured post data (có thể lấy từ API)
-const featuredPost = {
-  slug: "featured-post",
-  title: "Top 10 máy cắt cỏ chạy xăng tốt nhất 2024",
-  excerpt:
-    "Khám phá những mẫu máy cắt cỏ chạy xăng được ưa chuộng nhất hiện nay, với đánh giá chi tiết về hiệu suất, độ bền và giá cả.",
-  image:
-    "/images/news/6670636fbeca91b81a58a6f9_Deere-company-tractor-banner.jpg",
-  date: "15/03/2024",
-  author: "Nguyễn Văn A",
-  authorAvatar: "/images/customer/customer1.jpeg",
-  views: 1234,
-  comments: 56,
-  category: "Đánh giá sản phẩm",
-  tags: ["máy cắt cỏ", "chạy xăng", "top 10"],
-};
-
-// Tags cloud data
-const popularTags = [
-  "máy cắt cỏ",
-  "máy khoan",
-  "máy mài",
-  "máy cưa xích",
-  "máy rửa xe",
-  "máy phát điện",
-  "máy bơm nước",
-  "phụ kiện",
-  "bảo trì",
-  "khuyến mãi",
+const NEWS_CATEGORIES = [
+  "Kiến thức kỹ thuật",
+  "Tin tức sản phẩm",
+  "Hướng dẫn sử dụng",
+  "Khuyến mãi & Ưu đãi",
+  "Tin tức ngành",
 ];
+
+const PLACEHOLDER = "https://placehold.co/600x400?text=No+Image";
+
+function formatDate(dateStr?: string | null): string {
+  if (!dateStr) return "";
+  return new Date(dateStr).toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function parseTags(tags?: string | null): string[] {
+  if (!tags) return [];
+  return tags
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
+}
 
 export default function NewsListView() {
   const router = useRouter();
   const [keyword, setKeyword] = useState("");
   const [page, setPage] = useState(1);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const pageSize = 9;
 
-  const { data, isLoading } = useNewsList(keyword, page, pageSize);
-  const serverPosts = data?.result ?? [];
+  const { data, isLoading } = useNewsList(
+    keyword,
+    page,
+    pageSize,
+    selectedCategory,
+  );
+  const posts = data?.result ?? [];
   const totalPages = data?.meta?.pages ?? 1;
-  const list = serverPosts.length ? serverPosts : seedPosts;
 
-  // Filter posts based on category
-  const filteredPosts = useMemo(() => {
-    let posts = serverPosts.length ? serverPosts : list;
+  // First pinned (or first) post on page 1 with no filters = featured
+  const showFeatured = !keyword && !selectedCategory && page === 1;
+  const featuredPost = showFeatured && posts.length > 0 ? posts[0] : null;
+  const gridPosts = featuredPost ? posts.slice(1) : posts;
 
-    if (selectedCategory) {
-      posts = posts.filter((post) => post.category === selectedCategory);
-    }
+  // Collect tags from current page results
+  const popularTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    posts.forEach((p) => parseTags(p.tags).forEach((t) => tagSet.add(t)));
+    return Array.from(tagSet).slice(0, 12);
+  }, [posts]);
 
-    if (keyword) {
-      const q = keyword.toLowerCase();
-      posts = posts.filter(
-        (post) =>
-          post.title.toLowerCase().includes(q) ||
-          post.excerpt?.toLowerCase().includes(q),
-      );
-    }
-
-    return posts;
-  }, [list, keyword, serverPosts.length, selectedCategory]);
-
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
+      transition: { staggerChildren: 0.1, delayChildren: 0.2 },
     },
   };
 
@@ -134,38 +111,27 @@ export default function NewsListView() {
     transition: { type: "spring", stiffness: 300 },
   };
 
+  const handleCategorySelect = (cat: string) => {
+    setSelectedCategory(cat);
+    setPage(1);
+  };
+
+  const handleKeywordChange = (val: string) => {
+    setKeyword(val);
+    setPage(1);
+  };
+
   return (
     <motion.div initial="hidden" animate="visible" variants={containerVariants}>
       <Container maxWidth="xl">
         <Box sx={{ py: 4 }}>
-          {/* Breadcrumb */}
-          {/* <motion.div variants={itemVariants}>
-            <Breadcrumbs sx={{ mb: 3 }}>
-              <Link
-                color="inherit"
-                href="/"
-                onClick={(e) => {
-                  e.preventDefault();
-                  router.push("/");
-                }}
-                sx={{ cursor: "pointer", "&:hover": { color: "#f25c05" } }}
-              >
-                Trang chủ
-              </Link>
-              <Typography color="text.primary">Tin tức</Typography>
-            </Breadcrumbs>
-          </motion.div> */}
-
           {/* Header */}
           <motion.div variants={itemVariants}>
             <Box sx={{ mb: 4 }}>
               <Typography
                 variant="h3"
                 fontWeight={800}
-                sx={{
-                  fontSize: { xs: "2rem", md: "2.5rem" },
-                  mb: 1,
-                }}
+                sx={{ fontSize: { xs: "2rem", md: "2.5rem" }, mb: 1 }}
               >
                 Tin tức & Sự kiện
               </Typography>
@@ -182,74 +148,138 @@ export default function NewsListView() {
 
           {/* Search and Filter */}
           <motion.div variants={itemVariants}>
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={2}
-              sx={{ mb: 4 }}
+            <Paper
+              elevation={0}
+              sx={{
+                mb: 4,
+                p: { xs: 2, sm: 2.5 },
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: "divider",
+                bgcolor: "background.paper",
+                position: "relative",
+                zIndex: 1,
+              }}
             >
-              <TextField
-                fullWidth
-                size="medium"
-                placeholder="Tìm kiếm bài viết..."
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon />
-                    </InputAdornment>
-                  ),
-                }}
+              {/* Search row */}
+              <Box
                 sx={{
-                  maxWidth: { sm: 400 },
-                  "& .MuiOutlinedInput-root": {
-                    "&:hover fieldset": {
-                      borderColor: "#ffb700",
-                    },
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                  mb: 2,
+                  bgcolor: "action.hover",
+                  borderRadius: 2,
+                  px: 2,
+                  py: 0.5,
+                  border: "1.5px solid transparent",
+                  transition: "border-color 0.2s, box-shadow 0.2s",
+                  "&:focus-within": {
+                    borderColor: "#f25c05",
+                    boxShadow: "0 0 0 3px rgba(242,92,5,0.1)",
+                    bgcolor: "background.paper",
                   },
                 }}
-              />
-
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Typography variant="body2" color="text.secondary">
-                  Lọc:
-                </Typography>
-                <Chip
-                  label="Tất cả"
-                  onClick={() => setSelectedCategory(null)}
-                  color={selectedCategory === null ? "warning" : "default"}
+              >
+                <SearchIcon sx={{ color: "text.disabled", flexShrink: 0 }} />
+                <Box
+                  component="input"
+                  placeholder="Tìm kiếm bài viết..."
+                  value={keyword}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    handleKeywordChange(e.target.value)
+                  }
                   sx={{
-                    bgcolor:
-                      selectedCategory === null ? "#f25c05" : "transparent",
-                    color: selectedCategory === null ? "#fff" : "#666",
+                    flex: 1,
+                    border: "none",
+                    outline: "none",
+                    bgcolor: "transparent",
+                    fontSize: "0.95rem",
+                    color: "text.primary",
+                    py: 1,
+                    "&::placeholder": { color: "text.disabled" },
                   }}
                 />
-                {categories.slice(0, 3).map((cat) => (
-                  <Chip
-                    key={cat.name}
-                    label={cat.name}
-                    onClick={() => setSelectedCategory(cat.name)}
-                    color={
-                      selectedCategory === cat.name ? "warning" : "default"
-                    }
+                {keyword && (
+                  <Box
+                    component="button"
+                    onClick={() => handleKeywordChange("")}
                     sx={{
-                      bgcolor:
-                        selectedCategory === cat.name
-                          ? "#f25c05"
-                          : "transparent",
-                      color: selectedCategory === cat.name ? "#fff" : "#666",
+                      border: "none",
+                      bgcolor: "transparent",
+                      cursor: "pointer",
+                      color: "text.disabled",
+                      display: "flex",
+                      alignItems: "center",
+                      p: 0.5,
+                      borderRadius: "50%",
+                      "&:hover": { bgcolor: "action.hover", color: "text.secondary" },
                     }}
-                  />
-                ))}
-              </Stack>
-            </Stack>
+                  >
+                    ✕
+                  </Box>
+                )}
+              </Box>
+
+              {/* Category filter row */}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.75,
+                  flexWrap: "wrap",
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  fontWeight={600}
+                  color="text.secondary"
+                  sx={{ mr: 0.5, flexShrink: 0 }}
+                >
+                  Danh mục:
+                </Typography>
+                {["Tất cả", ...NEWS_CATEGORIES].map((cat) => {
+                  const isActive =
+                    cat === "Tất cả" ? !selectedCategory : selectedCategory === cat;
+                  return (
+                    <Box
+                      key={cat}
+                      onClick={() =>
+                        handleCategorySelect(cat === "Tất cả" ? "" : cat)
+                      }
+                      sx={{
+                        px: 1.5,
+                        py: 0.4,
+                        borderRadius: 10,
+                        fontSize: "0.8rem",
+                        fontWeight: isActive ? 700 : 500,
+                        cursor: "pointer",
+                        border: "1.5px solid",
+                        borderColor: isActive ? "#f25c05" : "divider",
+                        bgcolor: isActive ? "#f25c05" : "background.paper",
+                        color: isActive ? "#fff" : "text.secondary",
+                        transition: "all 0.18s ease",
+                        userSelect: "none",
+                        "&:hover": {
+                          borderColor: "#f25c05",
+                          color: isActive ? "#fff" : "#f25c05",
+                          bgcolor: isActive ? "#e64a19" : "rgba(242,92,5,0.06)",
+                        },
+                      }}
+                    >
+                      {cat}
+                    </Box>
+                  );
+                })}
+              </Box>
+            </Paper>
           </motion.div>
 
           <Grid container spacing={4}>
             {/* Main Content */}
             <Grid size={{ xs: 12, md: 8 }}>
               {/* Featured Post */}
-              {!keyword && !selectedCategory && page === 1 && (
+              {featuredPost && (
                 <motion.div variants={itemVariants}>
                   <Paper
                     elevation={0}
@@ -272,16 +302,18 @@ export default function NewsListView() {
                           sx={{
                             position: "relative",
                             height: { xs: 200, md: "100%" },
+                            minHeight: { md: 260 },
                           }}
                         >
                           <Image
-                            src={featuredPost.image}
+                            src={featuredPost.thumbnail || PLACEHOLDER}
                             alt={featuredPost.title}
                             fill
+                            unoptimized
                             style={{ objectFit: "cover" }}
                           />
                           <Chip
-                            label="Nổi bật"
+                            label={featuredPost.pinned ? "Nổi bật" : "Tin tức"}
                             size="small"
                             sx={{
                               position: "absolute",
@@ -297,49 +329,22 @@ export default function NewsListView() {
                       </Grid>
                       <Grid size={{ xs: 12, md: 6 }}>
                         <Box sx={{ p: 3 }}>
-                          <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-                            <Chip
-                              label={featuredPost.category}
-                              size="small"
-                              sx={{ bgcolor: "#ffb700", color: "#000" }}
-                            />
-                          </Stack>
-
-                          <Typography
-                            variant="h5"
-                            fontWeight={700}
-                            sx={{ mb: 2 }}
-                          >
+                          <Chip
+                            label={featuredPost.category || "Tin tức"}
+                            size="small"
+                            sx={{ bgcolor: "#ffb700", color: "#000", mb: 2 }}
+                          />
+                          <Typography variant="h5" fontWeight={700} sx={{ mb: 2 }}>
                             {featuredPost.title}
                           </Typography>
-
                           <Typography
                             variant="body2"
                             color="text.secondary"
                             sx={{ mb: 2 }}
                           >
-                            {featuredPost.excerpt}
+                            {featuredPost.summary}
                           </Typography>
-
-                          <Stack
-                            direction="row"
-                            alignItems="center"
-                            spacing={2}
-                            sx={{ mb: 2 }}
-                          >
-                            <Stack
-                              direction="row"
-                              alignItems="center"
-                              spacing={1}
-                            >
-                              <Avatar
-                                src={featuredPost.authorAvatar}
-                                sx={{ width: 24, height: 24 }}
-                              />
-                              <Typography variant="caption">
-                                {featuredPost.author}
-                              </Typography>
-                            </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
                             <Stack
                               direction="row"
                               alignItems="center"
@@ -352,40 +357,22 @@ export default function NewsListView() {
                                 variant="caption"
                                 color="text.secondary"
                               >
-                                {featuredPost.date}
+                                {formatDate(featuredPost.createdAt)}
                               </Typography>
                             </Stack>
-                          </Stack>
-
-                          <Stack direction="row" spacing={2}>
                             <Stack
                               direction="row"
                               alignItems="center"
                               spacing={0.5}
                             >
                               <VisibilityIcon
-                                sx={{ fontSize: 16, color: "#999" }}
+                                sx={{ fontSize: 14, color: "#999" }}
                               />
                               <Typography
                                 variant="caption"
                                 color="text.secondary"
                               >
-                                {featuredPost.views}
-                              </Typography>
-                            </Stack>
-                            <Stack
-                              direction="row"
-                              alignItems="center"
-                              spacing={0.5}
-                            >
-                              <CommentIcon
-                                sx={{ fontSize: 16, color: "#999" }}
-                              />
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                              >
-                                {featuredPost.comments}
+                                {featuredPost.viewCount ?? 0}
                               </Typography>
                             </Stack>
                           </Stack>
@@ -416,7 +403,7 @@ export default function NewsListView() {
                         </Paper>
                       </Grid>
                     ))
-                  : filteredPosts.map((post, index) => (
+                  : gridPosts.map((post, index) => (
                       <Grid key={post.slug} size={{ xs: 12, sm: 6 }}>
                         <motion.div
                           variants={itemVariants}
@@ -432,9 +419,7 @@ export default function NewsListView() {
                               height: "100%",
                               transition: "all 0.3s ease",
                               "&:hover": {
-                                "& .post-image": {
-                                  transform: "scale(1.05)",
-                                },
+                                "& .post-image": { transform: "scale(1.05)" },
                               },
                             }}
                           >
@@ -448,9 +433,10 @@ export default function NewsListView() {
                               }}
                             >
                               <Image
-                                src={post.image}
+                                src={post.thumbnail || PLACEHOLDER}
                                 alt={post.title}
                                 fill
+                                unoptimized
                                 className="post-image"
                                 style={{
                                   objectFit: "cover",
@@ -500,7 +486,7 @@ export default function NewsListView() {
                                 overflow: "hidden",
                               }}
                             >
-                              {post.excerpt || post.description}
+                              {post.summary}
                             </Typography>
 
                             <Stack
@@ -521,26 +507,24 @@ export default function NewsListView() {
                                     variant="caption"
                                     color="text.secondary"
                                   >
-                                    {post.date || post.publishedAt}
+                                    {formatDate(post.createdAt)}
                                   </Typography>
                                 </Stack>
-                                {post.views && (
-                                  <Stack
-                                    direction="row"
-                                    alignItems="center"
-                                    spacing={0.5}
+                                <Stack
+                                  direction="row"
+                                  alignItems="center"
+                                  spacing={0.5}
+                                >
+                                  <VisibilityIcon
+                                    sx={{ fontSize: 14, color: "#999" }}
+                                  />
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
                                   >
-                                    <VisibilityIcon
-                                      sx={{ fontSize: 14, color: "#999" }}
-                                    />
-                                    <Typography
-                                      variant="caption"
-                                      color="text.secondary"
-                                    >
-                                      {post.views}
-                                    </Typography>
-                                  </Stack>
-                                )}
+                                    {post.viewCount ?? 0}
+                                  </Typography>
+                                </Stack>
                               </Stack>
 
                               <IconButton size="small" sx={{ color: "#999" }}>
@@ -554,7 +538,7 @@ export default function NewsListView() {
               </Grid>
 
               {/* Empty State */}
-              {!isLoading && filteredPosts.length === 0 && (
+              {!isLoading && gridPosts.length === 0 && !featuredPost && (
                 <Fade in>
                   <Box sx={{ textAlign: "center", py: 8 }}>
                     <Typography
@@ -611,16 +595,15 @@ export default function NewsListView() {
                     >
                       Danh mục
                     </Typography>
-                    <Stack spacing={1}>
-                      {categories.map((cat) => (
+                    <Stack spacing={0.5}>
+                      {NEWS_CATEGORIES.map((cat) => (
                         <ListItemButton
-                          key={cat.path}
-                          onClick={() => {
-                            setSelectedCategory(cat.name);
-                            router.push(cat.path);
-                          }}
+                          key={cat}
+                          selected={selectedCategory === cat}
+                          onClick={() => handleCategorySelect(cat)}
                           sx={{
                             borderRadius: 2,
+                            "&.Mui-selected": { bgcolor: "#fff8f0" },
                             "&:hover": {
                               bgcolor: "#fff8f0",
                               "& .arrow": {
@@ -631,14 +614,14 @@ export default function NewsListView() {
                           }}
                         >
                           <ListItemText
-                            primary={cat.name}
-                            primaryTypographyProps={{ fontWeight: 500 }}
+                            primary={cat}
+                            slotProps={{ primary: { fontWeight: 500 } }}
                           />
                           <ArrowForwardIcon
                             className="arrow"
                             sx={{
                               fontSize: 16,
-                              opacity: 0,
+                              opacity: selectedCategory === cat ? 1 : 0,
                               transition: "all 0.3s",
                               color: "#f25c05",
                             }}
@@ -663,115 +646,132 @@ export default function NewsListView() {
                       Bài viết mới nhất
                     </Typography>
                     <Stack spacing={2}>
-                      {(serverPosts.length ? serverPosts : seedPosts)
-                        .slice(0, 5)
-                        .map((item, idx) => (
-                          <motion.div
-                            key={item.slug}
-                            whileHover={{ x: 4 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <Box
-                              display="flex"
-                              gap={1.5}
-                              sx={{
-                                cursor: "pointer",
-                                p: 1,
-                                borderRadius: 2,
-                                "&:hover": {
-                                  bgcolor: "#fff8f0",
-                                },
-                              }}
-                              onClick={() => router.push(`/new/${item.slug}`)}
-                            >
-                              <Box
-                                sx={{
-                                  width: 70,
-                                  height: 70,
-                                  borderRadius: 2,
-                                  overflow: "hidden",
-                                  flexShrink: 0,
-                                }}
-                              >
-                                <Image
-                                  src={item.image}
-                                  alt={item.title}
-                                  width={70}
-                                  height={70}
-                                  style={{
-                                    objectFit: "cover",
-                                    width: "100%",
-                                    height: "100%",
-                                  }}
-                                />
-                              </Box>
-                              <Box>
-                                <Typography
-                                  variant="body2"
-                                  fontWeight={600}
-                                  sx={{
-                                    display: "-webkit-box",
-                                    WebkitLineClamp: 2,
-                                    WebkitBoxOrient: "vertical",
-                                    overflow: "hidden",
-                                    mb: 0.5,
-                                  }}
-                                >
-                                  {item.title}
-                                </Typography>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                >
-                                  {item.date || item.publishedAt}
-                                </Typography>
+                      {isLoading
+                        ? Array.from({ length: 4 }).map((_, i) => (
+                            <Box key={i} display="flex" gap={1.5}>
+                              <Skeleton
+                                variant="rounded"
+                                width={70}
+                                height={70}
+                                sx={{ flexShrink: 0 }}
+                              />
+                              <Box flex={1}>
+                                <Skeleton height={18} sx={{ mb: 0.5 }} />
+                                <Skeleton height={14} width="60%" />
                               </Box>
                             </Box>
-                          </motion.div>
-                        ))}
+                          ))
+                        : posts.slice(0, 5).map((item) => (
+                            <motion.div
+                              key={item.slug}
+                              whileHover={{ x: 4 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              <Box
+                                display="flex"
+                                gap={1.5}
+                                sx={{
+                                  cursor: "pointer",
+                                  p: 1,
+                                  borderRadius: 2,
+                                  "&:hover": { bgcolor: "#fff8f0" },
+                                }}
+                                onClick={() =>
+                                  router.push(`/new/${item.slug}`)
+                                }
+                              >
+                                <Box
+                                  sx={{
+                                    width: 70,
+                                    height: 70,
+                                    borderRadius: 2,
+                                    overflow: "hidden",
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  <Image
+                                    src={item.thumbnail || PLACEHOLDER}
+                                    alt={item.title}
+                                    width={70}
+                                    height={70}
+                                    unoptimized
+                                    style={{
+                                      objectFit: "cover",
+                                      width: "100%",
+                                      height: "100%",
+                                    }}
+                                  />
+                                </Box>
+                                <Box>
+                                  <Typography
+                                    variant="body2"
+                                    fontWeight={600}
+                                    sx={{
+                                      display: "-webkit-box",
+                                      WebkitLineClamp: 2,
+                                      WebkitBoxOrient: "vertical",
+                                      overflow: "hidden",
+                                      mb: 0.5,
+                                    }}
+                                  >
+                                    {item.title}
+                                  </Typography>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                  >
+                                    {formatDate(item.createdAt)}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </motion.div>
+                          ))}
                     </Stack>
                   </Paper>
                 </motion.div>
 
-                {/* Popular Tags */}
-                <motion.div variants={itemVariants}>
-                  <Paper
-                    elevation={0}
-                    sx={{ p: 3, borderRadius: 3, border: "1px solid #f0f0f0" }}
-                  >
-                    <Typography
-                      variant="h6"
-                      fontWeight={700}
-                      sx={{ mb: 2, color: "#f25c05" }}
+                {/* Popular Tags — chỉ hiện khi có tags từ API */}
+                {popularTags.length > 0 && (
+                  <motion.div variants={itemVariants}>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 3,
+                        borderRadius: 3,
+                        border: "1px solid #f0f0f0",
+                      }}
                     >
-                      Từ khóa phổ biến
-                    </Typography>
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      flexWrap="wrap"
-                      useFlexGap
-                      gap={1}
-                    >
-                      {popularTags.map((tag) => (
-                        <Chip
-                          key={tag}
-                          label={tag}
-                          size="small"
-                          onClick={() => setKeyword(tag)}
-                          sx={{
-                            bgcolor: "#f5f5f5",
-                            "&:hover": {
-                              bgcolor: "#ffb700",
-                              color: "#000",
-                            },
-                            cursor: "pointer",
-                          }}
-                        />
-                      ))}
-                    </Stack>
-                  </Paper>
-                </motion.div>
+                      <Typography
+                        variant="h6"
+                        fontWeight={700}
+                        sx={{ mb: 2, color: "#f25c05" }}
+                      >
+                        Từ khóa phổ biến
+                      </Typography>
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        flexWrap="wrap"
+                        useFlexGap
+                        gap={1}
+                      >
+                        {popularTags.map((tag) => (
+                          <Chip
+                            key={tag}
+                            label={tag}
+                            size="small"
+                            onClick={() => handleKeywordChange(tag)}
+                            sx={{
+                              bgcolor: "#f5f5f5",
+                              "&:hover": { bgcolor: "#ffb700", color: "#000" },
+                              cursor: "pointer",
+                            }}
+                          />
+                        ))}
+                      </Stack>
+                    </Paper>
+                  </motion.div>
+                )}
 
                 {/* Newsletter Signup */}
                 <motion.div variants={itemVariants}>
@@ -785,12 +785,7 @@ export default function NewsListView() {
                     }}
                   >
                     <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 2,
-                        mb: 2,
-                      }}
+                      sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}
                     >
                       <EmailIcon sx={{ fontSize: 32 }} />
                       <Typography variant="h6" fontWeight={700}>
@@ -824,9 +819,7 @@ export default function NewsListView() {
                           bgcolor: "#fff",
                           color: "#f25c05",
                           fontWeight: 600,
-                          "&:hover": {
-                            bgcolor: "#f5f5f5",
-                          },
+                          "&:hover": { bgcolor: "#f5f5f5" },
                         }}
                       >
                         Đăng ký
@@ -835,7 +828,7 @@ export default function NewsListView() {
                   </Paper>
                 </motion.div>
 
-                {/* Advertisement Banner */}
+                {/* Promotion Banner */}
                 <motion.div variants={itemVariants}>
                   <Paper
                     elevation={0}
@@ -854,7 +847,7 @@ export default function NewsListView() {
                       color="#f25c05"
                       gutterBottom
                     >
-                      🎉 Khuyến mãi đặc biệt
+                      Khuyến mãi đặc biệt
                     </Typography>
                     <Typography
                       variant="body2"
@@ -867,11 +860,7 @@ export default function NewsListView() {
                       variant="outlined"
                       size="small"
                       endIcon={<ArrowForwardIcon />}
-                      sx={{
-                        mt: 1,
-                        borderColor: "#ffb700",
-                        color: "#f25c05",
-                      }}
+                      sx={{ mt: 1, borderColor: "#ffb700", color: "#f25c05" }}
                     >
                       Xem ngay
                     </Button>

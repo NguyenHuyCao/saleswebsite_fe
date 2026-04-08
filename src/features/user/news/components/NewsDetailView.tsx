@@ -27,7 +27,6 @@ import HomeIcon from "@mui/icons-material/Home";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import CommentIcon from "@mui/icons-material/Comment";
 import ShareIcon from "@mui/icons-material/Share";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import TelegramIcon from "@mui/icons-material/Telegram";
@@ -38,8 +37,34 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 
 import { useNewsDetail, useRelatedNews, useNewsList } from "../queries";
-import { categories } from "../data";
 import { useState } from "react";
+
+const NEWS_CATEGORIES = [
+  { name: "Kiến thức kỹ thuật", path: "/new?category=Kiến thức kỹ thuật" },
+  { name: "Tin tức sản phẩm", path: "/new?category=Tin tức sản phẩm" },
+  { name: "Hướng dẫn sử dụng", path: "/new?category=Hướng dẫn sử dụng" },
+  { name: "Khuyến mãi & Ưu đãi", path: "/new?category=Khuyến mãi & Ưu đãi" },
+  { name: "Tin tức ngành", path: "/new?category=Tin tức ngành" },
+];
+
+const PLACEHOLDER = "https://placehold.co/600x400?text=No+Image";
+
+function parseTags(tags?: string | null): string[] {
+  if (!tags) return [];
+  return tags
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
+}
+
+function formatDate(dateStr?: string | null): string {
+  if (!dateStr) return "";
+  return new Date(dateStr).toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
 
 interface Props {
   slug: string;
@@ -166,19 +191,13 @@ export default function NewsDetailView({ slug }: Props) {
                   <Stack direction="row" alignItems="center" spacing={0.5}>
                     <CalendarTodayIcon sx={{ fontSize: 16, color: "#999" }} />
                     <Typography variant="caption" color="text.secondary">
-                      {post.date || post.publishedAt}
+                      {formatDate(post.createdAt)}
                     </Typography>
                   </Stack>
                   <Stack direction="row" alignItems="center" spacing={0.5}>
                     <VisibilityIcon sx={{ fontSize: 16, color: "#999" }} />
                     <Typography variant="caption" color="text.secondary">
-                      {post.views || 0} lượt xem
-                    </Typography>
-                  </Stack>
-                  <Stack direction="row" alignItems="center" spacing={0.5}>
-                    <CommentIcon sx={{ fontSize: 16, color: "#999" }} />
-                    <Typography variant="caption" color="text.secondary">
-                      {post.comments || 0} bình luận
+                      {post.viewCount ?? 0} lượt xem
                     </Typography>
                   </Stack>
                 </Stack>
@@ -204,12 +223,12 @@ export default function NewsDetailView({ slug }: Props) {
                 spacing={2}
                 sx={{ mb: 3 }}
               >
-                <Avatar src={post.authorAvatar} sx={{ width: 48, height: 48 }}>
-                  {post.author?.charAt(0)}
+                <Avatar sx={{ width: 48, height: 48, bgcolor: "#f25c05" }}>
+                  {(post.createdBy ?? "A").charAt(0).toUpperCase()}
                 </Avatar>
                 <Box>
                   <Typography fontWeight={600}>
-                    {post.author || "Admin"}
+                    {post.createdBy || "Admin"}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     Chuyên gia tư vấn
@@ -229,16 +248,17 @@ export default function NewsDetailView({ slug }: Props) {
                 }}
               >
                 <Image
-                  src={post.image}
+                  src={post.thumbnail || PLACEHOLDER}
                   alt={post.title}
                   fill
                   priority
+                  unoptimized
                   style={{ objectFit: "cover" }}
                 />
               </Box>
 
-              {/* Excerpt */}
-              {post.excerpt && (
+              {/* Summary */}
+              {post.summary && (
                 <Typography
                   variant="body1"
                   sx={{
@@ -251,7 +271,7 @@ export default function NewsDetailView({ slug }: Props) {
                     mb: 3,
                   }}
                 >
-                  {post.excerpt}
+                  {post.summary}
                 </Typography>
               )}
 
@@ -298,7 +318,7 @@ export default function NewsDetailView({ slug }: Props) {
               </Box>
 
               {/* Tags */}
-              {post.tags && post.tags.length > 0 && (
+              {parseTags(post.tags).length > 0 && (
                 <>
                   <Divider sx={{ my: 3 }} />
                   <Box>
@@ -310,7 +330,7 @@ export default function NewsDetailView({ slug }: Props) {
                       Chủ đề liên quan:
                     </Typography>
                     <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                      {post.tags.map((tag) => (
+                      {parseTags(post.tags).map((tag) => (
                         <Chip
                           key={tag}
                           label={tag}
@@ -416,7 +436,7 @@ export default function NewsDetailView({ slug }: Props) {
                   Danh mục
                 </Typography>
                 <Stack spacing={1}>
-                  {categories.map((cat) => (
+                  {NEWS_CATEGORIES.map((cat) => (
                     <Box
                       key={cat.name}
                       onClick={() => router.push(cat.path)}
@@ -488,10 +508,11 @@ export default function NewsDetailView({ slug }: Props) {
                           }}
                         >
                           <Image
-                            src={item.image}
+                            src={item.thumbnail || PLACEHOLDER}
                             alt={item.title}
                             width={70}
                             height={70}
+                            unoptimized
                             style={{
                               objectFit: "cover",
                               width: "100%",
@@ -524,7 +545,7 @@ export default function NewsDetailView({ slug }: Props) {
                               variant="caption"
                               color="text.secondary"
                             >
-                              {item.date || item.publishedAt}
+                              {formatDate(item.createdAt)}
                             </Typography>
                           </Stack>
                         </Box>
@@ -577,7 +598,7 @@ export default function NewsDetailView({ slug }: Props) {
                             }}
                           />
                           <Typography variant="caption" color="text.secondary">
-                            {item.date}
+                            {formatDate(item.createdAt)}
                           </Typography>
                         </Stack>
                       </Box>

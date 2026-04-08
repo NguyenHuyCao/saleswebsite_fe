@@ -107,7 +107,7 @@ const TopBar = () => {
   };
 
   return (
-    <Container sx={{ position: "relative", zIndex: 1201 }}>
+    <Container sx={{ position: "relative" }}>
       <Box
         sx={{
           display: "flex",
