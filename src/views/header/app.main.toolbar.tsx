@@ -195,7 +195,7 @@ const MainToolbar = () => {
 
   const handleProductClick = (slug: string) => {
     setShowDropdown(false);
-    router.push(`/product/detail?slug=${slug}`);
+    router.push(`/product/detail?name=${slug}`);
   };
 
   const handleFaqClick = (question: string) => {

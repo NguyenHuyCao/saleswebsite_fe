@@ -5,9 +5,8 @@ import ScrollPositionManager from "@/components/common/ScrollResetOnLoad";
 import ProductDetailPage from "./components/ProductDetailPage";
 import { getProductDetailBySlug } from "./api";
 
-export default async function ProductDetailView({ searchParams }: any) {
-  const slug = searchParams?.name;
-  if (!slug) return notFound();
+export default async function ProductDetailView({ slug }: { slug?: string }) {
+  if (!slug || slug === "null" || slug === "undefined") return notFound();
 
   const { product, category } = await getProductDetailBySlug(slug);
   if (!product) return notFound();
