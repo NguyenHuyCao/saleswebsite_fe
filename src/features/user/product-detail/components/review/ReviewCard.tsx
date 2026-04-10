@@ -6,7 +6,6 @@ import {
   Avatar,
   Stack,
   Rating,
-  Divider,
   Button,
   Tooltip,
   Dialog,
@@ -16,7 +15,6 @@ import {
   Chip,
   IconButton,
   Zoom,
-  Paper,
 } from "@mui/material";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -25,34 +23,62 @@ import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import VerifiedIcon from "@mui/icons-material/Verified";
+import ThumbUpAltOutlinedIcon from "@mui/icons-material/ThumbUpAltOutlined";
+import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
+import { http } from "@/lib/api/http";
 
-interface Review {
+export interface Review {
   id: number;
   rating: number;
   comment: string;
   createdAt: string;
   createdBy: string;
+  authorName?: string;
+  authorAvatar?: string | null;
+  userId?: number;
   image1?: string | null;
   image2?: string | null;
   image3?: string | null;
   approved: boolean;
+  verifiedPurchase?: boolean;
+  helpfulCount?: number;
 }
 
 interface Props {
   review: Review;
-  userEmail: string | null;
+  isAdmin: boolean;
+  currentUserId?: number | null;
   onToggleApproval: (id: number) => void;
+  onHelpfulToggled?: (updated: Review) => void;
 }
 
-const ReviewCard = ({ review, userEmail, onToggleApproval }: Props) => {
+const ReviewCard = ({
+  review,
+  isAdmin,
+  currentUserId,
+  onToggleApproval,
+  onHelpfulToggled,
+}: Props) => {
   const [openImage, setOpenImage] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageIndex, setImageIndex] = useState(0);
   const [confirmDialog, setConfirmDialog] = useState(false);
+  const [helpfulLoading, setHelpfulLoading] = useState(false);
 
   const images = [review.image1, review.image2, review.image3].filter(
     Boolean,
   ) as string[];
+
+  // Tên hiển thị: ưu tiên authorName, fallback ẩn email (chỉ dùng phần trước @)
+  const displayName =
+    review.authorName ||
+    (review.createdBy?.includes("@")
+      ? review.createdBy.split("@")[0]
+      : review.createdBy) ||
+    "Khách hàng";
+
+  const avatarLetter = displayName.charAt(0).toUpperCase();
 
   const handleImageClick = (img: string, index: number) => {
     setSelectedImage(img);
@@ -72,83 +98,106 @@ const ReviewCard = ({ review, userEmail, onToggleApproval }: Props) => {
     setSelectedImage(images[newIndex]);
   };
 
-  const handleToggleConfirm = () => {
-    if (userEmail === "admin@gmail.com") {
-      setConfirmDialog(true);
-    } else {
-      onToggleApproval(review.id);
+  const handleHelpful = async () => {
+    if (!currentUserId || helpfulLoading) return;
+    setHelpfulLoading(true);
+    try {
+      const res = await http.post<{ data: Review }>(
+        `/api/v1/reviews/${review.id}/helpful`,
+      );
+      if (onHelpfulToggled && res?.data) {
+        onHelpfulToggled(res.data);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setHelpfulLoading(false);
     }
   };
 
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+
   return (
     <>
-      <Paper
-        elevation={0}
+      <Box
         sx={{
           p: 3,
           borderRadius: 3,
-          bgcolor: "#fff",
-          border: "1px solid #f0f0f0",
-          transition: "all 0.3s",
+          bgcolor: "background.paper",
+          border: "1px solid",
+          borderColor: "divider",
+          transition: "all 0.25s",
           "&:hover": {
             borderColor: "#ffb700",
-            boxShadow: "0 4px 12px rgba(242,92,5,0.1)",
+            boxShadow: "0 4px 16px rgba(242,92,5,0.08)",
           },
         }}
       >
         <Stack spacing={2}>
-          {/* Header - User Info */}
-          <Stack direction="row" spacing={2} alignItems="center">
+          {/* Header */}
+          <Stack direction="row" spacing={2} alignItems="flex-start">
             <Avatar
-              sx={{
-                bgcolor: "#f25c05",
-                width: 48,
-                height: 48,
-                fontSize: "1.2rem",
-              }}
+              src={review.authorAvatar || undefined}
+              sx={{ bgcolor: "#f25c05", width: 44, height: 44, fontSize: "1rem", flexShrink: 0 }}
             >
-              {review.createdBy.charAt(0).toUpperCase()}
+              {avatarLetter}
             </Avatar>
 
-            <Box sx={{ flex: 1 }}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
               <Stack
                 direction="row"
                 justifyContent="space-between"
-                alignItems="center"
+                alignItems="flex-start"
                 flexWrap="wrap"
-                gap={1}
+                gap={0.5}
               >
-                <Typography fontWeight={600} fontSize="1rem">
-                  {review.createdBy}
-                </Typography>
+                <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
+                  <Typography fontWeight={600} fontSize="0.95rem" noWrap>
+                    {displayName}
+                  </Typography>
+                  {review.verifiedPurchase && (
+                    <Chip
+                      icon={<VerifiedIcon sx={{ fontSize: "0.75rem !important" }} />}
+                      label="Đã mua hàng"
+                      size="small"
+                      sx={{
+                        height: 20,
+                        fontSize: "0.65rem",
+                        bgcolor: "#e8f5e9",
+                        color: "#2e7d32",
+                        border: "1px solid #a5d6a7",
+                        "& .MuiChip-icon": { color: "#2e7d32" },
+                      }}
+                    />
+                  )}
+                  {!review.approved && isAdmin && (
+                    <Chip
+                      label="Chờ duyệt"
+                      size="small"
+                      color="warning"
+                      sx={{ height: 20, fontSize: "0.65rem" }}
+                    />
+                  )}
+                </Stack>
 
-                <Typography fontSize="0.8rem" color="text.secondary">
-                  {new Date(review.createdAt).toLocaleDateString("vi-VN")}
+                <Typography fontSize="0.78rem" color="text.secondary" flexShrink={0}>
+                  {formatDate(review.createdAt)}
                 </Typography>
               </Stack>
 
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Rating value={review.rating} readOnly size="small" />
-                {!review.approved && userEmail === "admin@gmail.com" && (
-                  <Chip
-                    label="Chờ duyệt"
-                    size="small"
-                    color="warning"
-                    sx={{ height: 20, fontSize: "0.6rem" }}
-                  />
-                )}
-              </Stack>
+              <Rating value={review.rating} readOnly size="small" sx={{ mt: 0.5 }} />
             </Box>
           </Stack>
 
           {/* Comment */}
           <Typography
             variant="body2"
-            sx={{
-              whiteSpace: "pre-line",
-              color: "#333",
-              lineHeight: 1.6,
-            }}
+            sx={{ whiteSpace: "pre-line", color: "text.primary", lineHeight: 1.7 }}
           >
             {review.comment}
           </Typography>
@@ -168,16 +217,15 @@ const ReviewCard = ({ review, userEmail, onToggleApproval }: Props) => {
                       src={img}
                       onClick={() => handleImageClick(img, idx)}
                       sx={{
-                        width: 70,
-                        height: 70,
+                        width: 72,
+                        height: 72,
                         borderRadius: 2,
-                        border: "1px solid #e0e0e0",
+                        border: "1px solid",
+                        borderColor: "divider",
                         objectFit: "cover",
                         cursor: "pointer",
-                        transition: "all 0.2s",
-                        "&:hover": {
-                          borderColor: "#f25c05",
-                        },
+                        transition: "border-color 0.2s",
+                        "&:hover": { borderColor: "#f25c05" },
                       }}
                     />
                   </Tooltip>
@@ -186,36 +234,69 @@ const ReviewCard = ({ review, userEmail, onToggleApproval }: Props) => {
             </Stack>
           )}
 
-          {/* Admin Actions */}
-          {userEmail === "admin@gmail.com" && (
-            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+          {/* Footer: Helpful + Admin */}
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            flexWrap="wrap"
+            gap={1}
+          >
+            {/* Nút hữu ích */}
+            <Tooltip
+              title={!currentUserId ? "Đăng nhập để đánh dấu hữu ích" : ""}
+            >
+              <span>
+                <Button
+                  size="small"
+                  variant="text"
+                  disabled={!currentUserId || helpfulLoading}
+                  onClick={handleHelpful}
+                  startIcon={
+                    (review.helpfulCount ?? 0) > 0 ? (
+                      <ThumbUpAltIcon sx={{ fontSize: "1rem" }} />
+                    ) : (
+                      <ThumbUpAltOutlinedIcon sx={{ fontSize: "1rem" }} />
+                    )
+                  }
+                  sx={{
+                    color: "text.secondary",
+                    fontSize: "0.78rem",
+                    textTransform: "none",
+                    px: 1,
+                    "&:hover": { color: "#f25c05", bgcolor: "transparent" },
+                  }}
+                >
+                  Hữu ích{" "}
+                  {(review.helpfulCount ?? 0) > 0 && `(${review.helpfulCount})`}
+                </Button>
+              </span>
+            </Tooltip>
+
+            {/* Admin Actions */}
+            {isAdmin && (
               <Button
                 size="small"
                 variant="outlined"
                 color={review.approved ? "error" : "success"}
-                onClick={handleToggleConfirm}
+                onClick={() => setConfirmDialog(true)}
                 startIcon={
                   review.approved ? <VisibilityOffIcon /> : <CheckCircleIcon />
                 }
                 sx={{
                   textTransform: "none",
                   borderRadius: 2,
-                  borderColor: review.approved ? "#f44336" : "#4caf50",
-                  color: review.approved ? "#f44336" : "#4caf50",
-                  "&:hover": {
-                    borderColor: review.approved ? "#d32f2f" : "#388e3c",
-                    bgcolor: review.approved ? "#ffebee" : "#e8f5e9",
-                  },
+                  fontSize: "0.78rem",
                 }}
               >
                 {review.approved ? "Ẩn đánh giá" : "Duyệt đánh giá"}
               </Button>
-            </Box>
-          )}
+            )}
+          </Stack>
         </Stack>
-      </Paper>
+      </Box>
 
-      {/* Confirm Dialog for Admin */}
+      {/* Confirm Dialog */}
       <Dialog
         open={confirmDialog}
         onClose={() => setConfirmDialog(false)}
@@ -254,27 +335,15 @@ const ReviewCard = ({ review, userEmail, onToggleApproval }: Props) => {
         onClose={() => setOpenImage(false)}
         maxWidth="lg"
         fullWidth
-        PaperProps={{
-          sx: {
-            bgcolor: "rgba(0,0,0,0.95)",
-            color: "#fff",
-          },
-        }}
+        PaperProps={{ sx: { bgcolor: "rgba(0,0,0,0.95)", color: "#fff" } }}
       >
         <DialogTitle sx={{ display: "flex", justifyContent: "flex-end", p: 1 }}>
-          <IconButton
-            onClick={() => setOpenImage(false)}
-            sx={{ color: "#fff" }}
-          >
+          <IconButton onClick={() => setOpenImage(false)} sx={{ color: "#fff" }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
         <DialogContent
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
+          sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
         >
           {images.length > 1 && (
             <>
@@ -308,11 +377,7 @@ const ReviewCard = ({ review, userEmail, onToggleApproval }: Props) => {
             <Box
               component="img"
               src={selectedImage || ""}
-              sx={{
-                maxWidth: "100%",
-                maxHeight: "70vh",
-                objectFit: "contain",
-              }}
+              sx={{ maxWidth: "100%", maxHeight: "70vh", objectFit: "contain" }}
             />
           </Zoom>
         </DialogContent>

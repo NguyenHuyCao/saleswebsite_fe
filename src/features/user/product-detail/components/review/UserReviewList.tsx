@@ -1,244 +1,365 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import {
   Box,
   Button,
   Typography,
   Avatar,
   Rating,
-  Divider,
   Stack,
+  Chip,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextField,
   Alert,
+  IconButton,
+  Divider,
 } from "@mui/material";
-import { http, toApiError, type ApiEnvelope } from "@/lib/api/http";
-import { getAccessToken } from "@/lib/api/token";
-
-interface Review {
-  id: number;
-  rating: number;
-  comment: string;
-  createdAt: string;
-  image1?: string | null;
-  image2?: string | null;
-  image3?: string | null;
-}
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import CloseIcon from "@mui/icons-material/Close";
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import { http, toApiError } from "@/lib/api/http";
+import { useToast } from "@/lib/toast/ToastContext";
+import type { Review } from "./ReviewCard";
 
 interface Props {
-  productId: number;
+  reviews: Review[];
+  onUpdated: (updated: Review) => void;
+  onDeleted: (deletedId: number) => void;
 }
 
-const UserReviewList = ({ productId }: Props) => {
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [openEdit, setOpenEdit] = useState(false);
-  const [selectedReview, setSelectedReview] = useState<Review | null>(null);
-  const [updatedRating, setUpdatedRating] = useState<number>(0);
-  const [updatedComment, setUpdatedComment] = useState("");
-  const [updatedImages, setUpdatedImages] = useState<File[]>([]);
-  const [error, setError] = useState<string | null>(null);
+/**
+ * Danh sách đánh giá của chính người dùng (tối đa 3).
+ * Mỗi review có badge trạng thái duyệt + nút Sửa / Xóa.
+ */
+const UserReviewSection = ({ reviews, onUpdated, onDeleted }: Props) => {
+  const { showToast } = useToast();
+
+  // Edit state
+  const [editingReview, setEditingReview] = useState<Review | null>(null);
+  const [editRating, setEditRating] = useState(0);
+  const [editComment, setEditComment] = useState("");
+  const [editImages, setEditImages] = useState<File[]>([]);
+  const [editError, setEditError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const fetchUserReviews = async () => {
-    // Không dùng cookie; nếu chưa đăng nhập thì thôi
-    if (!getAccessToken()) return;
-    try {
-      const res = await http.get<ApiEnvelope<Review[]>>(
-        `/api/v1/me/products/${productId}/reviews`,
-      );
-      setReviews(res.data?.data ?? []);
-    } catch (err) {
-      console.error("Lỗi khi lấy đánh giá người dùng:", err);
-    }
-  };
+  // Delete state
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    fetchUserReviews();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productId]);
-
-  const handleEditClick = (review: Review) => {
-    setSelectedReview(review);
-    setUpdatedRating(review.rating);
-    setUpdatedComment(review.comment);
-    setUpdatedImages([]);
-    setError(null);
-    setOpenEdit(true);
+  const openEdit = (r: Review) => {
+    setEditingReview(r);
+    setEditRating(r.rating);
+    setEditComment(r.comment);
+    setEditImages([]);
+    setEditError(null);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files ? Array.from(e.target.files) : [];
     if (files.length > 3) {
-      setError("Chỉ được tải lên tối đa 3 ảnh");
+      setEditError("Tối đa 3 ảnh");
     } else {
-      setUpdatedImages(files);
-      setError(null);
+      setEditImages(files);
+      setEditError(null);
     }
   };
 
   const handleUpdate = async () => {
-    if (!getAccessToken() || !selectedReview) return;
-
-    if (!updatedComment.trim() || !updatedRating) {
-      setError("Vui lòng nhập đủ thông tin");
+    if (!editingReview) return;
+    if (!editComment.trim() || !editRating) {
+      setEditError("Vui lòng nhập đủ thông tin");
       return;
     }
-
     setSaving(true);
     try {
       const formData = new FormData();
-      formData.append("comment", updatedComment.trim());
-      formData.append("rating", String(updatedRating));
-      updatedImages.forEach((img) => formData.append("imageReviews", img));
+      formData.append("rating", String(editRating));
+      formData.append("comment", editComment.trim());
+      editImages.forEach((img) => formData.append("imageReviews", img));
 
-      // Dùng http.put; interceptor tự gắn Bearer từ localStorage
-      await http.put(`/api/v1/reviews/${selectedReview.id}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      setOpenEdit(false);
-      await fetchUserReviews();
+      const res = await http.put<{ data: Review }>(
+        `/api/v1/reviews/${editingReview.id}`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } },
+      );
+      setEditingReview(null);
+      showToast("Đánh giá đã được cập nhật", "success");
+      if (res?.data) onUpdated(res.data);
     } catch (err) {
-      setError(toApiError(err).message || "Không thể cập nhật đánh giá.");
-      console.error(err);
+      setEditError(toApiError(err).message || "Không thể cập nhật đánh giá.");
     } finally {
       setSaving(false);
     }
   };
 
+  const handleDelete = async () => {
+    if (deletingId === null) return;
+    setDeleting(true);
+    try {
+      await http.delete(`/api/v1/reviews/${deletingId}`);
+      setDeletingId(null);
+      showToast("Đã xoá đánh giá", "success");
+      onDeleted(deletingId);
+    } catch (err) {
+      showToast(toApiError(err).message || "Không thể xoá đánh giá.", "error");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  if (reviews.length === 0) return null;
+
   return (
-    <Box mt={6}>
-      <Typography variant="h6" fontWeight={700} mb={2}>
-        Đánh giá của bạn
-      </Typography>
+    <>
+      <Stack spacing={2}>
+        <AnimatePresence>
+          {reviews.map((review, idx) => {
+            const images = [review.image1, review.image2, review.image3].filter(Boolean) as string[];
+            const displayName = review.authorName || review.createdBy?.split("@")[0] || "Bạn";
 
-      {reviews.length === 0 ? (
-        <Typography color="text.secondary">
-          Bạn chưa có đánh giá nào cho sản phẩm này.
-        </Typography>
-      ) : (
-        <Stack spacing={3}>
-          {reviews.map((review) => (
-            <Box key={review.id}>
-              <Stack direction="row" spacing={2} alignItems="center">
-                <Avatar>
-                  {review?.createdAt?.charAt(0).toUpperCase() || "A"}
-                </Avatar>
-                <Box>
-                  <Rating value={review.rating} readOnly size="small" />
-                  <Typography variant="body2" color="text.secondary">
-                    {new Date(review.createdAt).toLocaleDateString("vi-VN")}
-                  </Typography>
-                </Box>
-              </Stack>
-
-              <Typography mt={1.5}>{review.comment}</Typography>
-
-              <Stack direction="row" spacing={2} mt={1}>
-                {[review.image1, review.image2, review.image3]
-                  .filter(Boolean)
-                  .map((img, idx) => (
-                    <Box
-                      key={idx}
-                      component="img"
-                      src={img || undefined}
-                      alt={`Hình ảnh ${idx + 1}`}
-                      sx={{
-                        width: 80,
-                        height: 80,
-                        borderRadius: 1,
-                        objectFit: "cover",
-                        border: "1px solid #ccc",
-                      }}
-                    />
-                  ))}
-              </Stack>
-
-              <Box mt={1}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => handleEditClick(review)}
+            return (
+              <motion.div
+                key={review.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.25, delay: idx * 0.05 }}
+              >
+                <Box
+                  sx={{
+                    p: 2.5,
+                    borderRadius: 2.5,
+                    border: "1.5px solid",
+                    borderColor: review.approved ? "#a5d6a7" : "#ffe082",
+                    bgcolor: review.approved ? "#f9fbe7" : "#fffde7",
+                    position: "relative",
+                  }}
                 >
-                  Sửa
-                </Button>
-              </Box>
+                  {/* Status badge */}
+                  <Chip
+                    icon={
+                      review.approved
+                        ? <CheckCircleOutlineIcon sx={{ fontSize: "0.75rem !important" }} />
+                        : <HourglassEmptyIcon sx={{ fontSize: "0.75rem !important" }} />
+                    }
+                    label={review.approved ? "Đã duyệt" : "Chờ duyệt"}
+                    size="small"
+                    sx={{
+                      position: "absolute",
+                      top: 10,
+                      right: 10,
+                      height: 22,
+                      fontSize: "0.65rem",
+                      bgcolor: review.approved ? "#c8e6c9" : "#fff9c4",
+                      color: review.approved ? "#1b5e20" : "#f57f17",
+                      border: "1px solid",
+                      borderColor: review.approved ? "#a5d6a7" : "#ffcc02",
+                      "& .MuiChip-icon": { color: review.approved ? "#2e7d32" : "#f57f17" },
+                    }}
+                  />
 
-              <Divider sx={{ mt: 2 }} />
-            </Box>
-          ))}
-        </Stack>
-      )}
+                  <Stack spacing={1.5}>
+                    {/* Header */}
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <Avatar
+                        src={review.authorAvatar || undefined}
+                        sx={{ bgcolor: "#f25c05", width: 38, height: 38, fontSize: "0.85rem" }}
+                      >
+                        {displayName.charAt(0).toUpperCase()}
+                      </Avatar>
+                      <Box>
+                        <Stack direction="row" alignItems="center" spacing={0.75}>
+                          <Typography fontWeight={600} fontSize="0.88rem">
+                            {displayName}
+                          </Typography>
+                          <Typography fontSize="0.75rem" color="text.secondary">
+                            · Lần {idx + 1}
+                          </Typography>
+                        </Stack>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Rating value={review.rating} readOnly size="small" />
+                          <Typography fontSize="0.72rem" color="text.secondary">
+                            {new Date(review.createdAt).toLocaleDateString("vi-VN")}
+                          </Typography>
+                        </Stack>
+                      </Box>
+                    </Stack>
 
+                    {/* Comment */}
+                    <Typography
+                      variant="body2"
+                      sx={{ whiteSpace: "pre-line", lineHeight: 1.65, pr: 6 }}
+                    >
+                      {review.comment}
+                    </Typography>
+
+                    {/* Images */}
+                    {images.length > 0 && (
+                      <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
+                        {images.map((img, i) => (
+                          <Box
+                            key={i}
+                            component="img"
+                            src={img}
+                            sx={{
+                              width: 64,
+                              height: 64,
+                              borderRadius: 1.5,
+                              objectFit: "cover",
+                              border: "1px solid #ddd",
+                            }}
+                          />
+                        ))}
+                      </Stack>
+                    )}
+
+                    {/* Actions */}
+                    <Stack direction="row" spacing={1} pt={0.25}>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<EditOutlinedIcon sx={{ fontSize: "0.9rem" }} />}
+                        onClick={() => openEdit(review)}
+                        sx={{
+                          textTransform: "none",
+                          borderRadius: 1.5,
+                          fontSize: "0.75rem",
+                          py: 0.4,
+                          borderColor: "#1976d2",
+                          color: "#1976d2",
+                          "&:hover": { bgcolor: "#e3f2fd" },
+                        }}
+                      >
+                        Sửa
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<DeleteOutlineIcon sx={{ fontSize: "0.9rem" }} />}
+                        onClick={() => setDeletingId(review.id)}
+                        sx={{
+                          textTransform: "none",
+                          borderRadius: 1.5,
+                          fontSize: "0.75rem",
+                          py: 0.4,
+                          borderColor: "#e53935",
+                          color: "#e53935",
+                          "&:hover": { bgcolor: "#ffebee" },
+                        }}
+                      >
+                        Xóa
+                      </Button>
+                    </Stack>
+                  </Stack>
+                </Box>
+
+                {idx < reviews.length - 1 && <Divider sx={{ mt: 1 }} />}
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </Stack>
+
+      {/* Edit Dialog */}
       <Dialog
-        open={openEdit}
-        onClose={() => setOpenEdit(false)}
+        open={!!editingReview}
+        onClose={() => setEditingReview(null)}
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Cập nhật đánh giá</DialogTitle>
+        <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Typography fontWeight={700}>Sửa đánh giá</Typography>
+          <IconButton onClick={() => setEditingReview(null)} size="small">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
         <DialogContent>
-          <Stack spacing={2} mt={1}>
-            {error && <Alert severity="error">{error}</Alert>}
-            <Rating
-              value={updatedRating}
-              onChange={(_, v) => setUpdatedRating(v || 0)}
-            />
+          <Stack spacing={2.5} mt={1}>
+            {editError && (
+              <Alert severity="error" onClose={() => setEditError(null)}>
+                {editError}
+              </Alert>
+            )}
+            <Box>
+              <Typography variant="body2" fontWeight={500} gutterBottom>
+                Đánh giá sao
+              </Typography>
+              <Rating value={editRating} onChange={(_, v) => setEditRating(v || 0)} size="large" />
+            </Box>
             <TextField
-              value={updatedComment}
+              label="Nhận xét"
+              value={editComment}
+              onChange={(e) => setEditComment(e.target.value)}
               multiline
-              rows={3}
-              onChange={(e) => setUpdatedComment(e.target.value)}
-              placeholder="Cập nhật nhận xét"
+              rows={4}
               fullWidth
             />
-            <Button variant="outlined" component="label">
-              Tải lại ảnh (tối đa 3)
-              <input
-                hidden
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleImageChange}
-              />
-            </Button>
-            <Typography variant="body2" color="text.secondary">
-              {updatedImages.length} ảnh được chọn
-            </Typography>
-            <Box display="flex" gap={1}>
-              {updatedImages.map((file, idx) => (
-                <Box
-                  key={idx}
-                  component="img"
-                  src={URL.createObjectURL(file)}
-                  alt={`Ảnh cập nhật ${idx + 1}`}
-                  sx={{
-                    width: 60,
-                    height: 60,
-                    objectFit: "cover",
-                    borderRadius: 1,
-                    border: "1px solid #ccc",
-                  }}
-                />
-              ))}
+            <Box>
+              <Typography variant="body2" fontWeight={500} gutterBottom>
+                Thay ảnh mới (để trống = giữ ảnh cũ, tối đa 3)
+              </Typography>
+              <Button variant="outlined" component="label" size="small">
+                Chọn ảnh
+                <input hidden type="file" accept="image/*" multiple onChange={handleImageChange} />
+              </Button>
+              {editImages.length > 0 && (
+                <Stack direction="row" spacing={1} mt={1} flexWrap="wrap" gap={1}>
+                  {editImages.map((f, i) => (
+                    <Box
+                      key={i}
+                      component="img"
+                      src={URL.createObjectURL(f)}
+                      sx={{ width: 60, height: 60, objectFit: "cover", borderRadius: 1.5, border: "1px solid #ccc" }}
+                    />
+                  ))}
+                </Stack>
+              )}
             </Box>
           </Stack>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenEdit(false)} disabled={saving}>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button onClick={() => setEditingReview(null)} disabled={saving}>
             Huỷ
           </Button>
-          <Button variant="contained" onClick={handleUpdate} disabled={saving}>
-            {saving ? "Đang lưu..." : "Lưu"}
+          <Button
+            variant="contained"
+            onClick={handleUpdate}
+            disabled={saving}
+            sx={{ bgcolor: "#f25c05", "&:hover": { bgcolor: "#e64a19" } }}
+          >
+            {saving ? "Đang lưu..." : "Lưu thay đổi"}
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+
+      {/* Delete Confirm */}
+      <Dialog open={deletingId !== null} onClose={() => setDeletingId(null)} maxWidth="xs">
+        <DialogTitle>
+          <Typography fontWeight={700}>Xoá đánh giá?</Typography>
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            Đánh giá này sẽ bị xoá vĩnh viễn và không thể khôi phục.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button onClick={() => setDeletingId(null)} disabled={deleting}>
+            Huỷ
+          </Button>
+          <Button variant="contained" color="error" onClick={handleDelete} disabled={deleting}>
+            {deleting ? "Đang xoá..." : "Xoá"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 
-export default UserReviewList;
+export default UserReviewSection;
