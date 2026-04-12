@@ -71,6 +71,16 @@ declare global {
     category: Category[];
   };
 
+  export type ProductVariant = {
+    id: number;
+    size: string | null;
+    color: string | null;
+    sku: string | null;
+    stockQuantity: number;
+    priceOverride: number | null;
+    active: boolean;
+  };
+
   export type Product = {
     id: number;
     name: string;
@@ -85,6 +95,7 @@ declare global {
     pricePerUnit: number;
     originalPrice: number;
     sale: boolean;
+    discountPercent?: number;
 
     inStock: boolean;
     label: string;
@@ -107,6 +118,10 @@ declare global {
     rating?: number;
     status: string[];
     favorite?: boolean;
+
+    productType?: 'MACHINE' | 'CLOTHING' | 'ACCESSORY' | 'OTHER';
+    material?: string;
+    variants?: ProductVariant[];
   };
 
   interface IBackendRes<T> {

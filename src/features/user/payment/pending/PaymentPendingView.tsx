@@ -20,9 +20,14 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { useQueryClient } from "@tanstack/react-query";
+import { mutate as swrMutate } from "swr";
 import { useMomoConfigQuery } from "../momo/queries";
 import { DEFAULT_MOMO_INFO } from "../momo/constants";
 import { api } from "@/lib/api/http";
+import { useToast } from "@/lib/toast/ToastContext";
+import { useSocket } from "@/lib/socket/SocketContext";
+import { CART_COUNT_KEY, ORDERS_COUNT_KEY } from "@/constants/apiKeys";
 
 type PaymentStatus = "pending" | "confirmed" | "failed";
 
@@ -48,6 +53,10 @@ function PendingContent() {
 
   const { data, isLoading } = useMomoConfigQuery();
   const cfg = useMemo(() => data ?? DEFAULT_MOMO_INFO, [data]);
+
+  const qc = useQueryClient();
+  const { showToast } = useToast();
+  const { refresh: refreshNotifications } = useSocket();
 
   const [copied, setCopied] = useState<"phone" | "note" | null>(null);
   const [payStatus, setPayStatus] = useState<PaymentStatus>("pending");
@@ -85,15 +94,22 @@ function PendingContent() {
     };
   }, [orderId]);
 
-  // Khi xác nhận thanh toán → chuyển trang kết quả
+  // Khi xác nhận thanh toán → làm mới dữ liệu và về trang chủ
   useEffect(() => {
     if (payStatus === "confirmed") {
-      const provider = method === "VNPAY" ? "vnpay" : "momo";
-      setTimeout(() => {
-        router.push(`/payment/return/${provider}?resultCode=0&orderId=${orderId}&amount=${amount}`);
-      }, 1500);
+      qc.invalidateQueries({ queryKey: ["cart"] });
+      qc.invalidateQueries({ queryKey: ["orders", "me"] });
+      swrMutate(CART_COUNT_KEY);
+      swrMutate(ORDERS_COUNT_KEY);
+      refreshNotifications();
+      showToast(
+        `Thanh toán thành công! Đơn hàng #${orderId} đang được xử lý.`,
+        "success",
+        "Thanh toán thành công"
+      );
+      setTimeout(() => router.push("/"), 1500);
     }
-  }, [payStatus, method, orderId, amount, router]);
+  }, [payStatus, orderId, router, qc, refreshNotifications, showToast]);
 
   const noteContent = cfg.noteFormat.replace("[Họ tên]", "").replace("[Tên sản phẩm]", "Đơn #" + orderId).trim();
 

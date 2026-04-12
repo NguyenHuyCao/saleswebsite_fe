@@ -3,7 +3,6 @@
 
 import { cookies } from "next/headers";
 import { http, type ApiEnvelope } from "@/lib/api/http";
-// import type { Product, Category } from "@/product/types";
 
 /** Lấy accessToken tạm trên SERVER bằng refresh-cookie (httpOnly). */
 async function getAccessTokenFromRefresh(): Promise<string | null> {
@@ -93,6 +92,17 @@ const mapProduct = (p: any): Product => {
     rating: p.rating ?? 0,
     status: (p.stockQuantity ?? 0) === 0 ? ["Hết hàng"] : [],
     favorite: p.wishListUser === true,
+    productType: p.productType,
+    material: p.material || "",
+    variants: (p.variants ?? []).map((v: any) => ({
+      id: v.id,
+      size: v.size ?? null,
+      color: v.color ?? null,
+      sku: v.sku ?? null,
+      stockQuantity: v.stockQuantity ?? 0,
+      priceOverride: v.priceOverride ?? null,
+      active: v.active ?? true,
+    })),
   };
 };
 

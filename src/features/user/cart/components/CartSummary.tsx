@@ -18,7 +18,7 @@ import {
   Chip,
 } from "@mui/material";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { mutate as swrMutate } from "swr";
@@ -34,7 +34,14 @@ import { useSocket } from "@/lib/socket/SocketContext";
 import { provinceNames, getDistricts } from "../constants/vietnamAddresses";
 import { api } from "@/lib/api/http";
 
-type Props = { items: CartItem[]; onApplyVoucher: (code: string) => void };
+const itemKey = (i: CartItem) =>
+  i.variantId ? `${i.productId}-${i.variantId}` : String(i.productId);
+
+type Props = {
+  items: CartItem[];
+  selectedKeys: Set<string>;
+  onApplyVoucher: (code: string) => void;
+};
 
 type QuoteLine = {
   productId: number;
@@ -53,7 +60,7 @@ type QuoteResult = {
   totalPayable: number;
 };
 
-export default function CartSummary({ items, onApplyVoucher }: Props) {
+export default function CartSummary({ items, selectedKeys, onApplyVoucher }: Props) {
   const router = useRouter();
   const [userId, setUserId] = useState<number | null>(null);
 
@@ -81,7 +88,10 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
   const [appliedCode, setAppliedCode] = useState<string | null>(null);
   const [quoteResult, setQuoteResult] = useState<QuoteResult | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
-  const [voucherMsg, setVoucherMsg] = useState<{ text: string; type: "success" | "error" | "info" } | null>(null);
+  const [voucherMsg, setVoucherMsg] = useState<{
+    text: string;
+    type: "success" | "error" | "info";
+  } | null>(null);
 
   const { showToast } = useToast();
   const qc = useQueryClient();
@@ -89,34 +99,64 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
   const { mutateAsync: clearCart, isPending: clearing } = useClearCartMutation();
   const { mutateAsync: place, isPending } = usePlaceOrderMutation();
 
+  // Only the items the user has checked
+  const selectedItems = useMemo(
+    () => items.filter((i) => selectedKeys.has(itemKey(i))),
+    [items, selectedKeys]
+  );
+
   const subtotal = useMemo(
-    () => items.reduce((s, it) => s + it.totalPrice, 0),
-    [items]
+    () => selectedItems.reduce((s, it) => s + it.totalPrice, 0),
+    [selectedItems]
   );
   const shippingFee = shippingType === "express" ? 30000 : 0;
 
-  // Tổng sau khi áp mã (hoặc subtotal nếu chưa áp)
   const discountedSubtotal = quoteResult ? quoteResult.totalPayable : subtotal;
   const totalDiscount = quoteResult ? quoteResult.totalDiscount : 0;
   const total = discountedSubtotal + shippingFee;
 
+  // Reset quote only when the selected product IDs actually change
+  const selectionFingerprint = useMemo(
+    () => [...selectedKeys].sort().join(","),
+    [selectedKeys]
+  );
+  const prevFingerprintRef = useRef("");
+  useEffect(() => {
+    const current = selectionFingerprint;
+    if (current === prevFingerprintRef.current) return;
+    const wasEmpty = prevFingerprintRef.current === "";
+    prevFingerprintRef.current = current;
+    if (!wasEmpty && appliedCode) {
+      setQuoteResult(null);
+      setAppliedCode(null);
+      setVoucherCode("");
+      setVoucherMsg({ text: "Thay đổi lựa chọn sản phẩm — vui lòng áp mã lại.", type: "info" });
+      onApplyVoucher("");
+    }
+  }, [selectionFingerprint]);
+
   const handleApplyVoucher = async () => {
     const code = voucherCode.trim().toUpperCase();
     if (!code) return;
+
+    if (selectedItems.length === 0) {
+      setVoucherMsg({ text: "Chưa chọn sản phẩm nào để áp mã.", type: "info" });
+      return;
+    }
 
     setQuoteLoading(true);
     setVoucherMsg(null);
     try {
       const result = await api.post<QuoteResult, any>("/api/v1/promotions/quote", {
         code,
-        items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+        items: selectedItems.map((i) => ({ productId: i.productId, quantity: i.quantity })),
       });
 
       const appliedLines = (result.lines ?? []).filter((l: QuoteLine) => l.applied?.requiresCode);
 
       if (result.totalDiscount <= 0 || appliedLines.length === 0) {
         setVoucherMsg({
-          text: "Mã hợp lệ nhưng không áp dụng được cho sản phẩm nào trong giỏ hàng.",
+          text: "Mã hợp lệ nhưng không áp dụng được cho sản phẩm nào được chọn.",
           type: "info",
         });
         setAppliedCode(null);
@@ -152,16 +192,24 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
       showToast("Vui lòng nhập địa chỉ giao hàng.", "error");
       return;
     }
+    if (selectedItems.length === 0) {
+      showToast("Vui lòng chọn ít nhất một sản phẩm để đặt hàng.", "error");
+      return;
+    }
     try {
       const promotionMap = appliedCode
-        ? Object.fromEntries(items.map((i) => [i.productId, appliedCode]))
+        ? Object.fromEntries(selectedItems.map((i) => [i.productId, appliedCode]))
         : {};
       const data = await place({
         shippingAddress: userAddress,
         paymentMethod,
         shippingNote: orderNote,
         shippingAmount: shippingFee,
-        promotionCodeByProductId: promotionMap,
+        promotionNameByProductId: promotionMap,
+        selectedItems: selectedItems.map((i) => ({
+          productId: i.productId,
+          variantId: i.variantId ?? null,
+        })),
       });
       qc.invalidateQueries({ queryKey: ["orders", "me"] });
       qc.invalidateQueries({ queryKey: ["cart"] });
@@ -219,6 +267,12 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
       <Typography variant="h6" fontWeight={700} gutterBottom>
         Tổng kết đơn hàng
       </Typography>
+
+      {/* Selected item count */}
+      <Typography variant="body2" color="text.secondary" mb={1}>
+        {selectedItems.length} / {items.length} sản phẩm được chọn
+      </Typography>
+
       <Divider sx={{ mb: 2 }} />
 
       <Box display="flex" justifyContent="space-between" mb={1}>
@@ -335,6 +389,12 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
         </Typography>
       </Box>
 
+      {selectedItems.length === 0 && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Vui lòng chọn ít nhất một sản phẩm để đặt hàng.
+        </Alert>
+      )}
+
       <Stack spacing={1}>
         <Button variant="outlined" color="error" onClick={handleClearCart} disabled={clearing}>
           Xoá tất cả
@@ -343,9 +403,15 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
           variant="contained"
           color="primary"
           onClick={handlePlaceOrder}
-          disabled={isPending}
+          disabled={isPending || selectedItems.length === 0}
         >
-          {isPending ? <CircularProgress size={22} /> : "Tiến hành đặt hàng"}
+          {isPending ? (
+            <CircularProgress size={22} />
+          ) : selectedItems.length > 0 ? (
+            `Đặt hàng (${selectedItems.length} sản phẩm)`
+          ) : (
+            "Tiến hành đặt hàng"
+          )}
         </Button>
       </Stack>
 
@@ -353,34 +419,64 @@ export default function CartSummary({ items, onApplyVoucher }: Props) {
       <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
         <Box
           sx={{
-            position: "absolute", top: "50%", left: "50%",
+            position: "absolute",
+            top: "50%",
+            left: "50%",
             transform: "translate(-50%, -50%)",
-            bgcolor: "background.paper", boxShadow: 24, p: 4,
-            width: { xs: "90%", sm: 400 }, borderRadius: 2,
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            p: 4,
+            width: { xs: "90%", sm: 400 },
+            borderRadius: 2,
           }}
         >
-          <Typography variant="h6" mb={2}>Cập nhật địa chỉ</Typography>
+          <Typography variant="h6" mb={2}>
+            Cập nhật địa chỉ
+          </Typography>
           <TextField
-            select fullWidth label="Tỉnh" value={selectedProvince}
-            onChange={(e) => { setSelectedProvince(e.target.value); setSelectedCommune(""); }}
+            select
+            fullWidth
+            label="Tỉnh"
+            value={selectedProvince}
+            onChange={(e) => {
+              setSelectedProvince(e.target.value);
+              setSelectedCommune("");
+            }}
             sx={{ mb: 2 }}
           >
-            {provinceNames.map((p) => <MenuItem key={p} value={p}>{p}</MenuItem>)}
+            {provinceNames.map((p) => (
+              <MenuItem key={p} value={p}>
+                {p}
+              </MenuItem>
+            ))}
           </TextField>
           <TextField
-            select fullWidth label="Xã/Quận" value={selectedCommune}
+            select
+            fullWidth
+            label="Xã/Quận"
+            value={selectedCommune}
             onChange={(e) => setSelectedCommune(e.target.value)}
-            disabled={!selectedProvince} sx={{ mb: 2 }}
+            disabled={!selectedProvince}
+            sx={{ mb: 2 }}
           >
-            {getDistricts(selectedProvince).map((c) => <MenuItem key={c} value={c}>{c}</MenuItem>)}
+            {getDistricts(selectedProvince).map((c) => (
+              <MenuItem key={c} value={c}>
+                {c}
+              </MenuItem>
+            ))}
           </TextField>
           <TextField
-            label="Địa chỉ chi tiết" fullWidth value={detailAddress}
-            onChange={(e) => setDetailAddress(e.target.value)} sx={{ mb: 2 }}
+            label="Địa chỉ chi tiết"
+            fullWidth
+            value={detailAddress}
+            onChange={(e) => setDetailAddress(e.target.value)}
+            sx={{ mb: 2 }}
           />
           <Stack direction="row" justifyContent="flex-end" spacing={1}>
             <Button onClick={() => setModalOpen(false)}>Huỷ</Button>
-            <Button variant="contained" onClick={handleReplaceAddress}>Thay thế</Button>
+            <Button variant="contained" onClick={handleReplaceAddress}>
+              Thay thế
+            </Button>
           </Stack>
         </Box>
       </Modal>

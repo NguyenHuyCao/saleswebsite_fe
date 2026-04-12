@@ -48,7 +48,7 @@ export type Product = {
   status: string[]; // BẮT BUỘC, dùng cho tag “Mới”, “Hết hàng”
   favorite?: boolean;
 
-  productType?: “MACHINE” | “CLOTHING” | “ACCESSORY” | “OTHER”;
+  productType?: 'MACHINE' | 'CLOTHING' | 'ACCESSORY' | 'OTHER';
   material?: string;
   variants?: ProductVariant[];
 };

@@ -20,7 +20,7 @@ const baseURL = (process.env.NEXT_PUBLIC_BACKEND_URL || "").replace(/\/$/, "");
 
 // unwrap: AxiosResponse<ApiEnvelope<T>> -> T
 export function unwrap<T>(res: AxiosResponse<ApiEnvelope<T>>): T {
-  if (!res?.data?.data) throw new Error("Invalid response shape");
+  if (!res?.data) throw new Error("Invalid response shape");
   return res.data.data as T;
 }
 

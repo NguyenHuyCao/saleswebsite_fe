@@ -21,10 +21,17 @@ export type VoucherValidateResponse = {
   applicableProductIds: number[];
 };
 
+export type SelectedItemKey = {
+  productId: number;
+  variantId?: number | null;
+};
+
 export type PlaceOrderPayload = {
   shippingAddress: string;
   paymentMethod: "COD" | "MOMO" | "VNPAY";
   shippingNote?: string;
   shippingAmount: number;
-  promotionCodeByProductId?: Record<number, string>;
+  promotionNameByProductId?: Record<number, string>;
+  /** Chỉ đặt những sản phẩm được chọn. undefined = đặt toàn bộ giỏ. */
+  selectedItems?: SelectedItemKey[];
 };

@@ -22,6 +22,7 @@ export const useCartQuery = () =>
       queryKey: cartKeys.root,
       queryFn: getCart,
       staleTime: 30_000,
+      retry: 1,
     })
   );
 

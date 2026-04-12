@@ -98,7 +98,11 @@ const MainToolbar = () => {
   const abortRef = useRef<AbortController | null>(null);
 
   const { data: wishlistCount = 0 } = useSWR(WISHLIST_COUNT_KEY, fetcherWithToken);
-  const { data: cartCount = 0 } = useSWR(CART_COUNT_KEY, fetcherWithToken);
+  const { data: cartCount = 0 } = useSWR(CART_COUNT_KEY, fetcherWithToken, {
+    refreshInterval: 10_000,   // fallback poll mỗi 10s — đồng bộ nếu mutate bị bỏ lỡ
+    revalidateOnFocus: true,   // refresh khi user quay lại tab
+    dedupingInterval: 1_000,   // tránh trùng request trong 1s
+  });
   const { data: ordersCount = 0 } = useSWR(ORDERS_COUNT_KEY, fetcherWithToken);
 
   // Typewriter placeholder animation
