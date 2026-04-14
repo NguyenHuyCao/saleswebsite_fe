@@ -14,12 +14,16 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
+  FormControl,
   Grid,
   IconButton,
+  InputLabel,
   Menu,
   MenuItem,
   Paper,
+  Select,
   Skeleton,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -27,7 +31,6 @@ import {
   TableHead,
   TablePagination,
   TableRow,
-  TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -44,7 +47,7 @@ import { styled } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import type { AppState } from "@/redux/store";
-import { useProducts, Mutations } from "../queries";
+import { useProducts, Mutations, Catalog } from "../queries";
 import type { Product, ProductType } from "../types";
 import AlertSnackbar from "@/components/feedback/AlertSnackbar";
 
@@ -173,16 +176,63 @@ function exportPDF(rows: Product[]) {
   win.print();
 }
 
+/* ── Constants ──────────────────────────────────────────────────── */
+const TYPE_OPTIONS = [
+  { value: "", label: "Tất cả loại" },
+  { value: "MACHINE",   label: "Máy móc" },
+  { value: "CLOTHING",  label: "Quần áo" },
+  { value: "ACCESSORY", label: "Phụ kiện" },
+  { value: "OTHER",     label: "Khác" },
+];
+
+const STATUS_OPTIONS = [
+  { value: "", label: "Tất cả trạng thái" },
+  { value: "active",   label: "Hoạt động" },
+  { value: "inactive", label: "Ngừng" },
+];
+
+const PRICE_OPTIONS = [
+  { value: "", label: "Tất cả khoảng giá" },
+  { value: "0-1000000",         label: "Dưới 1 triệu" },
+  { value: "1000000-5000000",   label: "1 – 5 triệu" },
+  { value: "5000000-10000000",  label: "5 – 10 triệu" },
+  { value: "10000000-999999999",label: "Trên 10 triệu" },
+];
+
+const STOCK_OPTIONS = [
+  { value: "", label: "Tất cả tồn kho" },
+  { value: "in_stock",    label: "Còn hàng (>0)" },
+  { value: "low_stock",   label: "Sắp hết (1–9)" },
+  { value: "out_of_stock",label: "Hết hàng (=0)" },
+];
+
+const SORT_OPTIONS = [
+  { value: "newest",     label: "Mới nhất" },
+  { value: "oldest",     label: "Cũ nhất" },
+  { value: "price_desc", label: "Giá cao → thấp" },
+  { value: "price_asc",  label: "Giá thấp → cao" },
+  { value: "stock_asc",  label: "Tồn kho thấp → cao" },
+];
+
+const labelOf = (opts: { value: string; label: string }[], v: string) =>
+  opts.find((o) => o.value === v)?.label ?? v;
+
 /* ── Main component ─────────────────────────────────────────────── */
 export default function ProductTable() {
   const router = useRouter();
   const { data, loading, error, refetch } = useProducts();
+  const { data: categoriesData } = Catalog.useCategories();
+  const { data: brandsData } = Catalog.useBrands();
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [typeFilter, setTypeFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [brandFilter, setBrandFilter] = useState("");
   const [priceRange, setPriceRange] = useState("");
+  const [stockFilter, setStockFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
 
   const [toast, setToast] = useState({ open: false, message: "", type: "success" as "success" | "error" });
   const showToast = (message: string, type: "success" | "error") => setToast({ open: true, message, type });
@@ -196,6 +246,8 @@ export default function ProductTable() {
 
   const keyword = useSelector((s: AppState) => s.search.keyword.trim().toLowerCase());
   const products = data?.result ?? [];
+  const categoryOptions = (categoriesData?.result ?? []) as { id: number; name: string }[];
+  const brandOptions = (brandsData?.result ?? []) as { id: number; name: string }[];
 
   /* ── Stats ── */
   const stats = useMemo(() => ({
@@ -205,21 +257,51 @@ export default function ProductTable() {
     lowStock: products.filter((p) => (p.stockQuantity ?? 0) <= 5).length,
   }), [products]);
 
-  /* ── Filtered ── */
+  const hasFilter =
+    Boolean(typeFilter) || Boolean(categoryFilter) || Boolean(brandFilter) ||
+    Boolean(priceRange) || Boolean(stockFilter) || Boolean(statusFilter);
+
+  const clearFilters = () => {
+    setTypeFilter("");
+    setCategoryFilter("");
+    setBrandFilter("");
+    setPriceRange("");
+    setStockFilter("");
+    setStatusFilter("");
+    setPage(0);
+  };
+
+  /* ── Filtered + Sorted ── */
   const filtered = useMemo(() => {
-    return products.filter((p) => {
+    let result = products.filter((p) => {
       const kw = [p.name, p.brandName ?? "", p.categoryName ?? "", String(p.id)]
         .some((v) => v.toLowerCase().includes(keyword));
-      const type = !typeFilter || (p.productType ?? "MACHINE") === typeFilter;
-      const status = !statusFilter || (statusFilter === "active" ? p.active : !p.active);
+      const type   = !typeFilter     || (p.productType ?? "MACHINE") === typeFilter;
+      const cat    = !categoryFilter || (p.categoryName ?? "") === categoryFilter;
+      const brand  = !brandFilter    || (p.brandName ?? "") === brandFilter;
+      const status = !statusFilter   || (statusFilter === "active" ? p.active : !p.active);
       let price = true;
       if (priceRange) {
         const [min, max] = priceRange.split("-").map(Number);
         price = (p.price ?? 0) >= min && (p.price ?? 0) <= max;
       }
-      return kw && type && status && price;
+      let stock = true;
+      if (stockFilter === "in_stock")     stock = (p.stockQuantity ?? 0) > 0;
+      if (stockFilter === "low_stock")    stock = (p.stockQuantity ?? 0) >= 1 && (p.stockQuantity ?? 0) <= 9;
+      if (stockFilter === "out_of_stock") stock = (p.stockQuantity ?? 0) === 0;
+      return kw && type && cat && brand && status && price && stock;
     });
-  }, [products, keyword, typeFilter, statusFilter, priceRange]);
+
+    return [...result].sort((a, b) => {
+      switch (sortBy) {
+        case "oldest":     return (a.id ?? 0) - (b.id ?? 0);
+        case "price_desc": return (b.price ?? 0) - (a.price ?? 0);
+        case "price_asc":  return (a.price ?? 0) - (b.price ?? 0);
+        case "stock_asc":  return (a.stockQuantity ?? 0) - (b.stockQuantity ?? 0);
+        default:           return (b.id ?? 0) - (a.id ?? 0); // newest
+      }
+    });
+  }, [products, keyword, typeFilter, categoryFilter, brandFilter, statusFilter, priceRange, stockFilter, sortBy]);
 
   /* ── Handlers ── */
   const onToggle = async (slug: string) => {
@@ -288,48 +370,77 @@ export default function ProductTable() {
         <Divider />
 
         <CardContent>
-          {/* Filters */}
-          <Box display="flex" gap={2} flexWrap="wrap" mb={3}>
-            <TextField
-              select label="Loại sản phẩm" size="small" sx={{ minWidth: 150 }}
-              SelectProps={{ native: true }}
-              value={typeFilter}
-              onChange={(e) => { setTypeFilter(e.target.value); setPage(0); }}
-              InputLabelProps={{ shrink: true }}
-            >
-              <option value="">Tất cả loại</option>
-              <option value="MACHINE">Máy móc</option>
-              <option value="CLOTHING">Quần áo</option>
-              <option value="ACCESSORY">Phụ kiện</option>
-              <option value="OTHER">Khác</option>
-            </TextField>
+          {/* Filter bar */}
+          <Box sx={{ mb: 1.5, display: "flex", gap: 1.5, flexWrap: "wrap", alignItems: "center" }}>
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+              <InputLabel>Sắp xếp</InputLabel>
+              <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} label="Sắp xếp" MenuProps={{ disableScrollLock: true }}>
+                {SORT_OPTIONS.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
+              </Select>
+            </FormControl>
 
-            <TextField
-              select label="Trạng thái" size="small" sx={{ minWidth: 140 }}
-              SelectProps={{ native: true }}
-              value={statusFilter}
-              onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
-              InputLabelProps={{ shrink: true }}
-            >
-              <option value="">Tất cả</option>
-              <option value="active">Hoạt động</option>
-              <option value="inactive">Ngừng</option>
-            </TextField>
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+              <InputLabel>Loại sản phẩm</InputLabel>
+              <Select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value); setPage(0); }} label="Loại sản phẩm" MenuProps={{ disableScrollLock: true }}>
+                {TYPE_OPTIONS.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
+              </Select>
+            </FormControl>
 
-            <TextField
-              select label="Khoảng giá" size="small" sx={{ minWidth: 150 }}
-              SelectProps={{ native: true }}
-              value={priceRange}
-              onChange={(e) => { setPriceRange(e.target.value); setPage(0); }}
-              InputLabelProps={{ shrink: true }}
-            >
-              <option value="">Tất cả</option>
-              <option value="0-1000000">Dưới 1 triệu</option>
-              <option value="1000000-5000000">1 - 5 triệu</option>
-              <option value="5000000-10000000">5 - 10 triệu</option>
-              <option value="10000000-999999999">Trên 10 triệu</option>
-            </TextField>
+            <FormControl size="small" sx={{ minWidth: 160 }}>
+              <InputLabel>Danh mục</InputLabel>
+              <Select value={categoryFilter} onChange={(e) => { setCategoryFilter(e.target.value); setPage(0); }} label="Danh mục" MenuProps={{ disableScrollLock: true }}>
+                <MenuItem value="">Tất cả danh mục</MenuItem>
+                {categoryOptions.map((c) => <MenuItem key={c.id} value={c.name}>{c.name}</MenuItem>)}
+              </Select>
+            </FormControl>
+
+            <FormControl size="small" sx={{ minWidth: 160 }}>
+              <InputLabel>Thương hiệu</InputLabel>
+              <Select value={brandFilter} onChange={(e) => { setBrandFilter(e.target.value); setPage(0); }} label="Thương hiệu" MenuProps={{ disableScrollLock: true }}>
+                <MenuItem value="">Tất cả thương hiệu</MenuItem>
+                {brandOptions.map((b) => <MenuItem key={b.id} value={b.name}>{b.name}</MenuItem>)}
+              </Select>
+            </FormControl>
+
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+              <InputLabel>Trạng thái</InputLabel>
+              <Select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }} label="Trạng thái" MenuProps={{ disableScrollLock: true }}>
+                {STATUS_OPTIONS.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
+              </Select>
+            </FormControl>
+
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+              <InputLabel>Khoảng giá</InputLabel>
+              <Select value={priceRange} onChange={(e) => { setPriceRange(e.target.value); setPage(0); }} label="Khoảng giá" MenuProps={{ disableScrollLock: true }}>
+                {PRICE_OPTIONS.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
+              </Select>
+            </FormControl>
+
+            <FormControl size="small" sx={{ minWidth: 160 }}>
+              <InputLabel>Tồn kho</InputLabel>
+              <Select value={stockFilter} onChange={(e) => { setStockFilter(e.target.value); setPage(0); }} label="Tồn kho" MenuProps={{ disableScrollLock: true }}>
+                {STOCK_OPTIONS.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
+              </Select>
+            </FormControl>
+
+            {hasFilter && (
+              <Button size="small" variant="outlined" color="error" onClick={clearFilters}>
+                Xóa bộ lọc
+              </Button>
+            )}
           </Box>
+
+          {/* Active filter chips */}
+          {hasFilter && (
+            <Stack direction="row" spacing={1} flexWrap="wrap" mb={1.5}>
+              {typeFilter && <Chip label={`Loại: ${labelOf(TYPE_OPTIONS, typeFilter)}`} size="small" onDelete={() => { setTypeFilter(""); setPage(0); }} />}
+              {categoryFilter && <Chip label={`Danh mục: ${categoryFilter}`} size="small" onDelete={() => { setCategoryFilter(""); setPage(0); }} />}
+              {brandFilter && <Chip label={`Thương hiệu: ${brandFilter}`} size="small" onDelete={() => { setBrandFilter(""); setPage(0); }} />}
+              {statusFilter && <Chip label={`Trạng thái: ${labelOf(STATUS_OPTIONS, statusFilter)}`} size="small" onDelete={() => { setStatusFilter(""); setPage(0); }} />}
+              {priceRange && <Chip label={`Giá: ${labelOf(PRICE_OPTIONS, priceRange)}`} size="small" onDelete={() => { setPriceRange(""); setPage(0); }} />}
+              {stockFilter && <Chip label={`Kho: ${labelOf(STOCK_OPTIONS, stockFilter)}`} size="small" onDelete={() => { setStockFilter(""); setPage(0); }} />}
+            </Stack>
+          )}
 
           <Paper sx={{ width: "100%", overflow: "hidden" }}>
             <TableContainer>

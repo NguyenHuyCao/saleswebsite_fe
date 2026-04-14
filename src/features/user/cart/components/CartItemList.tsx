@@ -33,6 +33,7 @@ import type { CartItem } from "../types";
 import { useDeleteItemMutation, useUpdateQtyMutation } from "../queries";
 import { useSocket } from "@/lib/socket/SocketContext";
 import { useToast } from "@/lib/toast/ToastContext";
+import { getColorHex, isLightColor } from "@/lib/utils/colorMap";
 
 type Props = {
   items: CartItem[];
@@ -141,14 +142,37 @@ export default function CartItemList({
               sx={{ fontSize: 11, height: 20 }}
             />
           )}
-          {item.color && (
-            <Chip
-              label={item.color}
-              size="small"
-              variant="filled"
-              sx={{ fontSize: 11, height: 20, bgcolor: "grey.100", color: "text.primary" }}
-            />
-          )}
+          {item.color && (() => {
+            const hex = getColorHex(item.color);
+            const light = hex ? isLightColor(hex) : false;
+            return (
+              <Box
+                display="inline-flex"
+                alignItems="center"
+                gap={0.5}
+                sx={{
+                  border: "1.5px solid rgba(0,0,0,0.12)",
+                  borderRadius: "10px",
+                  px: 0.75,
+                  height: 20,
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 11,
+                    height: 11,
+                    borderRadius: "50%",
+                    bgcolor: hex || "#bdbdbd",
+                    border: `1px solid ${light ? "#c0c0c0" : "rgba(0,0,0,0.18)"}`,
+                    flexShrink: 0,
+                  }}
+                />
+                <Typography fontSize={11} color="text.primary" lineHeight={1}>
+                  {item.color}
+                </Typography>
+              </Box>
+            );
+          })()}
         </Stack>
       )}
 

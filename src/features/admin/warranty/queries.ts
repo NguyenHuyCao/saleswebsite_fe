@@ -20,6 +20,7 @@ export function useUpdateWarrantyClaim() {
       claimId: number;
       status: WarrantyStatus | string;
       resolutionNote: string;
+      adminMessage?: string;
     }) => apiUpdateWarrantyClaim(p),
     onSuccess: () => qc.invalidateQueries({ queryKey: QK.claims }),
   });

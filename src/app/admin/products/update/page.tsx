@@ -143,6 +143,8 @@ export default function Page() {
           productId={form.id!}
           onBack={() => nav(imagesStep)}
           onDone={() => router.push("/admin/products")}
+          skipLabel={isMachine ? "Bỏ qua biến thể" : undefined}
+          onSkip={isMachine ? () => router.push("/admin/products") : undefined}
         />
       )}
     </Box>

@@ -17,6 +17,11 @@ import {
   Paper,
   Chip,
   Box,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  Stack,
   Tooltip,
 } from "@mui/material";
 import Image from "next/image";
@@ -31,6 +36,22 @@ import { useToast } from "@/lib/toast/ToastContext";
 
 const DEFAULT_ROWS = 10;
 
+const ACTIVE_OPTIONS = [
+  { value: "", label: "Tất cả trạng thái" },
+  { value: "active", label: "Hoạt động" },
+  { value: "hidden", label: "Tắt" },
+];
+
+const SORT_OPTIONS = [
+  { value: "newest",        label: "Mới nhất" },
+  { value: "oldest",        label: "Cũ nhất" },
+  { value: "name_az",       label: "Tên A → Z" },
+  { value: "most_products", label: "Nhiều sản phẩm nhất" },
+];
+
+const labelOf = (opts: { value: string; label: string }[], v: string) =>
+  opts.find((o) => o.value === v)?.label ?? v;
+
 const logoSrc = (logo?: string | null) => {
   if (!logo) return "/images/placeholder.png";
   if (logo.startsWith("http")) return logo;
@@ -40,6 +61,8 @@ const logoSrc = (logo?: string | null) => {
 export default function BrandsView() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(DEFAULT_ROWS);
+  const [activeFilter, setActiveFilter] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
 
   const { data, isLoading, isError } = useBrands(1, 1000);
   const all = (data?.result ?? []) as Brand[];
@@ -54,20 +77,41 @@ export default function BrandsView() {
 
   const keyword = useSelector((s: AppState) => s.search.keyword.trim().toLowerCase());
 
+  const hasFilter = Boolean(activeFilter);
+
+  const clearFilters = () => {
+    setActiveFilter("");
+    setPage(0);
+  };
+
   const filtered = useMemo(() => {
-    if (!keyword) return all;
-    return all.filter((b) => {
-      const createdDate = new Date(b.createdAt).toLocaleDateString("vi-VN");
-      return (
-        b.name.toLowerCase().includes(keyword) ||
-        (b.website ?? "").toLowerCase().includes(keyword) ||
-        (b.originCountry ?? "").toLowerCase().includes(keyword) ||
-        (b.year ?? "").includes(keyword) ||
-        (b.description ?? "").toLowerCase().includes(keyword) ||
-        createdDate.includes(keyword)
-      );
+    let result = all;
+
+    if (keyword)
+      result = result.filter((b) => {
+        const createdDate = new Date(b.createdAt).toLocaleDateString("vi-VN");
+        return (
+          b.name.toLowerCase().includes(keyword) ||
+          (b.website ?? "").toLowerCase().includes(keyword) ||
+          (b.originCountry ?? "").toLowerCase().includes(keyword) ||
+          (b.year ?? "").includes(keyword) ||
+          (b.description ?? "").toLowerCase().includes(keyword) ||
+          createdDate.includes(keyword)
+        );
+      });
+
+    if (activeFilter === "active") result = result.filter((b) => b.active !== false);
+    if (activeFilter === "hidden") result = result.filter((b) => b.active === false);
+
+    return [...result].sort((a, b) => {
+      switch (sortBy) {
+        case "oldest":        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case "name_az":       return a.name.localeCompare(b.name, "vi");
+        case "most_products": return (b.productCount ?? 0) - (a.productCount ?? 0);
+        default:              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
     });
-  }, [all, keyword]);
+  }, [all, keyword, activeFilter, sortBy]);
 
   const handleOpenEdit = (brand: Brand) => {
     setEditing(brand);
@@ -145,6 +189,41 @@ export default function BrandsView() {
       />
 
       <CardContent>
+        {/* Filter bar */}
+        <Box sx={{ mb: 1.5, display: "flex", gap: 1.5, flexWrap: "wrap", alignItems: "center" }}>
+          <FormControl size="small" sx={{ minWidth: 170 }}>
+            <InputLabel>Sắp xếp</InputLabel>
+            <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} label="Sắp xếp" MenuProps={{ disableScrollLock: true }}>
+              {SORT_OPTIONS.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
+            </Select>
+          </FormControl>
+
+          <FormControl size="small" sx={{ minWidth: 170 }}>
+            <InputLabel>Trạng thái</InputLabel>
+            <Select value={activeFilter} onChange={(e) => { setActiveFilter(e.target.value); setPage(0); }} label="Trạng thái" MenuProps={{ disableScrollLock: true }}>
+              {ACTIVE_OPTIONS.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
+            </Select>
+          </FormControl>
+
+          {hasFilter && (
+            <Button size="small" variant="outlined" color="error" onClick={clearFilters}>
+              Xóa bộ lọc
+            </Button>
+          )}
+        </Box>
+
+        {hasFilter && (
+          <Stack direction="row" spacing={1} flexWrap="wrap" mb={1.5}>
+            {activeFilter && (
+              <Chip
+                label={`Trạng thái: ${labelOf(ACTIVE_OPTIONS, activeFilter)}`}
+                size="small"
+                onDelete={() => { setActiveFilter(""); setPage(0); }}
+              />
+            )}
+          </Stack>
+        )}
+
         <Paper>
           <TableContainer sx={{ maxHeight: 520 }}>
             <Table stickyHeader size="small">

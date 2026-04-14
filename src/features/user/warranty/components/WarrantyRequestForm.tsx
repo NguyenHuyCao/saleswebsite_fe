@@ -74,8 +74,9 @@ export default function WarrantyRequestForm() {
   const [orderProducts, setOrderProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetchingProducts, setFetchingProducts] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [previews, setPreviews] = useState<{ url: string; file: File }[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const MAX_IMAGES = 3;
 
   const [alert, setAlert] = useState({
     open: false,
@@ -153,34 +154,42 @@ export default function WarrantyRequestForm() {
     setValidationError(null);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setAlert({
-          open: true,
-          type: "error",
-          message: "Kích thước ảnh không được vượt quá 5MB",
-        });
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => setPreview(reader.result as string);
-      reader.readAsDataURL(file);
+  const addFiles = (files: FileList | null) => {
+    if (!files) return;
+    const newFiles = Array.from(files);
+    const remaining = MAX_IMAGES - previews.length;
+    if (remaining <= 0) {
+      setAlert({ open: true, type: "error", message: `Chỉ được đính kèm tối đa ${MAX_IMAGES} ảnh` });
+      return;
     }
+    const toAdd = newFiles.slice(0, remaining);
+    const oversized = toAdd.find((f) => f.size > 5 * 1024 * 1024);
+    if (oversized) {
+      setAlert({ open: true, type: "error", message: "Kích thước mỗi ảnh không được vượt quá 5MB" });
+      return;
+    }
+    toAdd.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviews((prev) => [...prev, { url: reader.result as string, file }]);
+      };
+      reader.readAsDataURL(file);
+    });
+    // reset input so same file can be re-added if needed
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleRemoveImage = () => {
-    setPreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    addFiles(e.target.files);
+  };
+
+  const handleRemoveImage = (idx: number) => {
+    setPreviews((prev) => prev.filter((_, i) => i !== idx));
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    const file = e.dataTransfer.files?.[0];
-    if (file) handleFileChange({ target: { files: [file] } } as any);
+    addFiles(e.dataTransfer.files);
   };
 
   const handleDragOver = (e: React.DragEvent) => e.preventDefault();
@@ -197,8 +206,7 @@ export default function WarrantyRequestForm() {
       body.append("productId", formData.selectedProduct);
       body.append("issueDesc", formData.errorDescription);
 
-      const file = fileInputRef.current?.files?.[0];
-      if (file) body.append("image", file);
+      previews.forEach((p) => body.append("images", p.file));
 
       const result = await submitWarrantyClaim(body);
 
@@ -218,7 +226,7 @@ export default function WarrantyRequestForm() {
         errorDescription: "",
       });
       setOrderProducts([]);
-      setPreview(null);
+      setPreviews([]);
       setActiveStep(0);
       updateStepInUrl(0);
     } catch (error: any) {
@@ -347,78 +355,76 @@ export default function WarrantyRequestForm() {
               </Grid>
 
               <Grid size={{ xs: 12 }}>
-                <Box
-                  sx={{
-                    border: "2px dashed",
-                    borderColor: preview ? "#4caf50" : "#ccc",
-                    p: 3,
-                    textAlign: "center",
-                    borderRadius: 3,
-                    cursor: "pointer",
-                    transition: "all 0.3s",
-                    bgcolor: preview ? "#f1f8e9" : "#fafafa",
-                    "&:hover": { borderColor: "#0d47a1", bgcolor: "#e3f2fd" },
-                  }}
-                  onClick={() => fileInputRef.current?.click()}
-                  onDrop={handleDrop}
-                  onDragOver={handleDragOver}
-                >
-                  <CloudUploadIcon
-                    fontSize="large"
-                    color={preview ? "success" : "primary"}
-                  />
-                  <Typography mt={1} variant="body2">
-                    {preview
-                      ? "Ảnh đã được tải lên"
-                      : "Kéo & thả hoặc nhấn để tải ảnh lên"}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Hỗ trợ: JPG, PNG (tối đa 5MB)
-                  </Typography>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    hidden
-                    accept="image/jpeg,image/png,image/jpg"
-                    onChange={handleFileChange}
-                  />
+                {/* Drop zone — chỉ hiện khi chưa đủ MAX_IMAGES */}
+                {previews.length < MAX_IMAGES && (
+                  <Box
+                    sx={{
+                      border: "2px dashed",
+                      borderColor: previews.length > 0 ? "#4caf50" : "#ccc",
+                      p: 3,
+                      textAlign: "center",
+                      borderRadius: 3,
+                      cursor: "pointer",
+                      transition: "all 0.3s",
+                      bgcolor: previews.length > 0 ? "#f1f8e9" : "#fafafa",
+                      "&:hover": { borderColor: "#0d47a1", bgcolor: "#e3f2fd" },
+                    }}
+                    onClick={() => fileInputRef.current?.click()}
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                  >
+                    <CloudUploadIcon fontSize="large" color={previews.length > 0 ? "success" : "primary"} />
+                    <Typography mt={1} variant="body2">
+                      Kéo &amp; thả hoặc nhấn để thêm ảnh
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Hỗ trợ: JPG, PNG, WebP · Tối đa 5MB/ảnh · {previews.length}/{MAX_IMAGES} ảnh
+                    </Typography>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      hidden
+                      multiple
+                      accept="image/jpeg,image/png,image/jpg,image/webp"
+                      onChange={handleFileChange}
+                    />
+                  </Box>
+                )}
 
-                  {preview && (
-                    <Box
-                      sx={{
-                        position: "relative",
-                        display: "inline-block",
-                        mt: 2,
-                      }}
-                    >
-                      <Image
-                        src={preview}
-                        alt="Preview"
-                        width={120}
-                        height={120}
-                        style={{
-                          objectFit: "contain",
-                          border: "1px solid #ddd",
-                          borderRadius: 4,
-                        }}
-                      />
-                      <Chip
-                        icon={<DeleteIcon />}
-                        label="Xóa"
-                        size="small"
-                        onClick={handleRemoveImage}
-                        sx={{
-                          position: "absolute",
-                          top: -10,
-                          right: -10,
-                          bgcolor: "#f44336",
-                          color: "#fff",
-                          "&:hover": { bgcolor: "#d32f2f" },
-                        }}
-                      />
-                    </Box>
-                  )}
-                </Box>
+                {/* Preview grid */}
+                {previews.length > 0 && (
+                  <Stack direction="row" spacing={1.5} flexWrap="wrap" mt={previews.length < MAX_IMAGES ? 2 : 0}>
+                    {previews.map((p, idx) => (
+                      <Box
+                        key={idx}
+                        sx={{ position: "relative", display: "inline-block" }}
+                      >
+                        <Image
+                          src={p.url}
+                          alt={`Ảnh ${idx + 1}`}
+                          width={100}
+                          height={100}
+                          style={{ objectFit: "cover", border: "1px solid #ddd", borderRadius: 8 }}
+                        />
+                        <Chip
+                          icon={<DeleteIcon />}
+                          label="Xóa"
+                          size="small"
+                          onClick={() => handleRemoveImage(idx)}
+                          sx={{
+                            position: "absolute",
+                            top: -8,
+                            right: -8,
+                            bgcolor: "#f44336",
+                            color: "#fff",
+                            "& .MuiChip-icon": { color: "#fff" },
+                            "&:hover": { bgcolor: "#d32f2f" },
+                          }}
+                        />
+                      </Box>
+                    ))}
+                  </Stack>
+                )}
               </Grid>
             </Grid>
           )}

@@ -96,6 +96,7 @@ export function mapProduct(
     status,
     favorite: item.wishListUser === true,
     productType: item.productType,
+    hasVariants: item.hasVariants === true,
     material: item.material || "",
     variants: item.variants || [],
   };

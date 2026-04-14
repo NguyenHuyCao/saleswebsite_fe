@@ -13,9 +13,10 @@ export async function apiUpdateWarrantyClaim(params: {
   claimId: number;
   status: WarrantyStatus | string;
   resolutionNote: string;
+  adminMessage?: string;
 }) {
-  const { claimId, status, resolutionNote } = params;
+  const { claimId, status, resolutionNote, adminMessage } = params;
   await http.put(`/api/v1/warranty-claims/${claimId}`, null, {
-    params: { status, resolutionNote },
+    params: { status, resolutionNote, adminMessage },
   });
 }

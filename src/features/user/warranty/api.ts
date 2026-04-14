@@ -28,6 +28,7 @@ export interface WarrantyClaimResponse {
   validWarranty: boolean;
   issueDesc: string;
   imageUrl?: string;
+  imageUrls?: string[];
   resolutionNote?: string;
   adminMessage?: string;
   orderCode: string;
@@ -40,6 +41,7 @@ export interface WarrantyClaimResponse {
   warrantyExpiry?: string;
   userEmail?: string;
   userName?: string;
+  userPhone?: string;
   submittedAt?: string;
   createdAt?: string;
   updatedAt?: string;

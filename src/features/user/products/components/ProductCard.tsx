@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Box,
   Typography,
@@ -53,10 +54,13 @@ export const ProductCardSkeleton = () => (
     sx={{
       width: "100%",
       maxWidth: 240,
-      minHeight: 420,
+      height: "100%",
+      minHeight: 380,
       borderRadius: 2,
       p: 2,
       bgcolor: "#fff",
+      display: "flex",
+      flexDirection: "column",
     }}
   >
     <Skeleton variant="rounded" width="100%" height={200} sx={{ mb: 1.5 }} />
@@ -84,6 +88,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
+  const qc = useQueryClient();
 
   // Redux state
   const wishlistItems = useSelector((s: AppState) => s.wishlist.result);
@@ -115,7 +120,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const finalPrice = product.price;
   const originalPrice = product.originalPrice;
 
-  // MACHINE = direct add-to-cart; others need variant selection dialog
+  // Products with active variants always need dialog regardless of productType
+  const needsVariant = product.hasVariants === true;
+  // MACHINE = direct add-to-cart only when product has no active variants
   const isMachine = !product.productType || product.productType === "MACHINE";
 
   // Auth check
@@ -141,13 +148,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
       if (!product.inStock) return;
       if (!ensureLoggedIn()) return requireLogin("cart");
 
-      if (!isMachine) {
+      if (needsVariant) {
         setQuickDialogMode("cart");
         setQuickDialogOpen(true);
         return;
       }
 
-      // MACHINE: direct add
+      // No variants: direct add
       if (busyCart) return;
       setBusyCart(true);
       setShowAddedAnimation(true);
@@ -157,6 +164,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         await http.post("/api/v1/carts", { productId: product.id, quantity: 1 });
         setSnackbar({ open: true, message: "Đã thêm vào giỏ hàng", type: "success" });
         mutate(CART_COUNT_KEY, undefined, { revalidate: true });
+        qc.invalidateQueries({ queryKey: ["cart"] });
       } catch (err: any) {
         setSnackbar({
           open: true,
@@ -168,7 +176,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         setBusyCart(false);
       }
     },
-    [product.id, product.inStock, isMachine, ensureLoggedIn, requireLogin, busyCart],
+    [product.id, product.inStock, isMachine, ensureLoggedIn, requireLogin, busyCart, qc],
   );
 
   // Order button: add to cart + go to /cart
@@ -178,19 +186,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
       if (!product.inStock) return;
       if (!ensureLoggedIn()) return requireLogin("cart");
 
-      if (!isMachine) {
+      if (needsVariant) {
         setQuickDialogMode("order");
         setQuickDialogOpen(true);
         return;
       }
 
-      // MACHINE: add then navigate
+      // No variants: add then navigate
       if (busyCart) return;
       setBusyCart(true);
       try {
         await http.post("/api/v1/carts", { productId: product.id, quantity: 1 });
         mutate(CART_COUNT_KEY, undefined, { revalidate: true });
-        router.push("/cart");
+        qc.invalidateQueries({ queryKey: ["cart"] });
+        router.push(`/cart?select=${product.id}`);
       } catch (err: any) {
         setSnackbar({
           open: true,
@@ -201,7 +210,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         setBusyCart(false);
       }
     },
-    [product.id, product.inStock, isMachine, ensureLoggedIn, requireLogin, busyCart, router],
+    [product.id, product.inStock, isMachine, ensureLoggedIn, requireLogin, busyCart, router, qc],
   );
 
   // Toggle favorite handler
@@ -255,20 +264,24 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <>
-      <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.18, ease: "easeOut" }}>
+      <motion.div
+        whileHover={{ y: -4 }}
+        transition={{ duration: 0.18, ease: "easeOut" }}
+        style={{ height: "100%" }}
+      >
         <Paper
           onClick={handleCardClick}
           elevation={2}
           sx={{
             width: "100%",
             maxWidth: 240,
+            height: "100%",
             borderRadius: 3,
             overflow: "hidden",
             p: 2,
             position: "relative",
             display: "flex",
             flexDirection: "column",
-            justifyContent: "space-between",
             bgcolor: "#fff",
             cursor: "pointer",
             transition: "box-shadow 0.3s",
@@ -360,33 +373,35 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </Box>
 
           {/* Product Info */}
-          <Stack spacing={0.75} sx={{ flex: 1 }}>
-            {/* Status Tags */}
-            <Stack direction="row" spacing={0.5} flexWrap="wrap">
-              {product.status.slice(0, 2).map((tag, i) => (
-                <Box
-                  key={i}
-                  sx={{
-                    fontSize: 10,
-                    fontWeight: 600,
-                    px: 0.8,
-                    py: 0.3,
-                    borderRadius: 0.8,
-                    color: "#fff",
-                    bgcolor:
-                      tag === "Bán chạy" ? "#ffb700" : tag === "Hết hàng" ? "#9e9e9e" : "#f25c05",
-                    display: "inline-block",
-                  }}
-                >
-                  {tag}
-                </Box>
-              ))}
-              {product.status.length > 2 && (
-                <Typography variant="caption" color="text.secondary">
-                  +{product.status.length - 2}
-                </Typography>
-              )}
-            </Stack>
+          <Stack spacing={0.75}>
+            {/* Status Tags — always reserves 20px height so cards align */}
+            <Box sx={{ minHeight: 20 }}>
+              <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                {product.status.slice(0, 2).map((tag, i) => (
+                  <Box
+                    key={i}
+                    sx={{
+                      fontSize: 10,
+                      fontWeight: 600,
+                      px: 0.8,
+                      py: 0.3,
+                      borderRadius: 0.8,
+                      color: "#fff",
+                      bgcolor:
+                        tag === "Bán chạy" ? "#ffb700" : tag === "Hết hàng" ? "#9e9e9e" : "#f25c05",
+                      display: "inline-block",
+                    }}
+                  >
+                    {tag}
+                  </Box>
+                ))}
+                {product.status.length > 2 && (
+                  <Typography variant="caption" color="text.secondary">
+                    +{product.status.length - 2}
+                  </Typography>
+                )}
+              </Stack>
+            </Box>
 
             {/* Product Name */}
             <Tooltip title={product.name} arrow>
@@ -407,45 +422,52 @@ const ProductCard: React.FC<ProductCardProps> = ({
               </Typography>
             </Tooltip>
 
-            {/* Price */}
+            {/* Price — strikethrough always rendered to reserve space */}
             <Stack direction="row" spacing={1} alignItems="center">
               <Typography fontWeight={700} color="#f25c05" fontSize={16}>
                 {finalPrice.toLocaleString()}₫
               </Typography>
-              {hasDiscount && (
-                <Typography fontSize={12} sx={{ textDecoration: "line-through", color: "#999" }}>
-                  {originalPrice.toLocaleString()}₫
-                </Typography>
-              )}
+              <Typography
+                fontSize={12}
+                sx={{
+                  textDecoration: "line-through",
+                  color: "#999",
+                  visibility: hasDiscount ? "visible" : "hidden",
+                }}
+              >
+                {originalPrice?.toLocaleString() ?? "0"}₫
+              </Typography>
             </Stack>
 
-            {/* Rating */}
-            {typeof product.rating === "number" && product.rating > 0 && (
-              <Stack direction="row" alignItems="center" spacing={0.5}>
-                <Rating
-                  value={product.rating}
-                  precision={0.5}
-                  size="small"
-                  readOnly
-                  sx={{ color: "#ffb700" }}
-                />
-                <Typography variant="caption" color="text.secondary">
-                  ({product.rating})
-                </Typography>
-              </Stack>
-            )}
+            {/* Rating — always reserves 22px height */}
+            <Box sx={{ minHeight: 22 }}>
+              {typeof product.rating === "number" && product.rating > 0 && (
+                <Stack direction="row" alignItems="center" spacing={0.5}>
+                  <Rating
+                    value={product.rating}
+                    precision={0.5}
+                    size="small"
+                    readOnly
+                    sx={{ color: "#ffb700" }}
+                  />
+                  <Typography variant="caption" color="text.secondary">
+                    ({product.rating})
+                  </Typography>
+                </Stack>
+              )}
+            </Box>
           </Stack>
 
-          {/* Action Buttons */}
-          <Stack direction="row" spacing={0.75} mt={1.5}>
+          {/* Action Buttons — mt:auto pushes to card bottom */}
+          <Stack direction="row" spacing={0.75} sx={{ mt: "auto", pt: 1.5 }}>
             {/* Cart icon button */}
             <Tooltip
               title={
                 !product.inStock
                   ? "Hết hàng"
-                  : isMachine
-                  ? "Thêm vào giỏ hàng"
-                  : "Chọn và thêm vào giỏ"
+                  : needsVariant
+                  ? "Chọn và thêm vào giỏ"
+                  : "Thêm vào giỏ hàng"
               }
               arrow
             >

@@ -45,14 +45,19 @@ export interface UserInfo {
 
 export interface OrderDetail {
   orderId: number;
+  orderCode: string;
   status: string;
   shippingAddress: string;
   paymentMethod: string;
   shippingMethod: string;
   totalAmount: number;
   createdAt: string;
+  deliveredAt: string | null;
   items: OrderItem[];
   paymentStatus: string;
   paidAt: string | null;
+  paidAmount: number | null;
+  transferContent: string | null;
+  moneyChannel: string | null;
   user: UserInfo;
 }

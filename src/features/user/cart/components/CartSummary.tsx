@@ -224,14 +224,9 @@ export default function CartSummary({ items, selectedKeys, onApplyVoucher }: Pro
         "Đặt hàng thành công"
       );
       setTimeout(() => {
-        if (data?.paymentUrl && (paymentMethod === "MOMO" || paymentMethod === "VNPAY")) {
-          const query = new URLSearchParams({
-            orderId: String(data.orderId),
-            method: paymentMethod,
-            amount: String(total),
-            paymentUrl: data.paymentUrl,
-          });
-          router.push(`/payment/pending?${query.toString()}`);
+        if (paymentMethod === "MOMO" || paymentMethod === "VNPAY") {
+          // Chuyển đến trang QR thanh toán
+          router.push(`/payment/${data.orderId}?method=${paymentMethod}`);
         } else {
           router.push("/order");
         }
@@ -344,15 +339,28 @@ export default function CartSummary({ items, selectedKeys, onApplyVoucher }: Pro
       </Box>
 
       <Box mb={2}>
-        <Typography>Phương thức thanh toán:</Typography>
+        <Typography mb={0.5}>Phương thức thanh toán:</Typography>
         <RadioGroup
           value={paymentMethod}
           onChange={(e) => setPaymentMethod(e.target.value as any)}
         >
-          <FormControlLabel value="COD" control={<Radio />} label="Thanh toán khi nhận hàng" />
-          <FormControlLabel value="MOMO" control={<Radio />} label="Ví điện tử MoMo" />
-          <FormControlLabel value="VNPAY" control={<Radio />} label="Thanh toán qua VNPay" />
+          <FormControlLabel value="COD" control={<Radio />} label="Thanh toán khi nhận hàng (COD)" />
+          <FormControlLabel
+            value="MOMO"
+            control={<Radio />}
+            label="Chuyển khoản MoMo (quét mã QR)"
+          />
+          <FormControlLabel
+            value="VNPAY"
+            control={<Radio />}
+            label="Chuyển khoản ngân hàng (quét mã QR)"
+          />
         </RadioGroup>
+        {(paymentMethod === "MOMO" || paymentMethod === "VNPAY") && (
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>
+            Sau khi đặt hàng, bạn sẽ được chuyển đến trang QR thanh toán. Hệ thống tự động xác nhận khi nhận được tiền.
+          </Typography>
+        )}
       </Box>
 
       <TextField
