@@ -12,6 +12,7 @@ import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import LocalOfferOutlinedIcon from "@mui/icons-material/LocalOfferOutlined";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import PaymentOutlinedIcon from "@mui/icons-material/PaymentOutlined";
+import WarehouseOutlinedIcon from "@mui/icons-material/WarehouseOutlined";
 
 import { VerticalNavItemsType } from "src/@core/layouts/types";
 
@@ -71,6 +72,11 @@ const navigation = (): VerticalNavItemsType => {
       title: "Bảo hành",
       icon: VerifiedUserOutlinedIcon,
       path: "/admin/warranties",
+    },
+    {
+      title: "Kho & Bán hàng",
+      icon: WarehouseOutlinedIcon,
+      path: "/admin/warehouse",
     },
     {
       title: "Tin tức",
