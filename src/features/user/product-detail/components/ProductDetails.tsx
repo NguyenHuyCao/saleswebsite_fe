@@ -33,7 +33,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, AppState } from "@/redux/store";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
 import { selectIsProductInWishlist } from "@/redux/selectors/wishlistSelectors";
-import GlobalSnackbar from "@/components/alert/GlobalSnackbar";
+import GlobalSnackbar from "@/components/feedback/GlobalSnackbar";
 import { useToast } from "@/lib/toast/ToastContext";
 import { mutate } from "swr";
 import { CART_COUNT_KEY, WISHLIST_COUNT_KEY } from "@/constants/apiKeys";

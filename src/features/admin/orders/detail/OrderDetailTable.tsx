@@ -25,7 +25,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import GlobalSnackbar from "@/components/alert/GlobalSnackbar";
+import GlobalSnackbar from "@/components/feedback/GlobalSnackbar";
 import {
   useConfirmCodPaid,
   useOrder,

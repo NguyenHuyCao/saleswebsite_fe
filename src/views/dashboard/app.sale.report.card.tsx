@@ -10,8 +10,8 @@ import {
   Box,
   CircularProgress,
 } from "@mui/material";
-import SalesChart from "@/components/dashboard/SalesChart";
-import { api, toApiError } from "@/lib/api/http";
+import SalesChart from "./components/SalesChart";
+import { api } from "@/lib/api/http";
 import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError";
 
 interface StatusOption {

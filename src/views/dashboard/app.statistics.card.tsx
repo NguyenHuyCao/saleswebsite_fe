@@ -22,7 +22,7 @@ import CellphoneLink from "mdi-material-ui/CellphoneLink";
 import AccountOutline from "mdi-material-ui/AccountOutline";
 import ArrowDownward from "@mui/icons-material/ArrowDownward";
 import ArrowUpward from "@mui/icons-material/ArrowUpward";
-import { api, toApiError } from "@/lib/api/http";
+import { api } from "@/lib/api/http";
 import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError";
 
 type Period = "week" | "month" | "year";

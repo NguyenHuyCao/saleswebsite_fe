@@ -24,7 +24,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
-import GlobalSnackbar from "@/components/alert/GlobalSnackbar";
+import GlobalSnackbar from "@/components/feedback/GlobalSnackbar";
 import { motion, AnimatePresence } from "framer-motion";
 import { getOrderItems, submitWarrantyClaim } from "../api";
 

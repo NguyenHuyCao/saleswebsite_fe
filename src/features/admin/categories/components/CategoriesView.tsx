@@ -35,9 +35,9 @@ import {
 } from "../queries";
 import type { Category } from "../types";
 
-import ModalCreateCategory from "@/model/category/ModalCreateCategory";
-import ModalEditCategory from "@/model/category/ModalEditCategory";
-import ConfirmDeleteCategory from "@/model/category/ConfirmDeleteCategory";
+import ModalCreateCategory from "./modals/ModalCreateCategory";
+import ModalEditCategory from "./modals/ModalEditCategory";
+import ConfirmDeleteCategory from "./modals/ConfirmDeleteCategory";
 import { useToast } from "@/lib/toast/ToastContext";
 
 const DEFAULT_ROWS = 10;

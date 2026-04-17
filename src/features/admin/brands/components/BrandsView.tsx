@@ -30,8 +30,8 @@ import { AppState } from "@/redux/store";
 import { useBrands, useCreateBrand, useUpdateBrand } from "../queries";
 import type { Brand } from "../types";
 
-import ModalFormBrandCreate from "@/model/brand/ModalFormBrandCreate";
-import ModalFormBrandEdit from "@/model/brand/ModalFormBrandEdit";
+import ModalFormBrandCreate from "./modals/ModalFormBrandCreate";
+import ModalFormBrandEdit from "./modals/ModalFormBrandEdit";
 import { useToast } from "@/lib/toast/ToastContext";
 
 const DEFAULT_ROWS = 10;

@@ -30,7 +30,7 @@ import { useEffect, useState } from "react";
 import StarIcon from "@mui/icons-material/Star";
 import DotsVertical from "mdi-material-ui/DotsVertical";
 import Image from "next/image";
-import { api, toApiError } from "@/lib/api/http";
+import { api } from "@/lib/api/http";
 import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError";
 
 const formatDate = (date: string) =>

@@ -17,10 +17,10 @@ import {
   Typography,
 } from "@mui/material";
 import HeadsetMicIcon from "@mui/icons-material/HeadsetMic";
-import MainCard from "@/components/dashboard/MainCard";
+import MainCard from "./components/MainCard";
 import PaidOutlinedIcon from "@mui/icons-material/PaidOutlined";
 import Image from "next/image";
-import { api, toApiError } from "@/lib/api/http";
+import { api } from "@/lib/api/http";
 import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError";
 
 interface Transaction {

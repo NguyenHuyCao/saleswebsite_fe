@@ -5,7 +5,7 @@ import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { Badge, Box, Grid, IconButton, Tooltip } from "@mui/material";
 import HeadsetMicIcon from "@mui/icons-material/HeadsetMic";
-import ApexChartWrapper from "@/styles/libs/react-apexcharts";
+import ApexChartWrapper from "@/@core/styles/libs/react-apexcharts";
 import Trophy from "@/views/dashboard/app.trophy";
 import StatisticsCard from "@/views/dashboard/app.statistics.card";
 import WeeklyOverview from "@/views/dashboard/app.weekly.overview";

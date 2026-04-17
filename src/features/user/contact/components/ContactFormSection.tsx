@@ -27,7 +27,7 @@ import {
 } from "@mui/icons-material";
 import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import GlobalSnackbar from "@/components/alert/GlobalSnackbar";
+import GlobalSnackbar from "@/components/feedback/GlobalSnackbar";
 import { useSendContact } from "../queries";
 import type { ContactPayload } from "../types";
 

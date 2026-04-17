@@ -26,7 +26,7 @@ import DotsVertical from "mdi-material-ui/DotsVertical";
 import Image from "next/image";
 
 // API
-import { api, toApiError } from "@/lib/api/http";
+import { api } from "@/lib/api/http";
 import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError";
 
 interface BrandSaleType {

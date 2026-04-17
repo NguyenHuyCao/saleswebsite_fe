@@ -28,7 +28,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import GlobalSnackbar from "@/components/alert/GlobalSnackbar";
+import GlobalSnackbar from "@/components/feedback/GlobalSnackbar";
 import { mutate } from "swr";
 import { CART_COUNT_KEY, WISHLIST_COUNT_KEY } from "@/constants/apiKeys";
 import { useDispatch, useSelector } from "react-redux";

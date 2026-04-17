@@ -30,7 +30,7 @@ import DotsVertical from "mdi-material-ui/DotsVertical";
 import { useEffect, useState } from "react";
 
 // ** Custom Components Imports
-import ReactApexcharts from "src/@core/components/react-apexcharts";
+import ReactApexcharts from "@/components/wrapper/ApexChart";
 import type { ApexOptions } from "apexcharts";
 
 // ** http/api custom

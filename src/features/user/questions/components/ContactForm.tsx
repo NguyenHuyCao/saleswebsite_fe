@@ -18,7 +18,7 @@ import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
 import MessageIcon from "@mui/icons-material/Message";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import GlobalSnackbar from "@/components/alert/GlobalSnackbar";
+import GlobalSnackbar from "@/components/feedback/GlobalSnackbar";
 import { createContact } from "../api";
 
 const STORAGE_KEY = "contact_form_draft";
