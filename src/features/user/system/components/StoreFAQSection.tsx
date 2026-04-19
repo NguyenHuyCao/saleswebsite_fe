@@ -17,12 +17,12 @@ const faqs = [
   {
     question: "Có thể đến xem sản phẩm trực tiếp trước khi mua không?",
     answer:
-      "Có, bạn có thể đến bất kỳ cửa hàng nào của DolaTool để trải nghiệm sản phẩm thực tế. Nhân viên sẽ hỗ trợ tư vấn và demo sản phẩm cho bạn.",
+      "Có, bạn có thể đến bất kỳ cửa hàng nào của Cường Hoa để trải nghiệm sản phẩm thực tế. Nhân viên sẽ hỗ trợ tư vấn và demo sản phẩm cho bạn.",
   },
   {
     question: "Tôi có thể đổi trả sản phẩm tại cửa hàng không?",
     answer:
-      "Có, bạn có thể đổi trả sản phẩm trong vòng 7 ngày tại bất kỳ cửa hàng nào của DolaTool, kèm theo hóa đơn và sản phẩm còn nguyên tem, chưa qua sử dụng.",
+      "Có, bạn có thể đổi trả sản phẩm trong vòng 7 ngày tại bất kỳ cửa hàng nào của Cường Hoa, kèm theo hóa đơn và sản phẩm còn nguyên tem, chưa qua sử dụng.",
   },
   {
     question: "Cửa hàng có hỗ trợ giao hàng không?",

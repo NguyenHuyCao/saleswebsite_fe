@@ -248,24 +248,26 @@ export default function ChangePasswordView() {
                 error={touched.current && !!errors.current}
                 helperText={touched.current && errors.current}
                 inputRef={currentInputRef}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LockIcon sx={{ color: "#999" }} />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() =>
-                          setShow((s) => ({ ...s, current: !s.current }))
-                        }
-                        edge="end"
-                      >
-                        {show.current ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LockIcon sx={{ color: "#999" }} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() =>
+                            setShow((s) => ({ ...s, current: !s.current }))
+                          }
+                          edge="end"
+                        >
+                          {show.current ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                    },
                 }}
                 required
               />
@@ -285,24 +287,26 @@ export default function ChangePasswordView() {
                   onBlur={() => handleBlur("new")}
                   error={touched.new && !!errors.new}
                   helperText={touched.new && errors.new}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <LockIcon sx={{ color: "#999" }} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={() =>
-                            setShow((s) => ({ ...s, new: !s.new }))
-                          }
-                          edge="end"
-                        >
-                          {show.new ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <LockIcon sx={{ color: "#999" }} />
+                        </InputAdornment>
+                      ),
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() =>
+                              setShow((s) => ({ ...s, new: !s.new }))
+                            }
+                            edge="end"
+                          >
+                            {show.new ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                      },
                   }}
                   required
                 />
@@ -402,24 +406,26 @@ export default function ChangePasswordView() {
                 onBlur={() => handleBlur("confirm")}
                 error={touched.confirm && !!errors.confirm}
                 helperText={touched.confirm && errors.confirm}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LockIcon sx={{ color: "#999" }} />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() =>
-                          setShow((s) => ({ ...s, confirm: !s.confirm }))
-                        }
-                        edge="end"
-                      >
-                        {show.confirm ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LockIcon sx={{ color: "#999" }} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() =>
+                            setShow((s) => ({ ...s, confirm: !s.confirm }))
+                          }
+                          edge="end"
+                        >
+                          {show.confirm ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                    },
                 }}
                 required
               />

@@ -3,9 +3,9 @@
 import type { StoreOrder } from "../../types";
 
 // ── Cấu hình cửa hàng – chỉnh lại theo thực tế ──────────────────────────────
-const STORE_NAME    = "Cửa hàng";
-const STORE_ADDRESS = "";
-const STORE_PHONE   = "";
+const STORE_NAME    = "Cường Hoa";
+const STORE_ADDRESS = "293 TL293, Nghĩa Phương, Bắc Ninh";
+const STORE_PHONE   = "0392923392";
 const RETURN_POLICY = "Hàng đã mua không đổi trả sau 7 ngày.";
 
 const PM_VN: Record<string, string> = {

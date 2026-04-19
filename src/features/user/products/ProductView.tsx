@@ -23,7 +23,7 @@ export default async function ProductView() {
   return (
     <>
       <PageViewTracker />
-      <Container>
+      <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
         <CategoryBanner />
         <ProductCategoryIntroSection categories={categoryList} />
         <div id="category-section">

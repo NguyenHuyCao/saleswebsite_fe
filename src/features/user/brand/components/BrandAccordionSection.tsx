@@ -6,7 +6,7 @@ import {
   Typography,
   Avatar,
   Link,
-  Container,
+  
   Chip,
   Stack,
   Paper,
@@ -78,7 +78,7 @@ export default function BrandAccordionSection({ brands }: Props) {
       variants={containerVariants}
     >
       <Box sx={{ py: { xs: 4, md: 6 }, bgcolor: "background.default" }}>
-        <Container maxWidth="xl">
+        <Box>
           {/* Header */}
           <motion.div variants={itemVariants}>
             <Box sx={{ textAlign: "center", mb: 5 }}>
@@ -445,7 +445,7 @@ export default function BrandAccordionSection({ brands }: Props) {
               </Button>
             </Paper>
           </motion.div>
-        </Container>
+        </Box>
       </Box>
     </motion.div>
   );

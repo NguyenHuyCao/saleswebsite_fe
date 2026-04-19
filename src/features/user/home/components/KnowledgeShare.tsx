@@ -12,7 +12,7 @@ import {
   Button,
   Chip,
   Stack,
-  Container,
+  
   IconButton,
   useTheme,
   useMediaQuery,
@@ -81,27 +81,26 @@ export default function KnowledgeShare() {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.15, delayChildren: 0.2 },
+      transition: { staggerChildren: 0.08, delayChildren: 0.1 },
     },
   };
   const headerVariants = {
-    hidden: { y: -30, opacity: 0 },
+    hidden: { y: -16, opacity: 0 },
     visible: {
       y: 0,
       opacity: 1,
-      transition: { type: "spring", stiffness: 100, damping: 15 },
+      transition: { duration: 0.45, ease: "easeOut" },
     },
   };
   const cardVariants = {
-    hidden: { y: 50, opacity: 0 },
+    hidden: { y: 20, opacity: 0 },
     visible: (i: number) => ({
       y: 0,
       opacity: 1,
       transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 15,
-        delay: i * 0.1,
+        duration: 0.4,
+        ease: "easeOut",
+        delay: i * 0.08,
       },
     }),
   };
@@ -113,8 +112,8 @@ export default function KnowledgeShare() {
       animate={isInView ? "visible" : "hidden"}
       variants={containerVariants}
     >
-      <Box sx={{ py: { xs: 4, md: 6 }, bgcolor: "background.default" }}>
-        <Container maxWidth="xl">
+      <Box sx={{ py: { xs: 3, md: 4 }, bgcolor: "#fff" }}>
+        <Box>
           {/* Header */}
           <motion.div variants={headerVariants}>
             <Box
@@ -122,7 +121,7 @@ export default function KnowledgeShare() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                mb: 4,
+                mb: { xs: 2, md: 4 },
                 flexWrap: "wrap",
                 gap: 2,
               }}
@@ -195,7 +194,7 @@ export default function KnowledgeShare() {
           </motion.div>
 
           {/* Content */}
-          <Grid container spacing={3}>
+          <Grid container spacing={{ xs: 2, md: 3 }}>
             {isLoading ? (
               [1, 2, 3].map((i) => (
                 <Grid key={i} size={{ xs: 12, sm: 6, md: 4 }}>
@@ -228,12 +227,13 @@ export default function KnowledgeShare() {
               currentArticles.map((article, index) => {
                 const tags = parseTags(article.tags);
                 return (
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={article.id}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={article.id} sx={{ display: "flex" }}>
                     <motion.div
                       variants={cardVariants}
                       custom={index}
-                      whileHover={{ y: -8 }}
-                      transition={{ type: "spring", stiffness: 300 }}
+                      whileHover={{ y: -4 }}
+                      transition={{ duration: 0.18, ease: "easeOut" }}
+                      style={{ height: "100%" }}
                     >
                       <Card
                         onClick={() => router.push(`/new/${article.slug}`)}
@@ -244,12 +244,12 @@ export default function KnowledgeShare() {
                           borderRadius: 3,
                           overflow: "hidden",
                           cursor: "pointer",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-                          transition: "all 0.3s ease",
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                          transition: "box-shadow 0.25s ease",
                           "&:hover": {
-                            boxShadow: "0 12px 28px rgba(242,92,5,0.15)",
+                            boxShadow: "0 8px 24px rgba(242,92,5,0.13)",
                             "& .MuiCardMedia-root": {
-                              transform: "scale(1.05)",
+                              transform: "scale(1.03)",
                             },
                           },
                         }}
@@ -435,11 +435,11 @@ export default function KnowledgeShare() {
 
           {/* View All */}
           <motion.div
-            initial={{ opacity: 0 }}
+
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
           >
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
+            <Box sx={{ display: "flex", justifyContent: "center", mt: { xs: 3, md: 5 } }}>
               <Button
                 variant="outlined"
                 onClick={() => router.push("/new")}
@@ -463,7 +463,7 @@ export default function KnowledgeShare() {
               </Button>
             </Box>
           </motion.div>
-        </Container>
+        </Box>
       </Box>
     </motion.div>
   );

@@ -29,6 +29,7 @@ import FlashOnIcon from "@mui/icons-material/FlashOn";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import GlobalSnackbar from "@/components/feedback/GlobalSnackbar";
+import { trackRVItem } from "@/lib/utils/recentlyViewed";
 import { mutate } from "swr";
 import { CART_COUNT_KEY, WISHLIST_COUNT_KEY } from "@/constants/apiKeys";
 import { useDispatch, useSelector } from "react-redux";
@@ -53,11 +54,10 @@ export const ProductCardSkeleton = () => (
     elevation={2}
     sx={{
       width: "100%",
-      maxWidth: 240,
       height: "100%",
-      minHeight: 380,
+      minHeight: { xs: 300, sm: 360, md: 380 },
       borderRadius: 2,
-      p: 2,
+      p: { xs: 1.5, sm: 2 },
       bgcolor: "#fff",
       display: "flex",
       flexDirection: "column",
@@ -138,8 +138,18 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   // Navigate to product detail on card click
   const handleCardClick = useCallback(() => {
+    trackRVItem({
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      imageAvt: product.imageAvt,
+      price: product.price,
+      originalPrice: product.originalPrice,
+      discountPercent: product.discountPercent,
+      inStock: product.inStock,
+    });
     router.push(`/product/detail?name=${product.slug}`);
-  }, [router, product.slug]);
+  }, [router, product]);
 
   // Cart icon: add to cart (with variant dialog for non-machine)
   const handleCartAction = useCallback(
@@ -274,11 +284,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
           elevation={2}
           sx={{
             width: "100%",
-            maxWidth: 240,
             height: "100%",
             borderRadius: 3,
             overflow: "hidden",
-            p: 2,
+            p: { xs: 1.5, sm: 2 },
             position: "relative",
             display: "flex",
             flexDirection: "column",
@@ -406,7 +415,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
             {/* Product Name */}
             <Tooltip title={product.name} arrow>
               <Typography
-                fontSize={14}
                 fontWeight={600}
                 sx={{
                   overflow: "hidden",
@@ -414,8 +422,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   display: "-webkit-box",
                   WebkitLineClamp: 2,
                   WebkitBoxOrient: "vertical",
-                  minHeight: 40,
+                  minHeight: { xs: 36, sm: 40 },
                   lineHeight: 1.4,
+                  fontSize: { xs: "0.78rem", sm: "0.875rem" },
                 }}
               >
                 {product.name}
@@ -424,15 +433,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
             {/* Price — strikethrough always rendered to reserve space */}
             <Stack direction="row" spacing={1} alignItems="center">
-              <Typography fontWeight={700} color="#f25c05" fontSize={16}>
+              <Typography fontWeight={700} color="#f25c05" sx={{ fontSize: { xs: "0.85rem", sm: "1rem" } }}>
                 {finalPrice.toLocaleString()}₫
               </Typography>
               <Typography
-                fontSize={12}
                 sx={{
                   textDecoration: "line-through",
                   color: "#999",
                   visibility: hasDiscount ? "visible" : "hidden",
+                  fontSize: { xs: "0.65rem", sm: "0.75rem" },
                 }}
               >
                 {originalPrice?.toLocaleString() ?? "0"}₫
@@ -459,7 +468,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </Stack>
 
           {/* Action Buttons — mt:auto pushes to card bottom */}
-          <Stack direction="row" spacing={0.75} sx={{ mt: "auto", pt: 1.5 }}>
+          <Stack direction="row" spacing={0.5} sx={{ mt: "auto", pt: { xs: 1, sm: 1.5 } }}>
             {/* Cart icon button */}
             <Tooltip
               title={
@@ -477,8 +486,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   disabled={!product.inStock || busyCart}
                   size="small"
                   sx={{
-                    width: 36,
-                    height: 36,
+                    width: { xs: 32, sm: 36 },
+                    height: { xs: 32, sm: 36 },
                     borderRadius: 2,
                     border: "1.5px solid",
                     borderColor: product.inStock ? "#ffb700" : "#e0e0e0",
@@ -527,14 +536,21 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 bgcolor: product.inStock ? "#f25c05" : "transparent",
                 color: product.inStock ? "#fff" : "#999",
                 fontWeight: 600,
-                fontSize: 12,
+                fontSize: { xs: "0.68rem", sm: "0.75rem" },
                 borderRadius: 2,
-                height: 36,
+                height: { xs: 32, sm: 36 },
                 minWidth: 0,
+                px: { xs: 0.75, sm: 1.5 },
+                whiteSpace: "nowrap",
                 "&:hover": {
                   bgcolor: product.inStock ? "#e64a19" : "transparent",
                 },
                 transition: "all 0.2s",
+                "& .MuiButton-startIcon": {
+                  display: { xs: "none", sm: "flex" },
+                  mr: { xs: 0, sm: "6px" },
+                  ml: { xs: 0, sm: "-2px" },
+                },
               }}
             >
               {product.inStock ? "Đặt hàng" : "Hết hàng"}

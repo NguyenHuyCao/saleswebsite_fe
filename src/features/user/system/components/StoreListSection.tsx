@@ -263,12 +263,14 @@ export default function StoreListSection({ stores }: Props) {
               placeholder="Tìm theo tên hoặc địa chỉ"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon />
+                    </InputAdornment>
+                  ),
+                  },
               }}
             />
           </Grid>

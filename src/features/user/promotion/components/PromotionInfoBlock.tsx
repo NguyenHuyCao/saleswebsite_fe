@@ -27,7 +27,7 @@ const faqs = [
   {
     question: "Tôi cần kỹ thuật lắp đặt hỗ trợ?",
     answer:
-      "Dola Tool hỗ trợ tư vấn kỹ thuật trực tiếp hoặc gọi video miễn phí.",
+      "Cường Hoa hỗ trợ tư vấn kỹ thuật trực tiếp hoặc gọi video miễn phí.",
   },
 ];
 
@@ -40,10 +40,9 @@ export default function PromotionInfoBlock() {
       <GuaranteeSection />
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
+
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.3 }}
-        viewport={{ once: true }}
       >
         <Typography
           variant="h6"

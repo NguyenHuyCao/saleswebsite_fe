@@ -132,12 +132,14 @@ export default function ContactForm() {
             }}
             error={!!errors.fullName}
             helperText={errors.fullName}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <PersonIcon sx={{ color: "#f25c05" }} />
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <PersonIcon sx={{ color: "#f25c05" }} />
+                  </InputAdornment>
+                ),
+                },
             }}
           />
 
@@ -153,12 +155,14 @@ export default function ContactForm() {
             }}
             error={!!errors.email}
             helperText={errors.email}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <EmailIcon sx={{ color: "#f25c05" }} />
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <EmailIcon sx={{ color: "#f25c05" }} />
+                  </InputAdornment>
+                ),
+                },
             }}
           />
 
@@ -173,12 +177,14 @@ export default function ContactForm() {
             }}
             error={!!errors.phone}
             helperText={errors.phone}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <PhoneIcon sx={{ color: "#f25c05" }} />
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <PhoneIcon sx={{ color: "#f25c05" }} />
+                  </InputAdornment>
+                ),
+                },
             }}
           />
 
@@ -196,12 +202,14 @@ export default function ContactForm() {
             }}
             error={!!errors.messageContent}
             helperText={errors.messageContent}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <MessageIcon sx={{ color: "#f25c05" }} />
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <MessageIcon sx={{ color: "#f25c05" }} />
+                  </InputAdornment>
+                ),
+                },
             }}
           />
 

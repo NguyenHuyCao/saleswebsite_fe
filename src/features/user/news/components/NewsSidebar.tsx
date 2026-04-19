@@ -69,12 +69,14 @@ export default function NewsSidebar({ currentPost }: Props) {
           fullWidth
           placeholder="Tìm bài viết..."
           size="small"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+              },
           }}
         />
       </Paper>

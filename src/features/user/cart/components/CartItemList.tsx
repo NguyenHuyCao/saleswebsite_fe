@@ -238,7 +238,9 @@ export default function CartItemList({
         value={item.quantity}
         size="small"
         type="number"
-        InputProps={{ readOnly: true }}
+        slotProps={{
+          input: { readOnly: true   },
+        }}
         sx={{
           width: 52,
           "& input": { textAlign: "center", px: 0.5, py: 0.75, fontSize: 14 },

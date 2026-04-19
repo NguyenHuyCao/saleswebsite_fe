@@ -37,6 +37,7 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 
 import { useNewsDetail, useRelatedNews, useNewsList } from "../queries";
+import DOMPurify from "isomorphic-dompurify";
 import { useState } from "react";
 
 const NEWS_CATEGORIES = [
@@ -81,7 +82,7 @@ export default function NewsDetailView({ slug }: Props) {
 
   if (isLoading) {
     return (
-      <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
         <Skeleton variant="text" width={300} height={40} sx={{ mb: 2 }} />
         <Skeleton variant="rounded" height={400} sx={{ mb: 2 }} />
         <Skeleton variant="text" height={30} />
@@ -93,7 +94,7 @@ export default function NewsDetailView({ slug }: Props) {
 
   if (error || !post) {
     return (
-      <Container maxWidth="xl" sx={{ py: 8 }}>
+      <Container maxWidth="lg" sx={{ py: 8 }}>
         <Alert severity="error" sx={{ borderRadius: 3 }}>
           Không tìm thấy bài viết. Vui lòng quay lại sau.
         </Alert>
@@ -141,7 +142,7 @@ export default function NewsDetailView({ slug }: Props) {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
         {/* Breadcrumb */}
         <Breadcrumbs
           separator={<NavigateNextIcon fontSize="small" />}
@@ -314,7 +315,7 @@ export default function NewsDetailView({ slug }: Props) {
                   },
                 }}
               >
-                <div dangerouslySetInnerHTML={{ __html: post.content || "" }} />
+                <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content || "") }} />
               </Box>
 
               {/* Tags */}

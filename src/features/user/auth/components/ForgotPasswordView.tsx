@@ -161,12 +161,14 @@ export default function ForgotPasswordView() {
                 error={!!emailError}
                 helperText={emailError}
                 autoFocus
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <EmailIcon sx={{ color: "#999" }} />
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <EmailIcon sx={{ color: "#999" }} />
+                      </InputAdornment>
+                    ),
+                    },
                 }}
               />
 

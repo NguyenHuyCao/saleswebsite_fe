@@ -9,7 +9,7 @@ import {
   Stack,
   useTheme,
   useMediaQuery,
-  Container,
+  
   Chip,
   IconButton,
   Pagination,
@@ -121,7 +121,7 @@ export default function BrandListSection({ brands, loading = false }: Props) {
   // Loading skeleton
   if (loading) {
     return (
-      <Container maxWidth="xl" sx={{ py: 6 }}>
+      <Box sx={{ py: 6 }}>
         <Skeleton
           variant="text"
           width={300}
@@ -139,14 +139,14 @@ export default function BrandListSection({ brands, loading = false }: Props) {
             </Grid>
           ))}
         </Grid>
-      </Container>
+      </Box>
     );
   }
 
   // Empty state
   if (!brands || brands.length === 0) {
     return (
-      <Container maxWidth="xl" sx={{ py: 6 }}>
+      <Box sx={{ py: 6 }}>
         <Paper
           elevation={0}
           sx={{
@@ -165,7 +165,7 @@ export default function BrandListSection({ brands, loading = false }: Props) {
             Các thương hiệu sẽ sớm được cập nhật
           </Typography>
         </Paper>
-      </Container>
+      </Box>
     );
   }
 
@@ -177,7 +177,7 @@ export default function BrandListSection({ brands, loading = false }: Props) {
       variants={containerVariants}
     >
       <Box sx={{ py: { xs: 4, md: 6 }, bgcolor: "#fff" }}>
-        <Container maxWidth="xl">
+        <Box>
           {/* Header */}
           <motion.div variants={headerVariants}>
             <Stack
@@ -431,7 +431,7 @@ export default function BrandListSection({ brands, loading = false }: Props) {
               </Stack>
             </Fade>
           )}
-        </Container>
+        </Box>
       </Box>
     </motion.div>
   );

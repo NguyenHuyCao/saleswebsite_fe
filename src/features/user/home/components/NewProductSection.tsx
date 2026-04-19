@@ -9,7 +9,6 @@ import {
   IconButton,
   Chip,
   Fade,
-  Container,
 } from "@mui/material";
 import Slider from "react-slick";
 import ProductCard from "@/features/user/products/components/ProductCard";
@@ -35,8 +34,6 @@ export default function NewProductSection({ products }: Props) {
   const sliderRef = useRef<Slider | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [totalSlides, setTotalSlides] = useState(products.length);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
 
   // Animation variants
   const containerVariants = {
@@ -76,19 +73,6 @@ export default function NewProductSection({ products }: Props) {
   const slidesToShow = isMobile ? 2 : isTablet ? 3 : 5;
   const totalPages = Math.ceil(products.length / slidesToShow);
   const currentPage = Math.floor(currentSlide / slidesToShow) + 1;
-
-  // Kiểm tra có thể scroll không
-  useEffect(() => {
-    if (sliderRef.current) {
-      const slickList = document.querySelector(".slick-list");
-      if (slickList) {
-        const { scrollLeft, scrollWidth, clientWidth } =
-          slickList as HTMLElement;
-        setCanScrollLeft(scrollLeft > 0);
-        setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
-      }
-    }
-  }, [currentSlide]);
 
   // Cập nhật totalSlides khi products thay đổi
   useEffect(() => {
@@ -136,9 +120,8 @@ export default function NewProductSection({ products }: Props) {
   if (!products?.length) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
+
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
         <Box
@@ -165,12 +148,11 @@ export default function NewProductSection({ products }: Props) {
   return (
     <motion.div
       initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.1 }}
+      animate="visible"
       variants={containerVariants}
     >
-      <Box sx={{ py: { xs: 4, md: 6 }, bgcolor: "#fff" }}>
-        <Container maxWidth="xl">
+      <Box sx={{ py: { xs: 3, md: 4 }, bgcolor: "#fff" }}>
+        <Box>
           {/* Header với animation */}
           <motion.div variants={itemVariants}>
             <Box
@@ -178,7 +160,9 @@ export default function NewProductSection({ products }: Props) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                mb: 4,
+                mb: { xs: 2, md: 4 },
+                flexWrap: "wrap",
+                gap: 2,
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
@@ -214,7 +198,7 @@ export default function NewProductSection({ products }: Props) {
               {/* Pagination và navigation cho desktop */}
               {!isMobile && totalPages > 1 && (
                 <motion.div
-                  initial={{ opacity: 0, x: 20 }}
+
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 }}
                 >
@@ -328,7 +312,7 @@ export default function NewProductSection({ products }: Props) {
 
           {/* Slider Container với animation */}
           <motion.div variants={itemVariants}>
-            <Box sx={{ position: "relative" }}>
+            <Box sx={{ position: "relative", pt: 1, "& .slick-list": { overflow: "visible !important" }, overflow: "hidden" }}>
               {/* Slider */}
               <Slider ref={sliderRef} {...settings}>
                 {products.map((product, index) => (
@@ -341,7 +325,7 @@ export default function NewProductSection({ products }: Props) {
                     >
                       <ProductCard
                         product={product}
-                        mutateKey={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products?sort=createdAt,desc`}
+                        mutateKey="/api/v1/products?sort=createdAt,desc"
                       />
                     </motion.div>
                   </Box>
@@ -371,7 +355,7 @@ export default function NewProductSection({ products }: Props) {
           {/* Mobile Pagination với animation */}
           {isMobile && totalPages > 1 && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
@@ -396,7 +380,7 @@ export default function NewProductSection({ products }: Props) {
                   }}
                 >
                   <motion.div
-                    initial={{ width: 0 }}
+
                     animate={{
                       width: `${((currentSlide + slidesToShow) / products.length) * 100}%`,
                     }}
@@ -423,7 +407,7 @@ export default function NewProductSection({ products }: Props) {
           {/* Xem thêm button với animation */}
           {!isMobile && products.length > slidesToShow && (
             <motion.div
-              initial={{ opacity: 0 }}
+
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
               whileHover={{ scale: 1.02 }}
@@ -431,9 +415,7 @@ export default function NewProductSection({ products }: Props) {
               <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
                 <Box
                   component="button"
-                  onClick={() =>
-                    (window.location.href = "/product?sort=newest")
-                  }
+                  onClick={() => router.push("/product?sort=createdAt,desc")}
                   sx={{
                     display: "flex",
                     alignItems: "center",
@@ -461,7 +443,7 @@ export default function NewProductSection({ products }: Props) {
               </Box>
             </motion.div>
           )}
-        </Container>
+        </Box>
       </Box>
     </motion.div>
   );

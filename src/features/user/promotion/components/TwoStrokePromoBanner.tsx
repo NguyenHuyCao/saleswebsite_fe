@@ -108,7 +108,7 @@ export default function TwoStrokePromoBanner() {
 
   return (
     <Box sx={{ position: "relative", mb: 4 }}>
-      <Container maxWidth="xl">
+      <Box>
         <Box
           sx={{
             position: "relative",
@@ -312,7 +312,7 @@ export default function TwoStrokePromoBanner() {
                   {/* Right Image */}
                   {!isMobile && (
                     <motion.div
-                      initial={{ opacity: 0, x: 50 }}
+
                       animate={{ opacity: 0.95, x: 0 }}
                       transition={{ duration: 0.6, delay: 0.2 }}
                       style={{
@@ -426,7 +426,7 @@ export default function TwoStrokePromoBanner() {
             ))}
           </Box>
         </Box>
-      </Container>
+      </Box>
     </Box>
   );
 }

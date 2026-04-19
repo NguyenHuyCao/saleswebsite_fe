@@ -123,7 +123,7 @@ export default function NewsListView() {
 
   return (
     <motion.div initial="hidden" animate="visible" variants={containerVariants}>
-      <Container maxWidth="xl">
+      <Container maxWidth="lg">
         <Box sx={{ py: 4 }}>
           {/* Header */}
           <motion.div variants={itemVariants}>

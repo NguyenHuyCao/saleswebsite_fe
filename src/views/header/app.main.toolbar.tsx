@@ -2,6 +2,7 @@
 
 import {
   AppBar,
+  Badge,
   Box,
   Container,
   IconButton,
@@ -39,6 +40,8 @@ import {
 import { http } from "@/lib/api/http";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { faqData } from "@/features/user/questions/constants/faqData";
+import { getAccessToken } from "@/lib/api/token";
+import NotificationDropdown from "@/@core/layouts/components/shared-components/NotificationDropdown";
 
 mutate(CART_COUNT_KEY);
 mutate(WISHLIST_COUNT_KEY);
@@ -94,8 +97,20 @@ const MainToolbar = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [productSuggestions, setProductSuggestions] = useState<ProductSuggestion[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const debouncedSearch = useDebounce(searchText, 350);
   const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    setIsLoggedIn(!!getAccessToken());
+    const sync = () => setIsLoggedIn(!!getAccessToken());
+    window.addEventListener("login", sync);
+    window.addEventListener("logout", sync);
+    return () => {
+      window.removeEventListener("login", sync);
+      window.removeEventListener("logout", sync);
+    };
+  }, []);
 
   const { data: wishlistCount = 0 } = useSWR(WISHLIST_COUNT_KEY, fetcherWithToken);
   const { data: cartCount = 0 } = useSWR(CART_COUNT_KEY, fetcherWithToken, {
@@ -221,14 +236,15 @@ const MainToolbar = () => {
 
   return (
     <AppBar position="static" sx={{ bgcolor: "black", boxShadow: "none" }}>
-      <Container>
+      <Container maxWidth="lg">
         <Toolbar
           sx={{
-            justifyContent: { xs: "center", md: "space-between" },
             alignItems: "center",
-            flexDirection: { xs: "column", md: "row" },
-            gap: 2,
-            py: 2,
+            flexWrap: "wrap",
+            gap: { xs: 0, md: 2 },
+            py: { xs: 1, md: 2 },
+            px: { xs: 0.5, md: 2 },
+            minHeight: "unset",
           }}
         >
           <Box
@@ -236,8 +252,10 @@ const MainToolbar = () => {
             src="/images/store/logo-removebg-preview.png"
             alt="Logo"
             sx={{
-              height: { xs: 60, sm: 80, md: 100 },
+              height: { xs: 50, sm: 80, md: 100 },
               cursor: "pointer",
+              order: { xs: 1, md: 1 },
+              flexShrink: 0,
               transition: "transform 0.3s ease",
               "&:hover": { transform: "scale(1.05)" },
             }}
@@ -249,9 +267,12 @@ const MainToolbar = () => {
             <Box
               sx={{
                 position: "relative",
-                flexGrow: 1,
-                maxWidth: { xs: "100%", sm: 400 },
-                mx: 2,
+                flexGrow: { xs: 0, md: 1 },
+                order: { xs: 3, md: 2 },
+                width: { xs: "100%", md: "auto" },
+                maxWidth: { xs: "100%", md: 560 },
+                mx: { xs: 0, md: 2 },
+                mt: { xs: 1, md: 0 },
               }}
             >
               <Box
@@ -467,10 +488,14 @@ const MainToolbar = () => {
 
           <Stack
             direction="row"
-            spacing={3}
+            spacing={{ xs: 0.5, md: 3 }}
             alignItems="center"
             flexWrap="wrap"
             justifyContent="flex-end"
+            sx={{
+              order: { xs: 2, md: 3 },
+              ml: { xs: "auto", md: 0 },
+            }}
           >
             {navItems.map(({ label, href, icon: Icon, count }) => {
               const isActive = pathname === href;
@@ -493,22 +518,35 @@ const MainToolbar = () => {
                   }}
                   onClick={() => router.push(href)}
                 >
-                  <IconButton
+                  <Badge
+                    badgeContent={count || 0}
+                    color="error"
+                    max={99}
+                    invisible={!count}
                     sx={{
-                      color: isActive ? "#f25c05" : "#ffb700",
-                      border: "1px solid #ffb700",
-                      width: 40,
-                      height: 40,
-                      borderRadius: "50%",
+                      "& .MuiBadge-badge": {
+                        display: { xs: "flex", md: "none" },
+                      },
                     }}
                   >
-                    <Icon />
-                  </IconButton>
-                  <Box>
+                    <IconButton
+                      sx={{
+                        color: isActive ? "#f25c05" : "#ffb700",
+                        border: "1px solid #ffb700",
+                        width: { xs: 36, md: 40 },
+                        height: { xs: 36, md: 40 },
+                        borderRadius: "50%",
+                      }}
+                    >
+                      <Icon />
+                    </IconButton>
+                  </Badge>
+                  {/* Text + count — desktop only */}
+                  <Box sx={{ display: { xs: "none", md: "block" } }}>
                     <Typography
                       className="hover-label"
                       sx={{
-                        fontSize: { xs: "14px", md: "16px" },
+                        fontSize: "16px",
                         fontWeight: "bold",
                         color: isActive ? "#f25c05" : "#ffb700",
                         transition: "color 0.2s ease",
@@ -534,6 +572,34 @@ const MainToolbar = () => {
                 </Box>
               );
             })}
+
+            {/* Notification — mobile only, sau cart (sm+ dùng TopBar) */}
+            {isLoggedIn && (
+              <Box
+                sx={{
+                  display: { xs: "flex", sm: "none" },
+                  alignItems: "center",
+                  color: "#ffb700",
+                  "& .MuiIconButton-root": {
+                    border: "1px solid #ffb700",
+                    width: 36,
+                    height: 36,
+                    borderRadius: "50%",
+                    p: 0,
+                    color: "#ffb700",
+                    "&:hover": { bgcolor: "rgba(255,183,0,0.1)" },
+                  },
+                  "& .MuiBadge-badge": {
+                    bgcolor: "#f25c05",
+                    fontSize: "0.58rem",
+                    minWidth: 16,
+                    height: 16,
+                  },
+                }}
+              >
+                <NotificationDropdown />
+              </Box>
+            )}
           </Stack>
         </Toolbar>
       </Container>

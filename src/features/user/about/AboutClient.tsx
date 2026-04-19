@@ -48,7 +48,7 @@ export default function AboutClient() {
   return (
     <>
       <HeroSection />
-      <Container>
+      <Container maxWidth="lg">
         <WhoWeAre />
         <WhyTwoStrokeSection />
         <ExperienceMediaSection />

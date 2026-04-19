@@ -27,7 +27,6 @@ export default function NextAppDirEmotionCacheProvider({
 }: NextAppDirEmotionCacheProviderProps) {
   const [registry] = React.useState(() => {
     const cache = createCache(options);
-    cache.compat = true;
 
     const prevInsert = cache.insert;
     let inserted: { name: string; isGlobal: boolean }[] = [];

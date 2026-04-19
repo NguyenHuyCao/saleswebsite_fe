@@ -97,7 +97,7 @@ export default function CartView({ selectKey }: Props) {
   };
 
   return (
-    <Container sx={{ mt: 4, mb: 5 }}>
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 5, px: { xs: 2, sm: 3 } }}>
       {isLoading ? (
         <Grid container spacing={4} mt={2}>
           <Grid size={{ xs: 12, md: 8 }}>

@@ -17,7 +17,7 @@ export default async function WarrantyView() {
       {/* Hero Section */}
       <WarrantyHeroSection />
 
-      <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
         {/* Stats Overview */}
         <WarrantyStats />
 

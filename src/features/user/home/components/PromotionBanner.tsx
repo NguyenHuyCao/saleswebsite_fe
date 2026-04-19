@@ -28,8 +28,8 @@ function PromotionCard({ promo }: { promo: (typeof promotions)[0] }) {
   const router = useRouter();
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
+
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
       <Box
@@ -131,12 +131,14 @@ function PromotionCard({ promo }: { promo: (typeof promotions)[0] }) {
 
 export default function PromotionBanner() {
   return (
-    <Grid container spacing={3}>
-      {promotions.map((p, i) => (
-        <Grid size={{ xs: 12, md: 6 }} key={i}>
-          <PromotionCard promo={p} />
-        </Grid>
-      ))}
-    </Grid>
+    <Box sx={{ py: { xs: 3, md: 5 } }}>
+      <Grid container spacing={3}>
+        {promotions.map((p, i) => (
+          <Grid size={{ xs: 12, md: 6 }} key={i}>
+            <PromotionCard promo={p} />
+          </Grid>
+        ))}
+      </Grid>
+    </Box>
   );
 }

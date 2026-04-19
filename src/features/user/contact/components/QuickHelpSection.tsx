@@ -113,13 +113,15 @@ export default function QuickHelpSection() {
             placeholder="Tìm kiếm câu hỏi..."
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-              sx: { borderRadius: 3 },
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+                sx: { borderRadius: 3 },
+                },
             }}
           />
         </Box>

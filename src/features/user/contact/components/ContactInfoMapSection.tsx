@@ -28,50 +28,50 @@ const contactInfo = [
   {
     icon: <RoomIcon sx={{ color: "#f25c05", fontSize: 28 }} />,
     label: "Địa chỉ",
-    value: "7FGV+PM Lục Nam District, Bac Giang, Vietnam",
-    action: "https://maps.google.com",
+    value: "293 TL293, Nghĩa Phương, Bắc Ninh, Việt Nam",
+    action: "https://www.google.com/maps/search/?api=1&query=293+TL293+Nghi%C3%A3+Ph%C6%B0%C6%A1ng+B%E1%BA%AFc+Ninh",
   },
   {
     icon: <PhoneIcon sx={{ color: "#f25c05", fontSize: 28 }} />,
     label: "Hotline",
-    value: "0909 123 456",
-    action: "tel:0909123456",
-    subValue: "Tư vấn 24/7",
+    value: "0392 923 392",
+    action: "tel:0392923392",
+    subValue: "7:00 – 18:00 hàng ngày",
   },
   {
     icon: <EmailIcon sx={{ color: "#f25c05", fontSize: 28 }} />,
     label: "Email",
-    value: "info@dolatool.vn",
-    action: "mailto:info@dolatool.vn",
+    value: "support@cuonghoa.vn",
+    action: "mailto:support@cuonghoa.vn",
     subValue: "Phản hồi trong 24h",
   },
   {
     icon: <AccessTimeIcon sx={{ color: "#f25c05", fontSize: 28 }} />,
     label: "Giờ làm việc",
-    value: "Thứ 2 – Thứ 7",
-    subValue: "8:00 – 17:30",
+    value: "Thứ 2 – Chủ nhật",
+    subValue: "7:00 – 18:00",
   },
 ];
 
 const socialLinks = [
   {
     icon: <FacebookIcon />,
-    url: "https://facebook.com/dolatool",
+    url: "https://www.facebook.com/messages/e2ee/t/9200105130025225",
     label: "Facebook",
   },
   {
     icon: <YouTubeIcon />,
-    url: "https://youtube.com/dolatool",
+    url: "https://youtube.com/@cuonghoa",
     label: "YouTube",
   },
   {
     icon: <TwitterIcon />,
-    url: "https://twitter.com/dolatool",
+    url: "https://zalo.me/0392923392",
     label: "Twitter",
   },
   {
     icon: <InstagramIcon />,
-    url: "https://instagram.com/dolatool",
+    url: "https://zalo.me/0392923392",
     label: "Instagram",
   },
 ];
@@ -263,7 +263,7 @@ export default function ContactInfoMapSection() {
               }}
             >
               <iframe
-                title="DolaTool Google Map"
+                title="Cường Hoa – Bản đồ cửa hàng"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
@@ -285,7 +285,7 @@ export default function ContactInfoMapSection() {
                 <Chip
                   label="Chỉ đường"
                   component="a"
-                  href="https://maps.google.com/?q=7FGV+PM+Lục+Nam+District+Bac+Giang+Vietnam"
+                  href="https://www.google.com/maps/search/?api=1&query=293+TL293+Nghi%C3%A3+Ph%C6%B0%C6%A1ng+B%E1%BA%AFc+Ninh"
                   target="_blank"
                   clickable
                   sx={{

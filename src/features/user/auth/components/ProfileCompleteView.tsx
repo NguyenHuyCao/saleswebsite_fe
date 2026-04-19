@@ -164,12 +164,14 @@ export default function ProfileCompleteView() {
                 error={!!phoneError}
                 helperText={phoneError || "Ví dụ: 0912345678"}
                 autoFocus
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <PhoneIcon sx={{ color: "#999" }} />
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <PhoneIcon sx={{ color: "#999" }} />
+                      </InputAdornment>
+                    ),
+                    },
                 }}
               />
 
@@ -197,12 +199,14 @@ export default function ProfileCompleteView() {
                 value={form.address}
                 onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
                 placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <HomeIcon sx={{ color: "#999", alignSelf: "flex-start", mt: 1 }} />
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <HomeIcon sx={{ color: "#999", alignSelf: "flex-start", mt: 1 }} />
+                      </InputAdornment>
+                    ),
+                    },
                 }}
               />
 

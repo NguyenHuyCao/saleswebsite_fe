@@ -7,7 +7,6 @@ import {
   Button,
   useMediaQuery,
   useTheme,
-  Container,
   Chip,
   Stack,
 } from "@mui/material";
@@ -43,10 +42,7 @@ export default function WarrantyHeroSection() {
         }}
       />
 
-      <Container
-        maxWidth="xl"
-        sx={{ py: { xs: 6, md: 8 }, position: "relative" }}
-      >
+      <Box sx={{ py: { xs: 6, md: 8 }, position: "relative" }}>
         <Grid container spacing={4} alignItems="center">
           {/* Left Content */}
           <Grid size={{ xs: 12, md: 6 }}>
@@ -204,7 +200,7 @@ export default function WarrantyHeroSection() {
             </motion.div>
           </Grid>
         </Grid>
-      </Container>
+      </Box>
     </Box>
   );
 }

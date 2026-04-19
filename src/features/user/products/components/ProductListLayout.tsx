@@ -108,7 +108,6 @@ export default function ProductListLayout({
         display: { xs: "block", md: "flex" },
         gap: 3,
         py: 4,
-        px: { xs: 1, sm: 2 },
       }}
     >
       {/* Sidebar */}

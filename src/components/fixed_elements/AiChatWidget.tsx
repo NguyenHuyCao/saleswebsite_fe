@@ -13,6 +13,8 @@ import {
   TextField,
   Tooltip,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useRef, useState } from "react";
@@ -205,6 +207,9 @@ function StreamingCursor() {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function AiChatWidget({ onChatOpenChange }: { onChatOpenChange?: (open: boolean) => void }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   const [open, setOpen] = useState(false);
   useEffect(() => { onChatOpenChange?.(open); }, [open, onChatOpenChange]);
 
@@ -939,6 +944,19 @@ export default function AiChatWidget({ onChatOpenChange }: { onChatOpenChange?: 
 
   return (
     <>
+      {/* Mobile backdrop — tap để đóng bottom sheet */}
+      {isMobile && open && (
+        <Box
+          onClick={handleClose}
+          sx={{
+            position: "fixed",
+            inset: 0,
+            bgcolor: "rgba(0,0,0,0.45)",
+            zIndex: 1399,
+          }}
+        />
+      )}
+
       <AnimatePresence>
         {open && (
           <motion.div
@@ -947,7 +965,15 @@ export default function AiChatWidget({ onChatOpenChange }: { onChatOpenChange?: 
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            style={{
+            style={isMobile ? {
+              // Mobile: bottom sheet full-width, trượt từ dưới lên
+              position: "fixed",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              zIndex: 1400,
+            } : {
+              // Desktop: widget cố định góc phải
               position: "fixed",
               bottom: 90,
               right: 24,
@@ -958,10 +984,11 @@ export default function AiChatWidget({ onChatOpenChange }: { onChatOpenChange?: 
             <Paper
               elevation={12}
               sx={{
-                height: 540,
+                // Mobile: bottom sheet chiều cao động, góc trên bo tròn
+                height: isMobile ? "min(88vh, 620px)" : 540,
                 display: "flex",
                 flexDirection: "column",
-                borderRadius: "18px",
+                borderRadius: isMobile ? "16px 16px 0 0" : "18px",
                 overflow: "hidden",
                 border: "1px solid rgba(0,0,0,0.07)",
                 position: "relative",
@@ -1736,13 +1763,17 @@ export default function AiChatWidget({ onChatOpenChange }: { onChatOpenChange?: 
         whileTap={{ scale: 0.93 }}
         sx={{
           position: "fixed",
-          bottom: 24,
-          right: 24,
-          width: 56,
-          height: 56,
+          // Mobile: ngay trên bottom nav; desktop: vị trí cũ
+          bottom: isMobile
+            ? "calc(56px + env(safe-area-inset-bottom, 0px) + 16px)"
+            : 24,
+          right: isMobile ? 16 : 24,
+          width: isMobile ? 52 : 56,
+          height: isMobile ? 52 : 56,
           borderRadius: "50%",
           bgcolor: open ? "#455a64" : "#f25c05",
-          display: "flex",
+          // Mobile: ẩn FAB khi sheet đang mở (dùng nút X trong header)
+          display: isMobile && open ? "none" : "flex",
           alignItems: "center",
           justifyContent: "center",
           cursor: "pointer",

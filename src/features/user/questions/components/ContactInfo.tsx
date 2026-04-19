@@ -37,7 +37,7 @@ export default function ContactInfo() {
               <Typography variant="body2" color="text.secondary">
                 Hotline
               </Typography>
-              <Typography fontWeight={600} component="a" href="tel:19006750">
+              <Typography fontWeight={600} component="a" href="tel:0392923392">
                 1900 6750
               </Typography>
               <Typography
@@ -61,9 +61,9 @@ export default function ContactInfo() {
               <Typography
                 fontWeight={600}
                 component="a"
-                href="mailto:support@dolatool.vn"
+                href="mailto:support@cuonghoa.vn"
               >
-                support@dolatool.vn
+                support@cuonghoa.vn
               </Typography>
               <Typography
                 variant="caption"
@@ -104,7 +104,7 @@ export default function ContactInfo() {
             <Button
               variant="outlined"
               startIcon={<FacebookIcon />}
-              href="https://facebook.com/dolatool"
+              href="https://www.facebook.com/messages/e2ee/t/9200105130025225"
               target="_blank"
               sx={{ borderColor: "#ffb700", color: "#f25c05" }}
             >

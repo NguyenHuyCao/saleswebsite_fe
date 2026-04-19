@@ -8,7 +8,7 @@ import {
   Paper,
   useTheme,
   useMediaQuery,
-  Container,
+  
   Chip,
   Fade,
   Zoom,
@@ -123,7 +123,7 @@ export default function WhyChooseUs() {
       variants={containerVariants}
     >
       <Box sx={{ py: { xs: 6, md: 8 }, bgcolor: "#fff" }}>
-        <Container maxWidth="xl">
+        <Box>
           {/* Header */}
           <motion.div variants={headerVariants}>
             <Box sx={{ textAlign: "center", mb: 6 }}>
@@ -377,7 +377,7 @@ export default function WhyChooseUs() {
               />
             </Stack>
           </Fade>
-        </Container>
+        </Box>
       </Box>
     </motion.div>
   );

@@ -11,7 +11,7 @@ import {
   useTheme,
   Chip,
   IconButton,
-  Container,
+  
   Stack,
 } from "@mui/material";
 import { motion, useInView } from "framer-motion";
@@ -116,38 +116,36 @@ export default function VoucherCardList({ vouchers }: Props) {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
+        staggerChildren: 0.08,
+        delayChildren: 0.1,
       },
     },
   };
 
   const itemVariants = {
-    hidden: { y: 30, opacity: 0 },
+    hidden: { y: 16, opacity: 0 },
     visible: {
       y: 0,
       opacity: 1,
-      transition: { type: "spring", stiffness: 100, damping: 15 },
+      transition: { duration: 0.4, ease: "easeOut" },
     },
   };
 
   const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 16 },
     visible: (i: number) => ({
       opacity: 1,
       y: 0,
       transition: {
-        delay: i * 0.05,
-        duration: 0.4,
+        delay: i * 0.04,
+        duration: 0.35,
         ease: "easeOut",
       },
     }),
   };
 
-  if (!vouchers?.length) return null;
-
   const slidesToShow = isMobile ? 1 : isTablet ? 2 : 3;
-  const totalSlides = vouchers.length;
+  const totalSlides = vouchers?.length ?? 0;
   const totalPages = Math.ceil(totalSlides / slidesToShow);
   const currentPage = Math.floor(currentSlide / slidesToShow) + 1;
 
@@ -170,6 +168,8 @@ export default function VoucherCardList({ vouchers }: Props) {
       }
     };
   }, [isAutoPlay, isPaused, goToNext]);
+
+  if (!vouchers?.length) return null;
 
   // Pause auto-play khi hover vào slider
   const handleMouseEnter = () => setIsPaused(true);
@@ -214,20 +214,20 @@ export default function VoucherCardList({ vouchers }: Props) {
       animate={isInView ? "visible" : "hidden"}
       variants={containerVariants}
     >
-      <Box sx={{ py: { xs: 4, md: 6 }, bgcolor: "#fff", position: "relative" }}>
-        <Container maxWidth="xl">
+      <Box sx={{ py: { xs: 3, md: 4 }, bgcolor: "#fff", position: "relative" }}>
+        <Box>
           {/* Header với controls */}
           <motion.div variants={itemVariants}>
             <Stack
               direction="row"
               alignItems="center"
               justifyContent="space-between"
-              sx={{ mb: 4, flexWrap: "wrap", gap: 2 }}
+              sx={{ mb: { xs: 2, md: 4 }, flexWrap: "wrap", gap: { xs: 1, sm: 2 } }}
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                 <motion.div
-                  whileHover={{ rotate: 10, scale: 1.1 }}
-                  transition={{ type: "spring", stiffness: 300 }}
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
                 >
                   <Box
                     sx={{
@@ -284,7 +284,7 @@ export default function VoucherCardList({ vouchers }: Props) {
                 {/* Pagination */}
                 {totalPages > 1 && (
                   <motion.div
-                    initial={{ opacity: 0, x: 20 }}
+
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3 }}
                   >
@@ -323,7 +323,7 @@ export default function VoucherCardList({ vouchers }: Props) {
           {/* Slider Container */}
           <motion.div variants={itemVariants}>
             <Box
-              sx={{ position: "relative", px: { xs: 0, md: 4 } }}
+              sx={{ position: "relative", px: { xs: 0.5, sm: 1, md: 4 } }}
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
             >
@@ -331,7 +331,7 @@ export default function VoucherCardList({ vouchers }: Props) {
               {!isMobile && vouchers.length > slidesToShow && (
                 <>
                   <motion.div
-                    initial={{ opacity: 0, x: -20 }}
+
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.4 }}
                   >
@@ -356,7 +356,7 @@ export default function VoucherCardList({ vouchers }: Props) {
                     </IconButton>
                   </motion.div>
                   <motion.div
-                    initial={{ opacity: 0, x: 20 }}
+
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.4 }}
                   >
@@ -383,7 +383,8 @@ export default function VoucherCardList({ vouchers }: Props) {
                 </>
               )}
 
-              {/* Slider */}
+              {/* Slider — pt gives hover animation room; slick-list overflow visible prevents top clip */}
+              <Box sx={{ pt: 1, "& .slick-list": { overflow: "visible !important" }, overflow: "hidden" }}>
               <Slider ref={sliderRef} {...settings}>
                 {vouchers.map((voucher, index) => {
                   const type = getVoucherType(
@@ -402,8 +403,8 @@ export default function VoucherCardList({ vouchers }: Props) {
                         initial="hidden"
                         animate="visible"
                         custom={index}
-                        whileHover={{ y: -8 }}
-                        transition={{ type: "spring", stiffness: 300 }}
+                        whileHover={{ y: -4 }}
+                        transition={{ duration: 0.18, ease: "easeOut" }}
                       >
                         <Paper
                           elevation={3}
@@ -445,18 +446,19 @@ export default function VoucherCardList({ vouchers }: Props) {
                           </Box>
 
                           {/* Content */}
-                          <Box sx={{ display: "flex", p: 2 }}>
+                          <Box sx={{ display: "flex", p: { xs: 1.5, sm: 2 } }}>
                             {/* Left - Code Section */}
                             <Box
                               sx={{
-                                width: 100,
+                                width: { xs: 80, sm: 100 },
+                                flexShrink: 0,
                                 display: "flex",
                                 flexDirection: "column",
                                 alignItems: "center",
                                 justifyContent: "center",
                                 borderRight: "2px dashed",
                                 borderColor: "#ffb700",
-                                pr: 2,
+                                pr: { xs: 1.5, sm: 2 },
                               }}
                             >
                               <Typography
@@ -471,7 +473,9 @@ export default function VoucherCardList({ vouchers }: Props) {
                                 sx={{
                                   color: "#f25c05",
                                   letterSpacing: 1,
-                                  fontSize: "1.1rem",
+                                  fontSize: { xs: "0.85rem", sm: "1.1rem" },
+                                  wordBreak: "break-all",
+                                  textAlign: "center",
                                 }}
                               >
                                 {voucher.code || "CODE"}
@@ -479,7 +483,7 @@ export default function VoucherCardList({ vouchers }: Props) {
                             </Box>
 
                             {/* Right - Info Section */}
-                            <Box sx={{ flex: 1, pl: 2 }}>
+                            <Box sx={{ flex: 1, pl: { xs: 1.5, sm: 2 }, minWidth: 0 }}>
                               <Typography
                                 variant="h5"
                                 fontWeight={900}
@@ -590,13 +594,14 @@ export default function VoucherCardList({ vouchers }: Props) {
                   );
                 })}
               </Slider>
+              </Box>
             </Box>
           </motion.div>
 
           {/* Mobile Hint */}
           {isMobile && vouchers.length > 1 && (
             <motion.div
-              initial={{ opacity: 0 }}
+
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6 }}
             >
@@ -622,7 +627,7 @@ export default function VoucherCardList({ vouchers }: Props) {
               </Fade>
             </motion.div>
           )}
-        </Container>
+        </Box>
       </Box>
     </motion.div>
   );

@@ -191,12 +191,14 @@ export default function ContactFormSection() {
                   onChange={handleChange}
                   error={!!errors.fullName}
                   helperText={errors.fullName}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Person />
-                      </InputAdornment>
-                    ),
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Person />
+                        </InputAdornment>
+                      ),
+                      },
                   }}
                 />
               </Grid>
@@ -211,12 +213,14 @@ export default function ContactFormSection() {
                   onChange={handleChange}
                   error={!!errors.email}
                   helperText={errors.email}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <EmailOutlined />
-                      </InputAdornment>
-                    ),
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <EmailOutlined />
+                        </InputAdornment>
+                      ),
+                      },
                   }}
                 />
               </Grid>
@@ -231,12 +235,14 @@ export default function ContactFormSection() {
                   onChange={handleChange}
                   error={!!errors.phone}
                   helperText={errors.phone}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Phone />
-                      </InputAdornment>
-                    ),
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Phone />
+                        </InputAdornment>
+                      ),
+                      },
                   }}
                 />
               </Grid>
@@ -249,12 +255,14 @@ export default function ContactFormSection() {
                   label="Chủ đề *"
                   value={formData.subject}
                   onChange={handleChange}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Subject />
-                      </InputAdornment>
-                    ),
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Subject />
+                        </InputAdornment>
+                      ),
+                      },
                   }}
                 >
                   {topics.map((topic) => (
@@ -276,12 +284,14 @@ export default function ContactFormSection() {
                   helperText={errors.messageContent}
                   multiline
                   rows={4}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <MessageOutlined />
-                      </InputAdornment>
-                    ),
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <MessageOutlined />
+                        </InputAdornment>
+                      ),
+                      },
                   }}
                 />
               </Grid>

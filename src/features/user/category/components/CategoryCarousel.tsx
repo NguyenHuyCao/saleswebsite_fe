@@ -147,10 +147,9 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ categories }) => {
           {categories.map((item, idx) => (
             <motion.div
               key={item.id ?? idx}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05, duration: 0.4 }}
-              viewport={{ once: true }}
             >
               <Box
                 onClick={() => handleClick(item.slug)}

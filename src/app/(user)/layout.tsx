@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Box } from "@mui/material";
 import ThemeRegistry from "@/components/theme-registry/theme.registry";
 import "@/styles/app.css";
 import AppHeader from "@/views/header/app.header";
@@ -33,7 +34,9 @@ export default function UserLayout({
   return (
     <ThemeRegistry>
       <AppHeader />
-      {children}
+      <Box component="main" sx={{ pb: { xs: "calc(56px + env(safe-area-inset-bottom, 0px))", sm: 0 } }}>
+        {children}
+      </Box>
       <AppFooter />
       <ClientLayoutWrapper />
     </ThemeRegistry>

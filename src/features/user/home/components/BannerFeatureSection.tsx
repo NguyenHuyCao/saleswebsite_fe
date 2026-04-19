@@ -54,10 +54,9 @@ export default function BannerFeatureSection() {
         <Container maxWidth="md">
           <Stack spacing={3} alignItems="center">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7 }}
-              viewport={{ once: true }}
+
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, ease: "easeOut", delay: 0.15 }}
             >
               <Typography
                 variant={isMobile ? "h5" : "h3"}
@@ -69,10 +68,9 @@ export default function BannerFeatureSection() {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.7 }}
-              viewport={{ once: true }}
+
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35, duration: 0.6, ease: "easeOut" }}
             >
               <Typography
                 variant="body1"
@@ -89,15 +87,15 @@ export default function BannerFeatureSection() {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, duration: 0.7 }}
-              viewport={{ once: true }}
+
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.55, ease: "easeOut" }}
             >
               <Stack
                 direction={{ xs: "column", sm: "row" }}
-                spacing={2}
+                spacing={{ xs: 1.5, sm: 2 }}
                 justifyContent="center"
+                alignItems="center"
               >
                 <motion.div
                   whileHover={{ scale: 1.05 }}
@@ -106,9 +104,9 @@ export default function BannerFeatureSection() {
                   <Button
                     variant="contained"
                     color="warning"
-                    size="large"
+                    size={isMobile ? "medium" : "large"}
                     onClick={() => router.push("/product")}
-                    sx={{ fontWeight: 600, px: 4, minWidth: 200 }}
+                    sx={{ fontWeight: 600, px: { xs: 3, sm: 4 }, minWidth: { xs: 180, sm: "auto" } }}
                   >
                     Khám phá sản phẩm
                   </Button>
@@ -121,15 +119,15 @@ export default function BannerFeatureSection() {
                   <Button
                     variant="outlined"
                     color="warning"
-                    size="large"
+                    size={isMobile ? "medium" : "large"}
                     onClick={() => router.push("/about")}
                     sx={{
                       fontWeight: 600,
-                      px: 4,
-                      minWidth: 200,
+                      px: { xs: 3, sm: 4 },
                       borderWidth: 2,
                       color: "white",
                       borderColor: "white",
+                      minWidth: { xs: 180, sm: "auto" },
                       "&:hover": { backgroundColor: "rgba(255,255,255,0.1)" },
                     }}
                   >

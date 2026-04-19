@@ -8,7 +8,7 @@ import {
   useTheme,
   Tooltip,
   Chip,
-  Container,
+  
   Stack,
 } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
@@ -96,7 +96,7 @@ export default function ProductCategorySection({
 
   return (
     <Box sx={{ bgcolor: "#fff", py: { xs: 4, md: 6 } }}>
-      <Container maxWidth="xl">
+      <Box>
         {/* Header với thống kê */}
         <Box
           sx={{
@@ -356,7 +356,7 @@ export default function ProductCategorySection({
             </Typography>
           </motion.div>
         )}
-      </Container>
+      </Box>
     </Box>
   );
 }

@@ -22,10 +22,9 @@ export default function GuaranteeSection() {
   return (
     <Box mt={12} px={isMobile ? 2 : 4}>
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
+
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        viewport={{ once: true }}
       >
         <Typography
           variant="h6"
@@ -42,10 +41,9 @@ export default function GuaranteeSection() {
             <Grid key={idx} size={{ xs: 12, sm: 6, md: 3 }}>
               <MotionPaper
                 whileHover={{ scale: 1.03 }}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
+
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: idx * 0.2 }}
-                viewport={{ once: true }}
                 elevation={3}
                 sx={{
                   p: 3,

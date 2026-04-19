@@ -7,8 +7,10 @@ import {
   fetchCategoriesWithProducts,
   fetchPromotions,
   fetchVouchers,
+  fetchBestSellers,
+  fetchSiteStats,
 } from "./api";
-import type { Product, CategoryWithProducts, Promotion } from "./types";
+import type { Product, CategoryWithProducts, Promotion, BrandItem } from "./types";
 
 export const QK = {
   newProducts: ["home", "newProducts"] as const,
@@ -16,6 +18,8 @@ export const QK = {
   catWithProducts: ["home", "catWithProducts"] as const,
   promotions: ["home", "promotions"] as const,
   vouchers: ["home", "vouchers"] as const,
+  bestSellers: ["home", "bestSellers"] as const,
+  siteStats: ["home", "siteStats"] as const,
 };
 
 const common = { retry: 2, refetchOnWindowFocus: false } as const;
@@ -30,10 +34,10 @@ export function useNewProducts() {
 }
 
 export function useBrands() {
-  return useQuery<string[]>({
+  return useQuery<BrandItem[]>({
     queryKey: QK.brands,
     queryFn: fetchBrands,
-    staleTime: 3_600_000, // 1h
+    staleTime: 3_600_000,
     ...common,
   });
 }
@@ -61,6 +65,24 @@ export function useVouchers() {
     queryKey: QK.vouchers,
     queryFn: fetchVouchers,
     staleTime: 300_000,
+    ...common,
+  });
+}
+
+export function useBestSellers() {
+  return useQuery<Product[]>({
+    queryKey: QK.bestSellers,
+    queryFn: fetchBestSellers,
+    staleTime: 300_000,
+    ...common,
+  });
+}
+
+export function useSiteStats() {
+  return useQuery({
+    queryKey: QK.siteStats,
+    queryFn: fetchSiteStats,
+    staleTime: 3_600_000,
     ...common,
   });
 }

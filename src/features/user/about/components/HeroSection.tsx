@@ -1,15 +1,7 @@
 // about/components/HeroSection.tsx
 "use client";
 
-import {
-  Box,
-  Typography,
-  Button,
-  Stack,
-  Chip,
-  Container,
-  Grid,
-} from "@mui/material";
+import { Box, Typography, Button, Stack, Chip, Grid } from "@mui/material";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -61,7 +53,7 @@ export default function HeroSection() {
       />
 
       {/* Content */}
-      <Container maxWidth="xl" sx={{ position: "relative", zIndex: 3 }}>
+      <Box sx={{ position: "relative", zIndex: 3 }}>
         <Grid container spacing={4} alignItems="center">
           {/* Left Content */}
           <Grid size={{ xs: 12, md: 7 }}>
@@ -220,7 +212,7 @@ export default function HeroSection() {
             </motion.div>
           </Grid>
         </Grid>
-      </Container>
+      </Box>
     </Box>
   );
 }

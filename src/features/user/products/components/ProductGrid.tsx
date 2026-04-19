@@ -33,9 +33,7 @@ export default function ProductGrid({ products }: { products: any[] }) {
         {products.map((product, index) => (
           <Grid
             key={product.id}
-            size={{ xs: 6, sm: 4, md: 3 }}
-            display="flex"
-            justifyContent="center"
+            size={{ xs: 6, sm: 4, md: 3, lg: 3 }}
           >
             <motion.div
               initial={{ opacity: 0, y: 16 }}
@@ -46,11 +44,9 @@ export default function ProductGrid({ products }: { products: any[] }) {
                 delay: Math.min(index * 0.04, 0.2),
                 ease: "easeOut",
               }}
-              style={{ width: "100%" }}
+              style={{ width: "100%", height: "100%" }}
             >
-              <Box sx={{ width: "100%", maxWidth: 260, mx: "auto" }}>
-                <ProductCard product={product} />
-              </Box>
+              <ProductCard product={product} />
             </motion.div>
           </Grid>
         ))}

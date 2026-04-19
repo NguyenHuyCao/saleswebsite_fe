@@ -36,14 +36,14 @@ import type { Product } from "@/features/user/products/types";
 const sliderStyles = `
   .flash-sale-slider .slick-track {
     display: flex;
-    gap: 8px;
+    align-items: stretch;
   }
   .flash-sale-slider .slick-slide {
     height: inherit;
-    padding: 4px;
   }
   .flash-sale-slider .slick-slide > div {
     height: 100%;
+    padding: 4px 4px 8px;
   }
 `;
 // Fetcher applies the promotion discount so each product card shows the correct sale price.
@@ -161,8 +161,8 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
       <style>{sliderStyles}</style>
       <Box
         sx={{
-          px: { xs: 1, md: 2 },
-          py: 3,
+          px: { xs: 0.5, sm: 1.5, md: 2 },
+          py: { xs: 2, md: 3 },
           background: "linear-gradient(145deg, #ffffff 0%, #fff9f0 100%)",
           borderRadius: 4,
           boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
@@ -300,15 +300,16 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
         <Box sx={{ position: "relative" }}>
           <Slider ref={sliderRef} {...settings} className="flash-sale-slider">
             {products.map((product, index) => (
-              <Box key={product.id} px={1}>
+              <Box key={product.id} sx={{ height: "100%" }}>
                 <motion.div
-                  initial={{ opacity: 0, y: 16 }}
+
                   animate={{ opacity: 1, y: 0 }}
                   transition={{
                     duration: 0.25,
                     delay: Math.min(index * 0.04, 0.2),
                     ease: "easeOut",
                   }}
+                  style={{ height: "100%" }}
                 >
                   <ProductCard product={product} mutateKey={swrKey[0]} />
                 </motion.div>
@@ -357,7 +358,7 @@ const FlashSaleSlider: React.FC<FlashSaleSliderProps> = ({
                 }}
               >
                 <motion.div
-                  initial={{ width: 0 }}
+
                   animate={{
                     width: `${((currentSlide + slidesToShow) / totalProducts) * 100}%`,
                   }}

@@ -6,7 +6,16 @@
       "Bash(grep -r \"SecurityUtil\\\\|SecurityContext\\\\|Authentication\" 'E:\\\\Development Website\\\\Java\\\\MySelf\\\\saleswebsite_be\\\\src\\\\main\\\\java\\\\com\\\\huycao\\\\saleswebsite\\\\common\\\\security' --include=*.java)",
       "Bash(find 'E:\\\\Development Website\\\\Java\\\\MySelf\\\\saleswebsite_be' -type f -name *Redis*Config* -o -type f -name *RedisConfig*)",
       "Read(//d e:/Development Website/Java/MySelf/**)",
-      "Bash(redis-cli KEYS \"rl:checkout:user:*\")"
+      "Bash(grep *)",
+      "Bash(sed -i 's/Dola\\\\b/Cường Hoa/g' 'E:/Development Website/NextJs/MySelf/saleswebsite_fe/src/features/user/questions/constants/faqData.ts' 'E:/Development Website/NextJs/MySelf/saleswebsite_fe/src/features/user/system/components/StoreFAQSection.tsx' 'E:/Development Website/NextJs/MySelf/saleswebsite_fe/src/features/user/wishlist/components/WishlistShareModal.tsx')",
+      "Bash(sed -i 's/DolaTool/Cường Hoa/g' 'E:/Development Website/NextJs/MySelf/saleswebsite_fe/src/features/user/questions/constants/faqData.ts' 'E:/Development Website/NextJs/MySelf/saleswebsite_fe/src/features/user/system/components/StoreFAQSection.tsx' 'E:/Development Website/NextJs/MySelf/saleswebsite_fe/src/features/user/wishlist/components/WishlistShareModal.tsx')",
+      "Bash(sed -i 's/Dola Tool/Cường Hoa/g' 'E:/Development Website/NextJs/MySelf/saleswebsite_fe/src/features/user/promotion/components/PromotionInfoBlock.tsx')",
+      "Bash(npx tsc *)",
+      "Bash(node -e ' *)",
+      "Bash(node *)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\)['dependencies']; print\\('@mui/material:', d.get\\('@mui/material'\\)\\); print\\('framer-motion:', d.get\\('framer-motion'\\)\\)\")",
+      "Bash(awk 'NR==88' \"E:/Development Website/NextJs/MySelf/saleswebsite_fe/.next/static/chunks/_app-pages-browser_src_features_user_home_components_CustomerFeedback_tsx.js\")",
+      "Bash(sort grep *)"
     ]
   }
 }

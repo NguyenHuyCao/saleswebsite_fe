@@ -282,18 +282,22 @@ export default function LoginView() {
                     <Stack spacing={3}>
                       <TextField fullWidth label="Email" value={email} onChange={(e) => setEmail(e.target.value)}
                         onBlur={() => handleBlur("loginEmail")} error={!!loginErrors.email} helperText={loginErrors.email}
-                        InputProps={{ startAdornment: <InputAdornment position="start"><EmailIcon sx={{ color: "#999" }} /></InputAdornment> }} />
+                        slotProps={{
+                          input: { startAdornment: <InputAdornment position="start"><EmailIcon sx={{ color: "#999" }} /></InputAdornment>   },
+                        }} />
 
                       <TextField fullWidth label="Mật khẩu" type={showPw ? "text" : "password"}
                         value={password} onChange={(e) => setPassword(e.target.value)}
                         onBlur={() => handleBlur("loginPassword")} error={!!loginErrors.password} helperText={loginErrors.password}
-                        InputProps={{
-                          startAdornment: <InputAdornment position="start"><LockIcon sx={{ color: "#999" }} /></InputAdornment>,
-                          endAdornment: <InputAdornment position="end">
-                            <IconButton onClick={() => setShowPw(!showPw)} edge="end">
-                              {showPw ? <VisibilityOff /> : <Visibility />}
-                            </IconButton>
-                          </InputAdornment>,
+                        slotProps={{
+                          input: {
+                            startAdornment: <InputAdornment position="start"><LockIcon sx={{ color: "#999" }} /></InputAdornment>,
+                            endAdornment: <InputAdornment position="end">
+                              <IconButton onClick={() => setShowPw(!showPw)} edge="end">
+                                {showPw ? <VisibilityOff /> : <Visibility />}
+                              </IconButton>
+                            </InputAdornment>,
+                            },
                         }} />
 
                       <Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -350,19 +354,25 @@ export default function LoginView() {
                               onChange={(e) => setReg({ ...reg, name: e.target.value })}
                               onBlur={() => handleBlur("name")} error={touched.name && !!regErrors.name}
                               helperText={touched.name && regErrors.name}
-                              InputProps={{ startAdornment: <InputAdornment position="start"><PersonIcon sx={{ color: "#999" }} /></InputAdornment> }} />
+                              slotProps={{
+                                input: { startAdornment: <InputAdornment position="start"><PersonIcon sx={{ color: "#999" }} /></InputAdornment>   },
+                              }} />
 
                             <TextField fullWidth label="Email *" type="email" value={reg.email}
                               onChange={(e) => setReg({ ...reg, email: e.target.value })}
                               onBlur={() => handleBlur("email")} error={touched.email && !!regErrors.email}
                               helperText={touched.email && regErrors.email}
-                              InputProps={{ startAdornment: <InputAdornment position="start"><EmailIcon sx={{ color: "#999" }} /></InputAdornment> }} />
+                              slotProps={{
+                                input: { startAdornment: <InputAdornment position="start"><EmailIcon sx={{ color: "#999" }} /></InputAdornment>   },
+                              }} />
 
                             <TextField fullWidth label="Số điện thoại *" value={reg.phone}
                               onChange={(e) => setReg({ ...reg, phone: e.target.value })}
                               onBlur={() => handleBlur("phone")} error={touched.phone && !!regErrors.phone}
                               helperText={touched.phone && regErrors.phone}
-                              InputProps={{ startAdornment: <InputAdornment position="start"><PhoneIcon sx={{ color: "#999" }} /></InputAdornment> }} />
+                              slotProps={{
+                                input: { startAdornment: <InputAdornment position="start"><PhoneIcon sx={{ color: "#999" }} /></InputAdornment>   },
+                              }} />
 
                             <Grid container spacing={2}>
                               <Grid size={{ xs: 12, sm: 6 }}>
@@ -420,13 +430,15 @@ export default function LoginView() {
                               value={reg.password} onChange={(e) => setReg({ ...reg, password: e.target.value })}
                               onBlur={() => handleBlur("password")} error={touched.password && !!regErrors.password}
                               helperText={touched.password ? regErrors.password : "Ít nhất 8 ký tự, chữ hoa, chữ thường và số"}
-                              InputProps={{
-                                startAdornment: <InputAdornment position="start"><LockIcon sx={{ color: "#999" }} /></InputAdornment>,
-                                endAdornment: <InputAdornment position="end">
-                                  <IconButton onClick={() => setShowRegPw(!showRegPw)} edge="end">
-                                    {showRegPw ? <VisibilityOff /> : <Visibility />}
-                                  </IconButton>
-                                </InputAdornment>,
+                              slotProps={{
+                                input: {
+                                  startAdornment: <InputAdornment position="start"><LockIcon sx={{ color: "#999" }} /></InputAdornment>,
+                                  endAdornment: <InputAdornment position="end">
+                                    <IconButton onClick={() => setShowRegPw(!showRegPw)} edge="end">
+                                      {showRegPw ? <VisibilityOff /> : <Visibility />}
+                                    </IconButton>
+                                  </InputAdornment>,
+                                  },
                               }} />
 
                             {reg.password && (
@@ -448,13 +460,15 @@ export default function LoginView() {
                               onBlur={() => handleBlur("confirmPassword")}
                               error={touched.confirmPassword && !!regErrors.confirmPassword}
                               helperText={touched.confirmPassword && regErrors.confirmPassword}
-                              InputProps={{
-                                startAdornment: <InputAdornment position="start"><LockIcon sx={{ color: "#999" }} /></InputAdornment>,
-                                endAdornment: <InputAdornment position="end">
-                                  <IconButton onClick={() => setShowRegConfirm(!showRegConfirm)} edge="end">
-                                    {showRegConfirm ? <VisibilityOff /> : <Visibility />}
-                                  </IconButton>
-                                </InputAdornment>,
+                              slotProps={{
+                                input: {
+                                  startAdornment: <InputAdornment position="start"><LockIcon sx={{ color: "#999" }} /></InputAdornment>,
+                                  endAdornment: <InputAdornment position="end">
+                                    <IconButton onClick={() => setShowRegConfirm(!showRegConfirm)} edge="end">
+                                      {showRegConfirm ? <VisibilityOff /> : <Visibility />}
+                                    </IconButton>
+                                  </InputAdornment>,
+                                  },
                               }} />
 
                             <FormControlLabel control={<Checkbox checked={agreeTerms} onChange={(e) => setAgreeTerms(e.target.checked)} sx={{ color: "#f25c05" }} />}

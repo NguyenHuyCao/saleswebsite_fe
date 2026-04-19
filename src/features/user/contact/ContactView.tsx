@@ -11,7 +11,7 @@ export default function ContactView() {
   return (
     <>
       <ContactHeroSection />
-      <Container>
+      <Container maxWidth="lg">
         <ContactFormSection />
         <ContactInfoMapSection />
         <QuickHelpSection />

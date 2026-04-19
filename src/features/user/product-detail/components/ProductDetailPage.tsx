@@ -8,7 +8,6 @@ import {
   useTheme,
   Breadcrumbs,
   Link,
-  Container,
   Alert,
   Chip,
   Grid,
@@ -42,11 +41,11 @@ export default function ProductDetailPage({ product, category }: Props) {
 
   if (!product) {
     return (
-      <Container maxWidth="lg" sx={{ py: 8 }}>
+      <Box sx={{ py: 8 }}>
         <Alert severity="error" sx={{ borderRadius: 3 }}>
           Không tìm thấy sản phẩm.
         </Alert>
-      </Container>
+      </Box>
     );
   }
 
@@ -59,7 +58,7 @@ export default function ProductDetailPage({ product, category }: Props) {
   };
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Box sx={{ py: 4 }}>
       {/* Breadcrumb */}
       <Breadcrumbs
         separator={<NavigateNextIcon fontSize="small" />}
@@ -153,6 +152,6 @@ export default function ProductDetailPage({ product, category }: Props) {
       <Box mt={6}>
         <RelatedProductsSlick category={category} />
       </Box>
-    </Container>
+    </Box>
   );
 }

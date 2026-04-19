@@ -11,7 +11,7 @@ import {
   CardMedia,
   CardContent,
   Stack,
-  Container,
+  
   Chip,
   Avatar,
   Rating,
@@ -134,7 +134,7 @@ export default function BrandPageFinalSections() {
       variants={containerVariants}
     >
       <Box sx={{ py: { xs: 4, md: 6 }, bgcolor: "#fff" }}>
-        <Container maxWidth="xl">
+        <Box>
           {/* 1. TRUST BADGES - Thêm phần này để tăng độ tin cậy */}
           <motion.div variants={itemVariants}>
             <Grid container spacing={3} sx={{ mb: 6 }}>
@@ -633,7 +633,7 @@ export default function BrandPageFinalSections() {
               </Box>
             </Paper>
           </motion.div>
-        </Container>
+        </Box>
       </Box>
     </motion.div>
   );

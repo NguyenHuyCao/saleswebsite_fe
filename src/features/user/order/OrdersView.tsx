@@ -29,7 +29,7 @@ export default function OrdersView() {
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="vi">
       <PageViewTracker />
 
-      <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
         <OrderHistoryHeroSection />
         <OrderStats />
         <OrderFilters

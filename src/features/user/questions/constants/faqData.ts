@@ -7,7 +7,7 @@ export const faqData: FaqCategory[] = [
     icon: "👤",
     questions: [
       {
-        q: "Làm thế nào để tôi trở thành thành viên của Dola?",
+        q: "Làm thế nào để tôi trở thành thành viên của Cường Hoa?",
         a: "Nhấn 'Đăng ký' trên thanh menu hoặc ở Menu trên điện thoại. Điền thông tin cơ bản và xác nhận email để hoàn tất đăng ký.",
       },
       {
@@ -19,7 +19,7 @@ export const faqData: FaqCategory[] = [
         a: "Không nên để đảm bảo bảo mật thông tin cá nhân và lịch sử mua hàng. Mỗi tài khoản chỉ nên sử dụng cho một người.",
       },
       {
-        q: "Dola có chương trình ưu đãi nào hấp dẫn dành cho khách hàng thân thiết?",
+        q: "Cường Hoa có chương trình ưu đãi nào hấp dẫn dành cho khách hàng thân thiết?",
         a: "Có! Khách hàng thân thiết sẽ nhận được mã giảm giá đặc biệt, quyền truy cập sớm các chương trình sale, và tích điểm đổi quà.",
       },
     ],
@@ -47,7 +47,7 @@ export const faqData: FaqCategory[] = [
     icon: "🏪",
     questions: [
       {
-        q: "Tôi có thể đến cửa hàng Dola ở đâu?",
+        q: "Tôi có thể đến cửa hàng Cường Hoa ở đâu?",
         a: "Địa chỉ: 293 TL293, Nghĩa Phương, Lục Nam, Bắc Giang.\nXem bản đồ chi tiết tại trang 'Hệ thống cửa hàng'.",
       },
       {
@@ -61,7 +61,7 @@ export const faqData: FaqCategory[] = [
     icon: "💳",
     questions: [
       {
-        q: "Dola chấp nhận những hình thức thanh toán nào?",
+        q: "Cường Hoa chấp nhận những hình thức thanh toán nào?",
         a: "Chúng tôi chấp nhận:\n- Tiền mặt khi nhận hàng (COD)\n- Chuyển khoản ngân hàng\n- Thẻ tín dụng Visa, MasterCard\n- Ví điện tử Momo, ZaloPay, VNPay",
       },
       {

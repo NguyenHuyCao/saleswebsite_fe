@@ -17,7 +17,7 @@ export default function BrandView() {
   return (
     <>
       <BrandHeroSection />
-      <Container>
+      <Container maxWidth="lg">
         {isLoading ? (
           <div style={{ padding: 24 }}>Đang tải thương hiệu...</div>
         ) : isError ? (

@@ -33,7 +33,7 @@ interface MapEmbedProps {
 export default function MapEmbed({
   lat,
   lng,
-  storeName = "DolaTool",
+  storeName = "Cường Hoa",
   zoom = 15,
   height = 400,
   showControls = true,

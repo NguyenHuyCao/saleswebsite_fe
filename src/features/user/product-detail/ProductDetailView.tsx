@@ -12,7 +12,7 @@ export default async function ProductDetailView({ slug }: { slug?: string }) {
   if (!product) return notFound();
 
   return (
-    <Container>
+    <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
       <PageViewTracker />
       <ProductDetailPage product={product} category={category} />
       <ScrollPositionManager />

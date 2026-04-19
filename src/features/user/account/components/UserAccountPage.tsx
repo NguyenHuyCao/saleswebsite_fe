@@ -348,12 +348,14 @@ export default function UserAccountPage() {
                           onChange={handleChange}
                           required
                           disabled={!editing || loading || isPending}
-                          InputProps={{
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                <Person />
-                              </InputAdornment>
-                            ),
+                          slotProps={{
+                            input: {
+                              startAdornment: (
+                                <InputAdornment position="start">
+                                  <Person />
+                                </InputAdornment>
+                              ),
+                              },
                           }}
                         />
                       </Grid>
@@ -365,12 +367,14 @@ export default function UserAccountPage() {
                           name="email"
                           value={formData.email}
                           disabled
-                          InputProps={{
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                <Email />
-                              </InputAdornment>
-                            ),
+                          slotProps={{
+                            input: {
+                              startAdornment: (
+                                <InputAdornment position="start">
+                                  <Email />
+                                </InputAdornment>
+                              ),
+                              },
                           }}
                         />
                       </Grid>
@@ -384,12 +388,14 @@ export default function UserAccountPage() {
                           onChange={handleChange}
                           required
                           disabled={!editing || loading || isPending}
-                          InputProps={{
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                <Phone />
-                              </InputAdornment>
-                            ),
+                          slotProps={{
+                            input: {
+                              startAdornment: (
+                                <InputAdornment position="start">
+                                  <Phone />
+                                </InputAdornment>
+                              ),
+                              },
                           }}
                         />
                       </Grid>
@@ -405,12 +411,14 @@ export default function UserAccountPage() {
                           rows={2}
                           required
                           disabled={!editing || loading || isPending}
-                          InputProps={{
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                <LocationOn />
-                              </InputAdornment>
-                            ),
+                          slotProps={{
+                            input: {
+                              startAdornment: (
+                                <InputAdornment position="start">
+                                  <LocationOn />
+                                </InputAdornment>
+                              ),
+                              },
                           }}
                         />
                       </Grid>
@@ -425,12 +433,14 @@ export default function UserAccountPage() {
                           onChange={handleChange}
                           disabled={!editing || loading || isPending}
                           InputLabelProps={{ shrink: true }}
-                          InputProps={{
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                <Cake />
-                              </InputAdornment>
-                            ),
+                          slotProps={{
+                            input: {
+                              startAdornment: (
+                                <InputAdornment position="start">
+                                  <Cake />
+                                </InputAdornment>
+                              ),
+                              },
                           }}
                         />
                       </Grid>
@@ -498,12 +508,14 @@ export default function UserAccountPage() {
                         label="Mật khẩu hiện tại"
                         type="password"
                         name="currentPassword"
-                        InputProps={{
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <VpnKey />
-                            </InputAdornment>
-                          ),
+                        slotProps={{
+                          input: {
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <VpnKey />
+                              </InputAdornment>
+                            ),
+                            },
                         }}
                       />
                     </Grid>
