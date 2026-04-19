@@ -1,6 +1,6 @@
 "use client";
 
-import { Container } from "@mui/material";
+import { Container, Box, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { brandsOptions } from "./queries";
 import BrandHeroSection from "./components/BrandHeroSection";
@@ -11,29 +11,36 @@ import WhyChooseUs from "./components/WhyChooseUs";
 
 export default function BrandView() {
   const { data, isLoading, isError, error } = useQuery(brandsOptions());
-
   const brands = data?.items ?? [];
 
   return (
     <>
       <BrandHeroSection />
-      <Container maxWidth="lg">
-        {isLoading ? (
-          <div style={{ padding: 24 }}>Đang tải thương hiệu...</div>
-        ) : isError ? (
-          <div style={{ padding: 24, color: "crimson" }}>
-            Không lấy được danh sách thương hiệu.{" "}
-            {error instanceof Error ? error.message : ""}
-          </div>
-        ) : (
-          <>
-            <BrandListSection brands={brands} />
-            <WhyChooseUs />
-            <BrandAccordionSection brands={brands} />
-            <BrandPageFinalSections />
-          </>
-        )}
-      </Container>
+
+      <Box id="brand-list">
+        <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
+          {isError ? (
+            <Box sx={{ py: 6, textAlign: "center" }}>
+              <Typography color="error">
+                Không lấy được danh sách thương hiệu.{" "}
+                {error instanceof Error ? error.message : ""}
+              </Typography>
+            </Box>
+          ) : (
+            <>
+              <BrandListSection brands={brands} loading={isLoading} />
+
+              {!isLoading && (
+                <>
+                  <WhyChooseUs />
+                  <BrandAccordionSection brands={brands} />
+                  <BrandPageFinalSections />
+                </>
+              )}
+            </>
+          )}
+        </Container>
+      </Box>
     </>
   );
 }
