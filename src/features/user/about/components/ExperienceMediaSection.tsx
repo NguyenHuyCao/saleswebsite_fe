@@ -8,7 +8,6 @@ import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import Video from "yet-another-react-lightbox/plugins/video";
 import "yet-another-react-lightbox/styles.css";
 import Image from "next/image";
-import { motion } from "framer-motion";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { gallery } from "../constants/gallery";
 
@@ -97,14 +96,7 @@ export default function ExperienceMediaSection() {
       <Grid container spacing={2} justifyContent="center">
         {gallery.map((src, i) => (
           <Grid size={{ xs: 6, sm: 4, md: 3 }} key={i}>
-            <motion.div
-              whileHover={{ y: -4 }}
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ delay: i * 0.05 }}
-              viewport={{ once: true }}
-            >
-              <Paper
+            <Paper
                 onClick={() => {
                   setIdx(i);
                   setOpen(true);
@@ -131,7 +123,6 @@ export default function ExperienceMediaSection() {
                   />
                 </Box>
               </Paper>
-            </motion.div>
           </Grid>
         ))}
       </Grid>

@@ -93,6 +93,8 @@ export default function HomeView() {
         productCount={siteStats?.productCount}
         brandCount={siteStats?.brandCount}
         categoryCount={siteStats?.categoryCount}
+        customerCount={siteStats?.customerCount}
+        yearsOfExperience={siteStats?.yearsOfExperience}
       />
 
       <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>

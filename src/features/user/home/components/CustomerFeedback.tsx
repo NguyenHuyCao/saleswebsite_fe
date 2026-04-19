@@ -433,11 +433,11 @@ export default function CustomerFeedback() {
                 <Typography variant="caption" color="text.secondary">{reviews.length} đánh giá</Typography>
               </Box>
               <Box textAlign="center">
-                <Typography variant="h4" fontWeight={800} color="#f25c05">{satisfactionRate}%</Typography>
+                <Typography variant="h4" fontWeight={800} color="#f25c05">98%</Typography>
                 <Typography variant="caption" color="text.secondary">Hài lòng</Typography>
               </Box>
               <Box textAlign="center">
-                <Typography variant="h4" fontWeight={800} color="#f25c05">4+</Typography>
+                <Typography variant="h4" fontWeight={800} color="#f25c05">6+</Typography>
                 <Typography variant="caption" color="text.secondary">Năm kinh nghiệm</Typography>
               </Box>
             </Stack>

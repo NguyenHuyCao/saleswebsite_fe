@@ -49,9 +49,11 @@ type Props = {
   productCount?: number;
   brandCount?: number;
   categoryCount?: number;
+  customerCount?: number;
+  yearsOfExperience?: number;
 };
 
-export default function SiteStatsSection({ productCount = 0, brandCount = 0, categoryCount = 0 }: Props) {
+export default function SiteStatsSection({ productCount = 0, brandCount = 0, categoryCount = 0, customerCount, yearsOfExperience }: Props) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const ref = useRef<HTMLDivElement>(null);
@@ -67,21 +69,21 @@ export default function SiteStatsSection({ productCount = 0, brandCount = 0, cat
     },
     {
       Icon: StorefrontIcon,
-      value: brandCount >= 3 ? brandCount : 20,
+      value: brandCount >= 3 ? brandCount : 11,
       suffix: "+",
       label: "Thương hiệu uy tín",
       color: "#ffb700",
     },
     {
       Icon: EmojiEventsIcon,
-      value: 4,
+      value: yearsOfExperience ?? (new Date().getFullYear() - 2019),
       suffix: "+",
       label: "Năm kinh nghiệm",
       color: "#fff",
     },
     {
       Icon: GroupsIcon,
-      value: 5000,
+      value: customerCount && customerCount > 100 ? customerCount : 5000,
       suffix: "+",
       label: "Khách hàng hài lòng",
       color: "#a8f0b8",

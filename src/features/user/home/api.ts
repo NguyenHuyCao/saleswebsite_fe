@@ -74,11 +74,38 @@ export async function fetchBestSellers(): Promise<Product[]> {
   return arr.map((it: any) => mapProduct(it, nowMs));
 }
 
-export async function fetchSiteStats(): Promise<{
+export type SiteStats = {
   productCount: number;
   brandCount: number;
   categoryCount: number;
-}> {
+  customerCount: number;
+  reviewCount: number;
+  avgRating: number;
+  satisfactionRate: number;  // % review 4-5 sao, fallback 98 khi chưa đủ data
+  yearsOfExperience: number;
+};
+
+export async function fetchSiteStats(): Promise<SiteStats> {
+  try {
+    const raw = await api.get<any>("/api/v1/site-stats");
+    const d = raw?.result ?? raw;
+    if (d && typeof d.productCount === "number") {
+      return {
+        productCount: d.productCount,
+        brandCount: d.brandCount,
+        categoryCount: 0,
+        customerCount: d.customerCount,
+        reviewCount: d.reviewCount,
+        avgRating: d.avgRating,
+        satisfactionRate: d.satisfactionRate,
+        yearsOfExperience: d.yearsOfExperience,
+      };
+    }
+  } catch {
+    // fallback bên dưới
+  }
+
+  // Fallback: gọi 3 endpoint cũ nếu /site-stats chưa sẵn sàng
   const [prods, brands, cats] = await Promise.allSettled([
     api.get<any>("/api/v1/products?size=1&sort=createdAt,desc"),
     api.get<any>("/api/v1/brands"),
@@ -86,12 +113,7 @@ export async function fetchSiteStats(): Promise<{
   ]);
   const productCount =
     prods.status === "fulfilled"
-      ? (
-          prods.value?.totalElements ??
-          prods.value?.result?.totalElements ??
-          prods.value?.data?.totalElements ??
-          (Array.isArray(prods.value?.result) ? prods.value.result.length : 0)
-        )
+      ? (prods.value?.totalElements ?? prods.value?.result?.totalElements ?? 0)
       : 0;
   const brandCount =
     brands.status === "fulfilled"
@@ -101,5 +123,15 @@ export async function fetchSiteStats(): Promise<{
     cats.status === "fulfilled"
       ? (Array.isArray(cats.value?.result) ? cats.value.result.length : (Array.isArray(cats.value) ? cats.value.length : 0))
       : 0;
-  return { productCount, brandCount, categoryCount };
+
+  return {
+    productCount,
+    brandCount,
+    categoryCount,
+    customerCount: 5000,
+    reviewCount: 0,
+    avgRating: 4.8,
+    satisfactionRate: 98,
+    yearsOfExperience: new Date().getFullYear() - 2019,
+  };
 }

@@ -1,71 +1,66 @@
-// about/components/FinalCallToActionSection.tsx
 "use client";
 
 import { Box, Typography, Button, Stack, Chip, Container } from "@mui/material";
-import { styled } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import PhoneIcon from "@mui/icons-material/Phone";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { useCtaTracking } from "../hooks/useCtaTracking";
-
-const BackgroundBox = styled(Box)(({ theme }) => ({
-  backgroundImage: 'url("/images/banner/images (4).jpeg")',
-  backgroundSize: "cover",
-  backgroundPosition: "center",
-  backgroundRepeat: "no-repeat",
-  padding: theme.spacing(10, 4),
-  textAlign: "center",
-  color: "#fff",
-  position: "relative",
-  borderRadius: theme.spacing(3),
-  overflow: "hidden",
-  boxShadow: theme.shadows[6],
-  "&::before": {
-    content: '""',
-    position: "absolute",
-    inset: 0,
-    background:
-      "linear-gradient(135deg, rgba(242,92,5,0.9) 0%, rgba(255,183,0,0.8) 100%)",
-    zIndex: 1,
-  },
-}));
-
-const ContentBox = styled(motion.div)({ position: "relative", zIndex: 2 });
 
 export default function FinalCallToActionSection() {
   const router = useRouter();
   const track = useCtaTracking();
 
   return (
-    <Container maxWidth="lg" sx={{ py: 6 }}>
-      <BackgroundBox>
-        <ContentBox
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-        >
+    <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 } }}>
+      <Box
+        sx={{
+          position: "relative",
+          borderRadius: 4,
+          overflow: "hidden",
+          py: { xs: 6, md: 8 },
+          px: { xs: 3, md: 6 },
+          textAlign: "center",
+          color: "#fff",
+          background: "linear-gradient(135deg, #f25c05 0%, #e03d00 50%, #c43200 100%)",
+          "&::before": {
+            content: '""',
+            position: "absolute",
+            inset: 0,
+            backgroundImage: 'url("/images/banner/images (4).jpeg")',
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            opacity: 0.08,
+          },
+        }}
+      >
+        <Box sx={{ position: "relative", zIndex: 1 }}>
           <Chip
             label="SẴN SÀNG TRẢI NGHIỆM?"
-            sx={{ bgcolor: "#fff", color: "#f25c05", fontWeight: 700, mb: 3 }}
+            sx={{ bgcolor: "rgba(255,255,255,0.2)", color: "#fff", fontWeight: 700, mb: 3, backdropFilter: "blur(4px)" }}
           />
 
           <Typography
             variant="h3"
             fontWeight={900}
             gutterBottom
-            sx={{ fontSize: { xs: 28, sm: 36, md: 42 }, lineHeight: 1.4 }}
+            sx={{ fontSize: { xs: "1.7rem", sm: "2.2rem", md: "2.8rem" }, lineHeight: 1.3 }}
           >
             Sẵn sàng bứt phá cùng{" "}
             <Box component="span" sx={{ color: "#ffb700" }}>
-              Máy 2 thì
+              Cường Hoa?
             </Box>
           </Typography>
 
           <Typography
             variant="h6"
-            sx={{ mb: 4, opacity: 0.95, fontSize: { xs: 16, sm: 18 } }}
+            sx={{ mb: 1.5, opacity: 0.95, fontSize: { xs: "1rem", sm: "1.1rem" } }}
           >
             Chất lượng – Giá tốt – Hậu mãi trọn đời!
+          </Typography>
+
+          <Typography variant="body2" sx={{ opacity: 0.8, mb: 4 }}>
+            Gọi ngay <strong>0392 923 392</strong> hoặc đến trực tiếp{" "}
+            <strong>293 TL293, Nghĩa Phương, Bắc Ninh</strong> để được tư vấn miễn phí.
           </Typography>
 
           <Stack
@@ -74,56 +69,57 @@ export default function FinalCallToActionSection() {
             justifyContent="center"
             alignItems="center"
           >
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                variant="contained"
-                size="large"
-                sx={{
-                  fontWeight: 700,
-                  px: 4,
-                  py: 1.5,
-                  borderRadius: 3,
-                  bgcolor: "#ffb700",
-                  color: "#000",
-                  "&:hover": { bgcolor: "#ffa000" },
-                }}
-                onClick={() => {
-                  track("about_cta_contact");
-                  router.push("/contact");
-                }}
-              >
-                Liên hệ tư vấn
-              </Button>
-            </motion.div>
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<PhoneIcon />}
+              href="tel:0392923392"
+              sx={{
+                fontWeight: 700,
+                px: 4,
+                py: 1.5,
+                borderRadius: 3,
+                bgcolor: "#ffb700",
+                color: "#000",
+                fontSize: "1rem",
+                "&:hover": { bgcolor: "#ffa000", transform: "translateY(-2px)", boxShadow: "0 8px 24px rgba(0,0,0,0.2)" },
+                transition: "all 0.2s ease",
+              }}
+              onClick={() => track("about_cta_phone")}
+            >
+              Gọi ngay tư vấn
+            </Button>
 
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                variant="outlined"
-                size="large"
-                sx={{
-                  fontWeight: 700,
-                  px: 4,
-                  py: 1.5,
-                  borderRadius: 3,
-                  borderColor: "#fff",
-                  color: "#fff",
-                  borderWidth: 2,
-                  "&:hover": {
-                    borderColor: "#ffb700",
-                    bgcolor: "rgba(255,255,255,0.1)",
-                  },
-                }}
-                onClick={() => {
-                  track("about_cta_buy_now");
-                  router.push("/product");
-                }}
-              >
-                Mua ngay – Ưu đãi cực sốc!
-              </Button>
-            </motion.div>
+            <Button
+              variant="outlined"
+              size="large"
+              startIcon={<ShoppingCartIcon />}
+              sx={{
+                fontWeight: 700,
+                px: 4,
+                py: 1.5,
+                borderRadius: 3,
+                borderColor: "rgba(255,255,255,0.7)",
+                color: "#fff",
+                borderWidth: 2,
+                fontSize: "1rem",
+                "&:hover": {
+                  borderColor: "#ffb700",
+                  bgcolor: "rgba(255,255,255,0.1)",
+                  transform: "translateY(-2px)",
+                },
+                transition: "all 0.2s ease",
+              }}
+              onClick={() => {
+                track("about_cta_buy_now");
+                router.push("/product");
+              }}
+            >
+              Xem sản phẩm ngay
+            </Button>
           </Stack>
-        </ContentBox>
-      </BackgroundBox>
+        </Box>
+      </Box>
     </Container>
   );
 }
