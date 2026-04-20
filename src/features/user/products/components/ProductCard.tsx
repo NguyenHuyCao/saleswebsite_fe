@@ -20,13 +20,13 @@ import {
   Zoom,
   CircularProgress,
 } from "@mui/material";
-import { motion, AnimatePresence } from "framer-motion";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import GlobalSnackbar from "@/components/feedback/GlobalSnackbar";
 import { trackRVItem } from "@/lib/utils/recentlyViewed";
@@ -274,11 +274,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <>
-      <motion.div
-        whileHover={{ y: -4 }}
-        transition={{ duration: 0.18, ease: "easeOut" }}
-        style={{ height: "100%" }}
-      >
         <Paper
           onClick={handleCardClick}
           elevation={2}
@@ -293,9 +288,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
             flexDirection: "column",
             bgcolor: "#fff",
             cursor: "pointer",
-            transition: "box-shadow 0.3s",
+            transition: "box-shadow 0.3s ease, transform 0.18s ease",
             "&:hover": {
               boxShadow: "0 12px 28px rgba(242,92,5,0.15)",
+              transform: "translateY(-4px)",
             },
           }}
         >
@@ -318,21 +314,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   transition: "all 0.2s",
                 }}
               >
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={isFavorite ? "favorite" : "not-favorite"}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    exit={{ scale: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {isFavorite ? (
-                      <FavoriteIcon sx={{ color: "#f25c05", fontSize: 18 }} />
-                    ) : (
-                      <FavoriteBorderIcon sx={{ color: "#f25c05", fontSize: 18 }} />
-                    )}
-                  </motion.div>
-                </AnimatePresence>
+                {isFavorite ? (
+                    <FavoriteIcon sx={{ color: "#f25c05", fontSize: 18 }} />
+                  ) : (
+                    <FavoriteBorderIcon sx={{ color: "#f25c05", fontSize: 18 }} />
+                  )}
               </IconButton>
             </Tooltip>
           )}
@@ -371,9 +357,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
             <Image
               src={product.imageAvt}
-              alt={product.name}
+              alt={`${product.name} — máy công cụ chính hãng`}
               fill
-              sizes="(max-width: 600px) 100vw, 240px"
+              sizes="(max-width: 600px) 50vw, (max-width: 900px) 33vw, 240px"
               priority={priority}
               style={{ objectFit: "cover", transition: "transform 0.3s ease" }}
               onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.04)"; }}
@@ -412,23 +398,30 @@ const ProductCard: React.FC<ProductCardProps> = ({
               </Stack>
             </Box>
 
-            {/* Product Name */}
+            {/* Product Name — wrapped in Link for SEO crawlability */}
             <Tooltip title={product.name} arrow>
-              <Typography
-                fontWeight={600}
-                sx={{
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  display: "-webkit-box",
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: "vertical",
-                  minHeight: { xs: 36, sm: 40 },
-                  lineHeight: 1.4,
-                  fontSize: { xs: "0.78rem", sm: "0.875rem" },
-                }}
+              <Link
+                href={`/product/detail?name=${product.slug}`}
+                prefetch={false}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCardClick(); }}
+                style={{ textDecoration: "none", color: "inherit", display: "block" }}
               >
-                {product.name}
-              </Typography>
+                <Typography
+                  fontWeight={600}
+                  sx={{
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    minHeight: { xs: 36, sm: 40 },
+                    lineHeight: 1.4,
+                    fontSize: { xs: "0.78rem", sm: "0.875rem" },
+                  }}
+                >
+                  {product.name}
+                </Typography>
+              </Link>
             </Tooltip>
 
             {/* Price — strikethrough always rendered to reserve space */}
@@ -500,25 +493,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     transition: "all 0.2s",
                   }}
                 >
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={showAddedAnimation ? "check" : "cart"}
-                      initial={{ scale: 0.6, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0.6, opacity: 0 }}
-                      transition={{ duration: 0.15 }}
-                    >
-                      {busyCart ? (
-                        <CircularProgress size={16} sx={{ color: "#f25c05" }} />
-                      ) : showAddedAnimation ? (
-                        <CheckCircleIcon sx={{ fontSize: 18, color: "#4caf50" }} />
-                      ) : (
-                        <AddShoppingCartIcon
-                          sx={{ fontSize: 18, color: product.inStock ? "#f25c05" : "#bbb" }}
-                        />
-                      )}
-                    </motion.div>
-                  </AnimatePresence>
+                  {busyCart ? (
+                      <CircularProgress size={16} sx={{ color: "#f25c05" }} />
+                    ) : showAddedAnimation ? (
+                      <CheckCircleIcon sx={{ fontSize: 18, color: "#4caf50" }} />
+                    ) : (
+                      <AddShoppingCartIcon
+                        sx={{ fontSize: 18, color: product.inStock ? "#f25c05" : "#bbb" }}
+                      />
+                    )}
                 </IconButton>
               </span>
             </Tooltip>
@@ -557,7 +540,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </Button>
           </Stack>
         </Paper>
-      </motion.div>
 
       {/* Quick Action Dialog (variant selection) */}
       <ProductQuickActionDialog

@@ -75,8 +75,9 @@ export default function ProductSearchBar({
             key={option.value}
             label={option.label}
             onClick={() => {
-              setActiveSort(option.value);
-              onSort(option.value);
+              const next = activeSort === option.value ? "" : option.value;
+              setActiveSort(next);
+              onSort(next);
             }}
             color={activeSort === option.value ? "warning" : "default"}
             sx={{
