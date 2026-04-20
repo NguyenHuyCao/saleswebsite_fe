@@ -13,13 +13,24 @@ export default function PromotionViewClient() {
 
   if (isLoading) {
     return (
-      <Container sx={{ mb: 10 }}>
-        <Box sx={{ mb: 4 }}>
-          <Skeleton variant="rounded" height={220} />
+      <Container sx={{ mb: 10, pt: { xs: 3, sm: 4 } }}>
+        {/* TwoStrokePromoBanner skeleton */}
+        <Skeleton variant="rounded" height={{ xs: 420, sm: 380, md: 360 } as any} sx={{ mb: 4, borderRadius: 3 }} />
+        {/* Flash sale header */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, px: 2, mb: 3 }}>
+          <Skeleton variant="circular" width={48} height={48} />
+          <Box sx={{ flex: 1 }}>
+            <Skeleton variant="text" width={160} height={32} />
+            <Skeleton variant="text" width={120} height={20} />
+          </Box>
         </Box>
-        <Skeleton variant="rounded" height={140} sx={{ mb: 2 }} />
-        <Skeleton variant="rounded" height={140} sx={{ mb: 6 }} />
-        <Skeleton variant="rounded" height={200} />
+        {/* Flash sale slider */}
+        <Skeleton variant="rounded" height={380} sx={{ mb: 4, borderRadius: 3 }} />
+        {/* Promotion banners */}
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3, mb: 4 }}>
+          <Skeleton variant="rounded" height={260} sx={{ borderRadius: 2 }} />
+          <Skeleton variant="rounded" height={260} sx={{ borderRadius: 2 }} />
+        </Box>
       </Container>
     );
   }

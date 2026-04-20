@@ -10,16 +10,18 @@ const promotions = [
   {
     title: "Khuyến mãi",
     subtitle: "Máy khoan",
-    price: "5.590.000đ",
+    price: "Từ 5.590.000đ",
     image: "/images/banner/istockphoto-874289546-612x612.jpg",
-    link: "/promotion",
+    link: "/product#products",
+    imageAlt: "Khuyến mãi máy khoan chính hãng tại Cường Hoa",
   },
   {
     title: "Khuyến mãi",
-    subtitle: "Máy cưa",
-    price: "2.920.000đ",
+    subtitle: "Máy cưa xích",
+    price: "Từ 2.920.000đ",
     image: "/images/banner/May-cua-xich-chay-pin-STIHL-MSA-120.jpg",
-    link: "/promotion",
+    link: "/product#products",
+    imageAlt: "Khuyến mãi máy cưa xích STIHL chính hãng tại Cường Hoa",
   },
 ];
 
@@ -28,12 +30,14 @@ const PromotionCard = ({ promo }: { promo: (typeof promotions)[0] }) => {
 
   return (
     <motion.div
-
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
       <Box
         onClick={() => router.push(promo.link)}
+        role="link"
+        aria-label={`${promo.title} ${promo.subtitle} — Xem sản phẩm`}
         sx={{
           position: "relative",
           overflow: "hidden",
@@ -61,10 +65,10 @@ const PromotionCard = ({ promo }: { promo: (typeof promotions)[0] }) => {
         >
           <Image
             src={promo.image}
-            alt={promo.subtitle}
+            alt={promo.imageAlt}
             fill
+            sizes="(max-width: 900px) 100vw, 50vw"
             style={{ objectFit: "cover" }}
-            priority
           />
         </Box>
 

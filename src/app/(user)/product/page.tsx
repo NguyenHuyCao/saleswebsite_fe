@@ -2,7 +2,7 @@
 import type { Metadata } from "next";
 import ProductView from "@/features/user/products/ProductView";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://cuonghoa.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://cuonghoa.vn";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

@@ -7,7 +7,7 @@ import ProductCategoryIntroSection from "./components/ProductCategoryIntroSectio
 import ProductCategorySection from "./components/ProductCategorySection";
 import ProductListLayout from "./components/ProductListLayout";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://cuonghoa.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://cuonghoa.vn";
 
 export default async function ProductView() {
   const categories = await getCategoriesWithProducts();

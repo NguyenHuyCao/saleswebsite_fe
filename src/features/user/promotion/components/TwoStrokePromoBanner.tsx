@@ -36,8 +36,10 @@ const banners = [
       { icon: <LocalOfferIcon />, text: "Giảm đến 50%" },
       { icon: <AutorenewIcon />, text: "Miễn phí đổi trả 7 ngày" },
     ],
-    button: "XEM NGAY",
+    button: "XEM SẢN PHẨM",
     buttonIcon: "🔥",
+    href: "/product#products",
+    imageAlt: "Máy cắt cỏ 2 thì đang khuyến mãi tại Cường Hoa",
     image:
       "/images/banner/pngtree-an-orange-lawn-mower-parked-in-the-grass-image_2919945.jpg",
     bgGradient: "linear-gradient(135deg, #f25c05 0%, #ffb700 100%)",
@@ -54,8 +56,10 @@ const banners = [
       { icon: <VerifiedIcon />, text: "Bảo hành chính hãng" },
       { icon: <LocalOfferIcon />, text: "Ưu đãi độc quyền online" },
     ],
-    button: "SĂN DEAL",
+    button: "MUA NGAY",
     buttonIcon: "⚡",
+    href: "/product#products",
+    imageAlt: "Máy cưa xích flash sale giảm giá tại Cường Hoa",
     image: "/images/banner/cua-betong-gs461.jpg",
     bgGradient: "linear-gradient(135deg, #ffb700 0%, #f25c05 100%)",
     badge: "GIỚI HẠN",
@@ -284,7 +288,7 @@ export default function TwoStrokePromoBanner() {
                       <Button
                         variant="contained"
                         size={isMobile ? "medium" : "large"}
-                        onClick={() => router.push("/promotion")}
+                        onClick={() => router.push(current.href)}
                         startIcon={<span>{current.buttonIcon}</span>}
                         sx={{
                           bgcolor: "#fff",
@@ -337,7 +341,7 @@ export default function TwoStrokePromoBanner() {
                       >
                         <Image
                           src={current.image}
-                          alt="Banner product"
+                          alt={current.imageAlt}
                           fill
                           sizes="(max-width: 900px) 200px, 300px"
                           style={{
@@ -357,6 +361,7 @@ export default function TwoStrokePromoBanner() {
             <>
               <IconButton
                 onClick={handlePrev}
+                aria-label="Banner khuyến mãi trước"
                 sx={{
                   position: "absolute",
                   left: 10,
@@ -373,6 +378,7 @@ export default function TwoStrokePromoBanner() {
               </IconButton>
               <IconButton
                 onClick={handleNext}
+                aria-label="Banner khuyến mãi tiếp theo"
                 sx={{
                   position: "absolute",
                   right: 10,
