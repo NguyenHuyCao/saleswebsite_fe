@@ -213,6 +213,19 @@ export default function AiChatWidget({ onChatOpenChange }: { onChatOpenChange?: 
   const [open, setOpen] = useState(false);
   useEffect(() => { onChatOpenChange?.(open); }, [open, onChatOpenChange]);
 
+  // External trigger: CompareDialog fires "aiChatTrigger" with a pre-filled message
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const msg = (e as CustomEvent<{ message: string }>).detail?.message;
+      if (!msg) return;
+      setOpen(true);
+      // Small delay to let the widget open before sending
+      setTimeout(() => sendMessageRef.current(msg), 400);
+    };
+    window.addEventListener("aiChatTrigger", handler);
+    return () => window.removeEventListener("aiChatTrigger", handler);
+  }, []);
+
   const [messages, setMessages] = useState<Message[]>([WELCOME]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);

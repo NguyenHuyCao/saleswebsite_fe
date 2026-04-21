@@ -20,8 +20,6 @@ import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
-import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
-import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 
 interface Props {
   product: {
@@ -30,7 +28,7 @@ interface Props {
     imageDetail2?: string | null;
     imageDetail3?: string | null;
     name: string;
-    videoUrl?: string;
+    videoUrl?: string | null;
   };
 }
 
@@ -40,8 +38,9 @@ export default function ImageGallery({ product }: Props) {
   const baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/files/`;
 
   const getFullSrc = (src: string) =>
-    src?.startsWith("http") ? src : `${baseUrl}${src}`;
+    src.startsWith("http") ? src : `${baseUrl}${src}`;
 
+  // Build image list — filter out null/empty/undefined
   const images = [
     product.imageAvt,
     product.imageDetail1,
@@ -49,481 +48,363 @@ export default function ImageGallery({ product }: Props) {
     product.imageDetail3,
   ].filter((img): img is string => Boolean(img));
 
-  const [open, setOpen] = useState(false);
-  const [selectedImg, setSelectedImg] = useState<string | null>(null);
+  // currentIndex drives BOTH main display and modal position
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [imageLoading, setImageLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalLoading, setModalLoading] = useState(true);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
 
-  // Disable body scroll when modal is open
+  // Lock body scroll when modal is open
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [open]);
+    document.body.style.overflow = modalOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [modalOpen]);
 
-  const handleOpen = (src: string, index: number) => {
-    setSelectedImg(getFullSrc(src));
-    setCurrentIndex(index);
-    setImageLoading(true);
-    setOpen(true);
-  };
-
+  // Keyboard navigation in modal
   const handlePrev = useCallback(() => {
-    setImageLoading(true);
-    const newIndex = (currentIndex - 1 + images.length) % images.length;
-    setCurrentIndex(newIndex);
-    setSelectedImg(getFullSrc(images[newIndex]));
-  }, [currentIndex, images]);
+    setModalLoading(true);
+    setCurrentIndex((i) => (i - 1 + images.length) % images.length);
+  }, [images.length]);
 
   const handleNext = useCallback(() => {
-    setImageLoading(true);
-    const newIndex = (currentIndex + 1) % images.length;
-    setCurrentIndex(newIndex);
-    setSelectedImg(getFullSrc(images[newIndex]));
-  }, [currentIndex, images]);
+    setModalLoading(true);
+    setCurrentIndex((i) => (i + 1) % images.length);
+  }, [images.length]);
 
-  // Handle keyboard navigation
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!open) return;
+    if (!modalOpen) return;
+    const onKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") handlePrev();
-      if (e.key === "ArrowRight") handleNext();
-      if (e.key === "Escape") setOpen(false);
+      else if (e.key === "ArrowRight") handleNext();
+      else if (e.key === "Escape") setModalOpen(false);
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, handlePrev, handleNext]);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [modalOpen, handlePrev, handleNext]);
 
-  // Handle touch events for mobile swipe
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
+  const handleTouchStart = (e: React.TouchEvent) => setTouchStart(e.targetTouches[0].clientX);
+  const handleTouchMove = (e: React.TouchEvent) => setTouchEnd(e.targetTouches[0].clientX);
   const handleTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
-
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe) {
-      handleNext();
-    }
-    if (isRightSwipe) {
-      handlePrev();
-    }
-
+    const dist = touchStart - touchEnd;
+    if (dist > 50) handleNext();
+    else if (dist < -50) handlePrev();
     setTouchStart(0);
     setTouchEnd(0);
   };
 
+  const selectImage = (index: number) => {
+    setCurrentIndex(index);
+  };
+
+  const openModal = () => {
+    setModalLoading(true);
+    setModalOpen(true);
+  };
+
   return (
     <Box>
-      {/* Main Image */}
-      <motion.div
-        whileHover={{ scale: 1.02 }}
-        transition={{ duration: 0.25 }}
-        onClick={() => handleOpen(product.imageAvt, 0)}
-        style={{
+      {/* ── Main Image ── */}
+      <Box
+        onClick={openModal}
+        sx={{
+          position: "relative",
           width: "100%",
           aspectRatio: "1 / 1",
-          borderRadius: 12,
+          borderRadius: 2.5,
           overflow: "hidden",
           cursor: "zoom-in",
-          backgroundColor: "#fafafa",
-          position: "relative",
+          bgcolor: "#f7f7f7",
+          border: "1px solid #ebebeb",
+          "&:hover .zoom-icon": { opacity: 1 },
         }}
       >
-        <Image
-          src={getFullSrc(product.imageAvt)}
-          alt={product.name}
-          fill
-          style={{ objectFit: "cover" }}
-          sizes="(max-width: 600px) 100vw, 400px"
-          priority
-        />
-        <ZoomInIcon
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentIndex}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{ position: "absolute", inset: 0 }}
+          >
+            <Image
+              src={getFullSrc(images[currentIndex] ?? product.imageAvt)}
+              alt={`${product.name} — ảnh ${currentIndex + 1}`}
+              fill
+              style={{ objectFit: "cover" }}
+              sizes="(max-width: 600px) 100vw, 420px"
+              priority={currentIndex === 0}
+            />
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Zoom hint */}
+        <Box
+          className="zoom-icon"
           sx={{
             position: "absolute",
-            bottom: 8,
-            right: 8,
-            color: "#fff",
-            bgcolor: "rgba(0,0,0,0.5)",
+            bottom: 10,
+            right: 10,
+            bgcolor: "rgba(0,0,0,0.45)",
             borderRadius: "50%",
-            p: 0.5,
-            transition: "all 0.2s",
-            "&:hover": {
-              bgcolor: "rgba(242,92,5,0.8)",
-              transform: "scale(1.1)",
-            },
+            width: 32,
+            height: 32,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: 0,
+            transition: "opacity 0.2s",
           }}
-        />
-      </motion.div>
+        >
+          <ZoomInIcon sx={{ fontSize: 18, color: "#fff" }} />
+        </Box>
 
-      {/* Thumbnails */}
-      <Stack
-        direction="row"
-        spacing={1}
-        mt={2}
-        overflow="auto"
-        sx={{
-          "&::-webkit-scrollbar": { display: "none" },
-          scrollbarWidth: "none",
-        }}
-      >
-        {images.map((src, i) => (
-          <motion.div
-            key={i}
-            whileHover={{ scale: 1.05 }}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-          >
+        {/* Image counter — only if multiple */}
+        {images.length > 1 && (
+          <Chip
+            label={`${currentIndex + 1}/${images.length}`}
+            size="small"
+            sx={{
+              position: "absolute",
+              bottom: 10,
+              left: 10,
+              bgcolor: "rgba(0,0,0,0.45)",
+              color: "#fff",
+              height: 22,
+              fontSize: "0.7rem",
+              fontWeight: 600,
+            }}
+          />
+        )}
+      </Box>
+
+      {/* ── Thumbnail Strip ── */}
+      {(images.length > 1 || product.videoUrl) && (
+        <Stack
+          direction="row"
+          spacing={1}
+          mt={1.5}
+          sx={{
+            overflowX: "auto",
+            pb: 0.5,
+            "&::-webkit-scrollbar": { height: 4 },
+            "&::-webkit-scrollbar-thumb": { bgcolor: "#e0e0e0", borderRadius: 2 },
+          }}
+        >
+          {images.map((src, i) => (
             <Box
-              onClick={() => handleOpen(src, i)}
+              key={i}
+              onClick={() => selectImage(i)}
               sx={{
                 flex: "0 0 auto",
-                width: { xs: 60, sm: 70 },
-                height: { xs: 60, sm: 70 },
-                borderRadius: 2,
-                border:
-                  currentIndex === i ? "2px solid #f25c05" : "1px solid #ddd",
+                width: { xs: 60, sm: 68 },
+                height: { xs: 60, sm: 68 },
+                borderRadius: 1.5,
+                border: "2px solid",
+                borderColor: currentIndex === i ? "#f25c05" : "#e0e0e0",
                 overflow: "hidden",
                 cursor: "pointer",
-                bgcolor: "#fff",
+                bgcolor: "#f7f7f7",
                 position: "relative",
-                transition: "all 0.2s",
-                opacity: currentIndex === i ? 1 : 0.7,
-                "&:hover": {
-                  opacity: 1,
-                  borderColor: "#f25c05",
-                },
+                transition: "border-color 0.18s, opacity 0.18s",
+                opacity: currentIndex === i ? 1 : 0.65,
+                "&:hover": { borderColor: "#f25c05", opacity: 1 },
               }}
             >
               <Image
                 src={getFullSrc(src)}
-                alt={`Ảnh chi tiết ${i + 1}`}
+                alt={`Ảnh ${i + 1} — ${product.name}`}
                 fill
+                unoptimized
                 style={{ objectFit: "cover" }}
               />
             </Box>
-          </motion.div>
-        ))}
+          ))}
 
-        {/* Video Thumbnail (if available) */}
-        {product.videoUrl && (
-          <Box
-            sx={{
-              flex: "0 0 auto",
-              width: { xs: 60, sm: 70 },
-              height: { xs: 60, sm: 70 },
-              borderRadius: 2,
-              border: "1px solid #ddd",
-              overflow: "hidden",
-              cursor: "pointer",
-              bgcolor: "#000",
-              position: "relative",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "all 0.2s",
-              "&:hover": {
-                borderColor: "#f25c05",
-                transform: "scale(1.05)",
-              },
-            }}
-          >
-            <PlayCircleIcon
-              sx={{ fontSize: 30, color: "#fff", opacity: 0.8 }}
-            />
-          </Box>
-        )}
-      </Stack>
+          {/* Video thumbnail */}
+          {product.videoUrl && (
+            <Box
+              sx={{
+                flex: "0 0 auto",
+                width: { xs: 60, sm: 68 },
+                height: { xs: 60, sm: 68 },
+                borderRadius: 1.5,
+                border: "2px solid #e0e0e0",
+                overflow: "hidden",
+                cursor: "pointer",
+                bgcolor: "#111",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: "border-color 0.18s",
+                "&:hover": { borderColor: "#f25c05" },
+              }}
+              onClick={() => {
+                document.getElementById("product-video-section")?.scrollIntoView({ behavior: "smooth" });
+              }}
+            >
+              <PlayCircleIcon sx={{ fontSize: 28, color: "rgba(255,255,255,0.85)" }} />
+            </Box>
+          )}
+        </Stack>
+      )}
 
-      {/* Zoom Modal */}
+      {/* ── Zoom Modal ── */}
       <Dialog
-        open={open}
-        onClose={() => setOpen(false)}
-        maxWidth="xl"
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        maxWidth={false}
         fullScreen={isMobile}
         disableScrollLock
         PaperProps={{
           sx: {
-            backgroundColor: "rgba(0,0,0,0.95)",
+            bgcolor: "rgba(0,0,0,0.96)",
             boxShadow: "none",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            position: "relative",
-            margin: 0,
-            width: "100%",
-            height: "100%",
+            width: "100vw",
             maxWidth: "100vw",
+            height: "100vh",
             maxHeight: "100vh",
+            m: 0,
             borderRadius: 0,
           },
         }}
       >
         <DialogContent
-          sx={{
-            p: 0,
-            position: "relative",
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            overflow: "hidden", // QUAN TRỌNG: Ẩn scroll
-          }}
+          sx={{ p: 0, position: "relative", width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          {/* Close Button */}
+          {/* Close */}
           <IconButton
-            onClick={() => setOpen(false)}
+            onClick={() => setModalOpen(false)}
+            aria-label="Đóng"
             sx={{
-              position: "absolute",
-              top: { xs: 8, sm: 16 },
-              right: { xs: 8, sm: 16 },
-              zIndex: 20,
-              color: "#fff",
-              bgcolor: "rgba(0,0,0,0.5)",
-              "&:hover": {
-                bgcolor: "rgba(242,92,5,0.8)",
-                transform: "scale(1.1)",
-              },
-              transition: "all 0.2s",
+              position: "absolute", top: { xs: 8, sm: 16 }, right: { xs: 8, sm: 16 }, zIndex: 20,
+              color: "#fff", bgcolor: "rgba(255,255,255,0.12)",
+              "&:hover": { bgcolor: "rgba(242,92,5,0.75)" },
+              transition: "background-color 0.2s",
             }}
           >
             <CloseIcon />
           </IconButton>
 
-          {/* Navigation Buttons - Desktop */}
-          {!isMobile && images.length > 1 && (
+          {/* Prev/Next */}
+          {images.length > 1 && (
             <>
               <IconButton
                 onClick={handlePrev}
+                aria-label="Ảnh trước"
                 sx={{
-                  position: "absolute",
-                  left: 24,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  zIndex: 20,
-                  color: "#fff",
-                  bgcolor: "rgba(0,0,0,0.5)",
-                  width: 48,
-                  height: 48,
-                  "&:hover": {
-                    bgcolor: "rgba(242,92,5,0.8)",
-                    transform: "translateY(-50%) scale(1.1)",
-                  },
-                  transition: "all 0.2s",
+                  position: "absolute", left: { xs: 8, sm: 20 }, top: "50%", transform: "translateY(-50%)", zIndex: 20,
+                  color: "#fff", bgcolor: "rgba(255,255,255,0.12)", width: { xs: 36, sm: 48 }, height: { xs: 36, sm: 48 },
+                  "&:hover": { bgcolor: "rgba(242,92,5,0.75)" }, transition: "background-color 0.2s",
                 }}
               >
-                <NavigateBeforeIcon fontSize="large" />
+                <NavigateBeforeIcon fontSize={isMobile ? "medium" : "large"} />
               </IconButton>
               <IconButton
                 onClick={handleNext}
+                aria-label="Ảnh sau"
                 sx={{
-                  position: "absolute",
-                  right: 24,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  zIndex: 20,
-                  color: "#fff",
-                  bgcolor: "rgba(0,0,0,0.5)",
-                  width: 48,
-                  height: 48,
-                  "&:hover": {
-                    bgcolor: "rgba(242,92,5,0.8)",
-                    transform: "translateY(-50%) scale(1.1)",
-                  },
-                  transition: "all 0.2s",
+                  position: "absolute", right: { xs: 8, sm: 20 }, top: "50%", transform: "translateY(-50%)", zIndex: 20,
+                  color: "#fff", bgcolor: "rgba(255,255,255,0.12)", width: { xs: 36, sm: 48 }, height: { xs: 36, sm: 48 },
+                  "&:hover": { bgcolor: "rgba(242,92,5,0.75)" }, transition: "background-color 0.2s",
                 }}
               >
-                <NavigateNextIcon fontSize="large" />
+                <NavigateNextIcon fontSize={isMobile ? "medium" : "large"} />
               </IconButton>
             </>
           )}
 
-          {/* Mobile Navigation Buttons - Smaller */}
-          {isMobile && images.length > 1 && (
-            <>
-              <IconButton
-                onClick={handlePrev}
-                sx={{
-                  position: "absolute",
-                  left: 8,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  zIndex: 20,
-                  color: "#fff",
-                  bgcolor: "rgba(0,0,0,0.5)",
-                  width: 36,
-                  height: 36,
-                  "&:hover": { bgcolor: "rgba(242,92,5,0.8)" },
-                }}
-              >
-                <KeyboardArrowLeftIcon />
-              </IconButton>
-              <IconButton
-                onClick={handleNext}
-                sx={{
-                  position: "absolute",
-                  right: 8,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  zIndex: 20,
-                  color: "#fff",
-                  bgcolor: "rgba(0,0,0,0.5)",
-                  width: 36,
-                  height: 36,
-                  "&:hover": { bgcolor: "rgba(242,92,5,0.8)" },
-                }}
-              >
-                <KeyboardArrowRightIcon />
-              </IconButton>
-            </>
-          )}
-
-          {/* Current Image Counter */}
+          {/* Counter */}
           <Chip
             label={`${currentIndex + 1} / ${images.length}`}
             size="small"
             sx={{
-              position: "absolute",
-              bottom: { xs: 8, sm: 16 },
-              left: "50%",
-              transform: "translateX(-50%)",
-              zIndex: 20,
-              bgcolor: "rgba(0,0,0,0.5)",
-              color: "#fff",
-              backdropFilter: "blur(4px)",
-              border: "1px solid rgba(255,255,255,0.2)",
+              position: "absolute", bottom: { xs: 72, sm: 20 }, left: "50%", transform: "translateX(-50%)", zIndex: 20,
+              bgcolor: "rgba(0,0,0,0.55)", color: "#fff", backdropFilter: "blur(4px)",
+              border: "1px solid rgba(255,255,255,0.15)", fontSize: "0.78rem",
             }}
           />
 
-          {/* Image Container */}
-          <Box
-            sx={{
-              width: "100%",
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              position: "relative",
-            }}
-          >
+          {/* Image */}
+          <Box sx={{ position: "relative", width: isMobile ? "100%" : "90%", height: isMobile ? "100%" : "88%", maxWidth: 1280, maxHeight: 880 }}>
+            {modalLoading && (
+              <Fade in>
+                <Box sx={{
+                  position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 15,
+                  width: 40, height: 40, border: "3px solid rgba(255,255,255,0.25)", borderTopColor: "#f25c05",
+                  borderRadius: "50%", animation: "spin 0.9s linear infinite",
+                  "@keyframes spin": { "0%": { transform: "rotate(0deg)" }, "100%": { transform: "rotate(360deg)" } },
+                }} />
+              </Fade>
+            )}
             <AnimatePresence mode="wait">
-              {selectedImg && (
-                <motion.div
-                  key={currentIndex}
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -50 }}
-                  transition={{ duration: 0.3 }}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      position: "relative",
-                      width: isMobile ? "100%" : "90%",
-                      height: isMobile ? "100%" : "90%",
-                      maxWidth: "1200px",
-                      maxHeight: "800px",
-                    }}
-                  >
-                    {/* Loading Indicator */}
-                    {imageLoading && (
-                      <Fade in>
-                        <Box
-                          sx={{
-                            position: "absolute",
-                            top: "50%",
-                            left: "50%",
-                            transform: "translate(-50%, -50%)",
-                            zIndex: 15,
-                            color: "#fff",
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              width: 40,
-                              height: 40,
-                              border: "3px solid rgba(255,255,255,0.3)",
-                              borderTopColor: "#f25c05",
-                              borderRadius: "50%",
-                              animation: "spin 1s linear infinite",
-                              "@keyframes spin": {
-                                "0%": { transform: "rotate(0deg)" },
-                                "100%": { transform: "rotate(360deg)" },
-                              },
-                            }}
-                          />
-                        </Box>
-                      </Fade>
-                    )}
-
-                    <Image
-                      src={selectedImg}
-                      alt="Xem ảnh lớn"
-                      fill
-                      sizes="(max-width: 600px) 100vw, 1200px"
-                      style={{
-                        objectFit: "contain",
-                      }}
-                      onLoadingComplete={() => setImageLoading(false)}
-                      priority
-                    />
-                  </Box>
-                </motion.div>
-              )}
+              <motion.div
+                key={currentIndex}
+                initial={{ opacity: 0, x: 40 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -40 }}
+                transition={{ duration: 0.25 }}
+                style={{ position: "absolute", inset: 0 }}
+              >
+                <Image
+                  src={getFullSrc(images[currentIndex] ?? product.imageAvt)}
+                  alt={`${product.name} — xem ảnh lớn`}
+                  fill
+                  unoptimized
+                  sizes="100vw"
+                  style={{ objectFit: "contain" }}
+                  onLoadingComplete={() => setModalLoading(false)}
+                  priority
+                />
+              </motion.div>
             </AnimatePresence>
           </Box>
 
-          {/* Hint for mobile swipe */}
+          {/* Mobile thumbnail strip in modal */}
           {isMobile && images.length > 1 && (
-            <Box
+            <Stack
+              direction="row"
+              spacing={1}
               sx={{
-                position: "absolute",
-                bottom: 40,
-                left: "50%",
-                transform: "translateX(-50%)",
-                color: "#fff",
-                bgcolor: "rgba(0,0,0,0.5)",
-                px: 2,
-                py: 1,
-                borderRadius: 3,
-                zIndex: 25,
-                backdropFilter: "blur(4px)",
-                animation: "pulse 2s infinite",
-                "@keyframes pulse": {
-                  "0%": { opacity: 0.5 },
-                  "50%": { opacity: 1 },
-                  "100%": { opacity: 0.5 },
-                },
+                position: "absolute", bottom: 12, left: 0, right: 0,
+                justifyContent: "center", px: 2, zIndex: 20,
+                overflowX: "auto", "&::-webkit-scrollbar": { display: "none" },
               }}
             >
-              <Typography variant="caption">← Vuốt để chuyển ảnh →</Typography>
-            </Box>
+              {images.map((src, i) => (
+                <Box
+                  key={i}
+                  onClick={() => { setModalLoading(true); setCurrentIndex(i); }}
+                  sx={{
+                    flex: "0 0 auto", width: 44, height: 44, borderRadius: 1,
+                    border: "2px solid", borderColor: currentIndex === i ? "#f25c05" : "rgba(255,255,255,0.3)",
+                    overflow: "hidden", cursor: "pointer", position: "relative",
+                    opacity: currentIndex === i ? 1 : 0.55, transition: "all 0.18s",
+                    "&:hover": { opacity: 1, borderColor: "#f25c05" },
+                  }}
+                >
+                  <Image src={getFullSrc(src)} alt="" fill unoptimized style={{ objectFit: "cover" }} />
+                </Box>
+              ))}
+            </Stack>
+          )}
+
+          {/* Desktop swipe hint */}
+          {!isMobile && images.length > 1 && (
+            <Typography
+              variant="caption"
+              sx={{
+                position: "absolute", bottom: 14, right: 20, color: "rgba(255,255,255,0.4)",
+                fontSize: "0.72rem", userSelect: "none",
+              }}
+            >
+              ← → để chuyển ảnh · ESC để đóng
+            </Typography>
           )}
         </DialogContent>
       </Dialog>

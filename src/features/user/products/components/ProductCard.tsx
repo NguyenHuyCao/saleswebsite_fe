@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Box,
@@ -25,6 +25,7 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
+import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -39,6 +40,7 @@ import { http } from "@/lib/api/http";
 import type { Product } from "@/features/user/products/types";
 import ProductQuickActionDialog from "./ProductQuickActionDialog";
 import type { QuickActionMode } from "./ProductQuickActionDialog";
+import { addToCompare, removeFromCompare, isInCompare, COMPARE_EVENT } from "@/lib/utils/compareStorage";
 
 interface ProductCardProps {
   product: Product;
@@ -114,6 +116,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const [busyCart, setBusyCart] = useState(false);
   const [busyFav, setBusyFav] = useState(false);
   const [showAddedAnimation, setShowAddedAnimation] = useState(false);
+  const [inCompare, setInCompare] = useState(false);
+
+  useEffect(() => {
+    const syncCompare = () => setInCompare(isInCompare(product.id));
+    syncCompare();
+    window.addEventListener(COMPARE_EVENT, syncCompare);
+    return () => window.removeEventListener(COMPARE_EVENT, syncCompare);
+  }, [product.id]);
 
   // Price & discount
   const hasDiscount = product.sale && (product.discountPercent ?? 0) > 0;
@@ -295,33 +305,55 @@ const ProductCard: React.FC<ProductCardProps> = ({
             },
           }}
         >
-          {/* Wishlist Button */}
-          {!hideWishlistButton && (
-            <Tooltip title={isFavorite ? "Bỏ yêu thích" : "Thêm vào yêu thích"} arrow>
+          {/* Top-right: Wishlist + Compare */}
+          <Stack
+            direction="column"
+            spacing={0.5}
+            sx={{ position: "absolute", top: 8, right: 8, zIndex: 3 }}
+          >
+            {!hideWishlistButton && (
+              <Tooltip title={isFavorite ? "Bỏ yêu thích" : "Thêm vào yêu thích"} arrow>
+                <IconButton
+                  onClick={handleToggleFavorite}
+                  disabled={busyFav}
+                  sx={{
+                    bgcolor: "rgba(255,255,255,0.9)",
+                    backdropFilter: "blur(4px)",
+                    width: 30,
+                    height: 30,
+                    "&:hover": { bgcolor: "#fff", transform: "scale(1.1)" },
+                    transition: "all 0.2s",
+                  }}
+                >
+                  {isFavorite ? (
+                    <FavoriteIcon sx={{ color: "#f25c05", fontSize: 16 }} />
+                  ) : (
+                    <FavoriteBorderIcon sx={{ color: "#f25c05", fontSize: 16 }} />
+                  )}
+                </IconButton>
+              </Tooltip>
+            )}
+            <Tooltip title={inCompare ? "Bỏ so sánh" : "Thêm vào so sánh"} arrow>
               <IconButton
-                onClick={handleToggleFavorite}
-                disabled={busyFav}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (inCompare) removeFromCompare(product.id);
+                  else addToCompare(product);
+                }}
                 sx={{
-                  position: "absolute",
-                  top: 8,
-                  right: 8,
-                  bgcolor: "rgba(255,255,255,0.9)",
+                  bgcolor: inCompare ? "rgba(242,92,5,0.15)" : "rgba(255,255,255,0.9)",
                   backdropFilter: "blur(4px)",
-                  width: 32,
-                  height: 32,
-                  zIndex: 3,
-                  "&:hover": { bgcolor: "#fff", transform: "scale(1.1)" },
+                  width: 30,
+                  height: 30,
+                  border: inCompare ? "1.5px solid #f25c05" : "none",
+                  "&:hover": { bgcolor: inCompare ? "rgba(242,92,5,0.25)" : "#fff", transform: "scale(1.1)" },
                   transition: "all 0.2s",
                 }}
               >
-                {isFavorite ? (
-                    <FavoriteIcon sx={{ color: "#f25c05", fontSize: 18 }} />
-                  ) : (
-                    <FavoriteBorderIcon sx={{ color: "#f25c05", fontSize: 18 }} />
-                  )}
+                <CompareArrowsIcon sx={{ color: inCompare ? "#f25c05" : "#666", fontSize: 16 }} />
               </IconButton>
             </Tooltip>
-          )}
+          </Stack>
 
           {/* Product Image */}
           <Box

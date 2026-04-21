@@ -25,8 +25,10 @@ import {
   Truck,
   Shield,
   RotateCcw,
+  Zap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { getColorHex, isLightColor } from "@/lib/utils/colorMap";
 import { useDispatch, useSelector } from "react-redux";
@@ -49,6 +51,7 @@ interface Props {
 export default function ProductDetails({ product, category }: Props) {
   const dispatch = useDispatch<AppDispatch>();
   const qc = useQueryClient();
+  const router = useRouter();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isFavorite = useSelector((state: AppState) =>
@@ -137,17 +140,39 @@ export default function ProductDetails({ product, category }: Props) {
     }
   };
 
+  const handleOrderAction = async () => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+    if (!token) {
+      return setSnackbar({ open: true, type: "error", message: "Bạn cần đăng nhập để đặt hàng." });
+    }
+    if (hasVariants && !selectedVariant) {
+      return setSnackbar({ open: true, type: "error", message: "Vui lòng chọn kích cỡ / màu sắc trước khi đặt hàng." });
+    }
+    try {
+      await http.post("/api/v1/carts", {
+        quantity,
+        productId: product.id,
+        variantId: selectedVariant?.id ?? undefined,
+      });
+      mutate(CART_COUNT_KEY, undefined, { revalidate: true });
+      qc.invalidateQueries({ queryKey: ["cart"] });
+      refreshNotifications();
+      router.push(`/cart?select=${product.id}`);
+    } catch (e: any) {
+      setSnackbar({ open: true, type: "error", message: e?.message || "Đặt hàng thất bại." });
+    }
+  };
+
   const toggleFavorite = async () => {
     const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
     if (!token) {
       return setSnackbar({ open: true, type: "error", message: "Bạn cần đăng nhập để yêu thích sản phẩm." });
     }
     try {
-      const formData = new FormData();
-      formData.append("productId", String(product.id));
-      await http.post("/api/v1/wishlist", formData, { headers: { "Content-Type": "multipart/form-data" } });
+      await http.post(`/api/v1/wishlist/toggle?productId=${product.id}`);
       dispatch(fetchWishlist());
       mutate(WISHLIST_COUNT_KEY, undefined, { revalidate: true });
+
       if (isFavorite) {
         showToast(`Đã xóa ${product.name} khỏi yêu thích.`, "info", "Yêu thích");
       } else {
@@ -400,8 +425,8 @@ export default function ProductDetails({ product, category }: Props) {
         </Box>
       )}
 
-      {/* Quantity Selector & Add to Cart */}
-      <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
+      {/* Row 1: Quantity + Wishlist */}
+      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1.5 }}>
         <Stack
           direction="row"
           alignItems="center"
@@ -429,22 +454,6 @@ export default function ProductDetails({ product, category }: Props) {
           </IconButton>
         </Stack>
 
-        <Tooltip title={!inStock ? "Sản phẩm đã hết hàng" : "Thêm vào giỏ hàng"}>
-          <span style={{ flex: 1 }}>
-            <Button
-              fullWidth
-              variant="contained"
-              color="warning"
-              startIcon={<ShoppingCart size={18} />}
-              sx={{ borderRadius: 2, py: 1.5, fontWeight: 600, fontSize: "0.95rem", textTransform: "none" }}
-              onClick={handleAddToCart}
-              disabled={!inStock}
-            >
-              {inStock ? "Thêm vào giỏ" : "Hết hàng"}
-            </Button>
-          </span>
-        </Tooltip>
-
         <Tooltip title={isFavorite ? "Bỏ yêu thích" : "Thêm yêu thích"}>
           <IconButton
             onClick={toggleFavorite}
@@ -458,6 +467,48 @@ export default function ProductDetails({ product, category }: Props) {
           >
             <Heart fill={isFavorite ? "#f25c05" : "none"} color={isFavorite ? "#f25c05" : "#999"} />
           </IconButton>
+        </Tooltip>
+      </Stack>
+
+      {/* Row 2: Add to Cart + Order Now */}
+      <Stack direction="row" spacing={1.5} sx={{ mb: 3 }}>
+        <Tooltip title={!inStock ? "Sản phẩm đã hết hàng" : "Thêm vào giỏ hàng"}>
+          <span style={{ flex: 1 }}>
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<ShoppingCart size={18} />}
+              sx={{
+                borderRadius: 2, py: 1.4, fontWeight: 600, fontSize: "0.9rem", textTransform: "none",
+                borderColor: "#f25c05", color: "#f25c05",
+                "&:hover": { borderColor: "#d94f00", bgcolor: "#fff3e0" },
+              }}
+              onClick={handleAddToCart}
+              disabled={!inStock}
+            >
+              {inStock ? "Thêm vào giỏ" : "Hết hàng"}
+            </Button>
+          </span>
+        </Tooltip>
+
+        <Tooltip title={!inStock ? "Sản phẩm đã hết hàng" : "Đặt hàng ngay"}>
+          <span style={{ flex: 1 }}>
+            <Button
+              fullWidth
+              variant="contained"
+              startIcon={<Zap size={18} />}
+              sx={{
+                borderRadius: 2, py: 1.4, fontWeight: 700, fontSize: "0.9rem", textTransform: "none",
+                bgcolor: "#f25c05",
+                "&:hover": { bgcolor: "#d94f00" },
+                boxShadow: "0 4px 14px rgba(242,92,5,0.35)",
+              }}
+              onClick={handleOrderAction}
+              disabled={!inStock}
+            >
+              Đặt hàng ngay
+            </Button>
+          </span>
         </Tooltip>
       </Stack>
 

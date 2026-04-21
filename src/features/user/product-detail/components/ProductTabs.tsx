@@ -25,6 +25,9 @@ const tabLabels = [
   "Chính sách bảo hành và bảo trì",
 ];
 
+const BASE_IMG = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/files/`;
+const getImg = (src: string) => (src?.startsWith("http") ? src : `${BASE_IMG}${src}`);
+
 export default function ProductTabs({ product, category }: Props) {
   const [value, setValue] = useState(0);
 
@@ -119,9 +122,10 @@ export default function ProductTabs({ product, category }: Props) {
           }}
         >
           <Image
-            src={item.imageAvt || "/images/product/default.jpg"}
+            src={item.imageAvt ? getImg(item.imageAvt) : "/images/product/default.jpg"}
             alt={item.name}
             fill
+            unoptimized
             style={{ objectFit: "cover" }}
             sizes="60px"
           />
@@ -146,6 +150,9 @@ export default function ProductTabs({ product, category }: Props) {
           <Tabs
             value={value}
             onChange={(_, v) => setValue(v)}
+            variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
             sx={{
               mb: 2,
               borderBottom: 1,
