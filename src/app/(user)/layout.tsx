@@ -7,6 +7,7 @@ import AppFooter from "@/views/footer/app.footer";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import ClientLayoutWrapper from "@/components/fixed_elements/ClientLayoutWrapper";
+import MobileBottomNav from "@/views/header/MobileBottomNav";
 
 export const metadata: Metadata = {
   title: {
@@ -38,6 +39,7 @@ export default function UserLayout({
         {children}
       </Box>
       <AppFooter />
+      <MobileBottomNav />
       <ClientLayoutWrapper />
     </ThemeRegistry>
   );

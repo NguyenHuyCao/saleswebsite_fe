@@ -82,18 +82,18 @@ const WarrantyAndFAQButtons = ({ hidden = false }: { hidden?: boolean }) => {
       <Box
         sx={{
           position: "fixed",
-          // mobile: trái 8px, bottom 72px (16px buffer trên bottom nav 56px + safe area)
-          bottom: isMobile
-            ? "calc(56px + env(safe-area-inset-bottom, 0px) + 16px)"
-            : 90,
-          left: isMobile ? 8 : "auto",
-          right: isMobile ? "auto" : 28,
+          bottom: {
+            xs: "calc(56px + env(safe-area-inset-bottom, 0px) + 16px)",
+            sm: 90,
+          },
+          left: { xs: 8, sm: "auto" },
+          right: { xs: "auto", sm: 28 },
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: isMobile ? 1.5 : 1.2,
+          gap: { xs: 1.5, sm: 1.2 },
           zIndex: 9999,
-          animation: "fadeInUp 0.8s ease-in-out",
+          animation: { xs: "none", sm: "fadeInUp 0.8s ease-in-out" },
           opacity: hidden ? 0 : 1,
           transform: hidden ? "scale(0.85) translateY(8px)" : "scale(1) translateY(0)",
           pointerEvents: hidden ? "none" : "auto",

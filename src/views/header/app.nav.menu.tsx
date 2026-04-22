@@ -1,31 +1,17 @@
 "use client";
 
 import {
-  Badge,
   Box,
   Button,
   Container,
   Typography,
-  BottomNavigation,
-  BottomNavigationAction,
   Fade,
 } from "@mui/material";
 import AppsIcon from "@mui/icons-material/Apps";
-import HomeIcon from "@mui/icons-material/Home";
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import CompareIcon from "@mui/icons-material/Compare";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import useSWR from "swr";
 import BrandMegaMenu from "@/features/user/brand/components/BrandMegaMenu";
 import { api, toApiError } from "@/lib/api/http";
-import { fetcherWithToken } from "@/lib/utils/fetcherWithToken";
-import {
-  CART_COUNT_KEY,
-  WISHLIST_COUNT_KEY,
-  ORDERS_COUNT_KEY,
-} from "@/constants/apiKeys";
 
 // Nếu dự án đã có sẵn types Category/BrandWithCategories thì giữ nguyên.
 // Tại đây chỉ dùng lại như code cũ.
@@ -35,10 +21,6 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
   const [brandsData, setBrandsData] = useState<BrandWithCategories[]>([]);
   const router = useRouter();
   const pathname = usePathname();
-
-  const { data: cartCount = 0 } = useSWR(CART_COUNT_KEY, fetcherWithToken);
-  const { data: wishlistCount = 0 } = useSWR(WISHLIST_COUNT_KEY, fetcherWithToken);
-  const { data: ordersCount = 0 } = useSWR(ORDERS_COUNT_KEY, fetcherWithToken);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -84,107 +66,7 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
   ];
 
   if (isMobile) {
-    return (
-      <Box
-        sx={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          zIndex: 1200,
-          borderTop: "1px solid #e0e0e0",
-          bgcolor: "#fff",
-          // safe area cho màn hình notch (iPhone X+)
-          paddingBottom: "env(safe-area-inset-bottom, 0px)",
-          boxShadow: "0 -1px 6px rgba(0,0,0,0.08)",
-        }}
-      >
-        <BottomNavigation
-          showLabels
-          value={pathname}
-          sx={{
-            height: 56,
-            width: "100%",
-            // 5 items căn đều
-            "& .MuiBottomNavigationAction-root": {
-              flex: 1,
-              minWidth: 0,
-              maxWidth: "none",
-              padding: "6px 2px 4px",
-              color: "#9e9e9e",
-              // icon 22px
-              "& .MuiSvgIcon-root": {
-                fontSize: 22,
-              },
-              // text 10px — ghim cả trạng thái selected (MUI tự tăng lên)
-              "& .MuiBottomNavigationAction-label": {
-                fontSize: "10px",
-                lineHeight: 1.3,
-                marginTop: "3px",
-                whiteSpace: "nowrap",
-                overflow: "visible",
-                textOverflow: "clip",
-                "&.Mui-selected": {
-                  fontSize: "10px",
-                },
-              },
-              // active: cam
-              "&.Mui-selected": {
-                color: "#f25c05",
-              },
-            },
-          }}
-        >
-          <BottomNavigationAction
-            label="Trang chủ"
-            value="/"
-            icon={<HomeIcon />}
-            onClick={() => router.push("/")}
-            aria-label="Trang chủ"
-          />
-          <BottomNavigationAction
-            label="Sản phẩm"
-            value="/product"
-            icon={<AppsIcon />}
-            onClick={() => router.push("/product")}
-            aria-label="Sản phẩm"
-          />
-          <BottomNavigationAction
-            label="Yêu thích"
-            value="/wishlist"
-            icon={
-              <Badge badgeContent={wishlistCount || 0} color="error" max={99} invisible={!wishlistCount}>
-                <FavoriteIcon />
-              </Badge>
-            }
-            onClick={() => router.push("/wishlist")}
-            aria-label="Yêu thích"
-          />
-          <BottomNavigationAction
-            label="Đơn hàng"
-            value="/order"
-            icon={
-              <Badge badgeContent={ordersCount || 0} color="error" max={99} invisible={!ordersCount}>
-                <CompareIcon />
-              </Badge>
-            }
-            onClick={() => router.push("/order")}
-            aria-label="Đơn hàng"
-          />
-          <BottomNavigationAction
-            label="Giỏ hàng"
-            value="/cart"
-            icon={
-              <Badge badgeContent={cartCount || 0} color="error" max={99} invisible={!cartCount}>
-                <ShoppingCartIcon />
-              </Badge>
-            }
-            onClick={() => router.push("/cart")}
-            aria-label="Giỏ hàng"
-          />
-        </BottomNavigation>
-      </Box>
-    );
+    return null;
   }
 
   return (

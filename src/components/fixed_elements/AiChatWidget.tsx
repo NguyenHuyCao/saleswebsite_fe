@@ -1776,16 +1776,15 @@ export default function AiChatWidget({ onChatOpenChange }: { onChatOpenChange?: 
         whileTap={{ scale: 0.93 }}
         sx={{
           position: "fixed",
-          // Mobile: ngay trên bottom nav; desktop: vị trí cũ
-          bottom: isMobile
-            ? "calc(56px + env(safe-area-inset-bottom, 0px) + 16px)"
-            : 24,
-          right: isMobile ? 16 : 24,
-          width: isMobile ? 52 : 56,
-          height: isMobile ? 52 : 56,
+          bottom: {
+            xs: "calc(56px + env(safe-area-inset-bottom, 0px) + 16px)",
+            sm: 24,
+          },
+          right: { xs: 16, sm: 24 },
+          width: { xs: 52, sm: 56 },
+          height: { xs: 52, sm: 56 },
           borderRadius: "50%",
           bgcolor: open ? "#455a64" : "#f25c05",
-          // Mobile: ẩn FAB khi sheet đang mở (dùng nút X trong header)
           display: isMobile && open ? "none" : "flex",
           alignItems: "center",
           justifyContent: "center",
