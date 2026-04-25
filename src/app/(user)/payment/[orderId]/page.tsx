@@ -1,18 +1,23 @@
 import QrPaymentPage from "@/features/user/payment/QrPaymentPage";
 
 export const metadata = {
-  title: "Thanh toán QR",
+  title: "Thanh toán",
   robots: { index: false },
 };
 
 interface Props {
-  params: { orderId: string };
-  searchParams: { method?: string };
+  params: Promise<{ orderId: string }>;
+  searchParams: Promise<{ method?: string }>;
 }
 
-export default function PaymentQrRoutePage({ params, searchParams }: Props) {
-  const orderId = parseInt(params.orderId, 10);
-  const method = (searchParams.method?.toUpperCase() ?? "MOMO") as "MOMO" | "VNPAY";
+export default async function PaymentQrRoutePage({ params, searchParams }: Props) {
+  const { orderId: orderIdStr } = await params;
+  const { method } = await searchParams;
+  const orderId = parseInt(orderIdStr, 10);
+  const paymentMethod = (method?.toUpperCase() ?? "BANK_TRANSFER") as
+    | "MOMO"
+    | "VNPAY"
+    | "BANK_TRANSFER";
 
-  return <QrPaymentPage orderId={orderId} paymentMethod={method} />;
+  return <QrPaymentPage orderId={orderId} paymentMethod={paymentMethod} />;
 }

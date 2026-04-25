@@ -1,19 +1,10 @@
 "use client";
-import {
-  Box,
-  Typography,
-  Button,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
+import { Box, Typography, Button } from "@mui/material";
 import Link from "next/link";
 import ContactPhoneIcon from "@mui/icons-material/ContactPhone";
 import { motion } from "framer-motion";
 
 export default function ContactCTA() {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
   return (
     <Box
       component={motion.div}
@@ -29,11 +20,11 @@ export default function ContactCTA() {
         p: { xs: 4, md: 6 },
         color: "#fff",
         display: "flex",
-        flexDirection: isMobile ? "column" : "row",
+        flexDirection: { xs: "column", sm: "row" },
         alignItems: "center",
         justifyContent: "space-between",
         gap: 3,
-        textAlign: isMobile ? "center" : "left",
+        textAlign: { xs: "center", sm: "left" },
         backgroundImage:
           "url('/images/banner/cognitive-scienc-minor-banner-7.jpg.2.2x.generic.jpg')",
         backgroundSize: "cover",
@@ -49,7 +40,7 @@ export default function ContactCTA() {
         },
       }}
     >
-      <Box zIndex={2} maxWidth={isMobile ? "100%" : "60%"}>
+      <Box zIndex={2} maxWidth={{ xs: "100%", sm: "60%" }}>
         <Typography
           variant="h5"
           fontWeight={700}

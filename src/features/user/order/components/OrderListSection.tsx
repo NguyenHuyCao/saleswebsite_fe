@@ -85,9 +85,10 @@ const PAYMENT_STATUS_INFO: Record<string, { label: string; color: string }> = {
 };
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
-  COD:   "Thanh toán khi nhận hàng (COD)",
-  MOMO:  "Ví MoMo",
-  VNPAY: "VNPay / Chuyển khoản",
+  COD:           "Thanh toán khi nhận hàng (COD)",
+  MOMO:          "Ví MoMo",
+  VNPAY:         "VNPay / Chuyển khoản",
+  BANK_TRANSFER: "Chuyển khoản ngân hàng (MB Bank)",
 };
 
 const CANCEL_REASONS = [
@@ -384,6 +385,8 @@ export default function OrderListSection({
           const isExpanded = expandedOrder === String(order.orderId);
           const isWaitingPayment =
             order.status === "WAITING_PAYMENT" && order.paymentMethod !== "COD";
+          const isBankTransferPending =
+            order.paymentMethod === "BANK_TRANSFER" && order.paymentStatus === "PENDING";
           const isDelivered = order.status === "DELIVERED";
           const isShipping = order.status === "SHIPPING";
 
@@ -402,7 +405,7 @@ export default function OrderListSection({
                   borderRadius: 3,
                   overflow: "hidden",
                   border: "1px solid",
-                  borderColor: isWaitingPayment
+                  borderColor: isWaitingPayment || isBankTransferPending
                     ? "#ff980040"
                     : isExpanded
                     ? "#f25c0540"
@@ -414,8 +417,8 @@ export default function OrderListSection({
                   },
                 }}
               >
-                {/* ── WAITING_PAYMENT progress indicator ────────── */}
-                {isWaitingPayment && (
+                {/* ── WAITING_PAYMENT / BANK_TRANSFER pending indicator ── */}
+                {(isWaitingPayment || isBankTransferPending) && (
                   <LinearProgress
                     color="warning"
                     sx={{ height: 3, "& .MuiLinearProgress-bar": { bgcolor: "#ff9800" } }}
@@ -492,7 +495,7 @@ export default function OrderListSection({
                       </Typography>
                       <Stack direction="row" spacing={0.5} mt={0.5} flexWrap="wrap">
                         <ShippingStatusChip status={order.status} />
-                        {order.paymentStatus && order.paymentStatus !== "PENDING" && (
+                        {order.paymentStatus && (order.paymentStatus !== "PENDING" || isBankTransferPending) && (
                           <PaymentBadge status={order.paymentStatus} />
                         )}
                       </Stack>
@@ -532,6 +535,35 @@ export default function OrderListSection({
                               }}
                             >
                               {isMobile ? "Thanh toán" : "Thanh toán ngay"}
+                            </Button>
+                          </Tooltip>
+                        )}
+
+                        {/* BANK_TRANSFER + PENDING → chuyển khoản button */}
+                        {isBankTransferPending && (
+                          <Tooltip title="Xem thông tin chuyển khoản">
+                            <Button
+                              size="small"
+                              variant="contained"
+                              startIcon={<PaymentIcon sx={{ fontSize: 14 }} />}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/payment/${order.orderId}?method=BANK_TRANSFER`);
+                              }}
+                              sx={{
+                                bgcolor: "#1565c0",
+                                color: "#fff",
+                                textTransform: "none",
+                                fontWeight: 700,
+                                fontSize: "0.72rem",
+                                borderRadius: 2,
+                                py: 0.5,
+                                px: 1.25,
+                                "&:hover": { bgcolor: "#0d47a1" },
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {isMobile ? "Chuyển khoản" : "Xem thông tin CK"}
                             </Button>
                           </Tooltip>
                         )}
@@ -831,7 +863,7 @@ export default function OrderListSection({
                                 <strong>Trạng thái:</strong>{" "}
                                 <PaymentBadge status={order.paymentStatus} />
                               </Typography>
-                              {order.paidAmount != null && order.paidAmount > 0 && (
+                              {order.paymentStatus === "PAID" && order.paidAmount != null && order.paidAmount > 0 && (
                                 <Typography variant="body2" color="text.secondary" component="div">
                                   <strong>Đã thanh toán:</strong>{" "}
                                   <span style={{ color: "#4caf50", fontWeight: 700 }}>
@@ -877,6 +909,28 @@ export default function OrderListSection({
                                   }}
                                 >
                                   Thanh toán ngay
+                                </Button>
+                              )}
+                              {isBankTransferPending && (
+                                <Button
+                                  size="small"
+                                  variant="contained"
+                                  fullWidth
+                                  startIcon={<PaymentIcon sx={{ fontSize: 14 }} />}
+                                  onClick={() =>
+                                    router.push(`/payment/${order.orderId}?method=BANK_TRANSFER`)
+                                  }
+                                  sx={{
+                                    mt: 1,
+                                    bgcolor: "#1565c0",
+                                    textTransform: "none",
+                                    fontWeight: 700,
+                                    fontSize: "0.78rem",
+                                    borderRadius: 2,
+                                    "&:hover": { bgcolor: "#0d47a1" },
+                                  }}
+                                >
+                                  Xem thông tin chuyển khoản
                                 </Button>
                               )}
                             </Stack>

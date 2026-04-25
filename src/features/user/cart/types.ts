@@ -28,7 +28,7 @@ export type SelectedItemKey = {
 
 export type PlaceOrderPayload = {
   shippingAddress: string;
-  paymentMethod: "COD" | "MOMO" | "VNPAY";
+  paymentMethod: "COD" | "BANK_TRANSFER";
   shippingNote?: string;
   shippingAmount: number;
   promotionNameByProductId?: Record<number, string>;
