@@ -12,10 +12,8 @@ import {
   Button,
   Card,
   CardContent,
-  Avatar,
   Rating,
   Pagination,
-  Skeleton,
   FormControl,
   InputLabel,
   Select,
@@ -30,44 +28,11 @@ import PhoneIcon from "@mui/icons-material/Phone";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import DirectionsIcon from "@mui/icons-material/Directions";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
-import MapIcon from "@mui/icons-material/Map";
 import type { StoreInfo } from "../types";
+import { googleEmbedUrl, googleDirectionsUrl } from "../queries";
 
-// Component Map nhỏ cho mỗi store
 const StoreMiniMap = ({ store }: { store: StoreInfo }) => {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  const [mapError, setMapError] = useState(false);
-
-  if (!apiKey || mapError) {
-    return (
-      <Box
-        sx={{
-          height: 150,
-          bgcolor: "#f5f5f5",
-          borderRadius: 2,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "column",
-          gap: 1,
-        }}
-      >
-        <MapIcon sx={{ color: "#999", fontSize: 40 }} />
-        <Button
-          size="small"
-          variant="outlined"
-          startIcon={<DirectionsIcon />}
-          onClick={() => {
-            const url = `https://www.google.com/maps/dir/?api=1&destination=${store.coords.lat},${store.coords.lng}`;
-            window.open(url, "_blank");
-          }}
-          sx={{ borderColor: "#ffb700", color: "#f25c05" }}
-        >
-          Mở Google Maps
-        </Button>
-      </Box>
-    );
-  }
+  const src = googleEmbedUrl(store.coords.lat, store.coords.lng);
 
   return (
     <Box
@@ -76,11 +41,7 @@ const StoreMiniMap = ({ store }: { store: StoreInfo }) => {
         borderRadius: 2,
         overflow: "hidden",
         position: "relative",
-        "&:hover": {
-          "& .map-overlay": {
-            opacity: 1,
-          },
-        },
+        "&:hover .map-overlay": { opacity: 1 },
       }}
     >
       <iframe
@@ -89,35 +50,29 @@ const StoreMiniMap = ({ store }: { store: StoreInfo }) => {
         height="100%"
         style={{ border: 0 }}
         loading="lazy"
-        src={`https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${store.coords.lat},${store.coords.lng}&zoom=14`}
-        onError={() => setMapError(true)}
+        referrerPolicy="no-referrer-when-downgrade"
+        src={src}
       />
 
-      {/* Overlay để mở rộng */}
+      {/* Hover overlay */}
       <Box
         className="map-overlay"
         sx={{
           position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          bgcolor: "rgba(0,0,0,0.5)",
+          inset: 0,
+          bgcolor: "rgba(0,0,0,0.45)",
           opacity: 0,
-          transition: "opacity 0.3s",
+          transition: "opacity 0.25s",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           cursor: "pointer",
         }}
-        onClick={() => {
-          const url = `https://www.google.com/maps/search/?api=1&query=${store.coords.lat},${store.coords.lng}`;
-          window.open(url, "_blank");
-        }}
+        onClick={() => window.open(googleDirectionsUrl(store.coords.lat, store.coords.lng), "_blank")}
       >
         <Chip
           icon={<DirectionsIcon />}
-          label="Xem lớn hơn"
+          label="Chỉ đường"
           sx={{
             bgcolor: "#fff",
             color: "#f25c05",
@@ -395,7 +350,7 @@ export default function StoreListSection({ stores }: Props) {
                         <AccessTimeIcon
                           sx={{ color: "#f25c05", fontSize: 18 }}
                         />
-                        <Typography variant="body2">8:00 - 17:30</Typography>
+                        <Typography variant="body2">{store.hours.monday}</Typography>
                       </Stack>
                     </Stack>
 

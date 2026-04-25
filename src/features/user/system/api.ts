@@ -19,6 +19,9 @@ const STORE: StoreInfo = {
   images: [
     "/images/about/1534231926-5.jpg",
     "/images/about/cua-betong-gs461.jpg",
+    "/images/about/may-cat-co-1-trieu-1.jpg",
+    "/images/about/May-cua-xich-chay-pin-STIHL-MSA-120.jpg",
+    "/images/about/499532978_2773015746202250_4981359374519031868_n.jpg",
   ],
   services: ["Bán máy 2 thì", "Sửa chữa máy", "Bảo hành", "Tư vấn", "Giao hàng"],
   policies: {
@@ -30,7 +33,7 @@ const STORE: StoreInfo = {
   managerPhone: "0392923392",
   rating: 4.9,
   totalRatings: 180,
-  coords: { lat: 21.1167, lng: 106.0667 },
+  coords: { lat: 21.2740, lng: 106.4871 },
   promotions: [
     {
       title: "Mua máy tặng phụ kiện",

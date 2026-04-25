@@ -270,10 +270,10 @@ export default function StoreHeroSection({ store }: Props) {
                           Giờ mở cửa
                         </Typography>
                         <Typography fontWeight={500}>
-                          Thứ 2 - Thứ 7: 8:00 - 17:30
+                          Thứ 2 – Thứ 7: {store.hours.monday}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          Chủ nhật: 9:00 - 12:00
+                          Chủ nhật: {store.hours.sunday}
                         </Typography>
                       </Box>
                     </Stack>

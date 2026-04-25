@@ -1,81 +1,48 @@
-// system/components/MapEmbed.tsx
 "use client";
 
-import {
-  Box,
-  Paper,
-  Chip,
-  IconButton,
-  Tooltip,
-  Stack,
-  CircularProgress,
-  Typography,
-  Button,
-} from "@mui/material";
+import { Box, Paper, Chip, IconButton, Tooltip, CircularProgress, Typography, Button } from "@mui/material";
 import { motion } from "framer-motion";
-import { useCallback, useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import DirectionsIcon from "@mui/icons-material/Directions";
-import ZoomInIcon from "@mui/icons-material/ZoomIn";
-import ZoomOutIcon from "@mui/icons-material/ZoomOut";
-import SatelliteIcon from "@mui/icons-material/Satellite";
-import MapIcon from "@mui/icons-material/Map";
 import FullscreenIcon from "@mui/icons-material/Fullscreen";
+import { googleDirectionsUrl, googleEmbedUrl } from "../queries";
 
 interface MapEmbedProps {
   lat: number;
   lng: number;
   storeName?: string;
-  zoom?: number;
   height?: number | string;
-  showControls?: boolean;
 }
 
-export default function MapEmbed({
-  lat,
-  lng,
-  storeName = "Cường Hoa",
-  zoom = 15,
-  height = 400,
-  showControls = true,
-}: MapEmbedProps) {
-  const [mapZoom, setMapZoom] = useState(zoom);
-  const [mapType, setMapType] = useState<"roadmap" | "satellite">("roadmap");
+export default function MapEmbed({ lat, lng, storeName = "Cường Hoa", height = 400 }: MapEmbedProps) {
   const [isLoading, setIsLoading] = useState(true);
-  const [mapError, setMapError] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const src = googleEmbedUrl(lat, lng);
 
-  // Tạo URL cho Google Maps với các tùy chọn
-  const getMapUrl = useCallback(() => {
-    // Nếu có API key, dùng embed API với nhiều tính năng
-    if (apiKey) {
-      return `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${lat},${lng}&zoom=${mapZoom}&maptype=${mapType}`;
-    }
+  // Fallback: dismiss spinner after 2.5s if onLoad doesn't fire
+  useEffect(() => {
+    setIsLoading(true);
+    const t = setTimeout(() => setIsLoading(false), 2500);
+    return () => clearTimeout(t);
+  }, [src]);
 
-    // Fallback: dùng iframe thông thường (không cần API key)
-    return `https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d2000!2d${lng}!3d${lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1svi!2s!4v${Date.now()}`;
-  }, [lat, lng, mapZoom, mapType, apiKey]);
-
-  // Mở Google Maps trong tab mới để chỉ đường
-  const openDirections = useCallback(() => {
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-    window.open(url, "_blank", "noopener,noreferrer");
-  }, [lat, lng]);
-
-  const handleMapLoad = () => {
-    setIsLoading(false);
+  const openDirections = () => {
+    window.open(googleDirectionsUrl(lat, lng), "_blank", "noopener,noreferrer");
   };
 
-  const handleMapError = () => {
-    setMapError(true);
-    setIsLoading(false);
+  const openFullscreen = () => {
+    if (iframeRef.current?.requestFullscreen) {
+      iframeRef.current.requestFullscreen();
+    }
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
+      initial={{ opacity: 0, scale: 0.97 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.4 }}
     >
       <Paper
         elevation={3}
@@ -83,24 +50,21 @@ export default function MapEmbed({
           borderRadius: 4,
           overflow: "hidden",
           position: "relative",
-          height: height,
+          height,
           width: "100%",
           bgcolor: "#f5f5f5",
         }}
       >
-        {/* Loading State */}
-        {isLoading && !mapError && (
+        {/* Loading */}
+        {isLoading && !hasError && (
           <Box
             sx={{
               position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
+              inset: 0,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              bgcolor: "rgba(255,255,255,0.8)",
+              bgcolor: "rgba(255,255,255,0.85)",
               zIndex: 5,
             }}
           >
@@ -108,21 +72,18 @@ export default function MapEmbed({
           </Box>
         )}
 
-        {/* Error State */}
-        {mapError && (
+        {/* Error fallback */}
+        {hasError && (
           <Box
             sx={{
               position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
+              inset: 0,
               display: "flex",
+              flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              bgcolor: "#f5f5f5",
+              bgcolor: "#fafafa",
               zIndex: 5,
-              flexDirection: "column",
               gap: 2,
             }}
           >
@@ -139,101 +100,38 @@ export default function MapEmbed({
           </Box>
         )}
 
-        {/* Map Controls */}
-        {showControls && !mapError && (
+        {/* Controls */}
+        {!hasError && (
           <Box
             sx={{
               position: "absolute",
-              top: 16,
-              right: 16,
+              top: 12,
+              right: 12,
               zIndex: 10,
               display: "flex",
               flexDirection: "column",
               gap: 1,
             }}
           >
-            <Tooltip title="Phóng to">
+            <Tooltip title="Toàn màn hình">
               <IconButton
                 size="small"
-                onClick={() => setMapZoom((prev) => Math.min(prev + 1, 21))}
-                sx={{
-                  bgcolor: "white",
-                  boxShadow: 2,
-                  "&:hover": { bgcolor: "#ffb700", color: "#fff" },
-                }}
+                onClick={openFullscreen}
+                sx={{ bgcolor: "#fff", boxShadow: 2, "&:hover": { bgcolor: "#ffb700", color: "#fff" } }}
               >
-                <ZoomInIcon />
-              </IconButton>
-            </Tooltip>
-
-            <Tooltip title="Thu nhỏ">
-              <IconButton
-                size="small"
-                onClick={() => setMapZoom((prev) => Math.max(prev - 1, 5))}
-                sx={{
-                  bgcolor: "white",
-                  boxShadow: 2,
-                  "&:hover": { bgcolor: "#ffb700", color: "#fff" },
-                }}
-              >
-                <ZoomOutIcon />
-              </IconButton>
-            </Tooltip>
-
-            <Tooltip
-              title={
-                mapType === "roadmap"
-                  ? "Chuyển sang chế độ vệ tinh"
-                  : "Chuyển sang chế độ bản đồ"
-              }
-            >
-              <IconButton
-                size="small"
-                onClick={() =>
-                  setMapType((prev) =>
-                    prev === "roadmap" ? "satellite" : "roadmap",
-                  )
-                }
-                sx={{
-                  bgcolor: "white",
-                  boxShadow: 2,
-                  "&:hover": { bgcolor: "#ffb700", color: "#fff" },
-                }}
-              >
-                {mapType === "roadmap" ? <SatelliteIcon /> : <MapIcon />}
-              </IconButton>
-            </Tooltip>
-
-            <Tooltip title="Xem toàn màn hình">
-              <IconButton
-                size="small"
-                onClick={() => {
-                  const iframe = document.querySelector("iframe");
-                  if (iframe) {
-                    if (iframe.requestFullscreen) {
-                      iframe.requestFullscreen();
-                    }
-                  }
-                }}
-                sx={{
-                  bgcolor: "white",
-                  boxShadow: 2,
-                  "&:hover": { bgcolor: "#ffb700", color: "#fff" },
-                }}
-              >
-                <FullscreenIcon />
+                <FullscreenIcon fontSize="small" />
               </IconButton>
             </Tooltip>
           </Box>
         )}
 
-        {/* Store Info Overlay */}
-        {!mapError && (
+        {/* Bottom chips */}
+        {!hasError && (
           <Box
             sx={{
               position: "absolute",
-              bottom: 16,
-              left: 16,
+              bottom: 12,
+              left: 12,
               zIndex: 10,
               display: "flex",
               gap: 1,
@@ -243,44 +141,37 @@ export default function MapEmbed({
             <Chip
               label={storeName}
               size="small"
-              sx={{
-                bgcolor: "#f25c05",
-                color: "#fff",
-                fontWeight: 600,
-                backdropFilter: "blur(4px)",
-              }}
+              sx={{ bgcolor: "#f25c05", color: "#fff", fontWeight: 700, boxShadow: 1 }}
             />
             <Chip
-              icon={<DirectionsIcon />}
+              icon={<DirectionsIcon sx={{ fontSize: "14px !important" }} />}
               label="Chỉ đường"
               size="small"
               onClick={openDirections}
               sx={{
-                bgcolor: "white",
+                bgcolor: "#fff",
                 color: "#333",
                 fontWeight: 600,
+                boxShadow: 1,
                 cursor: "pointer",
-                "&:hover": {
-                  bgcolor: "#ffb700",
-                  color: "#000",
-                },
+                "&:hover": { bgcolor: "#ffb700" },
               }}
             />
           </Box>
         )}
 
-        {/* Google Maps Iframe */}
         <iframe
+          ref={iframeRef}
           title={`Bản đồ ${storeName}`}
           width="100%"
           height="100%"
-          style={{ border: 0 }}
+          style={{ border: 0, display: "block" }}
           loading="lazy"
           allowFullScreen
           referrerPolicy="no-referrer-when-downgrade"
-          src={getMapUrl()}
-          onLoad={handleMapLoad}
-          onError={handleMapError}
+          src={src}
+          onLoad={() => setIsLoading(false)}
+          onError={() => { setHasError(true); setIsLoading(false); }}
         />
       </Paper>
     </motion.div>
