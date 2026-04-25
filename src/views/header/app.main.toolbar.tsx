@@ -17,6 +17,8 @@ import {
   ListItemText,
   Divider,
   CircularProgress,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import BookmarkBorderOutlinedIcon from "@mui/icons-material/BookmarkBorderOutlined";
@@ -27,6 +29,7 @@ import {
   QuestionAnswer,
   Article,
 } from "@mui/icons-material";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import ClickAwayListener from "@mui/material/ClickAwayListener";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -37,10 +40,11 @@ import {
   CART_COUNT_KEY,
   ORDERS_COUNT_KEY,
 } from "@/constants/apiKeys";
-import { http } from "@/lib/api/http";
+import { http, toApiError } from "@/lib/api/http";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { faqData } from "@/features/user/questions/constants/faqData";
-import { getAccessToken } from "@/lib/api/token";
+import { getAccessToken, clearAccessToken } from "@/lib/api/token";
+import { useToast } from "@/lib/toast/ToastContext";
 import NotificationDropdown from "@/@core/layouts/components/shared-components/NotificationDropdown";
 
 mutate(CART_COUNT_KEY);
@@ -90,6 +94,7 @@ interface ProductSuggestion {
 const MainToolbar = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const { showToast } = useToast();
   const [currentText, setCurrentText] = useState("");
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
@@ -98,8 +103,33 @@ const MainToolbar = () => {
   const [productSuggestions, setProductSuggestions] = useState<ProductSuggestion[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [mobileMenuAnchor, setMobileMenuAnchor] = useState<null | HTMLElement>(null);
   const debouncedSearch = useDebounce(searchText, 350);
   const abortRef = useRef<AbortController | null>(null);
+
+  const handleMobileMenuOpen = (e: React.MouseEvent<HTMLElement>) => {
+    setMobileMenuAnchor(e.currentTarget);
+  };
+
+  const handleMobileMenuClose = () => setMobileMenuAnchor(null);
+
+  const handleMobileLogout = async () => {
+    handleMobileMenuClose();
+    try {
+      await http.post("/api/v1/auth/logout");
+    } catch (e) {
+      console.warn("Logout failed:", toApiError(e).message);
+    } finally {
+      clearAccessToken();
+      setIsLoggedIn(false);
+      window.dispatchEvent(new Event("logout"));
+      showToast("Hẹn gặp lại bạn!", "info", "Đã đăng xuất");
+      mutate(CART_COUNT_KEY);
+      mutate(WISHLIST_COUNT_KEY);
+      mutate(ORDERS_COUNT_KEY);
+      router.push("/");
+    }
+  };
 
   useEffect(() => {
     setIsLoggedIn(!!getAccessToken());
@@ -503,7 +533,7 @@ const MainToolbar = () => {
                 <Box
                   key={label}
                   sx={{
-                    display: "flex",
+                    display: { xs: "none", sm: "flex" },
                     alignItems: "center",
                     gap: 1,
                     cursor: "pointer",
@@ -572,6 +602,74 @@ const MainToolbar = () => {
                 </Box>
               );
             })}
+
+            {/* Account — mobile only (TopBar is hidden on xs) */}
+            <Box sx={{ display: { xs: "flex", sm: "none" }, alignItems: "center" }}>
+              <IconButton
+                sx={{
+                  color: "#ffb700",
+                  border: "1px solid #ffb700",
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  p: 0,
+                  "&:hover": { bgcolor: "rgba(255,183,0,0.1)" },
+                }}
+                onClick={handleMobileMenuOpen}
+              >
+                <AccountCircleIcon sx={{ fontSize: 22 }} />
+              </IconButton>
+
+              <Menu
+                anchorEl={mobileMenuAnchor}
+                open={Boolean(mobileMenuAnchor)}
+                onClose={handleMobileMenuClose}
+                disableScrollLock
+                PaperProps={{
+                  sx: { mt: 1, minWidth: 180, borderRadius: 2 },
+                }}
+              >
+                {isLoggedIn ? [
+                  <MenuItem
+                    key="account"
+                    onClick={() => { handleMobileMenuClose(); router.push("/account"); }}
+                    sx={{ fontSize: 13 }}
+                  >
+                    Cập nhật thông tin
+                  </MenuItem>,
+                  <MenuItem
+                    key="password"
+                    onClick={() => { handleMobileMenuClose(); router.push("/change-password"); }}
+                    sx={{ fontSize: 13 }}
+                  >
+                    Đổi mật khẩu
+                  </MenuItem>,
+                  <Divider key="divider" />,
+                  <MenuItem
+                    key="logout"
+                    onClick={handleMobileLogout}
+                    sx={{ fontSize: 13, color: "error.main" }}
+                  >
+                    Đăng xuất
+                  </MenuItem>,
+                ] : [
+                  <MenuItem
+                    key="login"
+                    onClick={() => { handleMobileMenuClose(); router.push("/login?page=login"); }}
+                    sx={{ fontSize: 13 }}
+                  >
+                    Đăng nhập
+                  </MenuItem>,
+                  <MenuItem
+                    key="register"
+                    onClick={() => { handleMobileMenuClose(); router.push("/login?page=register"); }}
+                    sx={{ fontSize: 13 }}
+                  >
+                    Đăng ký
+                  </MenuItem>,
+                ]}
+              </Menu>
+            </Box>
 
             {/* Notification — mobile only, sau cart (sm+ dùng TopBar) */}
             {isLoggedIn && (
