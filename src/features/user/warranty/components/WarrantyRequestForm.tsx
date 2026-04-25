@@ -1,7 +1,6 @@
-// warranty/components/WarrantyRequestForm.tsx
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import {
   Box,
   Typography,
@@ -11,7 +10,6 @@ import {
   Button,
   TextField,
   Paper,
-  Grid,
   MenuItem,
   CircularProgress,
   Alert,
@@ -20,10 +18,10 @@ import {
   Chip,
   FormHelperText,
 } from "@mui/material";
+import Grid from "@mui/material/Grid";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Image from "next/image";
-import { useSearchParams, useRouter } from "next/navigation";
 import GlobalSnackbar from "@/components/feedback/GlobalSnackbar";
 import { motion, AnimatePresence } from "framer-motion";
 import { getOrderItems, submitWarrantyClaim } from "../api";
@@ -34,178 +32,140 @@ const steps = [
   "Mô tả lỗi và hình ảnh",
 ];
 
-// Validation rules
-const validateStep = (step: number, data: any, products: any[]) => {
+const MAX_IMAGES = 3;
+const MAX_DESC = 500;
+
+const validateStep = (step: number, data: typeof EMPTY_FORM, products: any[]) => {
   switch (step) {
     case 0:
-      if (!data.orderCode) return "Vui lòng nhập mã đơn hàng";
-      if (!data.contactInfo) return "Vui lòng nhập email tài khoản";
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.contactInfo)) {
+      if (!data.orderCode.trim()) return "Vui lòng nhập mã đơn hàng";
+      if (!data.contactInfo.trim()) return "Vui lòng nhập email tài khoản";
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.contactInfo))
         return "Email không đúng định dạng";
-      }
       break;
     case 1:
       if (products.length === 0) return "Không tìm thấy sản phẩm nào";
-      if (!data.selectedProduct) return "Vui lòng chọn sản phẩm";
+      if (!data.selectedProduct) return "Vui lòng chọn sản phẩm cần bảo hành";
       break;
     case 2:
-      if (!data.errorDescription) return "Vui lòng mô tả lỗi";
-      if (data.errorDescription.length < 10) return "Mô tả lỗi quá ngắn";
+      if (!data.errorDescription.trim()) return "Vui lòng mô tả lỗi sản phẩm";
+      if (data.errorDescription.trim().length < 10)
+        return "Mô tả lỗi quá ngắn (ít nhất 10 ký tự)";
       break;
   }
   return null;
 };
 
+const EMPTY_FORM = {
+  orderCode: "",
+  contactInfo: "",
+  selectedProduct: "",
+  errorDescription: "",
+};
+
 export default function WarrantyRequestForm() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const stepParam = parseInt(searchParams.get("step") || "0", 10);
   const formRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [activeStep, setActiveStep] = useState<number>(stepParam);
+  const [activeStep, setActiveStep] = useState(0);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    orderCode: "",
-    contactInfo: "",
-    selectedProduct: "",
-    errorDescription: "",
-  });
-
+  const [formData, setFormData] = useState(EMPTY_FORM);
   const [orderProducts, setOrderProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetchingProducts, setFetchingProducts] = useState(false);
   const [previews, setPreviews] = useState<{ url: string; file: File }[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const MAX_IMAGES = 3;
-
   const [alert, setAlert] = useState({
     open: false,
     type: "success" as "success" | "error",
     message: "",
   });
 
-  const scrollToForm = () => {
-    if (formRef.current) {
-      formRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  };
-
-  useEffect(() => {
-    if (window.location.hash === "#warranty-request") {
-      scrollToForm();
-    }
-  }, []);
-
-  useEffect(() => {
-    setActiveStep(stepParam);
-  }, [stepParam]);
-
-  // Lấy sản phẩm theo mã đơn hàng
-  useEffect(() => {
-    const run = async () => {
-      if (!formData.orderCode) return;
-      setFetchingProducts(true);
-      try {
-        const items = await getOrderItems(formData.orderCode);
-        setOrderProducts(items);
-      } catch (error) {
-        setOrderProducts([]);
-      } finally {
-        setFetchingProducts(false);
-      }
-    };
-    run();
-  }, [formData.orderCode]);
-
-  const updateStepInUrl = (step: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("step", step.toString());
-    router.push(`?${params.toString()}`, { scroll: false });
-  };
-
   const handleChange = (field: string, value: string) => {
+    if (field === "errorDescription" && value.length > MAX_DESC) return;
     setFormData((prev) => ({ ...prev, [field]: value }));
     setValidationError(null);
   };
 
-  const handleNext = () => {
-    // Validate current step
+  const handleNext = async () => {
     const error = validateStep(activeStep, formData, orderProducts);
     if (error) {
       setValidationError(error);
       return;
     }
-
     setValidationError(null);
 
-    if (activeStep === steps.length - 1) {
-      handleSubmitWarrantyRequest();
-    } else {
-      const next = activeStep + 1;
-      setActiveStep(next);
-      updateStepInUrl(next);
+    if (activeStep === 0) {
+      setFetchingProducts(true);
+      try {
+        const items = await getOrderItems(formData.orderCode.trim());
+        setOrderProducts(items);
+        if (items.length === 0) {
+          setValidationError(
+            "Không tìm thấy sản phẩm nào trong đơn hàng này. Vui lòng kiểm tra lại mã."
+          );
+          return;
+        }
+        setActiveStep(1);
+      } catch {
+        setValidationError(
+          "Không tìm thấy đơn hàng. Vui lòng kiểm tra lại mã đơn hàng."
+        );
+      } finally {
+        setFetchingProducts(false);
+      }
+      return;
     }
-  };;
+
+    if (activeStep === steps.length - 1) {
+      await handleSubmit();
+    } else {
+      setActiveStep((s) => s + 1);
+    }
+  };
 
   const handleBack = () => {
-    const back = activeStep - 1;
-    setActiveStep(back);
-    updateStepInUrl(back);
+    setActiveStep((s) => s - 1);
     setValidationError(null);
   };
 
   const addFiles = (files: FileList | null) => {
     if (!files) return;
-    const newFiles = Array.from(files);
     const remaining = MAX_IMAGES - previews.length;
     if (remaining <= 0) {
-      setAlert({ open: true, type: "error", message: `Chỉ được đính kèm tối đa ${MAX_IMAGES} ảnh` });
+      setAlert({
+        open: true,
+        type: "error",
+        message: `Chỉ được đính kèm tối đa ${MAX_IMAGES} ảnh`,
+      });
       return;
     }
-    const toAdd = newFiles.slice(0, remaining);
+    const toAdd = Array.from(files).slice(0, remaining);
     const oversized = toAdd.find((f) => f.size > 5 * 1024 * 1024);
     if (oversized) {
-      setAlert({ open: true, type: "error", message: "Kích thước mỗi ảnh không được vượt quá 5MB" });
+      setAlert({
+        open: true,
+        type: "error",
+        message: "Kích thước mỗi ảnh không được vượt quá 5MB",
+      });
       return;
     }
     toAdd.forEach((file) => {
       const reader = new FileReader();
-      reader.onloadend = () => {
+      reader.onloadend = () =>
         setPreviews((prev) => [...prev, { url: reader.result as string, file }]);
-      };
       reader.readAsDataURL(file);
     });
-    // reset input so same file can be re-added if needed
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    addFiles(e.target.files);
-  };
-
-  const handleRemoveImage = (idx: number) => {
-    setPreviews((prev) => prev.filter((_, i) => i !== idx));
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    addFiles(e.dataTransfer.files);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => e.preventDefault();
-
-  const handleSubmitWarrantyRequest = async () => {
+  const handleSubmit = async () => {
     setLoading(true);
     try {
       const body = new FormData();
-      // orderCode: mã đơn hàng (ORD-YYYYMMDD-XXXXX)
-      body.append("orderCode", formData.orderCode);
-      // email: dùng contactInfo (user nhập email tài khoản)
-      body.append("email", formData.contactInfo);
-      // productId: ID sản phẩm (selectedProduct giờ lưu productId)
+      body.append("orderCode", formData.orderCode.trim());
+      body.append("email", formData.contactInfo.trim());
       body.append("productId", formData.selectedProduct);
-      body.append("issueDesc", formData.errorDescription);
-
+      body.append("issueDesc", formData.errorDescription.trim());
       previews.forEach((p) => body.append("images", p.file));
 
       const result = await submitWarrantyClaim(body);
@@ -218,17 +178,10 @@ export default function WarrantyRequestForm() {
           : "Đã gửi yêu cầu bảo hành thành công!",
       });
 
-      // Reset form
-      setFormData({
-        orderCode: "",
-        contactInfo: "",
-        selectedProduct: "",
-        errorDescription: "",
-      });
+      setFormData(EMPTY_FORM);
       setOrderProducts([]);
       setPreviews([]);
       setActiveStep(0);
-      updateStepInUrl(0);
     } catch (error: any) {
       setAlert({
         open: true,
@@ -240,10 +193,12 @@ export default function WarrantyRequestForm() {
     }
   };
 
+  const isBusy = loading || fetchingProducts;
+
   return (
     <Paper
       ref={formRef}
-      sx={{ p: 4, mt: 4, borderRadius: 3 }}
+      sx={{ p: { xs: 3, md: 4 }, mt: 4, borderRadius: 3 }}
       id="warranty-request"
     >
       <Typography variant="h5" fontWeight={800} color="#333" gutterBottom>
@@ -283,7 +238,7 @@ export default function WarrantyRequestForm() {
                   label="Mã đơn hàng *"
                   fullWidth
                   value={formData.orderCode}
-                  onChange={(e) => handleChange("orderCode", e.target.value)}
+                  onChange={(e) => handleChange("orderCode", e.target.value.toUpperCase())}
                   placeholder="VD: ORD-20240315-00001"
                 />
               </Grid>
@@ -319,15 +274,12 @@ export default function WarrantyRequestForm() {
                   fullWidth
                   label="Chọn sản phẩm bảo hành *"
                   value={formData.selectedProduct}
-                  onChange={(e) =>
-                    handleChange("selectedProduct", e.target.value)
-                  }
+                  onChange={(e) => handleChange("selectedProduct", e.target.value)}
                 >
                   {orderProducts.map((p) => (
-                    // value = productId (số nguyên) — BE nhận productId để tìm OrderDetail
                     <MenuItem key={p.productId} value={String(p.productId)}>
-                      {p.productName} (SL: {p.quantity}) -{" "}
-                      {p.unitPrice?.toLocaleString()}₫
+                      {p.productName} (SL: {p.quantity}) –{" "}
+                      {p.unitPrice?.toLocaleString("vi-VN")}₫
                     </MenuItem>
                   ))}
                 </TextField>
@@ -344,18 +296,16 @@ export default function WarrantyRequestForm() {
                   multiline
                   minRows={4}
                   value={formData.errorDescription}
-                  onChange={(e) =>
-                    handleChange("errorDescription", e.target.value)
-                  }
+                  onChange={(e) => handleChange("errorDescription", e.target.value)}
                   placeholder="Vui lòng mô tả chi tiết lỗi của sản phẩm..."
+                  inputProps={{ maxLength: MAX_DESC }}
                 />
-                <FormHelperText>
-                  {formData.errorDescription.length}/500 ký tự
+                <FormHelperText sx={{ textAlign: "right" }}>
+                  {formData.errorDescription.length}/{MAX_DESC} ký tự
                 </FormHelperText>
               </Grid>
 
               <Grid size={{ xs: 12 }}>
-                {/* Drop zone — chỉ hiện khi chưa đủ MAX_IMAGES */}
                 {previews.length < MAX_IMAGES && (
                   <Box
                     sx={{
@@ -370,15 +320,22 @@ export default function WarrantyRequestForm() {
                       "&:hover": { borderColor: "#0d47a1", bgcolor: "#e3f2fd" },
                     }}
                     onClick={() => fileInputRef.current?.click()}
-                    onDrop={handleDrop}
-                    onDragOver={handleDragOver}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      addFiles(e.dataTransfer.files);
+                    }}
+                    onDragOver={(e) => e.preventDefault()}
                   >
-                    <CloudUploadIcon fontSize="large" color={previews.length > 0 ? "success" : "primary"} />
+                    <CloudUploadIcon
+                      fontSize="large"
+                      color={previews.length > 0 ? "success" : "primary"}
+                    />
                     <Typography mt={1} variant="body2">
                       Kéo &amp; thả hoặc nhấn để thêm ảnh
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Hỗ trợ: JPG, PNG, WebP · Tối đa 5MB/ảnh · {previews.length}/{MAX_IMAGES} ảnh
+                      Hỗ trợ: JPG, PNG, WebP · Tối đa 5MB/ảnh · {previews.length}/
+                      {MAX_IMAGES} ảnh
                     </Typography>
                     <input
                       ref={fileInputRef}
@@ -386,14 +343,18 @@ export default function WarrantyRequestForm() {
                       hidden
                       multiple
                       accept="image/jpeg,image/png,image/jpg,image/webp"
-                      onChange={handleFileChange}
+                      onChange={(e) => addFiles(e.target.files)}
                     />
                   </Box>
                 )}
 
-                {/* Preview grid */}
                 {previews.length > 0 && (
-                  <Stack direction="row" spacing={1.5} flexWrap="wrap" mt={previews.length < MAX_IMAGES ? 2 : 0}>
+                  <Stack
+                    direction="row"
+                    spacing={1.5}
+                    flexWrap="wrap"
+                    mt={previews.length < MAX_IMAGES ? 2 : 0}
+                  >
                     {previews.map((p, idx) => (
                       <Box
                         key={idx}
@@ -404,13 +365,19 @@ export default function WarrantyRequestForm() {
                           alt={`Ảnh ${idx + 1}`}
                           width={100}
                           height={100}
-                          style={{ objectFit: "cover", border: "1px solid #ddd", borderRadius: 8 }}
+                          style={{
+                            objectFit: "cover",
+                            border: "1px solid #ddd",
+                            borderRadius: 8,
+                          }}
                         />
                         <Chip
                           icon={<DeleteIcon />}
                           label="Xóa"
                           size="small"
-                          onClick={() => handleRemoveImage(idx)}
+                          onClick={() =>
+                            setPreviews((prev) => prev.filter((_, i) => i !== idx))
+                          }
                           sx={{
                             position: "absolute",
                             top: -8,
@@ -434,7 +401,7 @@ export default function WarrantyRequestForm() {
       <Box mt={4} display="flex" justifyContent="space-between">
         <Button
           variant="outlined"
-          disabled={activeStep === 0 || loading}
+          disabled={activeStep === 0 || isBusy}
           onClick={handleBack}
         >
           Quay lại
@@ -442,14 +409,15 @@ export default function WarrantyRequestForm() {
         <Button
           variant="contained"
           onClick={handleNext}
-          disabled={loading}
+          disabled={isBusy}
           sx={{
             bgcolor: "#0d47a1",
             color: "#fff",
             "&:hover": { bgcolor: "#1565c0" },
+            minWidth: 140,
           }}
         >
-          {loading ? (
+          {isBusy ? (
             <CircularProgress size={24} color="inherit" />
           ) : activeStep === steps.length - 1 ? (
             "Gửi yêu cầu"
