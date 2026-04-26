@@ -89,7 +89,7 @@ export default function WarehouseOverviewView() {
     <Box>
       {/* Stat cards */}
       <Grid container spacing={2} mb={3}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
             label="Tổng SKU"
             value={statsLoading ? "..." : (stats?.totalSkus ?? 0).toLocaleString("vi-VN")}
@@ -97,7 +97,7 @@ export default function WarehouseOverviewView() {
             color="#6366f1"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
             label="Giá trị tồn kho"
             value={statsLoading ? "..." : `${(stats?.totalInventoryValue ?? 0).toLocaleString("vi-VN")}₫`}
@@ -105,7 +105,7 @@ export default function WarehouseOverviewView() {
             color="#10b981"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
             label="Sắp hết hàng"
             value={statsLoading ? "..." : (stats?.lowStockCount ?? 0).toLocaleString("vi-VN")}
@@ -113,7 +113,7 @@ export default function WarehouseOverviewView() {
             color="#f59e0b"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
             label="Hết hàng"
             value={statsLoading ? "..." : (stats?.outOfStockCount ?? 0).toLocaleString("vi-VN")}

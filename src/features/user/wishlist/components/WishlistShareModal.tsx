@@ -33,25 +33,28 @@ export default function WishlistShareModal({
   const { data: items = [] } = useWishlist();
   const [copied, setCopied] = useState(false);
 
-  const shareUrl = `${window.location.origin}/wishlist/shared/${Date.now()}`;
+  const getShareUrl = () =>
+    `${typeof window !== "undefined" ? window.location.origin : ""}/wishlist/shared/${Date.now()}`;
   const shareText = `Mình có ${items.length} sản phẩm yêu thích tại DolaTool. Xem ngay:`;
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(shareUrl);
+    const url = getShareUrl();
+    navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleShareFacebook = () => {
     window.open(
-      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getShareUrl())}`,
       "_blank",
     );
   };
 
   const handleShareEmail = () => {
+    const url = getShareUrl();
     window.location.href = `mailto:?subject=Danh sách yêu thích tại DolaTool&body=${encodeURIComponent(
-      shareText + "\n" + shareUrl,
+      shareText + "\n" + url,
     )}`;
   };
 
@@ -86,7 +89,7 @@ export default function WishlistShareModal({
 
           <TextField
             label="Link chia sẻ"
-            value={shareUrl}
+            value={getShareUrl()}
             fullWidth
             slotProps={{
               input: {

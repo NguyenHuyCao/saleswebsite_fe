@@ -59,8 +59,9 @@ function formatDate(dateStr?: string | null): string {
   });
 }
 
-function parseTags(tags?: string | null): string[] {
+function parseTags(tags?: string | string[] | null): string[] {
   if (!tags) return [];
+  if (Array.isArray(tags)) return tags.filter(Boolean);
   return tags.split(",").map((t) => t.trim()).filter(Boolean);
 }
 

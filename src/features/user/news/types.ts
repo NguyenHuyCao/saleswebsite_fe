@@ -16,7 +16,7 @@ export interface NewsPost {
   /** Alias để tương thích với các component cũ */
   image?: string | null;
   category?: string | null;
-  tags?: string | null;
+  tags?: string[] | null;
   status: NewsStatus;
   pinned: boolean;
   viewCount: number;

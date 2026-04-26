@@ -61,7 +61,7 @@ export default function RelatedNews({ category, currentSlug }: Props) {
               >
                 <Box sx={{ position: "relative", height: 160 }}>
                   <Image
-                    src={post.image}
+                    src={post.thumbnail ?? post.image ?? ""}
                     alt={post.title}
                     fill
                     style={{ objectFit: "cover" }}
@@ -103,7 +103,7 @@ export default function RelatedNews({ category, currentSlug }: Props) {
                   >
                     <AccessTimeIcon sx={{ fontSize: 14, color: "#999" }} />
                     <Typography variant="caption" color="text.secondary">
-                      {post.date || post.publishedAt}
+                      {post.createdAt ? new Date(post.createdAt).toLocaleDateString("vi-VN") : ""}
                     </Typography>
                   </Stack>
                   <Button

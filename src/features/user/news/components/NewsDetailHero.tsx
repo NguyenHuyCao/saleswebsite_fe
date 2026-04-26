@@ -49,19 +49,19 @@ export default function NewsDetailHero({ post }: Props) {
             <Stack direction="row" alignItems="center" spacing={0.5}>
               <CalendarTodayIcon sx={{ fontSize: 16, color: "#999" }} />
               <Typography variant="caption" color="text.secondary">
-                {post.date || post.publishedAt}
+                {post.createdAt ? new Date(post.createdAt).toLocaleDateString("vi-VN") : ""}
               </Typography>
             </Stack>
             <Stack direction="row" alignItems="center" spacing={0.5}>
               <VisibilityIcon sx={{ fontSize: 16, color: "#999" }} />
               <Typography variant="caption" color="text.secondary">
-                {post.views || 0} lượt xem
+                {post.viewCount || 0} lượt xem
               </Typography>
             </Stack>
             <Stack direction="row" alignItems="center" spacing={0.5}>
               <CommentIcon sx={{ fontSize: 16, color: "#999" }} />
               <Typography variant="caption" color="text.secondary">
-                {post.comments || 0} bình luận
+                0 bình luận
               </Typography>
             </Stack>
           </Stack>
@@ -82,11 +82,11 @@ export default function NewsDetailHero({ post }: Props) {
 
         {/* Author */}
         <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 3 }}>
-          <Avatar src={post.authorAvatar} sx={{ width: 48, height: 48 }}>
-            {post.author?.charAt(0)}
+          <Avatar sx={{ width: 48, height: 48 }}>
+            {(post.createdBy ?? "A").charAt(0)}
           </Avatar>
           <Box>
-            <Typography fontWeight={600}>{post.author || "Admin"}</Typography>
+            <Typography fontWeight={600}>{post.createdBy || "Admin"}</Typography>
             <Typography variant="caption" color="text.secondary">
               Chuyên gia tư vấn
             </Typography>
@@ -105,7 +105,7 @@ export default function NewsDetailHero({ post }: Props) {
           }}
         >
           <Image
-            src={post.image}
+            src={post.thumbnail ?? post.image ?? ""}
             alt={post.title}
             fill
             priority

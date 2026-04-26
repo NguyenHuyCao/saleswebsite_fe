@@ -102,7 +102,7 @@ const ReviewCard = ({
     if (!currentUserId || helpfulLoading) return;
     setHelpfulLoading(true);
     try {
-      const res = await http.post<{ data: Review }>(
+      const res = await http.post<Review>(
         `/api/v1/reviews/${review.id}/helpful`,
       );
       if (onHelpfulToggled && res?.data) {

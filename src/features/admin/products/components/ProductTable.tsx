@@ -221,8 +221,8 @@ const labelOf = (opts: { value: string; label: string }[], v: string) =>
 export default function ProductTable() {
   const router = useRouter();
   const { data, loading, error, refetch } = useProducts();
-  const { data: categoriesData } = Catalog.useCategories();
-  const { data: brandsData } = Catalog.useBrands();
+  const categoriesData = Catalog.useCategories();
+  const brandsData = Catalog.useBrands();
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -246,8 +246,8 @@ export default function ProductTable() {
 
   const keyword = useSelector((s: AppState) => s.search.keyword.trim().toLowerCase());
   const products = data?.result ?? [];
-  const categoryOptions = (categoriesData?.result ?? []) as { id: number; name: string }[];
-  const brandOptions = (brandsData?.result ?? []) as { id: number; name: string }[];
+  const categoryOptions = (categoriesData ?? []) as { id: number; name: string }[];
+  const brandOptions = (brandsData ?? []) as { id: number; name: string }[];
 
   /* ── Stats ── */
   const stats = useMemo(() => ({
