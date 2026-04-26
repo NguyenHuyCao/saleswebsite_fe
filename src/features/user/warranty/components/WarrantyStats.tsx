@@ -1,4 +1,3 @@
-// warranty/components/WarrantyStats.tsx
 "use client";
 
 import { Box, Paper, Typography, Stack } from "@mui/material";
@@ -7,65 +6,111 @@ import { motion } from "framer-motion";
 import BuildIcon from "@mui/icons-material/Build";
 import SpeedIcon from "@mui/icons-material/Speed";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
-import GroupIcon from "@mui/icons-material/Group";
+import HistoryEduIcon from "@mui/icons-material/HistoryEdu";
 
 const stats = [
   {
-    icon: <BuildIcon sx={{ fontSize: 40 }} />,
+    icon: BuildIcon,
     value: "15,000+",
-    label: "Yêu cầu bảo hành đã xử lý",
+    label: "Yêu cầu đã xử lý",
+    color: "#0d47a1",
   },
   {
-    icon: <SpeedIcon sx={{ fontSize: 40 }} />,
+    icon: SpeedIcon,
     value: "24h",
-    label: "Thời gian xử lý trung bình",
+    label: "Thời gian xử lý",
+    color: "#1565c0",
   },
   {
-    icon: <ThumbUpIcon sx={{ fontSize: 40 }} />,
+    icon: ThumbUpIcon,
     value: "98%",
     label: "Khách hàng hài lòng",
+    color: "#0277bd",
   },
   {
-    icon: <GroupIcon sx={{ fontSize: 40 }} />,
-    value: "50+",
-    label: "Trung tâm bảo hành",
+    icon: HistoryEduIcon,
+    value: "6+",
+    label: "Năm kinh nghiệm",
+    color: "#01579b",
   },
 ];
 
 export default function WarrantyStats() {
   return (
-    <Grid container spacing={3} sx={{ my: 4 }}>
-      {stats.map((stat, idx) => (
-        <Grid key={idx} size={{ xs: 12, sm: 6, md: 3 }}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.1 }}
-            viewport={{ once: true }}
-          >
-            <Paper
-              sx={{
-                p: 3,
-                textAlign: "center",
-                borderRadius: 3,
-                transition: "all 0.3s",
-                "&:hover": {
-                  transform: "translateY(-4px)",
-                  boxShadow: "0 12px 28px rgba(13,71,161,0.15)",
-                },
-              }}
+    <Grid container spacing={2} sx={{ my: 4 }}>
+      {stats.map((stat, idx) => {
+        const Icon = stat.icon;
+        return (
+          <Grid key={idx} size={{ xs: 6, md: 3 }}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.08, duration: 0.4 }}
+              viewport={{ once: true }}
+              style={{ height: "100%" }}
             >
-              <Box sx={{ color: "#0d47a1", mb: 1 }}>{stat.icon}</Box>
-              <Typography variant="h5" fontWeight={800} color="#0d47a1">
-                {stat.value}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {stat.label}
-              </Typography>
-            </Paper>
-          </motion.div>
-        </Grid>
-      ))}
+              <Paper
+                elevation={0}
+                sx={{
+                  p: { xs: 2, md: 2.5 },
+                  borderRadius: 3,
+                  height: "100%",
+                  border: "1px solid #e8eef7",
+                  borderTop: `3px solid ${stat.color}`,
+                  transition: "all 0.25s ease",
+                  "&:hover": {
+                    transform: "translateY(-4px)",
+                    boxShadow: "0 8px 24px rgba(13,71,161,0.12)",
+                    borderColor: stat.color,
+                    borderTopColor: stat.color,
+                  },
+                }}
+              >
+                <Stack direction="row" alignItems="center" spacing={1.5}>
+                  <Box
+                    sx={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 2.5,
+                      bgcolor: "#e3f2fd",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Icon sx={{ fontSize: 22, color: stat.color }} />
+                  </Box>
+
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography
+                      variant="h5"
+                      fontWeight={900}
+                      sx={{
+                        color: stat.color,
+                        lineHeight: 1.1,
+                        fontSize: { xs: "1.2rem", md: "1.5rem" },
+                      }}
+                    >
+                      {stat.value}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{
+                        lineHeight: 1.3,
+                        fontSize: { xs: "0.68rem", sm: "0.75rem" },
+                      }}
+                    >
+                      {stat.label}
+                    </Typography>
+                  </Box>
+                </Stack>
+              </Paper>
+            </motion.div>
+          </Grid>
+        );
+      })}
     </Grid>
   );
 }

@@ -8,7 +8,6 @@ import {
   useTheme,
   Breadcrumbs,
   Link,
-  Container,
   Alert,
   Chip,
   Grid,
@@ -29,6 +28,7 @@ import ProductShare from "./ProductShare";
 import ProductCompare from "./ProductCompare";
 import HomeIcon from "@mui/icons-material/Home";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
+import NextLink from "next/link";
 
 interface Props {
   product: Product;
@@ -42,42 +42,39 @@ export default function ProductDetailPage({ product, category }: Props) {
 
   if (!product) {
     return (
-      <Container maxWidth="lg" sx={{ py: 8 }}>
+      <Box sx={{ py: 8 }}>
         <Alert severity="error" sx={{ borderRadius: 3 }}>
           Không tìm thấy sản phẩm.
         </Alert>
-      </Container>
+      </Box>
     );
   }
 
   const imageProduct = {
     imageAvt: product.imageAvt,
-    imageDetail1: product.imageDetail1 || "",
-    imageDetail2: product.imageDetail2 || "",
-    imageDetail3: product.imageDetail3 || "",
+    imageDetail1: product.imageDetail1 || null,
+    imageDetail2: product.imageDetail2 || null,
+    imageDetail3: product.imageDetail3 || null,
     name: product.name,
+    videoUrl: product.videoUrl || null,
   };
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Box sx={{ py: 4 }}>
       {/* Breadcrumb */}
       <Breadcrumbs
         separator={<NavigateNextIcon fontSize="small" />}
         sx={{ mb: 3, fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
       >
-        <Link
-          href="/"
-          color="inherit"
-          sx={{ display: "flex", alignItems: "center" }}
-        >
+        <Link component={NextLink} href="/" color="inherit" sx={{ display: "flex", alignItems: "center" }}>
           <HomeIcon sx={{ mr: 0.5, fontSize: { xs: 14, sm: 18 } }} />
           Trang chủ
         </Link>
-        <Link href="/product" color="inherit">
+        <Link component={NextLink} href="/product" color="inherit">
           Sản phẩm
         </Link>
         {category && (
-          <Link href={`/product?category=${category.slug}`} color="inherit">
+          <Link component={NextLink} href={`/product?category=${category.slug}`} color="inherit">
             {category.name}
           </Link>
         )}
@@ -128,11 +125,11 @@ export default function ProductDetailPage({ product, category }: Props) {
         {/* Right Column - Sidebar */}
         <Grid size={{ xs: 12, md: 4 }}>
           <Stack spacing={3}>
+            <ProductCompare product={product} />
             <CommitmentCard />
             <SupportBox />
             <PromotionBox />
             <ProductShare product={product} />
-            <ProductCompare product={product} />
           </Stack>
         </Grid>
       </Grid>
@@ -153,6 +150,6 @@ export default function ProductDetailPage({ product, category }: Props) {
       <Box mt={6}>
         <RelatedProductsSlick category={category} />
       </Box>
-    </Container>
+    </Box>
   );
 }

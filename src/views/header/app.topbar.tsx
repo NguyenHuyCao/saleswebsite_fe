@@ -145,7 +145,7 @@ const TopBar = () => {
 
         <Box
           sx={{
-            display: "flex",
+            display: { xs: "none", sm: "flex" },
             flexWrap: "wrap",
             justifyContent: { xs: "center", sm: "flex-end" },
             alignItems: "center",
@@ -247,7 +247,7 @@ const TopBar = () => {
           )}
 
           {isClient && isLoggedIn && (
-            <Box sx={{ color: "black" }}>
+            <Box sx={{ color: "black", display: "flex", alignItems: "center" }}>
               <NotificationDropdown />
             </Box>
           )}

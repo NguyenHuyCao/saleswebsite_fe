@@ -21,7 +21,7 @@ export default function FlashSaleShowcase({
   const loading = list === null;
 
   return (
-    <Box sx={{ pt: 8, mb: -5, position: "relative" }}>
+    <Box sx={{ pt: { xs: 3, sm: 4 }, mb: 2, position: "relative" }}>
       {/* Banner quảng cáo */}
       <TwoStrokePromoBanner />
 
@@ -132,8 +132,7 @@ export default function FlashSaleShowcase({
               <Box
                 component={motion.div}
                 initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.15 }}
                 sx={{
                   mb: 5,

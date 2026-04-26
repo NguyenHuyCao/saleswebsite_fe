@@ -206,19 +206,21 @@ export default function ResetPasswordView() {
                   error={!!errors.new}
                   helperText={errors.new}
                   autoFocus
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <LockIcon sx={{ color: "#999" }} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton onClick={() => setShow((s) => ({ ...s, new: !s.new }))} edge="end">
-                          {show.new ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <LockIcon sx={{ color: "#999" }} />
+                        </InputAdornment>
+                      ),
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton onClick={() => setShow((s) => ({ ...s, new: !s.new }))} edge="end">
+                            {show.new ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                      },
                   }}
                 />
 
@@ -269,19 +271,21 @@ export default function ResetPasswordView() {
                 onBlur={() => setTouched((t) => ({ ...t, confirm: true }))}
                 error={!!errors.confirm}
                 helperText={errors.confirm}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LockIcon sx={{ color: "#999" }} />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton onClick={() => setShow((s) => ({ ...s, confirm: !s.confirm }))} edge="end">
-                        {show.confirm ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LockIcon sx={{ color: "#999" }} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={() => setShow((s) => ({ ...s, confirm: !s.confirm }))} edge="end">
+                          {show.confirm ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                    },
                 }}
               />
 

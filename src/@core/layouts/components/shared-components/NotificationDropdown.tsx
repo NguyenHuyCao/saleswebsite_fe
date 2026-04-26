@@ -9,33 +9,54 @@ import {
   Divider,
   Button,
   Badge,
-  alpha,
+  Tooltip,
+  Chip,
 } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
+import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
+import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
+import PaymentsIcon from "@mui/icons-material/Payments";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import DoneAllIcon from "@mui/icons-material/DoneAll";
 import { useSocket } from "@/lib/socket/SocketContext";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, isToday, isYesterday } from "date-fns";
 import { vi } from "date-fns/locale";
+import { motion, AnimatePresence } from "framer-motion";
 
-const TYPE_CONFIG = {
-  ORDER:     { label: "ĐH", color: "#fff", bg: "#f25c05" },
-  PAYMENT:   { label: "TT", color: "#fff", bg: "#ffb700" },
-  PROMOTION: { label: "KM", color: "#fff", bg: "#2e7d32" },
-  SYSTEM:    { label: "HT", color: "#fff", bg: "#6c5dd3" },
+type TypeConfig = {
+  Icon: React.ElementType;
+  color: string;
+  bg: string;
+  label: string;
 };
 
-const getTypeConfig = (type: string) => {
-  if (!type) return { label: "N", color: "#fff", bg: "#888" };
-  if (type.startsWith("ORDER"))     return TYPE_CONFIG.ORDER;
-  if (type.startsWith("PAYMENT"))   return TYPE_CONFIG.PAYMENT;
-  if (type.startsWith("PROMOTION")) return TYPE_CONFIG.PROMOTION;
-  return TYPE_CONFIG.SYSTEM;
+const TYPE_MAP: Record<string, TypeConfig> = {
+  ORDER:     { Icon: ShoppingBagIcon,  color: "#f25c05", bg: "#fff3e0", label: "Đơn hàng" },
+  PAYMENT:   { Icon: PaymentsIcon,     color: "#2e7d32", bg: "#e8f5e9", label: "Thanh toán" },
+  PROMOTION: { Icon: LocalOfferIcon,   color: "#ffb700", bg: "#fff8e1", label: "Khuyến mãi" },
+  CART:      { Icon: ShoppingCartIcon, color: "#1976d2", bg: "#e3f2fd", label: "Giỏ hàng" },
+  SYSTEM:    { Icon: InfoOutlinedIcon, color: "#6c5dd3", bg: "#f3f0ff", label: "Hệ thống" },
+};
+
+const getTypeConfig = (type: string): TypeConfig => {
+  if (!type) return TYPE_MAP.SYSTEM;
+  if (type.startsWith("ORDER"))     return TYPE_MAP.ORDER;
+  if (type.startsWith("PAYMENT"))   return TYPE_MAP.PAYMENT;
+  if (type.startsWith("PROMOTION")) return TYPE_MAP.PROMOTION;
+  if (type.includes("CART"))        return TYPE_MAP.CART;
+  return TYPE_MAP.SYSTEM;
+};
+
+const formatTime = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  if (isToday(date)) return formatDistanceToNow(date, { addSuffix: true, locale: vi });
+  if (isYesterday(date)) return "Hôm qua";
+  return formatDistanceToNow(date, { addSuffix: true, locale: vi });
 };
 
 const NotificationDropdown = () => {
-  const theme = useTheme();
-  const isDark = theme.palette.mode === "dark";
-
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const { notifications, unreadCount, markRead, markAllRead, refresh } = useSocket();
@@ -46,62 +67,65 @@ const NotificationDropdown = () => {
   };
 
   const handleClose = () => {
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     setAnchorEl(null);
-  };
-
-  const handleMarkRead = (id: number) => markRead(id);
-
-  const handleMarkAll = () => {
-    markAllRead();
-    handleClose();
   };
 
   useEffect(() => {
     if (!open) return;
-    const handleScroll = () => handleClose();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    const onScroll = () => handleClose();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, [open]);
-
-  // Màu nền header: tối chủ đạo, hài hoà với cả hai mode
-  const headerBg = isDark ? "#1a1625" : "#18181b";
-
-  // Màu nền item chưa đọc
-  const unreadBg  = isDark
-    ? alpha(theme.palette.primary.main, 0.12)
-    : alpha(theme.palette.primary.main, 0.06);
-  const unreadHover = isDark
-    ? alpha(theme.palette.primary.main, 0.18)
-    : alpha(theme.palette.primary.main, 0.1);
-  const readHover   = theme.palette.action.hover;
 
   return (
     <Fragment>
-      <IconButton
-        onClick={handleOpen}
-        aria-label="Thông báo"
-        sx={{ color: "inherit", p: 0.5 }}
-      >
-        <Badge
-          badgeContent={unreadCount}
-          max={99}
+      <Tooltip title="Thông báo" arrow>
+        <IconButton
+          onClick={handleOpen}
+          aria-label="Thông báo"
           sx={{
-            "& .MuiBadge-badge": {
-              bgcolor: "secondary.main",
-              color: "#fff",
-              fontSize: "0.6rem",
-              minWidth: 16,
-              height: 16,
-              p: "0 4px",
-            },
+            color: "inherit",
+            p: 1,
+            borderRadius: 2,
+            transition: "background 0.2s",
+            "&:hover": { bgcolor: "rgba(242,92,5,0.08)" },
           }}
         >
-          <NotificationsNoneIcon sx={{ fontSize: 22 }} />
-        </Badge>
-      </IconButton>
+          <Badge
+            badgeContent={unreadCount}
+            max={99}
+            sx={{
+              "& .MuiBadge-badge": {
+                bgcolor: "#f25c05",
+                color: "#fff",
+                fontSize: "0.58rem",
+                fontWeight: 700,
+                minWidth: 16,
+                height: 16,
+                p: "0 4px",
+                boxShadow: "0 0 0 2px #fff",
+              },
+            }}
+          >
+            <motion.div
+              animate={unreadCount > 0 ? { rotate: [0, -12, 12, -8, 8, 0] } : {}}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {unreadCount > 0 ? (
+                <NotificationsActiveIcon sx={{ fontSize: 24, color: "#f25c05" }} />
+              ) : (
+                <NotificationsNoneIcon sx={{ fontSize: 24 }} />
+              )}
+            </motion.div>
+          </Badge>
+        </IconButton>
+      </Tooltip>
 
       <Popover
         open={open}
@@ -113,212 +137,265 @@ const NotificationDropdown = () => {
         slotProps={{
           paper: {
             sx: {
-              mt: 1,
-              width: 360,
-              borderRadius: 2,
-              border: "2px solid",
-              borderColor: "primary.main",
-              boxShadow: isDark
-                ? "0 8px 32px rgba(0,0,0,0.5)"
-                : "0 8px 32px rgba(0,0,0,0.18)",
+              mt: 1.5,
+              width: { xs: 320, sm: 380 },
+              borderRadius: 3,
+              boxShadow: "0 12px 40px rgba(0,0,0,0.14)",
+              border: "1px solid rgba(0,0,0,0.07)",
               overflow: "hidden",
-              bgcolor: "background.paper",
+              bgcolor: "#fff",
             },
           },
         }}
       >
+        {/* Orange accent top bar */}
+        <Box sx={{ height: 3, background: "linear-gradient(90deg, #f25c05, #ffb700)" }} />
+
         {/* Header */}
         <Box
           sx={{
-            px: 2,
-            py: 1.5,
-            bgcolor: headerBg,
+            px: 2.5,
+            py: 1.75,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
+            bgcolor: "#fff",
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <NotificationsNoneIcon sx={{ color: "primary.main", fontSize: 20 }} />
-            <Typography sx={{ color: "primary.main", fontWeight: 700, fontSize: "0.95rem" }}>
-              Thông báo
-            </Typography>
-          </Box>
-          {unreadCount > 0 && (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
             <Box
               sx={{
-                bgcolor: "secondary.main",
-                color: "#fff",
-                borderRadius: "12px",
-                px: 1,
-                py: 0.1,
-                fontSize: "0.72rem",
-                fontWeight: 700,
+                width: 36,
+                height: 36,
+                borderRadius: 2,
+                bgcolor: "#fff3e0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              {unreadCount} mới
+              <NotificationsNoneIcon sx={{ color: "#f25c05", fontSize: 20 }} />
             </Box>
+            <Box>
+              <Typography sx={{ fontWeight: 800, fontSize: "0.95rem", color: "#1a1a1a", lineHeight: 1.2 }}>
+                Thông báo
+              </Typography>
+              <Typography sx={{ fontSize: "0.72rem", color: "#999" }}>
+                {notifications.length} thông báo
+              </Typography>
+            </Box>
+          </Box>
+
+          {unreadCount > 0 && (
+            <Chip
+              label={`${unreadCount} chưa đọc`}
+              size="small"
+              sx={{
+                bgcolor: "#fff3e0",
+                color: "#f25c05",
+                fontWeight: 700,
+                fontSize: "0.65rem",
+                height: 22,
+                border: "1px solid rgba(242,92,5,0.2)",
+              }}
+            />
           )}
         </Box>
 
-        <Divider sx={{ borderColor: "primary.main" }} />
+        <Divider sx={{ borderColor: "rgba(0,0,0,0.06)" }} />
 
         {/* List */}
         {notifications.length === 0 ? (
-          <Box
-            sx={{
-              py: 6,
-              textAlign: "center",
-              bgcolor: "background.default",
-            }}
-          >
-            <NotificationsNoneIcon
-              sx={{ fontSize: 40, color: "text.disabled", mb: 1 }}
-            />
-            <Typography variant="body2" sx={{ color: "text.disabled", fontSize: "0.85rem" }}>
+          <Box sx={{ py: 6, textAlign: "center", bgcolor: "#fafafa" }}>
+            <Box
+              sx={{
+                width: 56,
+                height: 56,
+                borderRadius: "50%",
+                bgcolor: "#f5f5f5",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                mx: "auto",
+                mb: 1.5,
+              }}
+            >
+              <NotificationsNoneIcon sx={{ fontSize: 28, color: "#ccc" }} />
+            </Box>
+            <Typography sx={{ fontWeight: 600, color: "#999", fontSize: "0.85rem" }}>
               Không có thông báo nào
+            </Typography>
+            <Typography sx={{ fontSize: "0.75rem", color: "#bbb", mt: 0.5 }}>
+              Chúng tôi sẽ thông báo khi có cập nhật mới
             </Typography>
           </Box>
         ) : (
           <Box
             onWheel={(e) => e.stopPropagation()}
             sx={{
-              maxHeight: 360,
+              maxHeight: 380,
               overflowY: "auto",
               overflowX: "hidden",
               overscrollBehavior: "contain",
-              bgcolor: "background.paper",
+              bgcolor: "#fff",
               "&::-webkit-scrollbar": { width: 4 },
-              "&::-webkit-scrollbar-track": { bgcolor: "action.hover" },
-              "&::-webkit-scrollbar-thumb": {
-                bgcolor: "primary.main",
-                borderRadius: 2,
-              },
-              "&::-webkit-scrollbar-thumb:hover": { bgcolor: "secondary.main" },
+              "&::-webkit-scrollbar-track": { bgcolor: "transparent" },
+              "&::-webkit-scrollbar-thumb": { bgcolor: "#f25c05", borderRadius: 4, opacity: 0.5 },
             }}
           >
-            {notifications.map((noti, idx) => {
-              const cfg = getTypeConfig(noti.type);
-              return (
-                <Box key={noti.id}>
-                  <Box
-                    onClick={() => handleMarkRead(noti.id)}
-                    sx={{
-                      display: "flex",
-                      alignItems: "flex-start",
-                      gap: 1.5,
-                      px: 2,
-                      py: 1.5,
-                      cursor: "pointer",
-                      bgcolor: noti.read ? "background.paper" : unreadBg,
-                      borderLeft: noti.read
-                        ? "3px solid transparent"
-                        : "3px solid",
-                      borderLeftColor: noti.read ? "transparent" : "primary.main",
-                      transition: "background 0.15s",
-                      "&:hover": {
-                        bgcolor: noti.read ? readHover : unreadHover,
-                      },
-                    }}
+            <AnimatePresence initial={false}>
+              {notifications.map((noti, idx) => {
+                const cfg = getTypeConfig(noti.type);
+                const IconComp = cfg.Icon;
+
+                return (
+                  <motion.div
+                    key={noti.id}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.03, duration: 0.2 }}
                   >
-                    {/* Avatar */}
                     <Box
+                      onClick={() => markRead(noti.id)}
                       sx={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: "50%",
-                        bgcolor: cfg.bg,
-                        color: cfg.color,
                         display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontWeight: 700,
-                        fontSize: "0.72rem",
-                        flexShrink: 0,
+                        alignItems: "flex-start",
+                        gap: 1.5,
+                        px: 2.5,
+                        py: 1.5,
+                        cursor: "pointer",
+                        position: "relative",
+                        bgcolor: noti.read ? "#fff" : "rgba(242,92,5,0.035)",
+                        borderLeft: "3px solid",
+                        borderLeftColor: noti.read ? "transparent" : "#f25c05",
+                        transition: "background 0.15s",
+                        "&:hover": {
+                          bgcolor: noti.read ? "#fafafa" : "rgba(242,92,5,0.06)",
+                        },
                       }}
                     >
-                      {cfg.label}
-                    </Box>
-
-                    {/* Content */}
-                    <Box sx={{ flex: 1, overflow: "hidden" }}>
-                      <Typography
-                        sx={{
-                          fontSize: "0.83rem",
-                          fontWeight: noti.read ? 500 : 700,
-                          color: "text.primary",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        {noti.title}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: "0.78rem",
-                          color: "text.secondary",
-                          mt: 0.3,
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        {noti.content}
-                      </Typography>
-                      <Typography sx={{ fontSize: "0.7rem", color: "text.disabled", mt: 0.4 }}>
-                        {formatDistanceToNow(new Date(noti.createdAt), {
-                          addSuffix: true,
-                          locale: vi,
-                        })}
-                      </Typography>
-                    </Box>
-
-                    {/* Unread dot */}
-                    {!noti.read && (
+                      {/* Type icon */}
                       <Box
                         sx={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: "50%",
-                          bgcolor: "secondary.main",
+                          width: 38,
+                          height: 38,
+                          borderRadius: 2,
+                          bgcolor: cfg.bg,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
                           flexShrink: 0,
-                          mt: 0.5,
+                          mt: 0.25,
                         }}
-                      />
+                      >
+                        <IconComp sx={{ color: cfg.color, fontSize: 19 }} />
+                      </Box>
+
+                      {/* Content */}
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 0.3 }}>
+                          <Typography
+                            sx={{
+                              fontSize: "0.82rem",
+                              fontWeight: noti.read ? 500 : 700,
+                              color: noti.read ? "#444" : "#1a1a1a",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                              flex: 1,
+                            }}
+                          >
+                            {noti.title}
+                          </Typography>
+                          {!noti.read && (
+                            <Box
+                              sx={{
+                                width: 7,
+                                height: 7,
+                                borderRadius: "50%",
+                                bgcolor: "#f25c05",
+                                flexShrink: 0,
+                              }}
+                            />
+                          )}
+                        </Box>
+
+                        <Typography
+                          sx={{
+                            fontSize: "0.76rem",
+                            color: "#777",
+                            overflow: "hidden",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            lineHeight: 1.45,
+                            mb: 0.5,
+                          }}
+                        >
+                          {noti.content}
+                        </Typography>
+
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+                          <Box
+                            sx={{
+                              px: 0.75,
+                              py: 0.1,
+                              borderRadius: 0.75,
+                              bgcolor: cfg.bg,
+                              display: "inline-block",
+                            }}
+                          >
+                            <Typography sx={{ fontSize: "0.62rem", fontWeight: 600, color: cfg.color }}>
+                              {cfg.label}
+                            </Typography>
+                          </Box>
+                          <Typography sx={{ fontSize: "0.68rem", color: "#bbb" }}>
+                            {formatTime(noti.createdAt)}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+
+                    {idx < notifications.length - 1 && (
+                      <Divider sx={{ borderColor: "rgba(0,0,0,0.05)", ml: 7 }} />
                     )}
-                  </Box>
-                  {idx < notifications.length - 1 && (
-                    <Divider sx={{ borderColor: "divider" }} />
-                  )}
-                </Box>
-              );
-            })}
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
           </Box>
         )}
 
         {/* Footer */}
-        <Divider sx={{ borderColor: "divider" }} />
-        <Box sx={{ px: 2, py: 1.5, bgcolor: "background.default" }}>
+        <Divider sx={{ borderColor: "rgba(0,0,0,0.06)" }} />
+        <Box sx={{ px: 2, py: 1.5, bgcolor: "#fafafa" }}>
           <Button
             fullWidth
             disabled={unreadCount === 0}
-            onClick={handleMarkAll}
+            onClick={() => { markAllRead(); handleClose(); }}
+            startIcon={<DoneAllIcon sx={{ fontSize: 16 }} />}
             sx={{
-              bgcolor: unreadCount > 0 ? headerBg : "action.disabledBackground",
-              color: unreadCount > 0 ? "primary.main" : "text.disabled",
+              textTransform: "none",
               fontWeight: 700,
               fontSize: "0.8rem",
-              borderRadius: 1,
-              textTransform: "none",
-              py: 0.8,
+              borderRadius: 2,
+              py: 0.9,
+              bgcolor: unreadCount > 0 ? "#fff3e0" : "transparent",
+              color: unreadCount > 0 ? "#f25c05" : "#ccc",
+              border: "1px solid",
+              borderColor: unreadCount > 0 ? "rgba(242,92,5,0.2)" : "rgba(0,0,0,0.08)",
               "&:hover": {
-                bgcolor: unreadCount > 0 ? "secondary.main" : "action.disabledBackground",
-                color: unreadCount > 0 ? "#fff" : "text.disabled",
+                bgcolor: unreadCount > 0 ? "#ffe0b2" : "transparent",
+                borderColor: unreadCount > 0 ? "#f25c05" : "rgba(0,0,0,0.08)",
               },
+              "&:disabled": {
+                color: "#ccc",
+                border: "1px solid rgba(0,0,0,0.06)",
+              },
+              transition: "all 0.2s",
             }}
           >
-            Đánh dấu tất cả đã đọc
+            {unreadCount > 0 ? `Đánh dấu ${unreadCount} thông báo đã đọc` : "Tất cả đã được đọc"}
           </Button>
         </Box>
       </Popover>

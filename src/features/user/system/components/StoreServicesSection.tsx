@@ -1,14 +1,7 @@
 "use client";
 
-import {
-  Box,
-  Typography,
-  Paper,
-  Stack,
-  Chip,
-  Button,
-  Grid,
-} from "@mui/material";
+import { Box, Typography, Paper, Stack, Chip } from "@mui/material";
+import Grid from "@mui/material/Grid";
 import { motion } from "framer-motion";
 import BuildIcon from "@mui/icons-material/Build";
 import SecurityIcon from "@mui/icons-material/Security";

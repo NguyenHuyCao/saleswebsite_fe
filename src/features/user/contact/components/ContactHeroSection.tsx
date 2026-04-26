@@ -15,12 +15,17 @@ import KeyboardDoubleArrowDownIcon from "@mui/icons-material/KeyboardDoubleArrow
 import VerifiedIcon from "@mui/icons-material/Verified";
 import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 
+const CUSTOMER_INITIALS = ["H", "M", "T", "P", "N"];
+const AVATAR_COLORS = ["#f25c05", "#ffb700", "#4caf50", "#2196f3", "#9c27b0"];
+
 export default function ContactHeroSection() {
   return (
     <Box
+      component="section"
       sx={{
         position: "relative",
         height: { xs: "80vh", md: "90vh" },
+        minHeight: { xs: 480, md: 600 },
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -29,7 +34,7 @@ export default function ContactHeroSection() {
     >
       <Image
         src="/images/banner/360_F_229670001_Ju6K5ezKiyJphkwj316zT31XifNHJoPT.jpg"
-        alt="Team working"
+        alt="Đội ngũ tư vấn Cường Hoa"
         fill
         priority
         style={{ objectFit: "cover", zIndex: 0 }}
@@ -41,43 +46,46 @@ export default function ContactHeroSection() {
           position: "absolute",
           inset: 0,
           background:
-            "linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.2) 100%)",
+            "linear-gradient(135deg, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.2) 100%)",
           zIndex: 1,
         }}
       />
 
-      {/* Floating Stats */}
+      {/* Trust Badges — top right */}
       <Box
         sx={{
           position: "absolute",
-          top: { xs: 20, md: 40 },
-          right: { xs: 10, md: 40 },
+          top: { xs: 16, md: 40 },
+          right: { xs: 12, md: 40 },
           zIndex: 3,
           display: "flex",
-          gap: 2,
+          gap: 1,
           flexWrap: "wrap",
           justifyContent: "flex-end",
         }}
       >
         {[
-          { icon: <SupportAgentIcon />, label: "24/7 Support" },
-          { icon: <VerifiedIcon />, label: "100% Response" },
-        ].map((item, idx) => (
+          { icon: <SupportAgentIcon fontSize="small" />, label: "Hỗ trợ 24/7" },
+          { icon: <VerifiedIcon fontSize="small" />, label: "Phản hồi 100%" },
+        ].map((item) => (
           <Chip
-            key={idx}
+            key={item.label}
             icon={item.icon}
             label={item.label}
+            size="small"
             sx={{
-              bgcolor: "rgba(255,255,255,0.2)",
-              backdropFilter: "blur(4px)",
+              bgcolor: "rgba(255,255,255,0.18)",
+              backdropFilter: "blur(6px)",
               color: "#fff",
               border: "1px solid rgba(255,255,255,0.3)",
               fontWeight: 600,
+              fontSize: "0.75rem",
             }}
           />
         ))}
       </Box>
 
+      {/* Main Content */}
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
@@ -88,30 +96,33 @@ export default function ContactHeroSection() {
           width: "100%",
           maxWidth: 900,
           padding: "0 16px",
+          textAlign: "center",
         }}
       >
         {/* Trust Badge */}
-        <Stack direction="row" justifyContent="center" sx={{ mb: 2 }}>
+        <Stack direction="row" justifyContent="center" sx={{ mb: 2.5 }}>
           <Chip
             label="✨ 10,000+ Khách hàng tin tưởng"
             sx={{
-              bgcolor: "rgba(255,255,255,0.2)",
-              backdropFilter: "blur(4px)",
+              bgcolor: "rgba(255,255,255,0.18)",
+              backdropFilter: "blur(6px)",
               color: "#fff",
               fontWeight: 600,
+              border: "1px solid rgba(255,255,255,0.25)",
             }}
           />
         </Stack>
 
         <Typography
+          component="h1"
           variant="h2"
           fontWeight={900}
           sx={{
-            fontSize: { xs: "2rem", sm: "2.5rem", md: "3.5rem" },
-            textAlign: "center",
+            fontSize: { xs: "2rem", sm: "2.6rem", md: "3.5rem" },
             color: "#fff",
             mb: 2,
-            textShadow: "2px 2px 8px rgba(0,0,0,0.3)",
+            textShadow: "2px 2px 12px rgba(0,0,0,0.4)",
+            lineHeight: 1.2,
           }}
         >
           Chúng tôi luôn sẵn sàng
@@ -123,17 +134,16 @@ export default function ContactHeroSection() {
         <Typography
           variant="h6"
           sx={{
-            textAlign: "center",
-            color: "#fff",
+            color: "rgba(255,255,255,0.92)",
             mb: 4,
-            maxWidth: 700,
+            maxWidth: 680,
             mx: "auto",
-            opacity: 0.95,
-            fontSize: { xs: "1rem", md: "1.25rem" },
+            fontSize: { xs: "1rem", md: "1.2rem" },
+            lineHeight: 1.6,
           }}
         >
-          Đội ngũ tư vấn chuyên nghiệp sẽ phản hồi trong vòng 24h. Gửi yêu cầu
-          ngay để nhận ưu đãi đặc biệt!
+          Đội ngũ tư vấn chuyên nghiệp phản hồi trong vòng 24h.
+          Gửi yêu cầu ngay để nhận ưu đãi đặc biệt!
         </Typography>
 
         {/* CTA Buttons */}
@@ -141,7 +151,7 @@ export default function ContactHeroSection() {
           direction={{ xs: "column", sm: "row" }}
           spacing={2}
           justifyContent="center"
-          sx={{ mb: 4 }}
+          sx={{ mb: 5 }}
         >
           <Button
             variant="contained"
@@ -154,10 +164,13 @@ export default function ContactHeroSection() {
               fontWeight: 700,
               px: 4,
               py: 1.5,
+              fontSize: "1rem",
+              borderRadius: 2,
               "&:hover": {
                 bgcolor: "#f59e0b",
                 transform: "scale(1.05)",
               },
+              transition: "all 0.2s ease",
             }}
           >
             Gửi yêu cầu ngay
@@ -167,16 +180,19 @@ export default function ContactHeroSection() {
             size="large"
             href="#quick-help"
             sx={{
-              borderColor: "#fff",
+              borderColor: "rgba(255,255,255,0.7)",
               borderWidth: 2,
               color: "#fff",
               fontWeight: 600,
               px: 4,
               py: 1.5,
+              fontSize: "1rem",
+              borderRadius: 2,
               "&:hover": {
                 borderColor: "#ffb700",
-                bgcolor: "rgba(255,255,255,0.1)",
+                bgcolor: "rgba(255,255,255,0.08)",
               },
+              transition: "all 0.2s ease",
             }}
           >
             Câu hỏi thường gặp
@@ -188,19 +204,30 @@ export default function ContactHeroSection() {
           direction="row"
           alignItems="center"
           justifyContent="center"
-          spacing={2}
+          spacing={1.5}
+          flexWrap="wrap"
         >
-          <AvatarGroup max={4}>
-            {[1, 2, 3, 4, 5].map((i) => (
+          <AvatarGroup max={4} sx={{ "& .MuiAvatar-root": { border: "2px solid #ffb700" } }}>
+            {CUSTOMER_INITIALS.map((initial, i) => (
               <Avatar
                 key={i}
-                src={`/images/customers/customer${i}.jpg`}
-                sx={{ width: 40, height: 40, border: "2px solid #ffb700" }}
-              />
+                sx={{
+                  width: 38,
+                  height: 38,
+                  bgcolor: AVATAR_COLORS[i],
+                  fontSize: 14,
+                  fontWeight: 700,
+                }}
+              >
+                {initial}
+              </Avatar>
             ))}
           </AvatarGroup>
-          <Typography variant="body2" sx={{ color: "#fff" }}>
-            +500 khách hàng đã liên hệ trong tháng này
+          <Typography
+            variant="body2"
+            sx={{ color: "rgba(255,255,255,0.88)", fontWeight: 500 }}
+          >
+            +500 khách hàng đã liên hệ tháng này
           </Typography>
         </Stack>
       </motion.div>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { fetchMyOrders } from "./api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchMyOrders, cancelOrder } from "./api";
 import type { Order } from "./types";
 
 export const ordersKeys = {
@@ -15,5 +15,14 @@ export function useMyOrdersQuery() {
     queryFn: fetchMyOrders,
     staleTime: 0,
     refetchOnMount: "always",
+  });
+}
+
+export function useCancelOrderMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (params: { orderId: number | string; reason?: string }) =>
+      cancelOrder(params),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ordersKeys.me }),
   });
 }

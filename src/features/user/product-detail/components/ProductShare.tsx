@@ -7,6 +7,7 @@ import {
   Stack,
   Tooltip,
 } from "@mui/material";
+import { useState, useEffect } from "react";
 import { useToast } from "@/lib/toast/ToastContext";
 import ShareIcon from "@mui/icons-material/Share";
 import FacebookIcon from "@mui/icons-material/Facebook";
@@ -21,7 +22,13 @@ interface Props {
 
 export default function ProductShare({ product }: Props) {
   const { showToast } = useToast();
-  const productUrl = `${window.location.origin}/product/detail?name=${product.slug}`;
+  const [productUrl, setProductUrl] = useState(
+    `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://cuonghoa.vn"}/product/detail?name=${product.slug}`
+  );
+
+  useEffect(() => {
+    setProductUrl(`${window.location.origin}/product/detail?name=${product.slug}`);
+  }, [product.slug]);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(productUrl);

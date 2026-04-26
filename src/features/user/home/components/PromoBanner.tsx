@@ -7,7 +7,6 @@ import {
   Button,
   Chip,
   Stack,
-  Container,
   Paper,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
@@ -96,7 +95,7 @@ export default function PromoBanner() {
       animate={isInView ? "visible" : "hidden"}
       variants={containerVariants}
     >
-      <Container maxWidth="xl" sx={{ mb: 6 }}>
+      <Box sx={{ py: { xs: 2, md: 3 } }}>
         <Paper
           elevation={0}
           sx={{
@@ -113,7 +112,7 @@ export default function PromoBanner() {
               size={{ xs: 12, md: 6 }}
               sx={{
                 position: "relative",
-                minHeight: { xs: 400, md: 450 },
+                minHeight: { xs: 320, sm: 380, md: 450 },
                 backgroundImage:
                   "linear-gradient(135deg, #000 0%, #1a1a1a 100%)",
                 display: "flex",
@@ -137,7 +136,7 @@ export default function PromoBanner() {
               <motion.div variants={textVariants} style={{ width: "100%" }}>
                 <Box
                   sx={{
-                    p: { xs: 4, md: 6 },
+                    p: { xs: 2.5, sm: 3.5, md: 6 },
                     color: "#fff",
                     position: "relative",
                     zIndex: 2,
@@ -173,7 +172,7 @@ export default function PromoBanner() {
                     fontWeight={900}
                     sx={{
                       mb: 1,
-                      fontSize: { xs: "2rem", md: "2.5rem" },
+                      fontSize: { xs: "1.5rem", sm: "1.8rem", md: "2.5rem" },
                       lineHeight: 1.2,
                     }}
                   >
@@ -185,7 +184,7 @@ export default function PromoBanner() {
                       mb: 2,
                       color: "#ffb700",
                       fontWeight: 700,
-                      fontSize: { xs: "1.5rem", md: "2rem" },
+                      fontSize: { xs: "1.1rem", sm: "1.5rem", md: "2rem" },
                     }}
                   >
                     Pin DEWALT Chính Hãng
@@ -203,7 +202,7 @@ export default function PromoBanner() {
                       sx={{
                         color: "#ffb700",
                         fontWeight: 900,
-                        fontSize: { xs: "2rem", md: "2.5rem" },
+                        fontSize: { xs: "1.5rem", sm: "2rem", md: "2.5rem" },
                       }}
                     >
                       1.550.000₫
@@ -267,7 +266,7 @@ export default function PromoBanner() {
                   </Paper>
 
                   {/* Features */}
-                  <Stack direction="row" spacing={2} sx={{ mb: 4 }}>
+                  <Stack direction="row" spacing={1} sx={{ mb: { xs: 3, md: 4 }, flexWrap: "wrap", rowGap: 1 }}>
                     {[
                       "Bảo hành 12 tháng",
                       "Miễn phí ship",
@@ -300,11 +299,11 @@ export default function PromoBanner() {
                         bgcolor: "#ffb700",
                         color: "#000",
                         fontWeight: 700,
-                        px: 4,
-                        py: 1.5,
+                        px: { xs: 2.5, md: 4 },
+                        py: { xs: 1, md: 1.5 },
                         borderRadius: 3,
                         textTransform: "none",
-                        fontSize: "1.1rem",
+                        fontSize: { xs: "0.9rem", md: "1.1rem" },
                         "&:hover": {
                           bgcolor: "#f25c05",
                           color: "#fff",
@@ -368,7 +367,7 @@ export default function PromoBanner() {
 
                 {/* Price Tag */}
                 <motion.div
-                  initial={{ opacity: 0, scale: 0 }}
+
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.8, type: "spring" }}
                   style={{
@@ -433,7 +432,7 @@ export default function PromoBanner() {
             />
           </Box>
         </Paper>
-      </Container>
+      </Box>
     </motion.div>
   );
 }

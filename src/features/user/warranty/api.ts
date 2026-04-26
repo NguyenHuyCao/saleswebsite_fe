@@ -28,6 +28,7 @@ export interface WarrantyClaimResponse {
   validWarranty: boolean;
   issueDesc: string;
   imageUrl?: string;
+  imageUrls?: string[];
   resolutionNote?: string;
   adminMessage?: string;
   orderCode: string;
@@ -40,6 +41,7 @@ export interface WarrantyClaimResponse {
   warrantyExpiry?: string;
   userEmail?: string;
   userName?: string;
+  userPhone?: string;
   submittedAt?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -135,29 +137,19 @@ export async function cancelWarrantyRequest(requestId: string | number): Promise
   await api.post(`/api/v1/warranty-claims/${requestId}/cancel`, {});
 }
 
-/** Danh sách trung tâm bảo hành (static) */
+/** Chi nhánh bảo hành chính (static) */
 export function getWarrantyCenters() {
   return [
     {
       id: 1,
-      name: "Trung tâm bảo hành Bắc Giang",
-      address: "293 TL293, Nghĩa Phương, Lục Nam, Bắc Giang",
-      phone: "0204 123 456",
-      hours: "Thứ 2 - Thứ 7: 8:00 - 17:30",
-    },
-    {
-      id: 2,
-      name: "Trung tâm bảo hành Hà Nội",
-      address: "123 Nguyễn Trãi, Thanh Xuân, Hà Nội",
-      phone: "024 1234 5678",
-      hours: "Thứ 2 - Thứ 7: 8:00 - 20:00",
-    },
-    {
-      id: 3,
-      name: "Trung tâm bảo hành TP.HCM",
-      address: "456 Lê Lợi, Quận 1, TP.HCM",
-      phone: "028 5678 1234",
-      hours: "Thứ 2 - Thứ 7: 8:00 - 21:00",
+      name: "Cửa hàng máy 2 thì Cường Hoa",
+      address: "293 TL293, Nghĩa Phương, Lục Nam, Bắc Ninh",
+      phone: "0392 923 392",
+      hours: "Thứ 2 – Chủ nhật: 7:00 – 18:00",
+      mapUrl:
+        "https://www.google.com/maps/search/?api=1&query=293+TL293+Nghi%C3%A3+Ph%C6%B0%C6%A1ng+B%E1%BA%AFc+Ninh",
+      mapEmbed:
+        "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d44565.070290525546!2d106.44437623455282!3d21.273365680042907!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x313563aab2f52ee1%3A0x1f80e44dc4bbf9b5!2zQ8ar4bucTkcgSE9BIFPhu6xBIEPGr0EgTOG7kEM!5e0!3m2!1sen!2sus!4v1748509785866!5m2!1sen!2sus",
     },
   ];
 }

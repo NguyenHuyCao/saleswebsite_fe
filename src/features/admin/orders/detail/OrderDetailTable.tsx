@@ -25,7 +25,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import GlobalSnackbar from "@/components/alert/GlobalSnackbar";
+import GlobalSnackbar from "@/components/feedback/GlobalSnackbar";
 import {
   useConfirmCodPaid,
   useOrder,
@@ -46,9 +46,12 @@ const dt = (s: string | null) =>
 
 const ORDER_STATUS_LABEL: Record<string, string> = {
   PENDING: "Chờ xác nhận",
+  WAITING_PAYMENT: "Chờ thanh toán",
   CONFIRMED: "Đã xác nhận",
+  SHIPPING: "Đang vận chuyển",
   DELIVERED: "Đã giao hàng",
   CANCELLED: "Đã huỷ",
+  FAILED: "Thất bại",
 };
 
 export default function OrderDetailTable() {
@@ -195,6 +198,15 @@ export default function OrderDetailTable() {
                 <TextField
                   fullWidth
                   size="small"
+                  label="Mã đơn hàng"
+                  value={order.orderCode ?? `#${order.orderId}`}
+                  InputProps={{ readOnly: true, sx: { fontFamily: "monospace" } }}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  fullWidth
+                  size="small"
                   label="Ngày đặt hàng"
                   value={dt(order.createdAt)}
                   InputProps={{ readOnly: true }}
@@ -227,6 +239,15 @@ export default function OrderDetailTable() {
                   InputProps={{ readOnly: true }}
                 />
               </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Ngày giao hàng"
+                  value={dt(order.deliveredAt ?? null)}
+                  InputProps={{ readOnly: true }}
+                />
+              </Grid>
             </Grid>
           </CardContent>
         </Card>
@@ -247,8 +268,10 @@ export default function OrderDetailTable() {
                     label="Trạng thái thanh toán"
                     MenuProps={{ disableScrollLock: true }}
                   >
-                    <MenuItem value="PENDING">CHỜ THANH TOÁN</MenuItem>
-                    <MenuItem value="PAID">ĐÃ THANH TOÁN</MenuItem>
+                    <MenuItem value="PENDING">Chờ thanh toán</MenuItem>
+                    <MenuItem value="PAID">Đã thanh toán</MenuItem>
+                    <MenuItem value="REFUND_PENDING">Chờ hoàn tiền</MenuItem>
+                    <MenuItem value="CANCELLED">Đã huỷ</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>

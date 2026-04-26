@@ -9,7 +9,7 @@ import {
   IconButton,
   Chip,
   Fade,
-  Container,
+  
   Skeleton,
   Paper,
   Stack,
@@ -164,7 +164,7 @@ export default function RelatedProductsSlick({ category }: Props) {
   // Loading skeleton
   if (loading) {
     return (
-      <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Box sx={{ py: 4 }}>
         <Skeleton variant="text" width={200} height={40} sx={{ mb: 2 }} />
         <Box
           display="grid"
@@ -185,14 +185,14 @@ export default function RelatedProductsSlick({ category }: Props) {
             />
           ))}
         </Box>
-      </Container>
+      </Box>
     );
   }
 
   // Empty state
   if (!products.length) {
     return (
-      <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Box sx={{ py: 4 }}>
         <Paper
           sx={{
             p: 6,
@@ -210,12 +210,12 @@ export default function RelatedProductsSlick({ category }: Props) {
             Vui lòng khám phá thêm sản phẩm khác của chúng tôi
           </Typography>
         </Paper>
-      </Container>
+      </Box>
     );
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Box sx={{ py: 4 }}>
       {/* Header */}
       <Box
         sx={{
@@ -357,7 +357,6 @@ export default function RelatedProductsSlick({ category }: Props) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05, duration: 0.4 }}
-                whileHover={{ y: -4 }}
               >
                 <ProductCard
                   product={product}
@@ -444,6 +443,6 @@ export default function RelatedProductsSlick({ category }: Props) {
           </Stack>
         </Box>
       )}
-    </Container>
+    </Box>
   );
 }

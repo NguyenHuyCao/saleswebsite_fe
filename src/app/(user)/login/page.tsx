@@ -4,8 +4,8 @@ import PageViewTracker from "@/components/common/traffic/PageViewTracker";
 import { LoginView } from "@/features/user/auth";
 
 export const metadata: Metadata = {
-  title: "Đăng nhập | Máy 2 Thì",
-  description: "Đăng nhập tài khoản để mua hàng, theo dõi đơn hàng và nhận ưu đãi từ cửa hàng Cường Hoa.",
+  title: "Đăng nhập | Cường Hoa — Máy Công Cụ 2 Thì",
+  description: "Đăng nhập tài khoản Cường Hoa để mua hàng, theo dõi đơn hàng và nhận ưu đãi máy cắt cỏ, máy cưa, máy phát điện chính hãng.",
   robots: { index: false },
 };
 

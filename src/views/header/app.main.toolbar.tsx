@@ -2,6 +2,7 @@
 
 import {
   AppBar,
+  Badge,
   Box,
   Container,
   IconButton,
@@ -16,6 +17,8 @@ import {
   ListItemText,
   Divider,
   CircularProgress,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import BookmarkBorderOutlinedIcon from "@mui/icons-material/BookmarkBorderOutlined";
@@ -26,6 +29,7 @@ import {
   QuestionAnswer,
   Article,
 } from "@mui/icons-material";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import ClickAwayListener from "@mui/material/ClickAwayListener";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -36,9 +40,12 @@ import {
   CART_COUNT_KEY,
   ORDERS_COUNT_KEY,
 } from "@/constants/apiKeys";
-import { http } from "@/lib/api/http";
+import { http, toApiError } from "@/lib/api/http";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { faqData } from "@/features/user/questions/constants/faqData";
+import { getAccessToken, clearAccessToken } from "@/lib/api/token";
+import { useToast } from "@/lib/toast/ToastContext";
+import NotificationDropdown from "@/@core/layouts/components/shared-components/NotificationDropdown";
 
 mutate(CART_COUNT_KEY);
 mutate(WISHLIST_COUNT_KEY);
@@ -87,6 +94,7 @@ interface ProductSuggestion {
 const MainToolbar = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const { showToast } = useToast();
   const [currentText, setCurrentText] = useState("");
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
@@ -94,8 +102,45 @@ const MainToolbar = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [productSuggestions, setProductSuggestions] = useState<ProductSuggestion[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [mobileMenuAnchor, setMobileMenuAnchor] = useState<null | HTMLElement>(null);
   const debouncedSearch = useDebounce(searchText, 350);
   const abortRef = useRef<AbortController | null>(null);
+
+  const handleMobileMenuOpen = (e: React.MouseEvent<HTMLElement>) => {
+    setMobileMenuAnchor(e.currentTarget);
+  };
+
+  const handleMobileMenuClose = () => setMobileMenuAnchor(null);
+
+  const handleMobileLogout = async () => {
+    handleMobileMenuClose();
+    try {
+      await http.post("/api/v1/auth/logout");
+    } catch (e) {
+      console.warn("Logout failed:", toApiError(e).message);
+    } finally {
+      clearAccessToken();
+      setIsLoggedIn(false);
+      window.dispatchEvent(new Event("logout"));
+      showToast("Hẹn gặp lại bạn!", "info", "Đã đăng xuất");
+      mutate(CART_COUNT_KEY);
+      mutate(WISHLIST_COUNT_KEY);
+      mutate(ORDERS_COUNT_KEY);
+      router.push("/");
+    }
+  };
+
+  useEffect(() => {
+    setIsLoggedIn(!!getAccessToken());
+    const sync = () => setIsLoggedIn(!!getAccessToken());
+    window.addEventListener("login", sync);
+    window.addEventListener("logout", sync);
+    return () => {
+      window.removeEventListener("login", sync);
+      window.removeEventListener("logout", sync);
+    };
+  }, []);
 
   const { data: wishlistCount = 0 } = useSWR(WISHLIST_COUNT_KEY, fetcherWithToken);
   const { data: cartCount = 0 } = useSWR(CART_COUNT_KEY, fetcherWithToken, {
@@ -221,14 +266,15 @@ const MainToolbar = () => {
 
   return (
     <AppBar position="static" sx={{ bgcolor: "black", boxShadow: "none" }}>
-      <Container>
+      <Container maxWidth="lg">
         <Toolbar
           sx={{
-            justifyContent: { xs: "center", md: "space-between" },
             alignItems: "center",
-            flexDirection: { xs: "column", md: "row" },
-            gap: 2,
-            py: 2,
+            flexWrap: "wrap",
+            gap: { xs: 0, md: 2 },
+            py: { xs: 1, md: 2 },
+            px: { xs: 0.5, md: 2 },
+            minHeight: "unset",
           }}
         >
           <Box
@@ -236,8 +282,10 @@ const MainToolbar = () => {
             src="/images/store/logo-removebg-preview.png"
             alt="Logo"
             sx={{
-              height: { xs: 60, sm: 80, md: 100 },
+              height: { xs: 50, sm: 80, md: 100 },
               cursor: "pointer",
+              order: { xs: 1, md: 1 },
+              flexShrink: 0,
               transition: "transform 0.3s ease",
               "&:hover": { transform: "scale(1.05)" },
             }}
@@ -249,9 +297,12 @@ const MainToolbar = () => {
             <Box
               sx={{
                 position: "relative",
-                flexGrow: 1,
-                maxWidth: { xs: "100%", sm: 400 },
-                mx: 2,
+                flexGrow: { xs: 0, md: 1 },
+                order: { xs: 3, md: 2 },
+                width: { xs: "100%", md: "auto" },
+                maxWidth: { xs: "100%", md: 560 },
+                mx: { xs: 0, md: 2 },
+                mt: { xs: 1, md: 0 },
               }}
             >
               <Box
@@ -467,10 +518,14 @@ const MainToolbar = () => {
 
           <Stack
             direction="row"
-            spacing={3}
+            spacing={{ xs: 0.5, md: 3 }}
             alignItems="center"
             flexWrap="wrap"
             justifyContent="flex-end"
+            sx={{
+              order: { xs: 2, md: 3 },
+              ml: { xs: "auto", md: 0 },
+            }}
           >
             {navItems.map(({ label, href, icon: Icon, count }) => {
               const isActive = pathname === href;
@@ -478,7 +533,7 @@ const MainToolbar = () => {
                 <Box
                   key={label}
                   sx={{
-                    display: "flex",
+                    display: { xs: "none", sm: "flex" },
                     alignItems: "center",
                     gap: 1,
                     cursor: "pointer",
@@ -493,22 +548,35 @@ const MainToolbar = () => {
                   }}
                   onClick={() => router.push(href)}
                 >
-                  <IconButton
+                  <Badge
+                    badgeContent={count || 0}
+                    color="error"
+                    max={99}
+                    invisible={!count}
                     sx={{
-                      color: isActive ? "#f25c05" : "#ffb700",
-                      border: "1px solid #ffb700",
-                      width: 40,
-                      height: 40,
-                      borderRadius: "50%",
+                      "& .MuiBadge-badge": {
+                        display: { xs: "flex", md: "none" },
+                      },
                     }}
                   >
-                    <Icon />
-                  </IconButton>
-                  <Box>
+                    <IconButton
+                      sx={{
+                        color: isActive ? "#f25c05" : "#ffb700",
+                        border: "1px solid #ffb700",
+                        width: { xs: 36, md: 40 },
+                        height: { xs: 36, md: 40 },
+                        borderRadius: "50%",
+                      }}
+                    >
+                      <Icon />
+                    </IconButton>
+                  </Badge>
+                  {/* Text + count — desktop only */}
+                  <Box sx={{ display: { xs: "none", md: "block" } }}>
                     <Typography
                       className="hover-label"
                       sx={{
-                        fontSize: { xs: "14px", md: "16px" },
+                        fontSize: "16px",
                         fontWeight: "bold",
                         color: isActive ? "#f25c05" : "#ffb700",
                         transition: "color 0.2s ease",
@@ -534,6 +602,102 @@ const MainToolbar = () => {
                 </Box>
               );
             })}
+
+            {/* Account — mobile only (TopBar is hidden on xs) */}
+            <Box sx={{ display: { xs: "flex", sm: "none" }, alignItems: "center" }}>
+              <IconButton
+                sx={{
+                  color: "#ffb700",
+                  border: "1px solid #ffb700",
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  p: 0,
+                  "&:hover": { bgcolor: "rgba(255,183,0,0.1)" },
+                }}
+                onClick={handleMobileMenuOpen}
+              >
+                <AccountCircleIcon sx={{ fontSize: 22 }} />
+              </IconButton>
+
+              <Menu
+                anchorEl={mobileMenuAnchor}
+                open={Boolean(mobileMenuAnchor)}
+                onClose={handleMobileMenuClose}
+                disableScrollLock
+                PaperProps={{
+                  sx: { mt: 1, minWidth: 180, borderRadius: 2 },
+                }}
+              >
+                {isLoggedIn ? [
+                  <MenuItem
+                    key="account"
+                    onClick={() => { handleMobileMenuClose(); router.push("/account"); }}
+                    sx={{ fontSize: 13 }}
+                  >
+                    Cập nhật thông tin
+                  </MenuItem>,
+                  <MenuItem
+                    key="password"
+                    onClick={() => { handleMobileMenuClose(); router.push("/change-password"); }}
+                    sx={{ fontSize: 13 }}
+                  >
+                    Đổi mật khẩu
+                  </MenuItem>,
+                  <Divider key="divider" />,
+                  <MenuItem
+                    key="logout"
+                    onClick={handleMobileLogout}
+                    sx={{ fontSize: 13, color: "error.main" }}
+                  >
+                    Đăng xuất
+                  </MenuItem>,
+                ] : [
+                  <MenuItem
+                    key="login"
+                    onClick={() => { handleMobileMenuClose(); router.push("/login?page=login"); }}
+                    sx={{ fontSize: 13 }}
+                  >
+                    Đăng nhập
+                  </MenuItem>,
+                  <MenuItem
+                    key="register"
+                    onClick={() => { handleMobileMenuClose(); router.push("/login?page=register"); }}
+                    sx={{ fontSize: 13 }}
+                  >
+                    Đăng ký
+                  </MenuItem>,
+                ]}
+              </Menu>
+            </Box>
+
+            {/* Notification — mobile only, sau cart (sm+ dùng TopBar) */}
+            {isLoggedIn && (
+              <Box
+                sx={{
+                  display: { xs: "flex", sm: "none" },
+                  alignItems: "center",
+                  color: "#ffb700",
+                  "& .MuiIconButton-root": {
+                    border: "1px solid #ffb700",
+                    width: 36,
+                    height: 36,
+                    borderRadius: "50%",
+                    p: 0,
+                    color: "#ffb700",
+                    "&:hover": { bgcolor: "rgba(255,183,0,0.1)" },
+                  },
+                  "& .MuiBadge-badge": {
+                    bgcolor: "#f25c05",
+                    fontSize: "0.58rem",
+                    minWidth: 16,
+                    height: 16,
+                  },
+                }}
+              >
+                <NotificationDropdown />
+              </Box>
+            )}
           </Stack>
         </Toolbar>
       </Container>

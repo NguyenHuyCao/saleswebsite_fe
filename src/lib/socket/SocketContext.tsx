@@ -116,6 +116,11 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         path: "/ws",
         transports: ["websocket", "polling"],
         query: { token },
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 3000,
+        reconnectionDelayMax: 10000,
+        timeout: 10000,
       });
       socketRef.current = socket;
 
@@ -126,7 +131,11 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         refresh();
       });
       socket.on("connect_error", (err: any) => {
-        console.error("[Socket] Connection error:", err?.message ?? err);
+        // Log ở warn thay vì error để không làm đỏ console; chỉ log message ngắn
+        console.warn("[Socket] Connection unavailable:", err?.message ?? "websocket error");
+      });
+      socket.on("reconnect_failed", () => {
+        console.warn("[Socket] Gave up reconnecting after max attempts.");
       });
       socket.on("disconnect", (reason: any) => {
         console.warn("[Socket] Disconnected:", reason);

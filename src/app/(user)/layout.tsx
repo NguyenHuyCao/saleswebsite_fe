@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Box } from "@mui/material";
 import ThemeRegistry from "@/components/theme-registry/theme.registry";
 import "@/styles/app.css";
 import AppHeader from "@/views/header/app.header";
@@ -6,7 +7,7 @@ import AppFooter from "@/views/footer/app.footer";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import ClientLayoutWrapper from "@/components/fixed_elements/ClientLayoutWrapper";
-import Providers from "@/components/redux/Providers";
+import MobileBottomNav from "@/views/header/MobileBottomNav";
 
 export const metadata: Metadata = {
   title: {
@@ -26,21 +27,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayoutUser({
+export default function UserLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <>
-      <ThemeRegistry>
-        <Providers>
-          <AppHeader />
-          {children}
-          <AppFooter />
-        </Providers>
-        <ClientLayoutWrapper />
-      </ThemeRegistry>
-    </>
+    <ThemeRegistry>
+      <AppHeader />
+      <Box component="main" sx={{ pb: { xs: "calc(56px + env(safe-area-inset-bottom, 0px))", sm: 0 } }}>
+        {children}
+      </Box>
+      <AppFooter />
+      <MobileBottomNav />
+      <ClientLayoutWrapper />
+    </ThemeRegistry>
   );
 }

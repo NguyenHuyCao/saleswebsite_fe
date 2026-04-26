@@ -1,14 +1,18 @@
 import Login from "mdi-material-ui/Login";
 import HomeOutline from "mdi-material-ui/HomeOutline";
-import AccountCogOutline from "mdi-material-ui/AccountCogOutline";
-import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
+import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
+import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
 import ContactsOutlinedIcon from "@mui/icons-material/ContactsOutlined";
 import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
 import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined";
-import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
+import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
+import LocalOfferOutlinedIcon from "@mui/icons-material/LocalOfferOutlined";
+import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
+import PaymentOutlinedIcon from "@mui/icons-material/PaymentOutlined";
+import WarehouseOutlinedIcon from "@mui/icons-material/WarehouseOutlined";
 
 import { VerticalNavItemsType } from "src/@core/layouts/types";
 
@@ -19,11 +23,6 @@ const navigation = (): VerticalNavItemsType => {
       icon: HomeOutline,
       path: "/admin",
     },
-    // {
-    //   title: "Account",
-    //   icon: AccountCogOutline,
-    //   path: "/admin/account-settings",
-    // },
     {
       title: "Liên hệ",
       icon: ContactsOutlinedIcon,
@@ -31,7 +30,7 @@ const navigation = (): VerticalNavItemsType => {
     },
     {
       title: "Người dùng",
-      icon: PersonOutlineOutlinedIcon,
+      icon: PeopleOutlinedIcon,
       path: "/admin/users",
     },
     {
@@ -41,8 +40,13 @@ const navigation = (): VerticalNavItemsType => {
     },
     {
       title: "Đơn hàng",
-      icon: AccountCogOutline,
+      icon: ReceiptLongOutlinedIcon,
       path: "/admin/orders",
+    },
+    {
+      title: "Thanh toán",
+      icon: PaymentOutlinedIcon,
+      path: "/admin/payments",
     },
     {
       title: "Danh mục",
@@ -51,7 +55,7 @@ const navigation = (): VerticalNavItemsType => {
     },
     {
       title: "Thương hiệu",
-      icon: LabelOutlinedIcon,
+      icon: StorefrontOutlinedIcon,
       path: "/admin/brands",
     },
     {
@@ -61,13 +65,18 @@ const navigation = (): VerticalNavItemsType => {
     },
     {
       title: "Khuyến mãi",
-      icon: LocalShippingOutlinedIcon,
+      icon: LocalOfferOutlinedIcon,
       path: "/admin/events",
     },
     {
       title: "Bảo hành",
-      icon: LocalShippingOutlinedIcon,
+      icon: VerifiedUserOutlinedIcon,
       path: "/admin/warranties",
+    },
+    {
+      title: "Kho & Bán hàng",
+      icon: WarehouseOutlinedIcon,
+      path: "/admin/warehouse",
     },
     {
       title: "Tin tức",

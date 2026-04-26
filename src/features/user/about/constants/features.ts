@@ -51,9 +51,11 @@ export const whyTwoStroke = [
   },
 ];
 
+// Năm KN: thành lập 2019 → 2025 = 6 năm | Thương hiệu: lấy từ API thật (11)
+// Khách hàng: ước tính thực tế khu vực | Hài lòng: 98% nhất quán với các trang khác
 export const companyStats = [
-  { value: "5+", label: "Năm kinh nghiệm", suffix: "năm" },
-  { value: "10k+", label: "Khách hàng", suffix: "khách" },
-  { value: "50+", label: "Đối tác", suffix: "thương hiệu" },
+  { value: "6+", label: "Năm kinh nghiệm", suffix: "năm" },
+  { value: "5.000+", label: "Khách hàng", suffix: "khách" },
+  { value: "11+", label: "Thương hiệu", suffix: "thương hiệu" },
   { value: "98%", label: "Hài lòng", suffix: "đánh giá" },
 ];

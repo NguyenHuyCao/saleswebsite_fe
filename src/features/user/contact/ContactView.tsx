@@ -1,6 +1,5 @@
 "use client";
 
-import { Container } from "@mui/material";
 import ContactHeroSection from "./components/ContactHeroSection";
 import ContactFormSection from "./components/ContactFormSection";
 import ContactInfoMapSection from "./components/ContactInfoMapSection";
@@ -11,12 +10,10 @@ export default function ContactView() {
   return (
     <>
       <ContactHeroSection />
-      <Container>
-        <ContactFormSection />
-        <ContactInfoMapSection />
-        <QuickHelpSection />
-        <FinalCallToAction />
-      </Container>
+      <ContactFormSection />
+      <ContactInfoMapSection />
+      <QuickHelpSection />
+      <FinalCallToAction />
     </>
   );
 }

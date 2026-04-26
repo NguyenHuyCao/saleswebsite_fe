@@ -4,7 +4,6 @@ import {
   Card,
   CardContent,
   Typography,
-  Stack,
   Box,
   Divider,
 } from "@mui/material";
@@ -67,7 +66,11 @@ export default function CommitmentCard() {
             Cam kết của chúng tôi
           </Typography>
           <Divider sx={{ mb: 2 }} />
-          <Stack spacing={1.2}>
+          <Box
+            display="grid"
+            gridTemplateColumns="1fr 1fr"
+            gap={1.2}
+          >
             {commitments.map((item, idx) => (
               <motion.div
                 key={idx}
@@ -76,13 +79,17 @@ export default function CommitmentCard() {
                 animate="visible"
                 variants={itemVariants}
               >
-                <Box display="flex" alignItems="center" gap={1.5}>
-                  {item.icon}
-                  <Typography variant="body2">{item.text}</Typography>
+                <Box display="flex" alignItems="flex-start" gap={0.75}>
+                  <Box sx={{ flexShrink: 0, mt: "1px" }}>
+                    {item.icon}
+                  </Box>
+                  <Typography variant="body2" sx={{ lineHeight: 1.4, fontSize: "0.8rem" }}>
+                    {item.text}
+                  </Typography>
                 </Box>
               </motion.div>
             ))}
-          </Stack>
+          </Box>
         </CardContent>
       </Card>
     </motion.div>

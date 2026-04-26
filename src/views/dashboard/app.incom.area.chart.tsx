@@ -10,7 +10,7 @@ import {
   ToggleButton,
 } from "@mui/material";
 import { LineChart, areaElementClasses } from "@mui/x-charts";
-import { api, toApiError } from "@/lib/api/http";
+import { api } from "@/lib/api/http";
 import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError";
 
 type TrafficWeeklyItem = {

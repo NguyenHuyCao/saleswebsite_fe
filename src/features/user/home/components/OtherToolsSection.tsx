@@ -10,7 +10,7 @@ import {
   useTheme,
   Chip,
   IconButton,
-  Container,
+  
   Paper,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
@@ -107,9 +107,8 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({ categories }) => 
   if (categoryProducts.length === 0) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
+
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
         <Box sx={{ py: 6, textAlign: "center" }}>
@@ -137,13 +136,12 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({ categories }) => 
   }
 
   return (
-    <Box sx={{ py: { xs: 4, md: 6 }, bgcolor: "#fff" }}>
-      <Container maxWidth="xl">
+    <Box sx={{ py: { xs: 3, md: 4 }, bgcolor: "#fff" }}>
+      <Box>
         {/* Header với animation - SỬA: dùng whileInView thay vì animate có điều kiện */}
         <motion.div
           initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
+          animate="visible"
           variants={itemVariants}
         >
           <Box
@@ -151,7 +149,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({ categories }) => 
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              mb: 4,
+              mb: { xs: 2, md: 4 },
               flexWrap: "wrap",
               gap: 2,
             }}
@@ -210,8 +208,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({ categories }) => 
         {/* Category Navigation với animation */}
         <motion.div
           initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
+          animate="visible"
           variants={itemVariants}
           transition={{ delay: 0.1 }}
         >
@@ -219,7 +216,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({ categories }) => 
             {/* Scroll buttons */}
             {!isMobile && canScrollLeft && (
               <motion.div
-                initial={{ opacity: 0, x: -20 }}
+
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
               >
@@ -247,8 +244,8 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({ categories }) => 
               sx={{
                 display: "flex",
                 overflowX: "auto",
-                gap: 1.5,
-                px: { xs: 0, md: 2 },
+                gap: 1,
+                px: { xs: 0.5, sm: 1.5, md: 2 },
                 py: 1,
                 scrollBehavior: "smooth",
                 "&::-webkit-scrollbar": { display: "none" },
@@ -263,7 +260,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({ categories }) => 
                     key={cat.id}
                     whileHover={{ y: -2 }}
                     whileTap={{ scale: 0.95 }}
-                    initial={{ opacity: 0, x: -20 }}
+
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.2 + idx * 0.05 }}
                   >
@@ -271,8 +268,8 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({ categories }) => 
                       onClick={() => setActiveIndex(idx)}
                       sx={{
                         minWidth: "auto",
-                        px: 2.5,
-                        py: 1,
+                        px: { xs: 1.5, sm: 2.5 },
+                        py: { xs: 0.75, sm: 1 },
                         borderRadius: 3,
                         bgcolor: isActive ? "#f25c05" : "#fff",
                         color: isActive ? "#fff" : "#333",
@@ -280,7 +277,8 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({ categories }) => 
                         borderColor: isActive ? "#f25c05" : "#ffb700",
                         textTransform: "none",
                         fontWeight: 600,
-                        fontSize: "0.9rem",
+                        fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                        whiteSpace: "nowrap",
                         boxShadow: isActive
                           ? "0 4px 12px rgba(242,92,5,0.2)"
                           : "none",
@@ -315,7 +313,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({ categories }) => 
             {/* Scroll right button */}
             {!isMobile && canScrollRight && (
               <motion.div
-                initial={{ opacity: 0, x: 20 }}
+
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
               >
@@ -359,7 +357,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({ categories }) => 
         <AnimatePresence mode="wait">
           <motion.div
             key={activeIndex}
-            initial={{ opacity: 0, y: 20 }}
+
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.4 }}
@@ -378,7 +376,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({ categories }) => 
                       }}
                     >
                       <motion.div
-                        initial={{ opacity: 0, y: 16 }}
+
                         animate={{ opacity: 1, y: 0 }}
                         transition={{
                           duration: 0.25,
@@ -388,7 +386,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({ categories }) => 
                       >
                         <ProductCard
                           product={product}
-                          mutateKey={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories/${activeCategory?.slug}`}
+                          mutateKey={`/api/v1/categories/${activeCategory?.slug}`}
                         />
                       </motion.div>
                     </Grid>
@@ -397,7 +395,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({ categories }) => 
 
                 {/* Xem tất cả button */}
                 <motion.div
-                  initial={{ opacity: 0 }}
+
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.5 }}
                 >
@@ -436,7 +434,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({ categories }) => 
             ) : (
               // Empty state cho danh mục không có sản phẩm
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
+
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4 }}
               >
@@ -463,9 +461,9 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({ categories }) => 
             )}
           </motion.div>
         </AnimatePresence>
-      </Container>
+      </Box>
     </Box>
   );
-};;
+};
 
 export default OtherToolsSection;

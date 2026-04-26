@@ -126,16 +126,19 @@ const Trophy = () => {
         <CardContent>
           <Typography variant="h6">Sản phẩm bán chạy nhất</Typography>
           <Typography variant="body2" sx={{ letterSpacing: "0.25px" }}>
-            {product
-              ? `${product.name} bán chạy nhất tháng này`
-              : "Đang tải..."}
+            {product === null
+              ? "Đang tải..."
+              : product?.name
+                ? `${product.name} bán chạy nhất tháng này`
+                : "Chưa có dữ liệu tháng này"}
           </Typography>
           <Typography variant="h5" sx={{ my: 4, color: "primary.main" }}>
-            {formatCurrency(product?.revenue)}
+            {product?.name ? formatCurrency(product.revenue) : "---"}
           </Typography>
           <Button
             size="small"
             variant="contained"
+            disabled={!product?.name}
             onClick={() => setOpen(true)}
           >
             Xem doanh số

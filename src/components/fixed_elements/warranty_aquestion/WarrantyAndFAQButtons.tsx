@@ -32,7 +32,7 @@ const WarrantyAndFAQButtons = ({ hidden = false }: { hidden?: boolean }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
-  const size = isMobile ? 43 : isTablet ? 46 : 52;
+  const size = isMobile ? 40 : isTablet ? 46 : 52;
   const iconSize = isMobile ? 24 : 30;
 
   useEffect(() => {
@@ -82,14 +82,18 @@ const WarrantyAndFAQButtons = ({ hidden = false }: { hidden?: boolean }) => {
       <Box
         sx={{
           position: "fixed",
-          bottom: isMobile ? 76 : 90,
-          right: isMobile ? 10 : 28,
+          bottom: {
+            xs: "calc(56px + env(safe-area-inset-bottom, 0px) + 16px)",
+            sm: 90,
+          },
+          left: { xs: 8, sm: "auto" },
+          right: { xs: "auto", sm: 28 },
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: isMobile ? 1.5 : 1.2,
+          gap: { xs: 1.5, sm: 1.2 },
           zIndex: 9999,
-          animation: "fadeInUp 0.8s ease-in-out",
+          animation: { xs: "none", sm: "fadeInUp 0.8s ease-in-out" },
           opacity: hidden ? 0 : 1,
           transform: hidden ? "scale(0.85) translateY(8px)" : "scale(1) translateY(0)",
           pointerEvents: hidden ? "none" : "auto",

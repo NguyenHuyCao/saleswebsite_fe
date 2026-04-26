@@ -26,9 +26,8 @@ export default function FlashSaleShowcasePage({
           <Fade in key={String(promo.id)} timeout={500 + index * 100}>
             <Box
               component={motion.div}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: index * 0.15 }}
               sx={{ mb: 4 }}
             >

@@ -26,7 +26,7 @@ import DotsVertical from "mdi-material-ui/DotsVertical";
 import Image from "next/image";
 
 // API
-import { api, toApiError } from "@/lib/api/http";
+import { api } from "@/lib/api/http";
 import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError";
 
 interface BrandSaleType {
@@ -37,7 +37,7 @@ interface BrandSaleType {
 }
 
 type BrandReportRes = {
-  brandSales: Array<[string, string, string, number | string]> | any[];
+  brandSales: Array<{ name: string; logo: string; year: string; total: number }>;
   thisYearTotal: number | string;
   lastYearTotal: number | string;
   growthRate: number | string;
@@ -68,18 +68,12 @@ const TotalEarning = () => {
         );
 
         const mapped =
-          (data?.brandSales || []).map((item: any) => {
-            const name = String(item?.[0] ?? item?.name ?? "");
-            const logo = String(item?.[1] ?? item?.logo ?? "");
-            const founded = String(item?.[2] ?? item?.founded ?? "");
-            const revenueRaw = item?.[3] ?? item?.revenue ?? 0;
-            return {
-              name,
-              logo,
-              founded,
-              revenue: Number(revenueRaw) || 0,
-            } as BrandSaleType;
-          }) ?? [];
+          (data?.brandSales || []).map((item: any) => ({
+            name: String(item?.name ?? ""),
+            logo: String(item?.logo ?? ""),
+            founded: String(item?.year ?? ""),
+            revenue: Number(item?.total) || 0,
+          } as BrandSaleType)) ?? [];
 
         setBrandSales(mapped);
         setThisYearTotal(Number(data?.thisYearTotal ?? 0));

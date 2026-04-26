@@ -22,7 +22,7 @@ export default function AboutDolaTool() {
   ];
 
   return (
-    <Box px={4} py={8}>
+    <Box sx={{ py: { xs: 5, md: 7 } }}>
       <Grid container spacing={4} alignItems="center">
         <Grid size={{ xs: 12, md: 6 }}>
           <Grid container spacing={2}>
@@ -33,8 +33,8 @@ export default function AboutDolaTool() {
               ].map((src, idx) => (
                 <motion.div
                   key={idx}
-                  whileHover={{ scale: 1.04 }}
-                  transition={{ duration: 0.3 }}
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
                   style={{
                     position: "relative",
                     width: "100%",
@@ -55,8 +55,8 @@ export default function AboutDolaTool() {
             </Grid>
             <Grid size={{ xs: 6 }}>
               <motion.div
-                whileHover={{ scale: 1.04 }}
-                transition={{ duration: 0.3 }}
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
                 style={{
                   position: "relative",
                   width: "100%",
@@ -88,10 +88,9 @@ export default function AboutDolaTool() {
           </Box>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
           >
             <Typography variant="h5" fontWeight={700} mb={2}>
               MANG ĐẾN NHỮNG <span style={{ color: "#ffb700" }}>GIẢI PHÁP</span>{" "}
@@ -100,14 +99,14 @@ export default function AboutDolaTool() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
+
+            animate={{ opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.8 }}
-            viewport={{ once: true }}
           >
             <Typography fontSize={16} mb={3} color="text.secondary">
-              Dola Tool là một cửa hàng dụng cụ cơ khí hàng đầu, mang đến cho
-              khách hàng những sản phẩm chất lượng và đáng tin cậy...
+              Cường Hoa là cửa hàng chuyên bán và sửa chữa máy 2 thì chính hãng
+              tại Bắc Ninh. Chúng tôi cung cấp máy cắt cỏ, máy cưa xích, máy
+              phát điện cùng đầy đủ phụ kiện – cam kết chất lượng, giá hợp lý.
             </Typography>
           </motion.div>
 
@@ -115,10 +114,9 @@ export default function AboutDolaTool() {
             {listItems.map((item, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
+
+                animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 + i * 0.2, duration: 0.4 }}
-                viewport={{ once: true }}
               >
                 <ListItem disablePadding sx={{ mb: 1 }}>
                   <ListItemIcon sx={{ minWidth: 32 }}>

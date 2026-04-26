@@ -6,7 +6,10 @@ export interface WarrantyClaim {
   status: WarrantyStatus | string;
   validWarranty: boolean;
   issueDesc: string;
+  /** URL ảnh đầu tiên (backward compat) */
   imageUrl: string | null;
+  /** Danh sách URL tất cả ảnh đính kèm (tối đa 3) */
+  imageUrls: string[] | null;
   resolutionNote: string | null;
   adminMessage: string | null;
   orderCode: string | null;
@@ -19,6 +22,7 @@ export interface WarrantyClaim {
   warrantyExpiry: string | null;
   userEmail: string | null;
   userName: string | null;
+  userPhone: string | null;
   submittedAt: string | null;
   createdAt: string | null;
   updatedAt: string | null;

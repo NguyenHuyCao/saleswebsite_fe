@@ -1,4 +1,3 @@
-// components/home/CategoryBanner.tsx (OPTIMIZED RESPONSIVE)
 "use client";
 
 import {
@@ -9,160 +8,160 @@ import {
   useMediaQuery,
   useTheme,
   IconButton,
-  Fade,
   Chip,
 } from "@mui/material";
 import Image from "next/image";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import VerifiedIcon from "@mui/icons-material/Verified";
 
-const banners = [
+type BrandRef = { name: string; slug: string };
+
+type Props = {
+  brands?: BrandRef[];
+};
+
+// Banner visual templates — brand name/slug injected at runtime
+const TEMPLATES = [
   {
-    id: 1,
     image: "/images/banner/banner-ab.jpg",
-    title: "Chất lượng Mỹ – Hiệu năng vượt trội",
-    subtitle: "DeWALT chính hãng – Giá tốt mỗi ngày!",
-    buttonText: "Xem sản phẩm DeWALT",
-    href: "/product?brand=dewalt",
-    tag: "DeWALT",
-    color: "#f25c05",
-    gradient: "linear-gradient(90deg, #f25c05, #ffb700)",
+    titleFn: (name: string) => `${name} – Máy công cụ chính hãng`,
+    subtitle: "100% hàng chính hãng – Giá tốt mỗi ngày!",
+    buttonFn: (name: string) => `Xem sản phẩm ${name}`,
     features: ["Bảo hành 12 tháng", "Miễn phí vận chuyển", "Ưu đãi 15%"],
   },
   {
-    id: 2,
     image: "/images/banner/banner-may-cat-co.jpg",
-    title: "Makita – Đẳng cấp từ Nhật Bản",
-    subtitle: "Bền bỉ – Tiết kiệm – Chuyên nghiệp",
-    buttonText: "Khám phá máy Makita",
-    href: "/product?brand=makita",
-    tag: "Makita",
-    color: "#f25c05",
-    gradient: "linear-gradient(90deg, #ffb700, #f25c05)",
-    features: ["Công nghệ Nhật", "Tiết kiệm pin", "Nhẹ - Bền"],
+    titleFn: (name: string) => `${name} – Hiệu năng vượt trội`,
+    subtitle: "Bền bỉ – Tiết kiệm nhiên liệu – Chuyên nghiệp",
+    buttonFn: (name: string) => `Khám phá máy ${name}`,
+    features: ["Công nghệ tiên tiến", "Tiết kiệm nhiên liệu", "Nhẹ – Bền"],
   },
 ];
 
-export default function CategoryBanner() {
+// Fallback khi chưa có brand nào có sản phẩm
+const FALLBACK = [
+  {
+    image: "/images/banner/banner-ab.jpg",
+    title: "Máy công cụ 2 thì chính hãng",
+    subtitle: "Đa dạng thương hiệu – Bảo hành toàn quốc",
+    buttonText: "Khám phá sản phẩm",
+    href: "/product#products",
+    tag: "Cường Hoa",
+    features: ["Bảo hành 12 tháng", "Miễn phí vận chuyển", "Chính hãng 100%"],
+  },
+  {
+    image: "/images/banner/banner-may-cat-co.jpg",
+    title: "Máy cắt cỏ, máy cưa xích",
+    subtitle: "Lựa chọn hàng đầu cho công việc hiệu quả",
+    buttonText: "Xem tất cả sản phẩm",
+    href: "/product#products",
+    tag: "Mới nhất",
+    features: ["Đa dạng phụ kiện", "Hỗ trợ kỹ thuật", "6+ năm kinh nghiệm"],
+  },
+];
+
+export default function CategoryBanner({ brands = [] }: Props) {
   const [index, setIndex] = useState(0);
-  const [direction, setDirection] = useState(0);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
   const router = useRouter();
 
+  // Build banner list from real brands (or fallback)
+  const banners = useMemo(() => {
+    if (brands.length === 0) return FALLBACK;
+
+    return brands.slice(0, TEMPLATES.length).map((brand, i) => {
+      const tpl = TEMPLATES[i];
+      return {
+        image: tpl.image,
+        title: tpl.titleFn(brand.name),
+        subtitle: tpl.subtitle,
+        buttonText: tpl.buttonFn(brand.name),
+        href: `/product?brand=${brand.slug}#products`,
+        tag: brand.name,
+        features: tpl.features,
+      };
+    });
+  }, [brands]);
+
   const handleNext = useCallback(() => {
-    setDirection(1);
     setIndex((prev) => (prev + 1) % banners.length);
-  }, []);
+  }, [banners.length]);
 
   const handlePrev = useCallback(() => {
-    setDirection(-1);
     setIndex((prev) => (prev - 1 + banners.length) % banners.length);
-  }, []);
+  }, [banners.length]);
 
   useEffect(() => {
+    if (banners.length < 2) return;
     const timer = setInterval(handleNext, 5000);
     return () => clearInterval(timer);
-  }, [handleNext]);
+  }, [handleNext, banners.length]);
 
-  const current = banners[index];
-
-  const slideVariants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? "100%" : "-100%",
-      opacity: 0,
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-    },
-    exit: (direction: number) => ({
-      x: direction < 0 ? "100%" : "-100%",
-      opacity: 0,
-    }),
-  };
+  // Reset index when brands change
+  useEffect(() => {
+    setIndex(0);
+  }, [brands]);
 
   return (
     <Box
       sx={{
         position: "relative",
-        height: {
-          xs: "calc(100vh - 56px)", // Mobile: gần full màn hình
-          sm: 450, // Tablet
-          md: 500, // Desktop
-          lg: 550,
-        },
-        minHeight: { xs: 500, sm: 450 },
-        borderRadius: { xs: 0, sm: 4 },
+        height: { xs: 240, sm: 330, md: 400, lg: 440 },
+        borderRadius: { xs: 2, sm: 4 },
         overflow: "hidden",
-        boxShadow: "0 12px 28px rgba(0,0,0,0.15)",
-        mb: { xs: 2, sm: 4 },
-        mx: { xs: -2, sm: 0 }, // Bù padding container
+        boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+        mb: { xs: 2, sm: 3 },
+        mx: { xs: -2, sm: 0 },
       }}
     >
-      {/* Background Image */}
-      <AnimatePresence initial={false} custom={direction} mode="wait">
-        <motion.div
-          key={current.id}
-          custom={direction}
-          variants={slideVariants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={{
-            x: { type: "tween", duration: 0.5, ease: "easeInOut" },
-            opacity: { duration: 0.4 },
-          }}
-          style={{
+      {/* All banner backgrounds — CSS crossfade */}
+      {banners.map((banner, idx) => (
+        <Box
+          key={`bg-${idx}`}
+          sx={{
             position: "absolute",
-            width: "100%",
-            height: "100%",
+            inset: 0,
+            opacity: idx === index ? 1 : 0,
+            transition: "opacity 0.55s ease-in-out",
           }}
         >
           <Image
-            src={current.image}
-            alt={current.title}
+            src={banner.image}
+            alt={banner.title}
             fill
-            priority
-            sizes="(max-width: 600px) 100vw, (max-width: 960px) 100vw, 100vw"
-            style={{
-              objectFit: "cover",
-              objectPosition: "center",
-            }}
+            priority={idx === 0}
+            sizes="100vw"
+            style={{ objectFit: "cover", objectPosition: "center" }}
           />
           <Box
             sx={{
               position: "absolute",
               inset: 0,
               background: {
-                xs: "linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.2) 100%)",
-                sm: "linear-gradient(90deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%)",
+                xs: "linear-gradient(0deg, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.15) 100%)",
+                sm: "linear-gradient(90deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.25) 100%)",
               },
             }}
           />
-        </motion.div>
-      </AnimatePresence>
+        </Box>
+      ))}
 
-      {/* Content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={current.id}
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -30 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          style={{
+      {/* All banner content — CSS crossfade */}
+      {banners.map((banner, idx) => (
+        <Box
+          key={`content-${idx}`}
+          sx={{
             position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
+            inset: 0,
             zIndex: 2,
+            opacity: idx === index ? 1 : 0,
+            transform: idx === index ? "translateY(0)" : "translateY(14px)",
+            transition: "opacity 0.45s ease 0.1s, transform 0.45s ease 0.1s",
+            pointerEvents: idx === index ? "auto" : "none",
           }}
         >
           <Box
@@ -172,224 +171,200 @@ export default function CategoryBanner() {
               flexDirection: "column",
               justifyContent: { xs: "flex-end", sm: "center" },
               alignItems: { xs: "center", sm: "flex-start" },
-              px: { xs: 3, sm: 6, md: 8 },
-              pb: { xs: 8, sm: 0 },
+              px: { xs: 3, sm: 5, md: 7 },
+              pb: { xs: 5, sm: 0 },
               color: "#fff",
               textAlign: { xs: "center", sm: "left" },
             }}
           >
-            {/* Tag */}
             <Chip
-              label={current.tag}
+              label={banner.tag}
               size="small"
               sx={{
-                bgcolor: current.color,
+                bgcolor: "#f25c05",
                 color: "#fff",
                 fontWeight: 700,
-                width: "fit-content",
-                mb: 2,
-                px: 1,
-                fontSize: { xs: "0.7rem", sm: "0.8rem" },
-                height: { xs: 24, sm: 28 },
+                mb: 1.5,
+                fontSize: "0.72rem",
+                height: 24,
               }}
             />
 
-            {/* Title */}
             <Typography
-              variant={isMobile ? "h4" : isTablet ? "h3" : "h2"}
               fontWeight={800}
               sx={{
-                mb: { xs: 1, sm: 1.5 },
-                maxWidth: { xs: "100%", sm: 500, md: 600 },
-                textShadow: "2px 2px 4px rgba(0,0,0,0.3)",
-                fontSize: {
-                  xs: "1.8rem",
-                  sm: "2.2rem",
-                  md: "2.5rem",
-                  lg: "3rem",
-                },
+                mb: 1,
+                maxWidth: { xs: "100%", sm: 460, md: 540 },
+                textShadow: "2px 2px 4px rgba(0,0,0,0.35)",
+                fontSize: { xs: "1.25rem", sm: "1.65rem", md: "2rem" },
                 lineHeight: 1.2,
               }}
             >
-              {current.title}
+              {banner.title}
             </Typography>
 
-            {/* Subtitle */}
             <Typography
-              variant={isMobile ? "body1" : "h6"}
               sx={{
-                mb: { xs: 2, sm: 3 },
-                opacity: 0.95,
-                maxWidth: { xs: "100%", sm: 450, md: 500 },
-                textShadow: "1px 1px 2px rgba(0,0,0,0.3)",
-                fontSize: { xs: "1rem", sm: "1.1rem", md: "1.2rem" },
+                mb: { xs: 1.5, sm: 2 },
+                opacity: 0.93,
+                maxWidth: { xs: "90%", sm: 400 },
+                fontSize: { xs: "0.82rem", sm: "0.95rem" },
               }}
             >
-              {current.subtitle}
+              {banner.subtitle}
             </Typography>
 
-            {/* Features - Ẩn bớt trên mobile nếu cần */}
             <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={{ xs: 1, sm: 2 }}
+              direction="row"
               sx={{
-                mb: { xs: 3, sm: 4 },
-                width: { xs: "100%", sm: "auto" },
-                alignItems: { xs: "center", sm: "flex-start" },
+                mb: { xs: 2, sm: 2.5 },
+                flexWrap: "wrap",
+                justifyContent: { xs: "center", sm: "flex-start" },
+                gap: 1,
               }}
             >
-              {current.features
-                .slice(0, isMobile ? 2 : 3)
-                .map((feature, idx) => (
-                  <Box
-                    key={idx}
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                      bgcolor: "rgba(255,255,255,0.15)",
-                      backdropFilter: "blur(4px)",
-                      px: { xs: 1.5, sm: 2 },
-                      py: { xs: 0.8, sm: 1 },
-                      borderRadius: 3,
-                      width: { xs: "100%", sm: "auto" },
-                      justifyContent: { xs: "center", sm: "flex-start" },
-                    }}
-                  >
-                    <VerifiedIcon sx={{ fontSize: { xs: 16, sm: 18 } }} />
-                    <Typography
-                      variant="body2"
-                      fontWeight={500}
-                      fontSize={{ xs: "0.8rem", sm: "0.9rem" }}
-                    >
-                      {feature}
-                    </Typography>
-                  </Box>
-                ))}
+              {banner.features.slice(0, isMobile ? 2 : 3).map((feature, i) => (
+                <Box
+                  key={i}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    bgcolor: "rgba(255,255,255,0.15)",
+                    backdropFilter: "blur(4px)",
+                    px: 1.5,
+                    py: 0.5,
+                    borderRadius: 3,
+                  }}
+                >
+                  <VerifiedIcon sx={{ fontSize: 13 }} />
+                  <Typography sx={{ fontSize: "0.75rem", fontWeight: 500 }}>
+                    {feature}
+                  </Typography>
+                </Box>
+              ))}
             </Stack>
 
-            {/* CTA Button */}
             <Button
               variant="contained"
-              size={isMobile ? "medium" : "large"}
-              onClick={() => router.push(current.href)}
+              size={isMobile ? "small" : "medium"}
+              onClick={() => router.push(banner.href)}
               sx={{
                 bgcolor: "#fff",
                 color: "#333",
                 fontWeight: 700,
-                px: { xs: 3, sm: 4 },
-                py: { xs: 1.2, sm: 1.5 },
+                px: { xs: 2.5, sm: 3.5 },
+                py: { xs: 0.7, sm: 1.1 },
                 width: { xs: "100%", sm: "fit-content" },
-                maxWidth: { xs: 280, sm: "none" },
+                maxWidth: { xs: 240, sm: "none" },
                 borderRadius: 3,
                 textTransform: "none",
-                fontSize: { xs: "0.95rem", sm: "1.1rem" },
+                fontSize: { xs: "0.85rem", sm: "0.95rem" },
                 boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
                 "&:hover": {
-                  bgcolor: current.color,
+                  bgcolor: "#f25c05",
                   color: "#fff",
-                  transform: { xs: "none", sm: "translateY(-2px)" },
-                  boxShadow: "0 6px 16px rgba(0,0,0,0.3)",
+                  boxShadow: "0 6px 16px rgba(0,0,0,0.25)",
                 },
-                transition: "all 0.3s ease",
+                transition: "all 0.28s ease",
               }}
             >
-              {current.buttonText}
+              {banner.buttonText}
             </Button>
           </Box>
-        </motion.div>
-      </AnimatePresence>
+        </Box>
+      ))}
 
-      {/* Navigation Buttons - Chỉ hiện trên tablet/desktop */}
-      {!isMobile && (
+      {/* Prev/Next — desktop only, hide if single banner */}
+      {!isMobile && banners.length > 1 && (
         <>
           <IconButton
             onClick={handlePrev}
+            aria-label="Banner trước"
             sx={{
               position: "absolute",
-              left: { xs: 8, sm: 16 },
+              left: 12,
               top: "50%",
               transform: "translateY(-50%)",
               bgcolor: "rgba(255,255,255,0.2)",
               backdropFilter: "blur(4px)",
               color: "#fff",
               zIndex: 3,
-              width: { xs: 36, sm: 40 },
-              height: { xs: 36, sm: 40 },
-              "&:hover": { bgcolor: "rgba(255,255,255,0.3)" },
+              width: 38,
+              height: 38,
+              "&:hover": { bgcolor: "rgba(255,255,255,0.32)" },
             }}
           >
-            <ChevronLeftIcon fontSize={isTablet ? "medium" : "large"} />
+            <ChevronLeftIcon />
           </IconButton>
           <IconButton
             onClick={handleNext}
+            aria-label="Banner tiếp theo"
             sx={{
               position: "absolute",
-              right: { xs: 8, sm: 16 },
+              right: 12,
               top: "50%",
               transform: "translateY(-50%)",
               bgcolor: "rgba(255,255,255,0.2)",
               backdropFilter: "blur(4px)",
               color: "#fff",
               zIndex: 3,
-              width: { xs: 36, sm: 40 },
-              height: { xs: 36, sm: 40 },
-              "&:hover": { bgcolor: "rgba(255,255,255,0.3)" },
+              width: 38,
+              height: 38,
+              "&:hover": { bgcolor: "rgba(255,255,255,0.32)" },
             }}
           >
-            <ChevronRightIcon fontSize={isTablet ? "medium" : "large"} />
+            <ChevronRightIcon />
           </IconButton>
         </>
       )}
 
-      {/* Pagination Dots */}
-      <Box
-        sx={{
-          position: "absolute",
-          bottom: { xs: 16, sm: 24 },
-          left: "50%",
-          transform: "translateX(-50%)",
-          display: "flex",
-          gap: 1,
-          zIndex: 3,
-        }}
-      >
-        {banners.map((_, idx) => (
-          <Box
-            key={idx}
-            onClick={() => {
-              setDirection(idx > index ? 1 : -1);
-              setIndex(idx);
-            }}
-            sx={{
-              width: idx === index ? { xs: 24, sm: 32 } : { xs: 6, sm: 8 },
-              height: { xs: 6, sm: 8 },
-              borderRadius: 4,
-              bgcolor: "#fff",
-              opacity: idx === index ? 1 : 0.5,
-              cursor: "pointer",
-              transition: "all 0.3s ease",
-              "&:hover": { opacity: 1, width: { xs: 12, sm: 16 } },
-            }}
-          />
-        ))}
-      </Box>
+      {/* Dots — hide if single banner */}
+      {banners.length > 1 && (
+        <Box
+          sx={{
+            position: "absolute",
+            bottom: { xs: 10, sm: 16 },
+            left: "50%",
+            transform: "translateX(-50%)",
+            display: "flex",
+            gap: 0.8,
+            zIndex: 3,
+          }}
+        >
+          {banners.map((_, idx) => (
+            <Box
+              key={idx}
+              onClick={() => setIndex(idx)}
+              sx={{
+                width: idx === index ? { xs: 20, sm: 28 } : { xs: 6, sm: 7 },
+                height: { xs: 5, sm: 6 },
+                borderRadius: 4,
+                bgcolor: "#fff",
+                opacity: idx === index ? 1 : 0.5,
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+              }}
+            />
+          ))}
+        </Box>
+      )}
 
-      {/* Index Indicator - Ẩn trên mobile vì đã có dots */}
-      {!isMobile && (
+      {/* Page counter */}
+      {!isMobile && banners.length > 1 && (
         <Chip
           label={`${index + 1}/${banners.length}`}
           size="small"
           sx={{
             position: "absolute",
-            top: 16,
-            right: 16,
-            bgcolor: "rgba(0,0,0,0.5)",
+            top: 12,
+            right: 12,
+            bgcolor: "rgba(0,0,0,0.45)",
             color: "#fff",
             backdropFilter: "blur(4px)",
             zIndex: 3,
-            fontSize: { xs: "0.7rem", sm: "0.8rem" },
-            height: { xs: 24, sm: 28 },
+            fontSize: "0.72rem",
+            height: 22,
           }}
         />
       )}

@@ -94,6 +94,7 @@ const mapProduct = (p: any): Product => {
     favorite: p.wishListUser === true,
     productType: p.productType,
     material: p.material || "",
+    videoUrl: p.videoUrl || null,
     variants: (p.variants ?? []).map((v: any) => ({
       id: v.id,
       size: v.size ?? null,

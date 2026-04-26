@@ -88,17 +88,19 @@ export default function WishlistShareModal({
             label="Link chia sẻ"
             value={shareUrl}
             fullWidth
-            InputProps={{
-              readOnly: true,
-              endAdornment: (
-                <Button
-                  startIcon={<ContentCopyIcon />}
-                  onClick={handleCopyLink}
-                  sx={{ textTransform: "none" }}
-                >
-                  Copy
-                </Button>
-              ),
+            slotProps={{
+              input: {
+                readOnly: true,
+                endAdornment: (
+                  <Button
+                    startIcon={<ContentCopyIcon />}
+                    onClick={handleCopyLink}
+                    sx={{ textTransform: "none" }}
+                  >
+                    Copy
+                  </Button>
+                ),
+                },
             }}
           />
 

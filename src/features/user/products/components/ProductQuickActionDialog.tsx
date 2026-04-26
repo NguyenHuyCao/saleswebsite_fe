@@ -9,7 +9,6 @@ import {
   Box,
   Typography,
   Button,
-  Chip,
   Stack,
   IconButton,
   Avatar,
@@ -26,6 +25,7 @@ import FlashOnIcon from "@mui/icons-material/FlashOn";
 import { useRouter } from "next/navigation";
 import { api, http } from "@/lib/api/http";
 import { mutate } from "swr";
+import { getColorHex, isLightColor } from "@/lib/utils/colorMap";
 import { CART_COUNT_KEY } from "@/constants/apiKeys";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/lib/toast/ToastContext";
@@ -56,14 +56,16 @@ export default function ProductQuickActionDialog({ open, onClose, product, mode 
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [quantity, setQuantity] = useState(1);
 
-  const isMachine = !product.productType || product.productType === "MACHINE";
+  // Use hasVariants flag from API (set for any product with active variants, regardless of productType)
+  const needsVariant = product.hasVariants === true;
 
   // Merged variants: prefer fetched over prop (more up-to-date)
   const activeVariants = (
     fullVariants.length > 0 ? fullVariants : (product.variants ?? [])
   ).filter((v) => v.active);
 
-  const hasVariants = !isMachine && activeVariants.length > 0;
+  // hasVariants is true when the product is supposed to have variants AND we have them loaded
+  const hasVariants = needsVariant && activeVariants.length > 0;
 
   const uniqueSizes = [
     ...new Set(activeVariants.map((v) => v.size).filter(Boolean)),
@@ -103,9 +105,10 @@ export default function ProductQuickActionDialog({ open, onClose, product, mode 
     }
 
     const hasPropVariants = (product.variants?.length ?? 0) > 0;
-    if (hasPropVariants || isMachine) return; // already have data or not needed
+    if (hasPropVariants) return; // already have variant data
+    if (!needsVariant) return;  // product has no active variants, no fetch needed
 
-    // Non-machine without cached variants → fetch
+    // Has variants but not yet loaded → fetch from detail endpoint
     setFetching(true);
     api
       .get<any>(`/api/v1/products/${encodeURIComponent(product.slug)}`)
@@ -246,30 +249,39 @@ export default function ProductQuickActionDialog({ open, onClose, product, mode 
                 <Typography variant="body2" fontWeight={600} mb={0.75}>
                   Kích cỡ:{" "}
                   {selectedSize && (
-                    <span style={{ color: "#f25c05" }}>{selectedSize}</span>
+                    <span style={{ color: "#f25c05", fontWeight: 700 }}>{selectedSize}</span>
                   )}
                 </Typography>
                 <Stack direction="row" flexWrap="wrap" gap={0.75}>
                   {uniqueSizes.map((size) => {
                     const available = isSizeAvailable(size);
+                    const selected = selectedSize === size;
                     return (
-                      <Chip
-                        key={size}
-                        label={size}
-                        size="small"
-                        variant={selectedSize === size ? "filled" : "outlined"}
-                        color={selectedSize === size ? "warning" : "default"}
-                        onClick={() =>
-                          available &&
-                          setSelectedSize(selectedSize === size ? null : size)
-                        }
-                        disabled={!available}
-                        sx={{
-                          cursor: available ? "pointer" : "not-allowed",
-                          opacity: available ? 1 : 0.4,
-                          fontWeight: selectedSize === size ? 700 : 400,
-                        }}
-                      />
+                      <Tooltip key={size} title={!available ? "Hết hàng" : ""} arrow>
+                        <Box
+                          component="span"
+                          onClick={() => available && setSelectedSize(selected ? null : size)}
+                          sx={{
+                            display: "inline-flex", alignItems: "center", justifyContent: "center",
+                            minWidth: 40, height: 32, px: 1.25,
+                            borderRadius: 1.5,
+                            border: selected ? "2px solid #f25c05" : "1.5px solid",
+                            borderColor: selected ? "#f25c05" : available ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.1)",
+                            bgcolor: selected ? "#fff3e0" : "transparent",
+                            color: selected ? "#f25c05" : available ? "text.primary" : "text.disabled",
+                            fontWeight: selected ? 700 : 500,
+                            fontSize: "0.8rem",
+                            cursor: available ? "pointer" : "not-allowed",
+                            opacity: available ? 1 : 0.45,
+                            textDecoration: !available ? "line-through" : "none",
+                            transition: "all 0.15s",
+                            userSelect: "none",
+                            "&:hover": available ? { borderColor: "#f25c05", color: "#f25c05" } : {},
+                          }}
+                        >
+                          {size}
+                        </Box>
+                      </Tooltip>
                     );
                   })}
                 </Stack>
@@ -282,30 +294,54 @@ export default function ProductQuickActionDialog({ open, onClose, product, mode 
                 <Typography variant="body2" fontWeight={600} mb={0.75}>
                   Màu sắc:{" "}
                   {selectedColor && (
-                    <span style={{ color: "#f25c05" }}>{selectedColor}</span>
+                    <span style={{ color: "#f25c05", fontWeight: 700 }}>{selectedColor}</span>
                   )}
                 </Typography>
-                <Stack direction="row" flexWrap="wrap" gap={0.75}>
+                <Stack direction="row" flexWrap="wrap" gap={1}>
                   {uniqueColors.map((color) => {
                     const available = isColorAvailable(color);
+                    const hex = getColorHex(color);
+                    const selected = selectedColor === color;
+                    const light = hex ? isLightColor(hex) : false;
                     return (
-                      <Chip
+                      <Tooltip
                         key={color}
-                        label={color}
-                        size="small"
-                        variant={selectedColor === color ? "filled" : "outlined"}
-                        color={selectedColor === color ? "warning" : "default"}
-                        onClick={() =>
-                          available &&
-                          setSelectedColor(selectedColor === color ? null : color)
-                        }
-                        disabled={!available}
-                        sx={{
-                          cursor: available ? "pointer" : "not-allowed",
-                          opacity: available ? 1 : 0.4,
-                          fontWeight: selectedColor === color ? 700 : 400,
-                        }}
-                      />
+                        title={`${color}${!available ? " — Hết hàng" : ""}`}
+                        arrow
+                      >
+                        <Box
+                          onClick={() => available && setSelectedColor(selected ? null : color)}
+                          sx={{
+                            width: 32, height: 32, borderRadius: "50%",
+                            bgcolor: hex || "#bdbdbd",
+                            border: selected
+                              ? "3px solid #f25c05"
+                              : `2px solid ${light ? "#c0c0c0" : "rgba(0,0,0,0.1)"}`,
+                            outline: selected ? "2px solid rgba(242,92,5,0.35)" : "none",
+                            outlineOffset: 3,
+                            cursor: available ? "pointer" : "not-allowed",
+                            opacity: available ? 1 : 0.35,
+                            transition: "all 0.15s",
+                            position: "relative",
+                            flexShrink: 0,
+                            "&:hover": available ? { transform: "scale(1.15)" } : {},
+                          }}
+                        >
+                          {!available && (
+                            <Box sx={{
+                              position: "absolute", inset: 0, borderRadius: "50%",
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              overflow: "hidden",
+                            }}>
+                              <Box sx={{
+                                width: "130%", height: "2px",
+                                bgcolor: "rgba(0,0,0,0.45)",
+                                transform: "rotate(-45deg)",
+                              }} />
+                            </Box>
+                          )}
+                        </Box>
+                      </Tooltip>
                     );
                   })}
                 </Stack>
@@ -385,7 +421,7 @@ export default function ProductQuickActionDialog({ open, onClose, product, mode 
           variant="contained"
           fullWidth
           size="small"
-          disabled={busy || fetching || !product.inStock}
+          disabled={busy || fetching || !product.inStock || (needsVariant && !fetching && activeVariants.length > 0 && !selectedVariant)}
           startIcon={
             busy ? (
               <CircularProgress size={14} sx={{ color: "inherit" }} />

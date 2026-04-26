@@ -4,6 +4,7 @@
 import { Box, Typography, Paper, Divider, Chip } from "@mui/material";
 import { motion } from "framer-motion";
 import type { NewsPost } from "../types";
+import DOMPurify from "isomorphic-dompurify";
 
 interface Props {
   post: NewsPost;
@@ -53,7 +54,7 @@ export default function NewsContent({ post }: Props) {
           }}
         >
           {/* Render HTML content safely */}
-          <div dangerouslySetInnerHTML={{ __html: post.content || "" }} />
+          <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content || "") }} />
         </Typography>
 
         {/* Tags */}

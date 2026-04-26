@@ -8,18 +8,13 @@ import {
   useTheme,
   Tooltip,
   Chip,
-  Container,
-  Stack,
 } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import GridViewIcon from "@mui/icons-material/GridView";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import NewReleasesIcon from "@mui/icons-material/NewReleases";
-import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import Image from "next/image";
 
 export default function ProductCategorySection({
   categories,
@@ -36,327 +31,262 @@ export default function ProductCategorySection({
   const router = useRouter();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
 
   const checkScroll = () => {
-    const container = scrollRef.current;
-    if (container) {
-      const { scrollLeft, scrollWidth, clientWidth } = container;
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
-
-      // Tính toán active index
-      const itemWidth = 200 + 16; // width + gap
-      const newIndex = Math.round(scrollLeft / itemWidth);
-      setActiveIndex(Math.min(newIndex, categories.length - 1));
-    }
+    const el = scrollRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanScrollLeft(scrollLeft > 0);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
+    const itemWidth = 176 + 12;
+    setActiveIndex(Math.min(Math.round(scrollLeft / itemWidth), categories.length - 1));
   };
 
   useEffect(() => {
-    const container = scrollRef.current;
-    if (!container) return;
-
+    const el = scrollRef.current;
+    if (!el) return;
     checkScroll();
-    container.addEventListener("scroll", checkScroll);
+    el.addEventListener("scroll", checkScroll, { passive: true });
     window.addEventListener("resize", checkScroll);
-
-    const resizeObserver = new ResizeObserver(() => checkScroll());
-    resizeObserver.observe(container);
-
+    const ro = new ResizeObserver(checkScroll);
+    ro.observe(el);
     return () => {
-      container.removeEventListener("scroll", checkScroll);
+      el.removeEventListener("scroll", checkScroll);
       window.removeEventListener("resize", checkScroll);
-      resizeObserver.disconnect();
+      ro.disconnect();
     };
   }, [categories]);
 
-  const scroll = (direction: "left" | "right") => {
-    const container = scrollRef.current;
-    if (container) {
-      const scrollAmount = isMobile ? 200 : 400;
-      container.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
-    }
+  const scroll = (dir: "left" | "right") => {
+    scrollRef.current?.scrollBy({
+      left: dir === "left" ? -360 : 360,
+      behavior: "smooth",
+    });
   };
 
-  // Thống kê
-  const totalProducts = categories.reduce(
-    (sum, cat) => sum + (cat.products?.length || 0),
-    0,
-  );
-  const activeCategories = categories.filter(
-    (c) => (c.products?.length || 0) > 0,
-  ).length;
+  const activeCategories = categories.filter((c) => (c.products?.length || 0) > 0).length;
 
   return (
-    <Box sx={{ bgcolor: "#fff", py: { xs: 4, md: 6 } }}>
-      <Container maxWidth="xl">
-        {/* Header với thống kê */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            mb: 3,
-          }}
-        >
-          <Box>
-            <Typography variant="h5" fontWeight={700} color="#333">
-              Danh mục sản phẩm
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              {activeCategories} danh mục đang có sản phẩm • {categories.length}{" "}
-              tổng số
-            </Typography>
-          </Box>
-          {/* Pagination indicator */}
-          {categories.length > (isMobile ? 2 : 4) && (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              {/* Progress bar */}
-              <Box
-                sx={{
-                  width: { xs: 150, sm: 200 },
-                  height: 4,
-                  bgcolor: "#f0f0f0",
-                  borderRadius: 2,
-                  overflow: "hidden",
-                }}
-              >
-                <Box
-                  sx={{
-                    width: `${(activeIndex / (categories.length - 1)) * 100}%`,
-                    height: "100%",
-                    background: "linear-gradient(90deg, #ffb700, #f25c05)",
-                    transition: "width 0.3s ease",
-                  }}
-                />
-              </Box>
-
-              {/* Page info */}
-              <Typography
-                variant="caption"
-                sx={{ color: "#999", minWidth: 60 }}
-              >
-                {Math.floor(activeIndex / (isMobile ? 2 : 4)) + 1}/
-                {Math.ceil(categories.length / (isMobile ? 2 : 4))}
-              </Typography>
-            </Box>
-          )}
+    <Box sx={{ bgcolor: "#fff", py: { xs: 1.5, md: 2 }, mb: { xs: 1, md: 2 } }}>
+      {/* Compact header */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 2,
+        }}
+      >
+        <Box>
+          <Typography variant="subtitle1" fontWeight={700} color="#333">
+            Danh mục sản phẩm
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {activeCategories}/{categories.length} danh mục đang có hàng
+          </Typography>
         </Box>
 
-        {/* Categories carousel */}
-        <Box sx={{ position: "relative" }}>
-          {/* Navigation buttons */}
-          {!isMobile && (
-            <>
-              <IconButton
-                onClick={() => scroll("left")}
-                disabled={!canScrollLeft}
-                sx={{
-                  position: "absolute",
-                  left: -20,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  bgcolor: "#fff",
-                  boxShadow: 3,
-                  zIndex: 2,
-                  "&:hover": { bgcolor: "#ffb700", color: "#fff" },
-                  "&.Mui-disabled": { opacity: 0.3 },
-                }}
-              >
-                <ChevronLeftIcon />
-              </IconButton>
-              <IconButton
-                onClick={() => scroll("right")}
-                disabled={!canScrollRight}
-                sx={{
-                  position: "absolute",
-                  right: -20,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  bgcolor: "#fff",
-                  boxShadow: 3,
-                  zIndex: 2,
-                  "&:hover": { bgcolor: "#ffb700", color: "#fff" },
-                  "&.Mui-disabled": { opacity: 0.3 },
-                }}
-              >
-                <ChevronRightIcon />
-              </IconButton>
-            </>
-          )}
-
-          {/* Scroll container */}
-          <Box
-            ref={scrollRef}
-            sx={{
-              display: "flex",
-              overflowX: "auto",
-              gap: 2,
-              pb: 2,
-              scrollBehavior: "smooth",
-              "&::-webkit-scrollbar": { display: "none" },
-            }}
-          >
-            {categories.map((cat, idx) => {
-              const productCount = cat.products?.length || 0;
-
-              return (
-                <motion.div
-                  key={cat.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  whileHover={{ y: -8 }}
-                  style={{ flex: "0 0 auto" }}
-                >
-                  <Box
-                    onClick={() =>
-                      cat.slug && router.push(`/product?category=${cat.slug}`)
-                    }
-                    sx={{
-                      width: 200,
-                      bgcolor: "#fff",
-                      borderRadius: 3,
-                      overflow: "hidden",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-                      cursor: "pointer",
-                      transition: "all 0.3s",
-                      border: "1px solid #f0f0f0",
-                      "&:hover": {
-                        boxShadow: "0 8px 24px rgba(242,92,5,0.15)",
-                        borderColor: "#ffb700",
-                      },
-                    }}
-                  >
-                    {/* Image */}
-                    <Box
-                      sx={{
-                        height: 140,
-                        bgcolor: "#fafafa",
-                        position: "relative",
-                        overflow: "hidden",
-                      }}
-                    >
-                      {cat.image ? (
-                        <Box
-                          component="img"
-                          src={cat.image}
-                          alt={cat.name}
-                          sx={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            transition: "transform 0.5s",
-                            "&:hover": { transform: "scale(1.1)" },
-                          }}
-                        />
-                      ) : (
-                        <Box
-                          sx={{
-                            width: "100%",
-                            height: "100%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            bgcolor: "#f5f5f5",
-                          }}
-                        >
-                          <GridViewIcon sx={{ color: "#ccc", fontSize: 40 }} />
-                        </Box>
-                      )}
-
-                      {/* Badge */}
-                      <Chip
-                        label={`${productCount} sản phẩm`}
-                        size="small"
-                        sx={{
-                          position: "absolute",
-                          top: 8,
-                          right: 8,
-                          bgcolor: productCount > 0 ? "#f25c05" : "#999",
-                          color: "#fff",
-                          fontSize: "0.65rem",
-                          height: 20,
-                        }}
-                      />
-                    </Box>
-
-                    {/* Content */}
-                    <Box sx={{ p: 2 }}>
-                      <Tooltip title={cat.name} arrow>
-                        <Typography
-                          fontWeight={600}
-                          fontSize={14}
-                          noWrap
-                          sx={{ mb: 0.5 }}
-                        >
-                          {cat.name}
-                        </Typography>
-                      </Tooltip>
-
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <Typography variant="caption" color="text.secondary">
-                          {productCount > 0 ? "Còn hàng" : "Hết hàng"}
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: "#f25c05",
-                            fontWeight: 600,
-                            opacity: productCount > 0 ? 1 : 0.3,
-                          }}
-                        >
-                          Xem ngay →
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </Box>
-                </motion.div>
-              );
-            })}
-          </Box>
-        </Box>
-
-        {/* Mobile hint */}
-        {isMobile && canScrollRight && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-          >
-            <Typography
-              variant="caption"
+        {/* Progress bar */}
+        {categories.length > (isMobile ? 2 : 4) && (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            <Box
               sx={{
-                display: "block",
-                textAlign: "center",
-                mt: 2,
-                color: "#999",
-                animation: "slideHint 1.5s infinite",
-                "@keyframes slideHint": {
-                  "0%": { transform: "translateX(0)" },
-                  "50%": { transform: "translateX(-10px)" },
-                  "100%": { transform: "translateX(0)" },
-                },
+                width: { xs: 100, sm: 160 },
+                height: 3,
+                bgcolor: "#f0f0f0",
+                borderRadius: 2,
+                overflow: "hidden",
               }}
             >
-              ← Vuốt để xem thêm danh mục →
+              <Box
+                sx={{
+                  width: `${(activeIndex / Math.max(1, categories.length - 1)) * 100}%`,
+                  height: "100%",
+                  background: "linear-gradient(90deg, #ffb700, #f25c05)",
+                  transition: "width 0.3s ease",
+                }}
+              />
+            </Box>
+            <Typography variant="caption" color="#999" sx={{ minWidth: 40 }}>
+              {Math.floor(activeIndex / (isMobile ? 2 : 4)) + 1}/
+              {Math.ceil(categories.length / (isMobile ? 2 : 4))}
             </Typography>
-          </motion.div>
+          </Box>
         )}
-      </Container>
+      </Box>
+
+      {/* Carousel */}
+      <Box sx={{ position: "relative" }}>
+        {!isMobile && (
+          <>
+            <IconButton
+              onClick={() => scroll("left")}
+              disabled={!canScrollLeft}
+              size="small"
+              sx={{
+                position: "absolute",
+                left: -18,
+                top: "50%",
+                transform: "translateY(-50%)",
+                bgcolor: "#fff",
+                boxShadow: 2,
+                zIndex: 2,
+                "&:hover": { bgcolor: "#ffb700", color: "#fff" },
+                "&.Mui-disabled": { opacity: 0.3 },
+              }}
+            >
+              <ChevronLeftIcon fontSize="small" />
+            </IconButton>
+            <IconButton
+              onClick={() => scroll("right")}
+              disabled={!canScrollRight}
+              size="small"
+              sx={{
+                position: "absolute",
+                right: -18,
+                top: "50%",
+                transform: "translateY(-50%)",
+                bgcolor: "#fff",
+                boxShadow: 2,
+                zIndex: 2,
+                "&:hover": { bgcolor: "#ffb700", color: "#fff" },
+                "&.Mui-disabled": { opacity: 0.3 },
+              }}
+            >
+              <ChevronRightIcon fontSize="small" />
+            </IconButton>
+          </>
+        )}
+
+        <Box
+          ref={scrollRef}
+          sx={{
+            display: "flex",
+            overflowX: "auto",
+            gap: 1.5,
+            pb: 1,
+            scrollBehavior: "smooth",
+            "&::-webkit-scrollbar": { display: "none" },
+            msOverflowStyle: "none",
+            scrollbarWidth: "none",
+          }}
+        >
+          {categories.map((cat) => {
+            const productCount = cat.products?.length || 0;
+            return (
+              <Box
+                key={cat.id}
+                onClick={() => cat.slug && router.push(`/product?category=${cat.slug}`)}
+                sx={{
+                  flex: "0 0 auto",
+                  width: { xs: 140, sm: 176 },
+                  bgcolor: "#fff",
+                  borderRadius: 3,
+                  overflow: "hidden",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                  cursor: "pointer",
+                  transition: "all 0.25s ease",
+                  border: "1px solid #f0f0f0",
+                  "&:hover": {
+                    boxShadow: "0 6px 20px rgba(242,92,5,0.14)",
+                    borderColor: "#ffb700",
+                    transform: "translateY(-5px)",
+                  },
+                }}
+              >
+                {/* Image */}
+                <Box
+                  sx={{
+                    height: { xs: 100, sm: 120 },
+                    bgcolor: "#fafafa",
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                >
+                  {cat.image ? (
+                    <Image
+                      src={cat.image}
+                      alt={`${cat.name} — danh mục sản phẩm`}
+                      fill
+                      sizes="(max-width: 600px) 140px, 176px"
+                      style={{ objectFit: "cover" }}
+                    />
+                  ) : (
+                    <Box
+                      sx={{
+                        width: "100%",
+                        height: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <GridViewIcon sx={{ color: "#ccc", fontSize: 36 }} />
+                    </Box>
+                  )}
+
+                  <Chip
+                    label={`${productCount} SP`}
+                    size="small"
+                    sx={{
+                      position: "absolute",
+                      top: 6,
+                      right: 6,
+                      bgcolor: productCount > 0 ? "#f25c05" : "#9e9e9e",
+                      color: "#fff",
+                      fontSize: "0.6rem",
+                      height: 18,
+                    }}
+                  />
+                </Box>
+
+                {/* Name */}
+                <Box sx={{ px: 1.5, py: 1.2 }}>
+                  <Tooltip title={cat.name} arrow placement="top">
+                    <Typography
+                      fontWeight={600}
+                      noWrap
+                      sx={{ fontSize: { xs: "0.75rem", sm: "0.82rem" }, mb: 0.3 }}
+                    >
+                      {cat.name}
+                    </Typography>
+                  </Tooltip>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "#f25c05", fontWeight: 600, opacity: productCount > 0 ? 1 : 0.35 }}
+                  >
+                    Xem ngay →
+                  </Typography>
+                </Box>
+              </Box>
+            );
+          })}
+        </Box>
+      </Box>
+
+      {/* Mobile swipe hint */}
+      {isMobile && canScrollRight && (
+        <Typography
+          variant="caption"
+          sx={{
+            display: "block",
+            textAlign: "center",
+            mt: 1,
+            color: "#bbb",
+            animation: "swipeHint 1.6s ease-in-out infinite",
+            "@keyframes swipeHint": {
+              "0%, 100%": { transform: "translateX(0)" },
+              "50%": { transform: "translateX(-8px)" },
+            },
+          }}
+        >
+          ← Vuốt để xem thêm →
+        </Typography>
+      )}
     </Box>
   );
 }

@@ -23,7 +23,7 @@ const WishlistView = () => {
       {/* Hero Section với số liệu nổi bật */}
       <WishlistHeroSection />
 
-      <Container maxWidth="xl">
+      <Container maxWidth="lg">
         <Box sx={{ py: 4 }}>
           {/* Stats Cards hiện đại */}
           <WishlistStats />

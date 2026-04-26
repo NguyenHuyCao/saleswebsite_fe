@@ -49,8 +49,11 @@ export type Product = {
   favorite?: boolean;
 
   productType?: 'MACHINE' | 'CLOTHING' | 'ACCESSORY' | 'OTHER';
+  /** True if the product has at least one active variant (size/color). Drives dialog trigger. */
+  hasVariants?: boolean;
   material?: string;
   variants?: ProductVariant[];
+  videoUrl?: string | null;
 };
 
 export type Category = {

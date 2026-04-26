@@ -2,7 +2,7 @@
 
 import React, { useRef } from "react";
 import {
-  Box, Typography, Grid, Chip, Button, Container,
+  Box, Typography, Grid, Chip, Button,
   Paper, Divider, Stack, Skeleton,
 } from "@mui/material";
 import Image from "next/image";
@@ -49,8 +49,8 @@ export default function NewsSection() {
       animate={isInView ? "visible" : "hidden"}
       variants={containerVariants}
     >
-      <Box sx={{ py: { xs: 4, md: 6 }, bgcolor: "background.default" }}>
-        <Container maxWidth="xl">
+      <Box sx={{ py: { xs: 3, md: 4 }, bgcolor: "#fff" }}>
+        <Box>
           {/* Header */}
           <motion.div variants={itemVariants}>
             <Stack
@@ -58,7 +58,7 @@ export default function NewsSection() {
               alignItems={{ xs: "flex-start", sm: "center" }}
               justifyContent="space-between"
               spacing={2}
-              sx={{ mb: 4 }}
+              sx={{ mb: { xs: 2, md: 4 } }}
             >
               <Stack direction="row" alignItems="center" spacing={2}>
                 <Box sx={{ bgcolor: "#f25c05", width: 48, height: 48, borderRadius: 2, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -209,7 +209,7 @@ export default function NewsSection() {
               ))}
             </Stack>
           </motion.div>
-        </Container>
+        </Box>
       </Box>
     </motion.div>
   );

@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import ReportChart from "./app.report.chart";
-import { api, toApiError } from "@/lib/api/http";
+import { api } from "@/lib/api/http";
 import { logIfNotCanceled } from "@/lib/utils/ignoreCanceledError";
 
 type Insights = {

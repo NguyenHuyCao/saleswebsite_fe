@@ -153,6 +153,8 @@ export default function Page() {
           productId={productId}
           onBack={() => nav(imagesStep)}
           onDone={() => router.push("/admin/products")}
+          skipLabel={isMachine ? "Bỏ qua (không có biến thể)" : undefined}
+          onSkip={isMachine ? () => router.push("/admin/products") : undefined}
         />
       )}
     </Box>

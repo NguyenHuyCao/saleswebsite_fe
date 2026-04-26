@@ -1,6 +1,13 @@
 // src/features/user/home/types.ts
 export type { Product } from "@/features/user/products/types";
 
+export type BrandItem = {
+  id: string;
+  name: string;
+  logo: string;
+  slug: string;
+};
+
 export type Category = {
   id: number;
   name: string;
