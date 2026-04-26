@@ -7,8 +7,10 @@ import {
   Paper,
   Stack,
   Chip,
+  Rating,
   useTheme,
   useMediaQuery,
+  Zoom,
 } from "@mui/material";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -23,109 +25,147 @@ function RVCard({ item, index }: { item: RVItem; index: number }) {
 
   return (
     <motion.div
-
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.3, ease: "easeOut" }}
-      whileHover={{ y: -3 }}
       style={{ flexShrink: 0 }}
     >
       <Paper
         onClick={() => router.push(`/product/detail?name=${item.slug}`)}
-        elevation={0}
+        elevation={2}
         sx={{
-          width: { xs: 130, sm: 155, md: 170 },
-          borderRadius: 2.5,
+          width: { xs: 140, sm: 160, md: 175 },
+          borderRadius: 3,
           overflow: "hidden",
           cursor: "pointer",
-          border: "1px solid rgba(0,0,0,0.07)",
-          transition: "box-shadow 0.2s, border-color 0.2s",
+          p: { xs: 1.5, sm: 2 },
+          bgcolor: "#fff",
+          display: "flex",
+          flexDirection: "column",
+          transition: "box-shadow 0.3s ease, transform 0.18s ease",
           "&:hover": {
-            boxShadow: "0 6px 20px rgba(242,92,5,0.12)",
-            borderColor: "rgba(242,92,5,0.2)",
+            boxShadow: "0 12px 28px rgba(242,92,5,0.15)",
+            transform: "translateY(-4px)",
+          },
+          "&:hover .rv-img": {
+            transform: "scale(1.04)",
           },
         }}
       >
-        {/* Image */}
+        {/* Image — same structure as ProductCard */}
         <Box
           sx={{
             position: "relative",
             width: "100%",
             aspectRatio: "1/1",
-            bgcolor: "#f7f7f7",
+            mb: 1.5,
+            borderRadius: 2,
             overflow: "hidden",
+            bgcolor: "#f7f7f7",
           }}
         >
           {hasDiscount && (
-            <Chip
-              label={`-${item.discountPercent}%`}
-              size="small"
-              sx={{
-                position: "absolute",
-                top: 6,
-                left: 6,
-                zIndex: 2,
-                bgcolor: "#f25c05",
-                color: "#fff",
-                fontWeight: 700,
-                fontSize: "0.6rem",
-                height: 18,
-              }}
-            />
+            <Zoom in style={{ transitionDelay: "100ms" }}>
+              <Chip
+                label={`-${item.discountPercent}%`}
+                size="small"
+                sx={{
+                  position: "absolute",
+                  top: 8,
+                  left: 8,
+                  zIndex: 2,
+                  bgcolor: "#f25c05",
+                  color: "#fff",
+                  fontWeight: 700,
+                  fontSize: "0.7rem",
+                  height: 22,
+                }}
+              />
+            </Zoom>
           )}
           <Image
+            className="rv-img"
             src={item.imageAvt}
-            alt={item.name}
+            alt={`${item.name} — máy công cụ chính hãng`}
             fill
-            sizes="170px"
-            style={{ objectFit: "cover" }}
+            sizes="(max-width: 600px) 140px, 175px"
+            style={{ objectFit: "cover", transition: "transform 0.3s ease" }}
           />
         </Box>
 
-        {/* Info */}
-        <Box sx={{ p: 1.25 }}>
+        {/* Info — same Stack structure as ProductCard */}
+        <Stack spacing={0.75}>
+          {/* Status placeholder — reserves space like ProductCard */}
+          <Box sx={{ minHeight: 20 }}>
+            {!item.inStock && (
+              <Box
+                sx={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  px: 0.8,
+                  py: 0.3,
+                  borderRadius: 0.8,
+                  color: "#fff",
+                  bgcolor: "#9e9e9e",
+                  display: "inline-block",
+                }}
+              >
+                Hết hàng
+              </Box>
+            )}
+          </Box>
+
+          {/* Name */}
           <Typography
+            fontWeight={600}
             sx={{
-              fontSize: "0.75rem",
-              fontWeight: 600,
-              color: "#333",
               overflow: "hidden",
               display: "-webkit-box",
               WebkitLineClamp: 2,
               WebkitBoxOrient: "vertical",
-              lineHeight: 1.35,
-              mb: 0.75,
-              minHeight: 36,
+              minHeight: { xs: 36, sm: 40 },
+              lineHeight: 1.4,
+              fontSize: { xs: "0.75rem", sm: "0.875rem" },
             }}
           >
             {item.name}
           </Typography>
-          <Stack direction="row" alignItems="center" spacing={0.75}>
-            <Typography
-              fontWeight={700}
-              sx={{ color: "#f25c05", fontSize: "0.8rem" }}
-            >
+
+          {/* Price — strikethrough always rendered to reserve space */}
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Typography fontWeight={700} color="#f25c05" sx={{ fontSize: { xs: "0.85rem", sm: "1rem" } }}>
               {item.price.toLocaleString()}₫
             </Typography>
-            {hasDiscount && (
-              <Typography
-                sx={{
-                  fontSize: "0.65rem",
-                  color: "#aaa",
-                  textDecoration: "line-through",
-                }}
-              >
-                {item.originalPrice.toLocaleString()}₫
-              </Typography>
-            )}
+            <Typography
+              sx={{
+                textDecoration: "line-through",
+                color: "#999",
+                visibility: hasDiscount ? "visible" : "hidden",
+                fontSize: { xs: "0.65rem", sm: "0.75rem" },
+              }}
+            >
+              {item.originalPrice.toLocaleString()}₫
+            </Typography>
           </Stack>
-          {!item.inStock && (
-            <Chip
-              label="Hết hàng"
-              size="small"
-              sx={{ mt: 0.5, height: 16, fontSize: "0.58rem", bgcolor: "#f5f5f5", color: "#999" }}
-            />
-          )}
-        </Box>
+
+          {/* Rating — always reserves 22px height */}
+          <Box sx={{ minHeight: 22 }}>
+            {typeof item.rating === "number" && item.rating > 0 && (
+              <Stack direction="row" alignItems="center" spacing={0.5}>
+                <Rating
+                  value={item.rating}
+                  precision={0.5}
+                  size="small"
+                  readOnly
+                  sx={{ color: "#ffb700" }}
+                />
+                <Typography variant="caption" color="text.secondary">
+                  ({item.rating})
+                </Typography>
+              </Stack>
+            )}
+          </Box>
+        </Stack>
       </Paper>
     </motion.div>
   );
@@ -142,12 +182,11 @@ export default function RecentlyViewedSection() {
     setItems(getRVItems());
   }, []);
 
-  // Không render trên server hoặc khi không có lịch sử
   if (!mounted || items.length === 0) return null;
 
   return (
     <motion.div
-
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
     >
@@ -184,10 +223,7 @@ export default function RecentlyViewedSection() {
           </Stack>
 
           {!isMobile && (
-            <Typography
-              variant="caption"
-              sx={{ color: "#bbb", fontStyle: "italic" }}
-            >
+            <Typography variant="caption" sx={{ color: "#bbb", fontStyle: "italic" }}>
               Lưu trên thiết bị này
             </Typography>
           )}
@@ -209,19 +245,18 @@ export default function RecentlyViewedSection() {
             <RVCard key={item.id} item={item} index={idx} />
           ))}
 
-          {/* View more hint if many items */}
           {items.length >= 6 && !isMobile && (
             <motion.div
-
+              initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
               style={{ flexShrink: 0, display: "flex", alignItems: "center" }}
             >
               <Box
                 sx={{
-                  width: 170,
+                  width: 175,
                   aspectRatio: "1/1",
-                  borderRadius: 2.5,
+                  borderRadius: 3,
                   border: "1px dashed #ffb700",
                   display: "flex",
                   flexDirection: "column",
@@ -229,12 +264,11 @@ export default function RecentlyViewedSection() {
                   justifyContent: "center",
                   gap: 1,
                   cursor: "pointer",
-                  color: "#f25c05",
                   "&:hover": { bgcolor: "#fff8e1" },
                   transition: "background-color 0.2s",
                 }}
               >
-                <ArrowForwardIosIcon sx={{ fontSize: 20 }} />
+                <ArrowForwardIosIcon sx={{ fontSize: 20, color: "#f25c05" }} />
                 <Typography variant="caption" fontWeight={600} color="#f25c05">
                   Xem tất cả
                 </Typography>

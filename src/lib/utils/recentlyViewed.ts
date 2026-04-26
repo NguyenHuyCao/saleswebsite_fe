@@ -10,6 +10,7 @@ export type RVItem = {
   originalPrice: number;
   discountPercent?: number;
   inStock: boolean;
+  rating?: number;
 };
 
 export function trackRVItem(item: RVItem): void {

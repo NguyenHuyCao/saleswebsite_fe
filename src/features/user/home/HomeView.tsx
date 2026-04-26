@@ -52,7 +52,12 @@ export default function HomeView() {
   const [flashPromotions, setFlashPromotions] = useState<Promotion[] | null>(null);
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+    // Reset scroll to top on every fresh page load (prevents browser restoring mid-page position)
+    window.history.scrollRestoration = "manual";
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, []);
 
   useEffect(() => {
     let cancelled = false;

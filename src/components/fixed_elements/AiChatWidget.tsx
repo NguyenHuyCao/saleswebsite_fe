@@ -57,7 +57,7 @@ const BASE_URL = (process.env.NEXT_PUBLIC_BACKEND_URL ?? "").replace(/\/$/, "");
 const WELCOME: Message = {
   role: "assistant",
   content:
-    "Xin chào! Tôi là trợ lý AI của **Máy 2 Thì**.\n\nTôi có thể giúp bạn:\n- Tư vấn chọn máy phù hợp nhu cầu\n- Tra cứu giá & thông tin sản phẩm\n- Hướng dẫn bảo hành, đổi trả\n- Hỗ trợ đặt hàng online\n\nBạn cần hỗ trợ gì?",
+    "Xin chào! Tôi là trợ lý AI của **Cường Hoa - Máy 2 Thì**.\n\nTôi có thể giúp bạn:\n- Tư vấn chọn máy phù hợp nhu cầu & ngân sách\n- Tra cứu giá & thông tin sản phẩm thực tế từ kho\n- Hướng dẫn bảo hành, đổi trả, pha nhớt\n- Hỗ trợ đặt hàng & giao hàng toàn quốc\n\nBạn đang cần tư vấn về loại máy nào?",
   ts: 0,
 };
 
@@ -67,15 +67,19 @@ const QUICK_REPLIES = [
   "Máy cắt cỏ Honda giá bao nhiêu?",
   "So sánh Husqvarna và Stihl",
   "Cách pha nhớt 2 thì đúng tỉ lệ",
+  "Cửa hàng ở đâu? Giờ mở cửa?",
 ];
 
+// Triggered when AI genuinely cannot help and needs human escalation.
+// Keep specific — avoid broad phrases that appear in normal helpful responses.
 const ESCALATION_PHRASES = [
-  "chưa có thông tin",
-  "nhân viên hỗ trợ",
+  "mình chưa có thông tin",
+  "chưa có thông tin chính xác",
+  "nhờ nhân viên hỗ trợ thêm",
   "liên hệ trực tiếp",
-  "không có thông tin chính xác",
-  "vui lòng liên hệ",
   "mình sẽ nhờ nhân viên",
+  "cần hỗ trợ trực tiếp",
+  "không có thông tin chính xác",
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -106,19 +110,42 @@ function extractProductLinks(text: string): ProductLink[] {
 
 function getSuggestions(text: string): string[] {
   const t = text.toLowerCase();
-  if (t.includes("máy cưa") || t.includes("chainsaw"))
+  if (t.includes("máy cưa") || t.includes("chainsaw") || t.includes("cưa xích"))
     return ["Phụ tùng máy cưa có sẵn không?", "Cách bảo dưỡng máy cưa xích", "So sánh Honda vs Husqvarna"];
-  if (t.includes("bảo hành") || t.includes("đổi trả"))
-    return ["Quy trình bảo hành cụ thể?", "Thời gian xử lý bảo hành?", "Bảo hành tại chỗ hay gửi đi?"];
-  if (t.includes("máy cắt cỏ") || t.includes("trimmer"))
+  if (t.includes("bảo hành") || t.includes("đổi trả") || t.includes("lỗi") || t.includes("sửa chữa"))
+    return ["Quy trình bảo hành cụ thể?", "Thời gian xử lý bảo hành?", "Điều kiện bảo hành là gì?"];
+  if (t.includes("máy cắt cỏ") || t.includes("trimmer") || t.includes("cắt cỏ"))
     return ["Máy phù hợp diện tích bao nhiêu?", "So sánh các dòng máy cắt cỏ", "Cách pha xăng 2 thì"];
-  if (t.includes("giá") || t.includes("mua") || t.includes("đặt hàng"))
+  if (t.includes("máy thổi") || t.includes("blower") || t.includes("thổi lá"))
+    return ["Máy thổi lá phù hợp loại nào?", "Stihl hay Husqvarna tốt hơn?", "Giá máy thổi lá bao nhiêu?"];
+  if (t.includes("phụ tùng") || t.includes("linh kiện") || t.includes("thay thế") || t.includes("lưỡi"))
+    return ["Phụ tùng chính hãng hay thay thế?", "Thời gian thay lưỡi cưa?", "Đặt phụ tùng online được không?"];
+  if (t.includes("giá") || t.includes("mua") || t.includes("đặt hàng") || t.includes("order"))
     return ["Có chương trình khuyến mãi không?", "Phương thức thanh toán nào?", "Thời gian giao hàng bao lâu?"];
-  if (t.includes("pha nhớt") || t.includes("nhiên liệu") || t.includes("xăng"))
+  if (t.includes("giao hàng") || t.includes("vận chuyển") || t.includes("ship"))
+    return ["Phí ship bao nhiêu?", "Giao hàng tỉnh xa mất bao lâu?", "Có miễn phí vận chuyển không?"];
+  if (t.includes("pha nhớt") || t.includes("nhiên liệu") || t.includes("xăng") || t.includes("nhớt 2t"))
     return ["Tỉ lệ pha nhớt từng loại máy?", "Mua nhớt 2T ở đây không?", "Bảo dưỡng định kỳ thế nào?"];
-  if (t.includes("máy bơm") || t.includes("máy phát điện"))
-    return ["Công suất phù hợp cho gia đình?", "Bảo trì máy phát điện?", "Xem thêm sản phẩm"];
+  if (t.includes("máy bơm") || t.includes("bơm nước"))
+    return ["Công suất máy bơm phù hợp?", "Máy bơm dùng cho ao không?", "So sánh các loại máy bơm"];
+  if (t.includes("máy phát điện") || t.includes("phát điện"))
+    return ["Công suất phù hợp cho gia đình?", "Bảo trì máy phát điện?", "Máy phát điện dùng bao lâu?"];
+  if (t.includes("địa chỉ") || t.includes("cửa hàng") || t.includes("ở đâu") || t.includes("đường đi"))
+    return ["Giờ mở cửa là mấy giờ?", "Có chỗ đậu xe không?", "Xem bản đồ tại /system"];
+  if (t.includes("so sánh") || t.includes("khác nhau") || t.includes("tốt hơn"))
+    return ["Tư vấn chọn máy theo ngân sách?", "Thương hiệu nào bền nhất?", "Xem tất cả sản phẩm"];
   return [];
+}
+
+/** Extract product-relevant keyword from user message for RAG search */
+function extractSearchKeyword(text: string): string {
+  const cleaned = text
+    .replace(/\b(bao nhiêu|như thế nào|thế nào|làm sao|là gì|có không|ở đâu|khi nào|tại sao)\b/gi, " ")
+    .replace(/\b(tôi|mình|muốn|cần|hỏi|biết|xem|giúp|cho)\b/gi, " ")
+    .replace(/[?!.,]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return (cleaned.length > 3 ? cleaned : text).slice(0, 80);
 }
 
 function checkEscalation(text: string): boolean {
@@ -431,8 +458,10 @@ export default function AiChatWidget({ onChatOpenChange }: { onChatOpenChange?: 
     prevMsgCountRef.current = msgCount;
 
     if (isAtBottomRef.current) {
-      // Already at bottom — scroll to reveal any new content
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      // Direct container scroll instead of scrollIntoView to avoid scrolling the wrong parent
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTo({ top: scrollContainerRef.current.scrollHeight, behavior: "smooth" });
+      }
     } else if (added) {
       const last = messages[messages.length - 1];
       // Only count incoming messages (admin / AI), not user's own sent messages
@@ -544,6 +573,14 @@ export default function AiChatWidget({ onChatOpenChange }: { onChatOpenChange?: 
       setHistoryLoaded(true);
       setLoadingHistory(false);
       setTimeout(() => inputRef.current?.focus(), 150);
+      // Double rAF: wait for React to flush state + browser to paint new message list,
+      // then snap to bottom. Fixes first-open scroll staying at top after history loads.
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+          isAtBottomRef.current = true;
+        }
+      }));
     });
 
     setUnread(0);
@@ -709,7 +746,7 @@ export default function AiChatWidget({ onChatOpenChange }: { onChatOpenChange?: 
         body: JSON.stringify({
           sessionId: sessionId.current,
           message: msg,
-          keyword: msg,
+          keyword: extractSearchKeyword(msg),
         }),
         signal: controller.signal,
         credentials: "include",

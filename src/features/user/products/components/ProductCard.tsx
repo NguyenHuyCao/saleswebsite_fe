@@ -157,6 +157,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       originalPrice: product.originalPrice,
       discountPercent: product.discountPercent,
       inStock: product.inStock,
+      rating: product.rating,
     });
     router.push(`/product/detail?name=${product.slug}`);
   }, [router, product]);
