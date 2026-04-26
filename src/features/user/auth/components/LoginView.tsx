@@ -28,7 +28,7 @@ import StarIcon          from "@mui/icons-material/Star";
 import { useLogin, useRegister } from "../queries";
 import { useToast } from "@/lib/toast/ToastContext";
 
-const BE_URL = process.env.NEXT_PUBLIC_BE_URL ?? "http://localhost:8080";
+const BE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? process.env.NEXT_PUBLIC_BE_URL ?? "https://saleswebsite-be.onrender.com";
 
 const STORE = {
   name:    "Cường Hoa",
