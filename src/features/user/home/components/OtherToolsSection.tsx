@@ -175,7 +175,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({ categories }) => 
                 </Box>
               </motion.div>
               <Box>
-                <Typography variant="h5" fontWeight={800} color="#333">
+                <Typography component="h2" variant="h5" fontWeight={800} color="#333">
                   Dụng cụ khác
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
@@ -222,6 +222,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({ categories }) => 
               >
                 <IconButton
                   onClick={() => scroll("left")}
+                  aria-label="Cuộn trái"
                   sx={{
                     position: "absolute",
                     left: -10,
@@ -319,6 +320,7 @@ const OtherToolsSection: React.FC<OtherToolsSectionProps> = ({ categories }) => 
               >
                 <IconButton
                   onClick={() => scroll("right")}
+                  aria-label="Cuộn phải"
                   sx={{
                     position: "absolute",
                     right: -10,

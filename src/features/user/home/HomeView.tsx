@@ -75,7 +75,10 @@ export default function HomeView() {
   return (
     <>
       <BannerFeatureSection />
-      <TrustBadgesBar />
+      {/* min-height reserves space on SSR so TrustBadgesBar mount doesn't cause CLS */}
+      <Box sx={{ minHeight: { xs: 132, sm: 80, md: 80 } }}>
+        <TrustBadgesBar />
+      </Box>
 
       <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
         <WebsiteTrafficTracker />
@@ -94,13 +97,16 @@ export default function HomeView() {
         <AboutDolaTool />
       </Container>
 
-      <SiteStatsSection
-        productCount={siteStats?.productCount}
-        brandCount={siteStats?.brandCount}
-        categoryCount={siteStats?.categoryCount}
-        customerCount={siteStats?.customerCount}
-        yearsOfExperience={siteStats?.yearsOfExperience}
-      />
+      {/* min-height reserves space to reduce CLS when SiteStatsSection mounts */}
+      <Box sx={{ minHeight: { xs: 200, md: 180 } }}>
+        <SiteStatsSection
+          productCount={siteStats?.productCount}
+          brandCount={siteStats?.brandCount}
+          categoryCount={siteStats?.categoryCount}
+          customerCount={siteStats?.customerCount}
+          yearsOfExperience={siteStats?.yearsOfExperience}
+        />
+      </Box>
 
       <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
         {loadingCatProds ? (
@@ -116,7 +122,10 @@ export default function HomeView() {
         <KnowledgeShare />
       </Container>
 
-      <NewsletterSection />
+      {/* min-height reserves space to reduce CLS when NewsletterSection mounts */}
+      <Box sx={{ minHeight: { xs: 440, md: 280 } }}>
+        <NewsletterSection />
+      </Box>
 
       <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 3, md: 4 } }}>
         {loadingBrands ? (

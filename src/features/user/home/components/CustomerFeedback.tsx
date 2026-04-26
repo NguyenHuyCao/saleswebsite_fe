@@ -241,7 +241,7 @@ export default function CustomerFeedback() {
                   <FormatQuoteIcon sx={{ color: "#fff", fontSize: 28 }} />
                 </Box>
                 <Box>
-                  <Typography variant="h5" fontWeight={800} color="#333">
+                  <Typography component="h2" variant="h5" fontWeight={800} color="#333">
                     Khách hàng nói gì?
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -255,6 +255,7 @@ export default function CustomerFeedback() {
                   <IconButton
                     onClick={() => setIsAutoPlay(!isAutoPlay)}
                     size="small"
+                    aria-label={isAutoPlay ? "Tạm dừng tự động" : "Bật tự động"}
                     sx={{
                       bgcolor: isAutoPlay ? "#f25c05" : "#f5f5f5",
                       color: isAutoPlay ? "#fff" : "#999",
@@ -268,6 +269,7 @@ export default function CustomerFeedback() {
                   <IconButton
                     onClick={() => setAutoPlaySpeed((prev) => (prev === 5000 ? 3000 : 5000))}
                     size="small"
+                    aria-label={`Tốc độ chuyển: ${autoPlaySpeed === 5000 ? "5 giây" : "3 giây"}`}
                     sx={{ bgcolor: "#f5f5f5", color: "#666" }}
                   >
                     <SpeedIcon />
@@ -310,7 +312,7 @@ export default function CustomerFeedback() {
                     sx={{ width: 70, height: 70, border: "3px solid #ffb700" }}
                   />
                   <Box sx={{ flex: 1 }}>
-                    <Typography variant="h6" fontWeight={700}>{current.name}</Typography>
+                    <Typography component="p" variant="h6" fontWeight={700}>{current.name}</Typography>
                     <Rating
                       value={current.rating}
                       readOnly
@@ -372,12 +374,14 @@ export default function CustomerFeedback() {
               <Stack direction="row" spacing={1}>
                 <IconButton
                   onClick={prev}
+                  aria-label="Đánh giá trước"
                   sx={{ bgcolor: "#fff", boxShadow: 2, "&:hover": { bgcolor: "#ffb700", color: "#fff" } }}
                 >
                   <ArrowBackIosNewIcon fontSize="small" />
                 </IconButton>
                 <IconButton
                   onClick={next}
+                  aria-label="Đánh giá tiếp"
                   sx={{ bgcolor: "#fff", boxShadow: 2, "&:hover": { bgcolor: "#ffb700", color: "#fff" } }}
                 >
                   <ArrowForwardIosIcon fontSize="small" />
@@ -422,7 +426,7 @@ export default function CustomerFeedback() {
             <Divider sx={{ my: 3 }} />
             <Stack direction="row" justifyContent="space-around">
               <Box textAlign="center">
-                <Typography variant="h4" fontWeight={800} color="#f25c05">{avgRating}</Typography>
+                <Typography component="p" variant="h4" fontWeight={800} color="#f25c05">{avgRating}</Typography>
                 <Rating
                   value={parseFloat(avgRating)}
                   readOnly
@@ -433,11 +437,11 @@ export default function CustomerFeedback() {
                 <Typography variant="caption" color="text.secondary">{reviews.length} đánh giá</Typography>
               </Box>
               <Box textAlign="center">
-                <Typography variant="h4" fontWeight={800} color="#f25c05">98%</Typography>
+                <Typography component="p" variant="h4" fontWeight={800} color="#f25c05">98%</Typography>
                 <Typography variant="caption" color="text.secondary">Hài lòng</Typography>
               </Box>
               <Box textAlign="center">
-                <Typography variant="h4" fontWeight={800} color="#f25c05">6+</Typography>
+                <Typography component="p" variant="h4" fontWeight={800} color="#f25c05">6+</Typography>
                 <Typography variant="caption" color="text.secondary">Năm kinh nghiệm</Typography>
               </Box>
             </Stack>
@@ -464,7 +468,7 @@ export default function CustomerFeedback() {
                     <ChatBubbleOutlineIcon sx={{ color: "#fff", fontSize: 24 }} />
                   </Box>
                   <Box>
-                    <Typography variant="h5" fontWeight={800} color="#333">Liên hệ tư vấn</Typography>
+                    <Typography component="h2" variant="h5" fontWeight={800} color="#333">Liên hệ tư vấn</Typography>
                     <Typography variant="body2" color="text.secondary">Đội ngũ chuyên gia sẽ phản hồi trong 24h</Typography>
                   </Box>
                 </Stack>

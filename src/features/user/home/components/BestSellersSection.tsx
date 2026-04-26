@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Box,
   Typography,
@@ -30,6 +30,7 @@ export default function BestSellersSection({ products, isLoading }: Props) {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
   const sliderRef = useRef<Slider | null>(null);
+  const sliderContainerRef = useRef<HTMLDivElement | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const slidesToShow = isMobile ? 2 : isTablet ? 3 : 5;
@@ -37,6 +38,28 @@ export default function BestSellersSection({ products, isLoading }: Props) {
   const currentPage = Math.floor(currentSlide / slidesToShow) + 1;
 
   const goToPage = (idx: number) => sliderRef.current?.slickGoTo(idx * slidesToShow);
+
+  // Fix: react-slick marks cloned/inactive slides aria-hidden="true" but doesn't set
+  // tabIndex=-1 on child interactive elements, causing accessibility violations.
+  const fixSlickA11y = useCallback(() => {
+    const container = sliderContainerRef.current;
+    if (!container) return;
+    container.querySelectorAll<HTMLElement>('.slick-slide[aria-hidden="true"]').forEach((slide) => {
+      slide.setAttribute("inert", "");
+    });
+    container.querySelectorAll<HTMLElement>('.slick-slide:not([aria-hidden="true"])').forEach((slide) => {
+      slide.removeAttribute("inert");
+    });
+  }, []);
+
+  useEffect(() => {
+    fixSlickA11y();
+    const container = sliderContainerRef.current;
+    if (!container) return;
+    const observer = new MutationObserver(fixSlickA11y);
+    observer.observe(container, { subtree: true, attributeFilter: ["aria-hidden"] });
+    return () => observer.disconnect();
+  }, [fixSlickA11y]);
 
   const settings = {
     infinite: false,
@@ -102,7 +125,7 @@ export default function BestSellersSection({ products, isLoading }: Props) {
             </Box>
             <Box>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Typography variant="h5" fontWeight={800} color="#333">
+                <Typography component="h2" variant="h5" fontWeight={800} color="#333">
                   Sản phẩm phổ biến
                 </Typography>
                 <Chip
@@ -110,7 +133,7 @@ export default function BestSellersSection({ products, isLoading }: Props) {
                   size="small"
                   sx={{
                     bgcolor: "#f25c05",
-                    color: "#fff",
+                    color: "#000",
                     fontWeight: 700,
                     fontSize: "0.65rem",
                     height: 20,
@@ -146,6 +169,7 @@ export default function BestSellersSection({ products, isLoading }: Props) {
                 <IconButton
                   onClick={() => sliderRef.current?.slickPrev()}
                   disabled={currentSlide === 0}
+                  aria-label="Trang trước"
                   sx={{
                     bgcolor: currentSlide === 0 ? "#f5f5f5" : "#ffb700",
                     color: currentSlide === 0 ? "#bdbdbd" : "#000",
@@ -159,6 +183,7 @@ export default function BestSellersSection({ products, isLoading }: Props) {
                 <IconButton
                   onClick={() => sliderRef.current?.slickNext()}
                   disabled={currentSlide + slidesToShow >= products.length}
+                  aria-label="Trang tiếp"
                   sx={{
                     bgcolor: currentSlide + slidesToShow >= products.length ? "#f5f5f5" : "#f25c05",
                     color: currentSlide + slidesToShow >= products.length ? "#bdbdbd" : "#fff",
@@ -180,12 +205,12 @@ export default function BestSellersSection({ products, isLoading }: Props) {
         </Box>
 
         {/* Slider */}
-        <Box sx={{ position: "relative", pt: 1, "& .slick-list": { overflow: "visible !important" }, overflow: "hidden" }}>
+        <Box ref={sliderContainerRef} sx={{ position: "relative", pt: 1, "& .slick-list": { overflow: "visible !important" }, overflow: "hidden" }}>
           <Slider ref={sliderRef} {...settings}>
             {products.map((product, idx) => (
               <Box key={product.id} px={1}>
                 <motion.div
-
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: Math.min(idx * 0.04, 0.2), duration: 0.3, ease: "easeOut" }}
                 >

@@ -150,7 +150,7 @@ export default function PromoBanner() {
                       size="small"
                       sx={{
                         bgcolor: "#f25c05",
-                        color: "#fff",
+                        color: "#000",
                         fontWeight: 700,
                       }}
                     />
@@ -168,6 +168,7 @@ export default function PromoBanner() {
 
                   {/* Title */}
                   <Typography
+                    component="h2"
                     variant="h3"
                     fontWeight={900}
                     sx={{
@@ -179,6 +180,7 @@ export default function PromoBanner() {
                     KHUYẾN MÃI
                   </Typography>
                   <Typography
+                    component="h3"
                     variant="h4"
                     sx={{
                       mb: 2,
@@ -198,6 +200,7 @@ export default function PromoBanner() {
                     sx={{ mb: 3 }}
                   >
                     <Typography
+                      component="p"
                       variant="h3"
                       sx={{
                         color: "#ffb700",
@@ -208,6 +211,7 @@ export default function PromoBanner() {
                       1.550.000₫
                     </Typography>
                     <Typography
+                      component="p"
                       variant="h6"
                       sx={{
                         color: "#999",
@@ -251,6 +255,7 @@ export default function PromoBanner() {
                       ].map((item) => (
                         <Box key={item.label} sx={{ textAlign: "center" }}>
                           <Typography
+                            component="p"
                             variant="h5"
                             fontWeight={700}
                             sx={{ color: "#ffb700" }}
@@ -305,7 +310,7 @@ export default function PromoBanner() {
                         textTransform: "none",
                         fontSize: { xs: "0.9rem", md: "1.1rem" },
                         "&:hover": {
-                          bgcolor: "#f25c05",
+                          bgcolor: "#c94000",
                           color: "#fff",
                         },
                       }}
@@ -380,7 +385,7 @@ export default function PromoBanner() {
                     elevation={3}
                     sx={{
                       bgcolor: "#f25c05",
-                      color: "#fff",
+                      color: "#000",
                       p: 2,
                       borderRadius: "50%",
                       width: 100,
@@ -396,6 +401,7 @@ export default function PromoBanner() {
                       GIẢM
                     </Typography>
                     <Typography
+                      component="p"
                       variant="h4"
                       fontWeight={900}
                       sx={{ lineHeight: 1 }}

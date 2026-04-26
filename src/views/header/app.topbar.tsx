@@ -156,6 +156,7 @@ const TopBar = () => {
             <>
               <IconButton
                 onClick={handleToggle}
+                aria-label="Tài khoản"
                 sx={{ color: "black", zIndex: 1301 }}
               >
                 <AccountCircleIcon />

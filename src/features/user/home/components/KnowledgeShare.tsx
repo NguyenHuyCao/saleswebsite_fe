@@ -142,7 +142,7 @@ export default function KnowledgeShare() {
                   <MenuBookIcon sx={{ color: "#fff", fontSize: 28 }} />
                 </Box>
                 <Box>
-                  <Typography variant="h5" fontWeight={800}>
+                  <Typography component="h2" variant="h5" fontWeight={800}>
                     Chia sẻ kiến thức
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -159,6 +159,7 @@ export default function KnowledgeShare() {
                     <IconButton
                       onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
+                      aria-label="Trang trước"
                       sx={{
                         bgcolor: currentPage === 1 ? "action.hover" : "#ffb700",
                         color: currentPage === 1 ? "text.disabled" : "#000",
@@ -172,6 +173,7 @@ export default function KnowledgeShare() {
                         setCurrentPage((p) => Math.min(totalPages, p + 1))
                       }
                       disabled={currentPage === totalPages}
+                      aria-label="Trang tiếp"
                       sx={{
                         bgcolor:
                           currentPage === totalPages
@@ -315,6 +317,7 @@ export default function KnowledgeShare() {
                           </Stack>
 
                           <Typography
+                            component="h3"
                             variant="h6"
                             fontWeight={700}
                             sx={{
@@ -415,6 +418,7 @@ export default function KnowledgeShare() {
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
                 size="small"
+                aria-label="Trang trước"
               >
                 <ChevronLeftIcon />
               </IconButton>
@@ -427,6 +431,7 @@ export default function KnowledgeShare() {
                 }
                 disabled={currentPage === totalPages}
                 size="small"
+                aria-label="Trang tiếp"
               >
                 <ChevronRightIcon />
               </IconButton>

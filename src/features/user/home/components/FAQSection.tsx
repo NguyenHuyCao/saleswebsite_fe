@@ -81,7 +81,7 @@ export default function FAQSection() {
           <HelpOutlineIcon sx={{ color: "#fff", fontSize: 26 }} />
         </Box>
         <Box>
-          <Typography variant="h5" fontWeight={800} color="#333">
+          <Typography component="h2" variant="h5" fontWeight={800} color="#333">
             Câu hỏi thường gặp
           </Typography>
           <Typography variant="body2" color="text.secondary">

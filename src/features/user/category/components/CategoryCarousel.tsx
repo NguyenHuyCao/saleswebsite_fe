@@ -99,6 +99,7 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ categories }) => {
   return (
     <Box sx={{ position: "relative", px: 2, py: 4, bgcolor: "#fff" }}>
       <Typography
+        component="h2"
         variant="h5"
         fontWeight="bold"
         textAlign="center"
@@ -112,6 +113,7 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ categories }) => {
       {showLeft && (
         <IconButton
           onClick={() => scroll("left")}
+          aria-label="Cuộn trái"
           sx={{
             position: "absolute",
             top: "50%",
@@ -202,6 +204,7 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = ({ categories }) => {
       {showRight && (
         <IconButton
           onClick={() => scroll("right")}
+          aria-label="Cuộn phải"
           sx={{
             position: "absolute",
             top: "50%",

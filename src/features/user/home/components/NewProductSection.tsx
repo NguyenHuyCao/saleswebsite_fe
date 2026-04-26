@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useCallback, useRef, useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -32,8 +32,20 @@ export default function NewProductSection({ products }: Props) {
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
 
   const sliderRef = useRef<Slider | null>(null);
+  const sliderContainerRef = useRef<HTMLDivElement | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [totalSlides, setTotalSlides] = useState(products.length);
+
+  const fixSlickA11y = useCallback(() => {
+    const container = sliderContainerRef.current;
+    if (!container) return;
+    container.querySelectorAll<HTMLElement>('.slick-slide[aria-hidden="true"]').forEach((slide) => {
+      slide.setAttribute("inert", "");
+    });
+    container.querySelectorAll<HTMLElement>('.slick-slide:not([aria-hidden="true"])').forEach((slide) => {
+      slide.removeAttribute("inert");
+    });
+  }, []);
 
   // Animation variants
   const containerVariants = {
@@ -79,6 +91,15 @@ export default function NewProductSection({ products }: Props) {
     setTotalSlides(products.length);
   }, [products]);
 
+  useEffect(() => {
+    fixSlickA11y();
+    const container = sliderContainerRef.current;
+    if (!container) return;
+    const observer = new MutationObserver(fixSlickA11y);
+    observer.observe(container, { subtree: true, attributeFilter: ["aria-hidden"] });
+    return () => observer.disconnect();
+  }, [fixSlickA11y]);
+
   const handlePrev = () => {
     sliderRef.current?.slickPrev();
   };
@@ -101,9 +122,7 @@ export default function NewProductSection({ products }: Props) {
     beforeChange: (_current: number, next: number) => {
       setCurrentSlide(next);
     },
-    afterChange: (current: number) => {
-      setCurrentSlide(current);
-    },
+    afterChange: (current: number) => setCurrentSlide(current),
     responsive: [
       {
         breakpoint: 900,
@@ -186,7 +205,7 @@ export default function NewProductSection({ products }: Props) {
                   </Box>
                 </motion.div>
                 <Box>
-                  <Typography variant="h5" fontWeight={800} color="#333">
+                  <Typography component="h2" variant="h5" fontWeight={800} color="#333">
                     Sản phẩm mới
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -241,6 +260,7 @@ export default function NewProductSection({ products }: Props) {
                         <IconButton
                           onClick={handlePrev}
                           disabled={currentSlide === 0}
+                          aria-label="Trang trước"
                           sx={{
                             bgcolor: currentSlide === 0 ? "#f5f5f5" : "#ffb700",
                             color: currentSlide === 0 ? "#bdbdbd" : "#000",
@@ -264,6 +284,7 @@ export default function NewProductSection({ products }: Props) {
                           disabled={
                             currentSlide + slidesToShow >= products.length
                           }
+                          aria-label="Trang tiếp"
                           sx={{
                             bgcolor:
                               currentSlide + slidesToShow >= products.length
@@ -312,7 +333,7 @@ export default function NewProductSection({ products }: Props) {
 
           {/* Slider Container với animation */}
           <motion.div variants={itemVariants}>
-            <Box sx={{ position: "relative", pt: 1, "& .slick-list": { overflow: "visible !important" }, overflow: "hidden" }}>
+            <Box ref={sliderContainerRef} sx={{ position: "relative", pt: 1, "& .slick-list": { overflow: "visible !important" }, overflow: "hidden" }}>
               {/* Slider */}
               <Slider ref={sliderRef} {...settings}>
                 {products.map((product, index) => (

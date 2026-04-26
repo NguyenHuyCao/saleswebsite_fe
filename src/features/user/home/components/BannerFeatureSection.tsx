@@ -54,11 +54,12 @@ export default function BannerFeatureSection() {
         <Container maxWidth="md">
           <Stack spacing={3} alignItems="center">
             <motion.div
-
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.65, ease: "easeOut", delay: 0.15 }}
             >
               <Typography
+                component="h1"
                 variant={isMobile ? "h5" : "h3"}
                 fontWeight="bold"
                 sx={{ textShadow: "0 2px 6px rgba(0,0,0,0.5)" }}
@@ -68,7 +69,7 @@ export default function BannerFeatureSection() {
             </motion.div>
 
             <motion.div
-
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.35, duration: 0.6, ease: "easeOut" }}
             >
@@ -87,7 +88,7 @@ export default function BannerFeatureSection() {
             </motion.div>
 
             <motion.div
-
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.55, ease: "easeOut" }}
             >
@@ -103,10 +104,16 @@ export default function BannerFeatureSection() {
                 >
                   <Button
                     variant="contained"
-                    color="warning"
                     size={isMobile ? "medium" : "large"}
                     onClick={() => router.push("/product")}
-                    sx={{ fontWeight: 600, px: { xs: 3, sm: 4 }, minWidth: { xs: 180, sm: "auto" } }}
+                    sx={{
+                      fontWeight: 600,
+                      px: { xs: 3, sm: 4 },
+                      minWidth: { xs: 180, sm: "auto" },
+                      bgcolor: "#c94000",
+                      color: "#fff",
+                      "&:hover": { bgcolor: "#a83700" },
+                    }}
                   >
                     Khám phá sản phẩm
                   </Button>

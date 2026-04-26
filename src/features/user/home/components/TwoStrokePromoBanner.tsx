@@ -94,7 +94,7 @@ export default function TwoStrokePromoBanner() {
               maxWidth: 540,
             }}
           >
-            <Typography variant="h4" fontWeight={900}>
+            <Typography component="h2" variant="h4" fontWeight={900}>
               <ElectricBoltIcon sx={{ mr: 1 }} /> {current.title}
             </Typography>
             <Typography fontSize={17} fontWeight={500}>
@@ -124,7 +124,7 @@ export default function TwoStrokePromoBanner() {
               sx={{
                 mt: 3,
                 backgroundColor: "#fff8e1",
-                color: "#d35300",
+                color: "#a83700",
                 fontWeight: 700,
                 borderRadius: 12,
                 px: 5,

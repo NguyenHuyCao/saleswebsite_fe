@@ -62,7 +62,7 @@ export default function NewsletterSection() {
     <Box sx={{ py: { xs: 5, md: 7 }, bgcolor: "#f7f7f7" }}>
       <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
         <motion.div
-
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, ease: "easeOut" }}
         >
@@ -169,14 +169,14 @@ export default function NewsletterSection() {
                     {submitted ? (
                       <motion.div
                         key="success"
-
+                        initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.35 }}
                       >
                         <Box sx={{ textAlign: "center", py: 2 }}>
                           <motion.div
-
+                            initial={{ scale: 0.5 }}
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 260, delay: 0.1 }}
                           >
@@ -194,7 +194,7 @@ export default function NewsletterSection() {
                         </Box>
                       </motion.div>
                     ) : (
-                      <motion.div key="form" animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                      <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                         <Typography
                           fontWeight={700}
                           sx={{ fontSize: "0.95rem", color: "#333", mb: 2 }}

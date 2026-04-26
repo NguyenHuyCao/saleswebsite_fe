@@ -107,7 +107,7 @@ export default function TrustBadgesBar() {
                   <Typography
                     variant="caption"
                     sx={{
-                      color: "#888",
+                      color: "#666",
                       fontSize: { xs: "0.62rem", sm: "0.7rem" },
                       lineHeight: 1.3,
                     }}

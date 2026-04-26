@@ -138,7 +138,7 @@ export default function FeaturedBrandsSlider({ brands, loading = false }: Props)
               <StarIcon sx={{ color: "#fff", fontSize: 28 }} />
             </Box>
             <Box>
-              <Typography variant="h5" fontWeight={800} color="#333">
+              <Typography component="h2" variant="h5" fontWeight={800} color="#333">
                 Thương hiệu nổi bật
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -153,6 +153,7 @@ export default function FeaturedBrandsSlider({ brands, loading = false }: Props)
               <IconButton
                 onClick={() => setIsPaused(!isPaused)}
                 size="small"
+                aria-label={isPaused ? "Tiếp tục cuộn" : "Tạm dừng cuộn"}
                 sx={{
                   bgcolor: isPaused ? "#f25c05" : "#f5f5f5",
                   color: isPaused ? "#fff" : "#666",
@@ -167,6 +168,7 @@ export default function FeaturedBrandsSlider({ brands, loading = false }: Props)
               <IconButton
                 onClick={() => setSpeed((prev) => (prev === 30 ? 15 : 30))}
                 size="small"
+                aria-label={speed === 30 ? "Chuyển sang tốc độ chậm" : "Chuyển sang tốc độ bình thường"}
                 sx={{
                   bgcolor: "#f5f5f5",
                   color: "#666",

@@ -10,6 +10,7 @@ const connectSrcOrigins = [
   backendUrl,
   "https://saleswebsite-be.onrender.com",
   "https://res.cloudinary.com",
+  "https://api.ipify.org",
   ...(socketUrl ? [socketUrl.replace(/^http/, "ws"), socketUrl] : []),
   ...(isDev ? ["http://localhost:*", "ws://localhost:*"] : []),
 ].join(" ");

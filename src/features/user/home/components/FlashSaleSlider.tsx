@@ -58,14 +58,14 @@ export default function FlashSaleSlider({ promotion }: Props) {
   return (
     <Box sx={{ p: 2, borderRadius: 3, bgcolor: "#fff", border: "1px solid #eee" }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
-        <Typography variant="h6" fontWeight={800} color="warning.main">
+        <Typography component="h2" variant="h6" fontWeight={800} color="warning.main">
           🔥 Flash Sale {promotion?.name ? `– ${promotion.name}` : ""}
         </Typography>
         <Box>
-          <IconButton size="small" sx={{ mr: 0.5 }}>
+          <IconButton size="small" aria-label="Trang trước" sx={{ mr: 0.5 }}>
             <ArrowBackIosNewIcon fontSize="small" />
           </IconButton>
-          <IconButton size="small">
+          <IconButton size="small" aria-label="Trang tiếp">
             <ArrowForwardIosIcon fontSize="small" />
           </IconButton>
         </Box>

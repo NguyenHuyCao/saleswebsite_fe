@@ -317,6 +317,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 <IconButton
                   onClick={handleToggleFavorite}
                   disabled={busyFav}
+                  aria-label={isFavorite ? "Bỏ yêu thích" : "Thêm vào yêu thích"}
                   sx={{
                     bgcolor: "rgba(255,255,255,0.9)",
                     backdropFilter: "blur(4px)",
@@ -341,6 +342,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   if (inCompare) removeFromCompare(product.id);
                   else addToCompare(product);
                 }}
+                aria-label={inCompare ? "Bỏ so sánh" : "Thêm vào so sánh"}
                 sx={{
                   bgcolor: inCompare ? "rgba(242,92,5,0.15)" : "rgba(255,255,255,0.9)",
                   backdropFilter: "blur(4px)",
@@ -379,7 +381,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     left: 8,
                     zIndex: 2,
                     bgcolor: "#f25c05",
-                    color: "#fff",
+                    color: "#000",
                     fontWeight: 700,
                     fontSize: "0.7rem",
                     height: 22,
@@ -414,7 +416,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                       px: 0.8,
                       py: 0.3,
                       borderRadius: 0.8,
-                      color: "#fff",
+                      color: "#000",
                       bgcolor:
                         tag === "Bán chạy" ? "#ffb700" : tag === "Hết hàng" ? "#9e9e9e" : "#f25c05",
                       display: "inline-block",
@@ -459,7 +461,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
             {/* Price — strikethrough always rendered to reserve space */}
             <Stack direction="row" spacing={1} alignItems="center">
-              <Typography fontWeight={700} color="#f25c05" sx={{ fontSize: { xs: "0.85rem", sm: "1rem" } }}>
+              <Typography fontWeight={700} color="#c94000" sx={{ fontSize: { xs: "0.85rem", sm: "1rem" } }}>
                 {finalPrice.toLocaleString()}₫
               </Typography>
               <Typography
@@ -511,6 +513,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   onClick={handleCartAction}
                   disabled={!product.inStock || busyCart}
                   size="small"
+                  aria-label={!product.inStock ? "Hết hàng" : needsVariant ? "Chọn và thêm vào giỏ" : "Thêm vào giỏ hàng"}
                   sx={{
                     width: { xs: 32, sm: 36 },
                     height: { xs: 32, sm: 36 },
@@ -549,7 +552,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               startIcon={product.inStock ? <FlashOnIcon sx={{ fontSize: 15 }} /> : undefined}
               sx={{
                 textTransform: "none",
-                bgcolor: product.inStock ? "#f25c05" : "transparent",
+                bgcolor: product.inStock ? "#c94000" : "transparent",
                 color: product.inStock ? "#fff" : "#999",
                 fontWeight: 600,
                 fontSize: { xs: "0.68rem", sm: "0.75rem" },
@@ -559,7 +562,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 px: { xs: 0.75, sm: 1.5 },
                 whiteSpace: "nowrap",
                 "&:hover": {
-                  bgcolor: product.inStock ? "#e64a19" : "transparent",
+                  bgcolor: product.inStock ? "#a83700" : "transparent",
                 },
                 transition: "all 0.2s",
                 "& .MuiButton-startIcon": {
@@ -607,7 +610,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           <Button
             variant="contained"
             onClick={() => router.push("/login?page=login")}
-            sx={{ bgcolor: "#f25c05", color: "#fff", "&:hover": { bgcolor: "#e64a19" } }}
+            sx={{ bgcolor: "#c94000", color: "#fff", "&:hover": { bgcolor: "#a83700" } }}
           >
             Đăng nhập
           </Button>

@@ -128,8 +128,8 @@ export default function SiteStatsSection({ productCount = 0, brandCount = 0, cat
           {stats.map(({ Icon, value, suffix, label, color }, i) => (
             <motion.div
               key={label}
-
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              initial={{ opacity: 0, y: 12 }}
+              animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
               transition={{ delay: i * 0.1, duration: 0.45, ease: "easeOut" }}
             >
               <Box

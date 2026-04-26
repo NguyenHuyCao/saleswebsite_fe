@@ -65,7 +65,7 @@ export default function NewsSection() {
                   <ArticleIcon sx={{ color: "#fff", fontSize: 28 }} />
                 </Box>
                 <Box>
-                  <Typography variant="h5" fontWeight={700}>Tin tức & Sự kiện</Typography>
+                  <Typography component="h2" variant="h5" fontWeight={700}>Tin tức & Sự kiện</Typography>
                   <Typography variant="body2" color="text.secondary">Cập nhật những thông tin mới nhất</Typography>
                 </Box>
               </Stack>
@@ -128,7 +128,7 @@ export default function NewsSection() {
                         </Box>
                       </Box>
                       <Box sx={{ p: 3 }}>
-                        <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>{featuredNews.title}</Typography>
+                        <Typography component="h3" variant="h6" fontWeight={700} sx={{ mb: 1 }}>{featuredNews.title}</Typography>
                         <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
                           <Stack direction="row" alignItems="center" spacing={0.5}>
                             <CalendarTodayIcon sx={{ fontSize: 16, color: "#999" }} />

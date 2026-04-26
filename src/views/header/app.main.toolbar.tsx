@@ -12,6 +12,7 @@ import {
   Typography,
   Paper,
   List,
+  ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
@@ -306,6 +307,9 @@ const MainToolbar = () => {
               }}
             >
               <Box
+                component="form"
+                role="search"
+                onSubmit={(e) => { e.preventDefault(); handleSearch(); }}
                 sx={{
                   bgcolor: "#e5e7eb",
                   borderRadius: 1,
@@ -331,8 +335,9 @@ const MainToolbar = () => {
                     if (e.key === "Escape") setShowDropdown(false);
                   }}
                   sx={{ fontSize: { xs: "14px", sm: "16px" } }}
+                  inputProps={{ "aria-label": "Tìm kiếm sản phẩm" }}
                 />
-                <IconButton onClick={handleSearch}>
+                <IconButton type="submit" aria-label="Tìm kiếm">
                   {loadingSuggestions ? (
                     <CircularProgress size={18} sx={{ color: "#ffb700" }} />
                   ) : (
@@ -372,36 +377,37 @@ const MainToolbar = () => {
                       </Box>
                       <List dense disablePadding>
                         {productSuggestions.map((p) => (
-                          <ListItemButton
-                            key={p.slug}
-                            onClick={() => handleProductClick(p.slug)}
-                            sx={{ px: 2, "&:hover": { bgcolor: "#fff8f0" } }}
-                          >
-                            <ListItemIcon sx={{ minWidth: 36 }}>
-                              {p.imageAvt ? (
-                                <Box
-                                  component="img"
-                                  src={p.imageAvt}
-                                  alt={p.name}
-                                  sx={{ width: 28, height: 28, objectFit: "contain", borderRadius: 1 }}
-                                />
-                              ) : (
-                                <ShoppingBag sx={{ fontSize: 20, color: "#f25c05" }} />
-                              )}
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={p.name}
-                              secondary={
-                                p.price
-                                  ? `${p.price.toLocaleString("vi-VN")} ₫`
-                                  : undefined
-                              }
-                              slotProps={{
-                                primary: { fontSize: "0.88rem", fontWeight: 500 },
-                                secondary: { fontSize: "0.78rem", color: "#f25c05" },
-                              }}
-                            />
-                          </ListItemButton>
+                          <ListItem key={p.slug} disablePadding>
+                            <ListItemButton
+                              onClick={() => handleProductClick(p.slug)}
+                              sx={{ px: 2, "&:hover": { bgcolor: "#fff8f0" } }}
+                            >
+                              <ListItemIcon sx={{ minWidth: 36 }}>
+                                {p.imageAvt ? (
+                                  <Box
+                                    component="img"
+                                    src={p.imageAvt}
+                                    alt={p.name}
+                                    sx={{ width: 28, height: 28, objectFit: "contain", borderRadius: 1 }}
+                                  />
+                                ) : (
+                                  <ShoppingBag sx={{ fontSize: 20, color: "#f25c05" }} />
+                                )}
+                              </ListItemIcon>
+                              <ListItemText
+                                primary={p.name}
+                                secondary={
+                                  p.price
+                                    ? `${p.price.toLocaleString("vi-VN")} ₫`
+                                    : undefined
+                                }
+                                slotProps={{
+                                  primary: { fontSize: "0.88rem", fontWeight: 500 },
+                                  secondary: { fontSize: "0.78rem", color: "#f25c05" },
+                                }}
+                              />
+                            </ListItemButton>
+                          </ListItem>
                         ))}
                       </List>
                     </>
@@ -423,19 +429,20 @@ const MainToolbar = () => {
                       </Box>
                       <List dense disablePadding>
                         {faqSuggestions.map((q, i) => (
-                          <ListItemButton
-                            key={i}
-                            onClick={() => handleFaqClick(q)}
-                            sx={{ px: 2, "&:hover": { bgcolor: "#fff8f0" } }}
-                          >
-                            <ListItemIcon sx={{ minWidth: 36 }}>
-                              <QuestionAnswer sx={{ fontSize: 18, color: "#ffb700" }} />
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={q}
-                              slotProps={{ primary: { fontSize: "0.88rem" } }}
-                            />
-                          </ListItemButton>
+                          <ListItem key={i} disablePadding>
+                            <ListItemButton
+                              onClick={() => handleFaqClick(q)}
+                              sx={{ px: 2, "&:hover": { bgcolor: "#fff8f0" } }}
+                            >
+                              <ListItemIcon sx={{ minWidth: 36 }}>
+                                <QuestionAnswer sx={{ fontSize: 18, color: "#ffb700" }} />
+                              </ListItemIcon>
+                              <ListItemText
+                                primary={q}
+                                slotProps={{ primary: { fontSize: "0.88rem" } }}
+                              />
+                            </ListItemButton>
+                          </ListItem>
                         ))}
                       </List>
                     </>
@@ -457,22 +464,23 @@ const MainToolbar = () => {
                       </Box>
                       <List dense disablePadding>
                         {pageSuggestions.map((p) => (
-                          <ListItemButton
-                            key={p.href}
-                            onClick={() => {
-                              setShowDropdown(false);
-                              router.push(p.href);
-                            }}
-                            sx={{ px: 2, "&:hover": { bgcolor: "#fff8f0" } }}
-                          >
-                            <ListItemIcon sx={{ minWidth: 36 }}>
-                              <Article sx={{ fontSize: 18, color: "#999" }} />
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={p.label}
-                              slotProps={{ primary: { fontSize: "0.88rem" } }}
-                            />
-                          </ListItemButton>
+                          <ListItem key={p.href} disablePadding>
+                            <ListItemButton
+                              onClick={() => {
+                                setShowDropdown(false);
+                                router.push(p.href);
+                              }}
+                              sx={{ px: 2, "&:hover": { bgcolor: "#fff8f0" } }}
+                            >
+                              <ListItemIcon sx={{ minWidth: 36 }}>
+                                <Article sx={{ fontSize: 18, color: "#999" }} />
+                              </ListItemIcon>
+                              <ListItemText
+                                primary={p.label}
+                                slotProps={{ primary: { fontSize: "0.88rem" } }}
+                              />
+                            </ListItemButton>
+                          </ListItem>
                         ))}
                       </List>
                     </>
@@ -491,24 +499,28 @@ const MainToolbar = () => {
                   {!loadingSuggestions && (
                     <>
                       <Divider />
-                      <ListItemButton
-                        onClick={handleSearch}
-                        sx={{ px: 2, py: 1, "&:hover": { bgcolor: "#fff3e0" } }}
-                      >
-                        <ListItemIcon sx={{ minWidth: 36 }}>
-                          <Search sx={{ fontSize: 18, color: "#f25c05" }} />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={
-                            <Typography fontSize="0.88rem">
-                              Xem tất cả kết quả cho{" "}
-                              <Box component="span" fontWeight={700} color="#f25c05">
-                                &quot;{searchText}&quot;
-                              </Box>
-                            </Typography>
-                          }
-                        />
-                      </ListItemButton>
+                      <List dense disablePadding>
+                        <ListItem disablePadding>
+                          <ListItemButton
+                            onClick={handleSearch}
+                            sx={{ px: 2, py: 1, "&:hover": { bgcolor: "#fff3e0" } }}
+                          >
+                            <ListItemIcon sx={{ minWidth: 36 }}>
+                              <Search sx={{ fontSize: 18, color: "#f25c05" }} />
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={
+                                <Typography fontSize="0.88rem">
+                                  Xem tất cả kết quả cho{" "}
+                                  <Box component="span" fontWeight={700} color="#f25c05">
+                                    &quot;{searchText}&quot;
+                                  </Box>
+                                </Typography>
+                              }
+                            />
+                          </ListItemButton>
+                        </ListItem>
+                      </List>
                     </>
                   )}
                 </Paper>
@@ -560,6 +572,7 @@ const MainToolbar = () => {
                     }}
                   >
                     <IconButton
+                      aria-label={`${label}${count ? ` (${count})` : ""}`}
                       sx={{
                         color: isActive ? "#f25c05" : "#ffb700",
                         border: "1px solid #ffb700",
@@ -606,6 +619,7 @@ const MainToolbar = () => {
             {/* Account — mobile only (TopBar is hidden on xs) */}
             <Box sx={{ display: { xs: "flex", sm: "none" }, alignItems: "center" }}>
               <IconButton
+                aria-label="Tài khoản"
                 sx={{
                   color: "#ffb700",
                   border: "1px solid #ffb700",
@@ -689,6 +703,7 @@ const MainToolbar = () => {
                   },
                   "& .MuiBadge-badge": {
                     bgcolor: "#f25c05",
+                    color: "#000",
                     fontSize: "0.58rem",
                     minWidth: 16,
                     height: 16,

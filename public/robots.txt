@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /auth/
+Disallow: /_next/
+Disallow: /checkout/
+Disallow: /profile/
+Disallow: /order/
+
+Sitemap: https://cuonghoa.vn/sitemap.xml

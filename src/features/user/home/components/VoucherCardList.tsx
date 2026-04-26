@@ -75,7 +75,7 @@ const CountdownTimer = ({ endDate }: { endDate: string }) => {
             height: 20,
             fontSize: "0.6rem",
             bgcolor: "#f25c05",
-            color: "#fff",
+            color: "#000",
           }}
         />
       )}
@@ -99,6 +99,7 @@ export default function VoucherCardList({ vouchers }: Props) {
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
   const sliderRef = useRef<Slider>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
+  const sliderContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Kiểm tra khi component vào viewport
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
@@ -169,6 +170,26 @@ export default function VoucherCardList({ vouchers }: Props) {
     };
   }, [isAutoPlay, isPaused, goToNext]);
 
+  const fixSlickA11y = useCallback(() => {
+    const container = sliderContainerRef.current;
+    if (!container) return;
+    container.querySelectorAll<HTMLElement>('.slick-slide[aria-hidden="true"]').forEach((slide) => {
+      slide.setAttribute("inert", "");
+    });
+    container.querySelectorAll<HTMLElement>('.slick-slide:not([aria-hidden="true"])').forEach((slide) => {
+      slide.removeAttribute("inert");
+    });
+  }, []);
+
+  useEffect(() => {
+    fixSlickA11y();
+    const container = sliderContainerRef.current;
+    if (!container) return;
+    const observer = new MutationObserver(fixSlickA11y);
+    observer.observe(container, { subtree: true, attributeFilter: ["aria-hidden"] });
+    return () => observer.disconnect();
+  }, [fixSlickA11y]);
+
   if (!vouchers?.length) return null;
 
   // Pause auto-play khi hover vào slider
@@ -183,6 +204,7 @@ export default function VoucherCardList({ vouchers }: Props) {
     slidesToScroll: slidesToShow,
     arrows: false,
     beforeChange: (_: number, next: number) => setCurrentSlide(next),
+    afterChange: (cur: number) => setCurrentSlide(cur),
     responsive: [
       { breakpoint: 600, settings: { slidesToShow: 1, slidesToScroll: 1 } },
       { breakpoint: 960, settings: { slidesToShow: 2, slidesToScroll: 2 } },
@@ -245,7 +267,7 @@ export default function VoucherCardList({ vouchers }: Props) {
                   </Box>
                 </motion.div>
                 <Box>
-                  <Typography variant="h5" fontWeight={800} color="#333">
+                  <Typography component="h2" variant="h5" fontWeight={800} color="#333">
                     Mã giảm giá hot
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -264,6 +286,7 @@ export default function VoucherCardList({ vouchers }: Props) {
                   <IconButton
                     onClick={() => setIsAutoPlay(!isAutoPlay)}
                     size="small"
+                    aria-label={isAutoPlay ? "Tạm dừng tự động" : "Bật tự động"}
                     sx={{
                       bgcolor: isAutoPlay ? "#f25c05" : "#f5f5f5",
                       color: isAutoPlay ? "#fff" : "#999",
@@ -341,6 +364,7 @@ export default function VoucherCardList({ vouchers }: Props) {
                         setIsPaused(true);
                         setTimeout(() => setIsPaused(false), 5000);
                       }}
+                      aria-label="Trang trước"
                       sx={{
                         position: "absolute",
                         left: -20,
@@ -366,6 +390,7 @@ export default function VoucherCardList({ vouchers }: Props) {
                         setIsPaused(true);
                         setTimeout(() => setIsPaused(false), 5000);
                       }}
+                      aria-label="Trang tiếp"
                       sx={{
                         position: "absolute",
                         right: -20,
@@ -384,7 +409,7 @@ export default function VoucherCardList({ vouchers }: Props) {
               )}
 
               {/* Slider — pt gives hover animation room; slick-list overflow visible prevents top clip */}
-              <Box sx={{ pt: 1, "& .slick-list": { overflow: "visible !important" }, overflow: "hidden" }}>
+              <Box ref={sliderContainerRef} sx={{ pt: 1, "& .slick-list": { overflow: "visible !important" }, overflow: "hidden" }}>
               <Slider ref={sliderRef} {...settings}>
                 {vouchers.map((voucher, index) => {
                   const type = getVoucherType(
@@ -437,7 +462,7 @@ export default function VoucherCardList({ vouchers }: Props) {
                               size="small"
                               sx={{
                                 bgcolor: type.color,
-                                color: "#fff",
+                                color: "#000",
                                 fontWeight: 700,
                                 fontSize: "0.65rem",
                                 height: 24,
@@ -468,6 +493,7 @@ export default function VoucherCardList({ vouchers }: Props) {
                                 MÃ
                               </Typography>
                               <Typography
+                                component="p"
                                 variant="h6"
                                 fontWeight={800}
                                 sx={{
@@ -485,6 +511,7 @@ export default function VoucherCardList({ vouchers }: Props) {
                             {/* Right - Info Section */}
                             <Box sx={{ flex: 1, pl: { xs: 1.5, sm: 2 }, minWidth: 0 }}>
                               <Typography
+                                component="p"
                                 variant="h5"
                                 fontWeight={900}
                                 sx={{ color: "#f25c05", lineHeight: 1 }}
@@ -559,8 +586,8 @@ export default function VoucherCardList({ vouchers }: Props) {
                                 sx={{
                                   bgcolor:
                                     copiedId === voucher.id
-                                      ? "#4caf50"
-                                      : "#f25c05",
+                                      ? "#2e7d32"
+                                      : "#c94000",
                                   color: "#fff",
                                   textTransform: "none",
                                   fontWeight: 600,
@@ -570,8 +597,8 @@ export default function VoucherCardList({ vouchers }: Props) {
                                   "&:hover": {
                                     bgcolor:
                                       copiedId === voucher.id
-                                        ? "#45a049"
-                                        : "#e64a19",
+                                        ? "#1b5e20"
+                                        : "#a83700",
                                   },
                                 }}
                                 startIcon={

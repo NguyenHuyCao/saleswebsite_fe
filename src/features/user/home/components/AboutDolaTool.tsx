@@ -92,7 +92,7 @@ export default function AboutDolaTool() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <Typography variant="h5" fontWeight={700} mb={2}>
+            <Typography component="h2" variant="h5" fontWeight={700} mb={2}>
               MANG ĐẾN NHỮNG <span style={{ color: "#ffb700" }}>GIẢI PHÁP</span>{" "}
               TOÀN DIỆN
             </Typography>
@@ -112,13 +112,13 @@ export default function AboutDolaTool() {
 
           <List disablePadding>
             {listItems.map((item, i) => (
-              <motion.div
-                key={i}
-
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 + i * 0.2, duration: 0.4 }}
-              >
-                <ListItem disablePadding sx={{ mb: 1 }}>
+              <ListItem key={i} disablePadding sx={{ mb: 1 }}>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 + i * 0.2, duration: 0.4 }}
+                  style={{ display: "flex", alignItems: "center", width: "100%" }}
+                >
                   <ListItemIcon sx={{ minWidth: 32 }}>
                     <CheckCircleIcon sx={{ color: "#ffb700" }} />
                   </ListItemIcon>
@@ -129,8 +129,8 @@ export default function AboutDolaTool() {
                       color: "text.primary",
                     }}
                   />
-                </ListItem>
-              </motion.div>
+                </motion.div>
+              </ListItem>
             ))}
           </List>
         </Grid>

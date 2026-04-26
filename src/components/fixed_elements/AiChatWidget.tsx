@@ -1138,6 +1138,7 @@ export default function AiChatWidget({ onChatOpenChange }: { onChatOpenChange?: 
                         size="small"
                         onClick={handleEscalate}
                         disabled={escalating}
+                        aria-label="Gặp nhân viên hỗ trợ"
                       >
                         <HeadsetMicIcon
                           sx={{ color: "rgba(255,255,255,0.85)", fontSize: 18 }}
@@ -1150,13 +1151,14 @@ export default function AiChatWidget({ onChatOpenChange }: { onChatOpenChange?: 
                       size="small"
                       onClick={handleClear}
                       disabled={streaming}
+                      aria-label="Cuộc trò chuyện mới"
                     >
                       <DeleteOutlineIcon
                         sx={{ color: "rgba(255,255,255,0.85)", fontSize: 19 }}
                       />
                     </IconButton>
                   </Tooltip>
-                  <IconButton size="small" onClick={handleClose}>
+                  <IconButton size="small" onClick={handleClose} aria-label="Đóng hội thoại">
                     <CloseIcon sx={{ color: "#fff", fontSize: 20 }} />
                   </IconButton>
                 </Stack>
@@ -1759,6 +1761,7 @@ export default function AiChatWidget({ onChatOpenChange }: { onChatOpenChange?: 
                   <Tooltip title="Dừng">
                     <IconButton
                       onClick={handleStop}
+                      aria-label="Dừng phản hồi"
                       sx={{
                         bgcolor: "#f44336",
                         color: "#fff",
@@ -1781,6 +1784,7 @@ export default function AiChatWidget({ onChatOpenChange }: { onChatOpenChange?: 
                       }
                     }}
                     disabled={!input.trim() || loadingHistory}
+                    aria-label="Gửi tin nhắn"
                     sx={{
                       bgcolor: (supportStatus === "PENDING" || supportStatus === "IN_PROGRESS")
                         ? "#1976d2" : "#f25c05",
@@ -1811,6 +1815,10 @@ export default function AiChatWidget({ onChatOpenChange }: { onChatOpenChange?: 
         onClick={() => (open ? handleClose() : setOpen(true))}
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.93 }}
+        role="button"
+        aria-label={open ? "Đóng hội thoại AI" : "Mở hội thoại AI"}
+        tabIndex={0}
+        onKeyDown={(e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open ? handleClose() : setOpen(true); } }}
         sx={{
           position: "fixed",
           bottom: {
