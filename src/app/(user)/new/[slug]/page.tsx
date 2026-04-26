@@ -33,9 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       post.excerpt ||
       `Đọc bài viết "${post.title}" tại Cường Hoa — Máy công cụ 2 thì chính hãng.`;
 
-    const keywords = post.tags
-      ? post.tags.split(",").map((t) => t.trim()).filter(Boolean)
-      : undefined;
+    const keywords = post.tags?.length ? post.tags : undefined;
 
     const ogImage = post.thumbnail
       ? [{ url: post.thumbnail, width: 1200, height: 630, alt: post.title }]

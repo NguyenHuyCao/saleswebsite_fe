@@ -84,7 +84,7 @@ const UserReviewSection = ({ reviews, onUpdated, onDeleted }: Props) => {
       formData.append("comment", editComment.trim());
       editImages.forEach((img) => formData.append("imageReviews", img));
 
-      const res = await http.put<{ data: Review }>(
+      const res = await http.put<Review>(
         `/api/v1/reviews/${editingReview.id}`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } },

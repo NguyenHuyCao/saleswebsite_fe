@@ -14,7 +14,7 @@ const NavMenu = ({ isMobile }: { isMobile: boolean }) => {
   const [brandsData, setBrandsData] = useState<BrandWithCategories[]>([]);
   const router = useRouter();
   const pathname = usePathname();
-  const closeTimerRef = useRef<NodeJS.Timeout>();
+  const closeTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Debounce close 100ms — prevents flickering when crossing the micro-gap
   // between the button bottom edge and the mega menu top edge

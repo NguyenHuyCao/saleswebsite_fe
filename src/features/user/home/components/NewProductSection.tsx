@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Box,
   Typography,
@@ -26,6 +27,7 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 type Props = { products: Product[] };
 
 export default function NewProductSection({ products }: Props) {
+  const router = useRouter();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));

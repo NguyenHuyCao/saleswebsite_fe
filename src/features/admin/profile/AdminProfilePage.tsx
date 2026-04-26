@@ -233,9 +233,9 @@ export default function AdminProfilePage() {
                 />
                 {avatarLoading && (
                   <Box
-                    position="absolute" inset={0} borderRadius="50%"
-                    display="flex" alignItems="center" justifyContent="center"
-                    bgcolor="rgba(0,0,0,0.45)"
+                    sx={{ position: "absolute", inset: 0, borderRadius: "50%",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          bgcolor: "rgba(0,0,0,0.45)" }}
                   >
                     <CircularProgress size={32} sx={{ color: "#fff" }} />
                   </Box>

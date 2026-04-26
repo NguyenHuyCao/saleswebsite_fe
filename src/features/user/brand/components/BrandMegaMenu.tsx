@@ -42,7 +42,7 @@ const BrandMegaMenu = ({ brands }: Props) => {
   const [hoveredBrandId, setHoveredBrandId] = useState<number | null>(null);
   const [displayBrand, setDisplayBrand] = useState<Brand | null>(null);
   const router = useRouter();
-  const hideTimerRef = useRef<NodeJS.Timeout>();
+  const hideTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Debounce hiding right panel 180ms so mouse can travel from brand list
   // to the right panel without triggering onMouseLeave on the outer Box
@@ -309,60 +309,60 @@ const BrandMegaMenu = ({ brands }: Props) => {
                     {/* Product list */}
                     <Box component="ul" sx={{ listStyle: "none", p: 0, m: 0 }}>
                       {cat.products.slice(0, MAX_PRODUCTS).map((p) => (
-                        <MotionBox
-                          key={p.id}
-                          component="li"
-                          whileHover={{ x: 3 }}
-                          transition={{ duration: 0.12 }}
-                          onClick={() =>
-                            router.push(`/product/detail?name=${p.slug}`)
-                          }
-                          sx={{
-                            display: "flex",
-                            alignItems: "flex-start",
-                            gap: 0.8,
-                            py: 0.5,
-                            px: 0.5,
-                            cursor: "pointer",
-                            borderRadius: 1,
-                            transition: "background 0.15s, color 0.15s",
-                            "&:hover": {
-                              bgcolor: "#fff4e5",
-                              "& .arrow": { color: "#f25c05" },
-                              "& .name": { color: "#f25c05" },
-                            },
-                          }}
-                        >
-                          <Box
-                            className="arrow"
-                            component="span"
+                        <li key={p.id} style={{ listStyle: "none" }}>
+                          <MotionBox
+                            whileHover={{ x: 3 }}
+                            transition={{ duration: 0.12 }}
+                            onClick={() =>
+                              router.push(`/product/detail?name=${p.slug}`)
+                            }
                             sx={{
-                              color: "#ffb700",
-                              fontSize: 9,
-                              flexShrink: 0,
-                              mt: "4px",
-                              transition: "color 0.15s",
+                              display: "flex",
+                              alignItems: "flex-start",
+                              gap: 0.8,
+                              py: 0.5,
+                              px: 0.5,
+                              cursor: "pointer",
+                              borderRadius: 1,
+                              transition: "background 0.15s, color 0.15s",
+                              "&:hover": {
+                                bgcolor: "#fff4e5",
+                                "& .arrow": { color: "#f25c05" },
+                                "& .name": { color: "#f25c05" },
+                              },
                             }}
                           >
-                            ▶
-                          </Box>
-                          <Typography
-                            className="name"
-                            component="span"
-                            sx={{
-                              fontSize: 13,
-                              color: "#333",
-                              lineHeight: 1.4,
-                              overflow: "hidden",
-                              display: "-webkit-box",
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: "vertical",
-                              transition: "color 0.15s",
-                            }}
-                          >
-                            {p.name}
-                          </Typography>
-                        </MotionBox>
+                            <Box
+                              className="arrow"
+                              component="span"
+                              sx={{
+                                color: "#ffb700",
+                                fontSize: 9,
+                                flexShrink: 0,
+                                mt: "4px",
+                                transition: "color 0.15s",
+                              }}
+                            >
+                              ▶
+                            </Box>
+                            <Typography
+                              className="name"
+                              component="span"
+                              sx={{
+                                fontSize: 13,
+                                color: "#333",
+                                lineHeight: 1.4,
+                                overflow: "hidden",
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                                transition: "color 0.15s",
+                              }}
+                            >
+                              {p.name}
+                            </Typography>
+                          </MotionBox>
+                        </li>
                       ))}
 
                       {cat.products.length > MAX_PRODUCTS && (

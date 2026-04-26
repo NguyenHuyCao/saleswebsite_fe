@@ -53,7 +53,7 @@ export type Product = {
   hasVariants?: boolean;
   material?: string;
   variants?: ProductVariant[];
-  videoUrl?: string | null;
+  videoUrl?: string;
 };
 
 export type Category = {

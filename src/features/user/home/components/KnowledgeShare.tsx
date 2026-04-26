@@ -39,13 +39,11 @@ const fmtDate = (s: string) =>
     year: "numeric",
   });
 
-const parseTags = (tags?: string | null): string[] =>
-  tags
-    ? tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean)
-    : [];
+const parseTags = (tags?: string | string[] | null): string[] => {
+  if (!tags) return [];
+  if (Array.isArray(tags)) return tags.filter(Boolean);
+  return tags.split(",").map((t) => t.trim()).filter(Boolean);
+};
 
 export default function KnowledgeShare() {
   const router = useRouter();
